@@ -141,3 +141,8 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
   .readout th, .readout td { padding: 2px 0; }
   .tour__nav { position: sticky; bottom: -14px; margin: 8px -16px -14px; padding: 8px 16px 14px; background: var(--surface); }
 }
+
+.fallback { max-width: 720px; margin: 0 auto; padding: 72px 16px 40px; color: var(--text); background: var(--bg); line-height: 1.75; }
+.fallback h2 { font-size: 18px; margin: 28px 0 8px; }
+.fallback ol { padding-left: 20px; }
+.fallback li { margin-bottom: 14px; }

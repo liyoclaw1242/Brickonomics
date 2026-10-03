@@ -94,4 +94,5 @@ export const T = {
   feeParts: { expenseRatio: '內扣費用', distributionFee: '分銷費', cdsc: '遞延手續費', trading: '交易成本' },
   qualityNotice: '畫面有點卡，已自動切換成省電畫質。',
   dismiss: '知道了',
+  fallbackIntro: '你的瀏覽器無法顯示 3D 畫面，以下是文字版課程。',
 } as const
