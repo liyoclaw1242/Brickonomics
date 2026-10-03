@@ -54,7 +54,7 @@ export function Scene({ quality }: { quality: Quality }) {
         <meshStandardMaterial color="#6fb4e8" />
       </mesh>
       <ViewFraming />
-      <City labels={labels} shrink={shrink} />
+      <City labels={labels} islandLabels={mode !== 'tour' || tourScene.cityLabels !== false} shrink={shrink} />
       <Pedestal />
       <StageView quality={quality} />
       {productId && (

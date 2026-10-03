@@ -79,7 +79,7 @@ export function approach(current: number, target: number, dt: number, rate = 8):
   return current + (target - current) * (1 - Math.exp(-rate * dt))
 }
 
-/** 情境衝擊用：每個持股依比例打掉「該組最上方」的方塊，回傳被打掉的方塊集合 */
+/** 情境衝擊用：每個持股依比例標出「該組最上方」的受損方塊（渲染時染紅），回傳受損方塊集合 */
 export function damagedVoxels(voxels: Voxel[], damage: Readonly<Record<string, number>>): Set<Voxel> {
   const byId = new Map<string, Voxel[]>()
   for (const v of voxels) {

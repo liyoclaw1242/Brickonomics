@@ -16,9 +16,9 @@ import { VoxelColumn } from './VoxelColumn'
 const DAMAGE = damageFromShocks(SHOCK_2330)
 const STOCK_BLOCKS = 40 // 2×2×10 的台積電柱
 const SUBJECTS = [
-  { key: 'stock', x: -16 },
+  { key: 'stock', x: -14 },
   { key: '0050', x: 0 },
-  { key: 'SPY', x: 15 },
+  { key: 'SPY', x: 14 },
 ] as const
 
 /** 假設台積電下跌 30%：只買台積電、0050、SPY 並排比較 */
@@ -30,8 +30,8 @@ export function ShockStage({ active, quality }: { active: boolean; quality: Qual
   return (
     <>
       <VoxelColumn count={stockCount} look={look} position={atPlaza(SUBJECTS[0].x, 0, 0)} w={2} d={2} quality={quality} />
-      <Basket productId="0050" quality={quality} position={atPlaza(SUBJECTS[1].x, 0, 0)} slice={0} sliceAxis="x" explode={0} damage={damage} />
-      <Basket productId="SPY" quality={quality} position={atPlaza(SUBJECTS[2].x, 0, 0)} slice={0} sliceAxis="x" explode={0} />
+      <Basket productId="0050" quality="low" position={atPlaza(SUBJECTS[1].x, 0, 0)} slice={0} sliceAxis="x" explode={0} damage={damage} />
+      <Basket productId="SPY" quality="low" position={atPlaza(SUBJECTS[2].x, 0, 0)} slice={0} sliceAxis="x" explode={0} />
       {ready &&
         SUBJECTS.map((s) => {
           const name = s.key === 'stock' ? T.shock.stock : universe.get(s.key)!.name

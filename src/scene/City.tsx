@@ -15,7 +15,7 @@ const ISLAND_COLORS: Record<Region, string> = { TW: '#a5d6a7', US: '#e6d3a3' }
 const ISLAND_THICKNESS = 0.5
 
 /** 兩座島與大樓；每棟大樓是一根方塊柱，所有大樓共用一個 InstancedMesh */
-export function City({ labels, shrink }: { labels: boolean; shrink?: Readonly<Record<string, number>> }) {
+export function City({ labels, islandLabels = true, shrink }: { labels: boolean; islandLabels?: boolean; shrink?: Readonly<Record<string, number>> }) {
   const base = useMemo(() => cityLayout([...universe.values()]), [])
   const placements = useMemo(() => (shrink ? applyShrink(base, shrink) : base), [base, shrink])
   const voxels = useMemo(() => buildingVoxels(placements), [placements])
@@ -75,7 +75,7 @@ export function City({ labels, shrink }: { labels: boolean; shrink?: Readonly<Re
         </Html>
       ))}
       {/* 島名標籤與大樓標籤都在 labelsReady 後才掛載 */}
-      {labelsReady && (['TW', 'US'] as const).map((region) => {
+      {islandLabels && labelsReady && (['TW', 'US'] as const).map((region) => {
         const [x, z] = ISLAND_CENTERS[region]
         return (
           <Html key={`island-${region}`} position={[x, 0.2, z + sizeOf(region) / 2 + 1]} center distanceFactor={40} style={{ ...labelStyle, fontSize: 16, fontWeight: 600 }}>

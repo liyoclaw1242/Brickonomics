@@ -20,6 +20,8 @@ type Props = {
 }
 
 const DIM = 0.35
+const DAMAGE_COLOR = new Color('#e53935')
+const DAMAGE_MIX = 0.65
 
 /** 依材質分組：一種材質一個 InstancedMesh */
 export function VoxelInstances(props: Props) {
@@ -55,14 +57,15 @@ function KindMesh({ kind, voxels, looks, w, d, explode, cut, highlightGroup, qua
     voxels.forEach((v, i) => {
       c.set(looks[v.group]!.color)
       if (highlightGroup !== null && v.group !== highlightGroup) c.multiplyScalar(DIM)
+      if (damaged?.has(v)) c.lerp(DAMAGE_COLOR, DAMAGE_MIX)
       mesh.setColorAt(i, c)
     })
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
-  }, [voxels, looks, highlightGroup])
+  }, [voxels, looks, highlightGroup, damaged])
 
   useLayoutEffect(() => {
     anim.current.dirty = true
-  }, [voxels, cut, w, d, damaged])
+  }, [voxels, cut, w, d])
 
   useFrame((_, dt) => {
     const mesh = ref.current
@@ -75,7 +78,7 @@ function KindMesh({ kind, voxels, looks, w, d, explode, cut, highlightGroup, qua
     voxels.forEach((v, i) => {
       const [x, y, z] = voxelPosition(v, w, d)
       dummy.position.set(x, y + explodeOffsetY(v.group, a.explode, looks.length), z)
-      const hidden = (cut !== null && isHidden(v, cut)) || (damaged?.has(v) ?? false)
+      const hidden = cut !== null && isHidden(v, cut)
       dummy.scale.setScalar(hidden ? 0 : VOXEL_SCALE)
       dummy.updateMatrix()
       mesh.setMatrixAt(i, dummy.matrix)

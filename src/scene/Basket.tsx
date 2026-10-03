@@ -20,7 +20,7 @@ export type BasketProps = {
   sliceAxis: SliceAxis
   explode: number
   highlightId?: string | null
-  /** 持股 id → 打掉比例（情境衝擊）；呼叫端請 memo */
+  /** 持股 id → 受損比例（情境衝擊）：該組最上方的方塊染紅、不可點選；呼叫端請 memo */
   damage?: Readonly<Record<string, number>>
   onPick?: (holdingId: string) => void
 }
