@@ -15,8 +15,10 @@ describe('stageReadout', () => {
     const rows = stageReadout({ kind: 'feeRace' }, v({ years: 3, frontLoad: 0.015 }), universe, null)
     expect(rows[0]!.label).toContain('假設 1.50%')
     expect(rows[0]!.unverified).toBe(true)
-    expect(rows.at(-1)!.label).toBe('目前最划算')
+    expect(rows[0]!.note).toBe('待驗證：內扣費用')
+    expect(rows.at(-1)!.label).toBe('費用最少（只比費用）')
     expect(rows.at(-1)!.value).toBe('ETF（0050）')
+    expect(rows.at(-1)!.note).toBe('三者投資內容與風險不同，費用低不代表比較好')
   })
 
   it('shows shock impacts only when active', () => {
@@ -28,7 +30,8 @@ describe('stageReadout', () => {
   it('lists overlap rows with the total', () => {
     const rows = stageReadout({ kind: 'overlap', a: 'QQQ', b: 'SPY' }, v(), universe, null)
     expect(rows[0]).toMatchObject({ label: '輝達', value: '8.3%' })
-    expect(rows.at(-1)!.label).toBe('重疊合計')
+    expect(rows.at(-1)!.label).toBe('前幾大持股重疊（至少）')
+    expect(rows.at(-1)!.note).toBe('其餘持股未細分，實際重疊更多')
   })
 
   it('shows the expense ratio for the fee meter and nothing for plain stages', () => {

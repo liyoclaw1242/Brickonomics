@@ -33,7 +33,7 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
           unverified: r.unverified.length > 0,
           note: r.unverified.length ? T.readout.unverifiedParts(r.unverified.map((k) => T.feeParts[k]).join('、')) : undefined,
         })),
-        { label: T.readout.leader, value: label(feeRaceLeader(rows)) },
+        { label: T.readout.leader, value: label(feeRaceLeader(rows)), note: T.feeRaceCaveat },
       ]
     }
     case 'accumulate': {
@@ -64,7 +64,7 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
       const o = overlap(u, stage.a, stage.b)
       return [
         ...o.rows.map((r) => ({ label: u.get(r.id)!.name, value: `${(r.shared * 100).toFixed(1)}%` })),
-        { label: T.readout.overlapTotal, value: `${(o.total * 100).toFixed(1)}%` },
+        { label: T.readout.overlapTotal, value: `${(o.total * 100).toFixed(1)}%`, note: T.readout.overlapNote },
       ]
     }
     case 'excavator': {

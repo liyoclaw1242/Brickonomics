@@ -174,7 +174,7 @@ export const LEVELS: Level[] = [
       {
         id: 'e-3',
         text: (c) =>
-          `看到那層特別厚的藍色了嗎？那是台積電，佔了約 ${pct0(c.weightPct('0050', '2330'))}%。第二名聯發科只佔約 ${pct0(c.weightPct('0050', '2454'))}%，差距很大。`,
+          `看到最下面那層特別厚的藍色了嗎？那是台積電，佔了約 ${pct0(c.weightPct('0050', '2330'))}%。第二名聯發科只佔約 ${pct0(c.weightPct('0050', '2454'))}%，差距很大。`,
         scene: { camera: 'exchangeSide', product: '0050', slice: 0.5, sliceAxis: 'x', cityLabels: false },
       },
       {
@@ -206,7 +206,7 @@ export const LEVELS: Level[] = [
       },
       {
         id: 'c-3',
-        text: '再看「重疊」：把 QQQ 和 SPY 一起拆開，發光的線連起同一家公司。兩檔都押了輝達、蘋果、微軟——買兩檔，不等於分散兩倍。',
+        text: '再看「重疊」：把 QQQ 和 SPY 一起拆開，發光的線連起同一家公司。兩檔都押了輝達、蘋果、微軟——買兩檔，不等於分散兩倍（只列出前幾大持股，實際重疊更多）。',
         scene: { camera: 'plaza', product: null, stage: { kind: 'overlap', a: 'QQQ', b: 'SPY' }, cityLabels: false },
       },
       {

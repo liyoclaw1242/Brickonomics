@@ -10,7 +10,7 @@ export const FEE_RACE = {
   etf: '0050',
 } as const
 
-export type FeePart = 'frontLoad' | 'expenseRatio' | 'distributionFee' | 'cdsc' | 'trading'
+export type FeePart = 'expenseRatio' | 'distributionFee' | 'cdsc' | 'trading'
 export type FeeRaceRow = { id: 'front' | 'back' | 'etf'; value: number; lost: number; unverified: FeePart[] }
 
 const need = (u: Universe, id: string) => {
@@ -42,10 +42,10 @@ export function feeRace(u: Universe, years: number, frontLoad: number): FeeRaceR
     const value = valueAfter(profile, years)
     return { id, value, lost: 100 - value, unverified }
   }
-  const parts = (asset: typeof fund, keys: Exclude<FeePart, 'frontLoad' | 'trading'>[]) =>
+  const parts = (asset: typeof fund, keys: Exclude<FeePart, 'trading'>[]) =>
     keys.filter((k) => !isVerified(asset, `fees.${k}` as const))
   return [
-    row('front', p.front, ['frontLoad', ...parts(fund, ['expenseRatio'])]),
+    row('front', p.front, parts(fund, ['expenseRatio'])),
     row('back', p.back, parts(back, ['expenseRatio', 'distributionFee', 'cdsc'])),
     row('etf', p.etf, [
       ...parts(etf, ['expenseRatio']),

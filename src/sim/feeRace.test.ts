@@ -24,7 +24,8 @@ describe('feeRace', () => {
   })
 
   it('marks the assumed front load and unverified parts', () => {
-    expect(row(1, 'front').unverified).toContain('frontLoad')
+    // 前收手續費是使用者的假設，不是待驗證的資料；只有經理費（資料）待驗證
+    expect(row(1, 'front').unverified).toEqual(['expenseRatio'])
     expect(row(1, 'back').unverified).toContain('expenseRatio') // U 級別經理費待驗證
     expect(row(1, 'back').unverified).not.toContain('cdsc')
   })
