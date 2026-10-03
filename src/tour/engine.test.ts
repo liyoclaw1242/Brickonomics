@@ -72,6 +72,8 @@ describe('progress persistence', () => {
   it('round-trips and tolerates garbage', () => {
     const p = { completed: ['a'], sandboxUnlocked: true }
     expect(parseProgress(serializeProgress(p))).toEqual(p)
+    const withPos = { ...p, pos: { level: 3, step: 2 } }
+    expect(parseProgress(serializeProgress(withPos))).toEqual(withPos)
     expect(parseProgress(null)).toEqual({ completed: [], sandboxUnlocked: false })
     expect(parseProgress('{oops')).toEqual({ completed: [], sandboxUnlocked: false })
     expect(parseProgress('{"completed":[1,"b"],"sandboxUnlocked":"yes"}')).toEqual({ completed: ['b'], sandboxUnlocked: false })

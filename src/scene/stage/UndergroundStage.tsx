@@ -39,6 +39,7 @@ export function UndergroundStage({ show, cores, quality }: { show: Show; cores?:
   const layers = useMemo(() => strataLayout().map((l) => ({ ...l, color: soilTint(colorOf(l.sector)) })), [])
   const vein = goldVein()
   const faded = show === 'gold'
+  const veinDim = show !== 'gold'
   const coreData = useMemo(
     () =>
       (cores ?? []).map((id, i) => ({
@@ -49,7 +50,7 @@ export function UndergroundStage({ show, cores, quality }: { show: Show; cores?:
       })),
     [cores],
   )
-  const digLayer = layers[0]!
+  const digLayer = layers.find((l) => l.sector === 'semiconductor') ?? layers[0]!
   const digY = (digLayer.top + digLayer.bottom) / 2
   const veinLayers = layers.filter((l) => VEIN_SECTORS.includes(l.sector))
   return (
@@ -63,7 +64,7 @@ export function UndergroundStage({ show, cores, quality }: { show: Show; cores?:
       <mesh position={[4, (vein.top + vein.bottom) / 2, 36]}>
         <boxGeometry args={[30, vein.top - vein.bottom, 4]} />
         {/* 正面朝向鏡頭時金屬材質反射不到環境光會變黑：這裡用自發光的金色霧面材質 */}
-        <meshStandardMaterial color="#ffc107" emissive="#ffa000" emissiveIntensity={0.6} roughness={0.35} metalness={0.3} />
+        <meshStandardMaterial color="#ffc107" emissive="#ffa000" emissiveIntensity={0.6} roughness={0.35} metalness={0.3} transparent={veinDim} opacity={veinDim ? FADE : 1} />
       </mesh>
 
       {show === 'cores' &&

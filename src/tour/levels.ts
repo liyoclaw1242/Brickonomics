@@ -215,7 +215,8 @@ export const LEVELS: Level[] = [
         scene: { camera: 'overview', product: null },
       },
     ],
-  },  {
+  },
+  {
     id: 'underground',
     title: '鑽進地底：ETF 的種類',
     steps: [

@@ -53,6 +53,12 @@ describe('useTour', () => {
     expect(currentStep(useTour.getState()).id).toBe('e-3')
   })
 
+  it('enterStep preserves completed and sandboxUnlocked', () => {
+    useTour.setState({ progress: { completed: ['prologue'], sandboxUnlocked: true } })
+    useTour.getState().enterStep({ level: 2, step: 1 })
+    expect(useTour.getState().progress).toEqual({ completed: ['prologue'], sandboxUnlocked: true, pos: { level: 2, step: 1 } })
+  })
+
   it('remembers the current position', () => {
     useTour.getState().enterStep({ level: 1, step: 2 })
     expect(useTour.getState().progress.pos).toEqual({ level: 1, step: 2 })

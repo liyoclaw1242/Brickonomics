@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { universe } from '../../data'
 import { parseUniverse } from '../../data/universe'
+import { T } from '../../ui/strings'
 import { SECTORS, LAYER_THICKNESS, GROUND_TOP, strataLayout, goldVein, sectorBreakdown, coreSegments } from './underground'
 
 describe('strataLayout', () => {
@@ -45,12 +46,25 @@ describe('sectorBreakdown', () => {
   })
 })
 
+describe('T.sectors', () => {
+  it('has exactly the sectors plus unclassified', () => {
+    expect(Object.keys(T.sectors)).toEqual([...SECTORS, 'unclassified'])
+  })
+})
+
 describe('coreSegments', () => {
   it('splits the core height by weight from the top down', () => {
     expect(coreSegments([{ sector: 'semiconductor', weightPct: 60 }, { sector: 'unclassified', weightPct: 40 }], 10)).toEqual([
       { sector: 'semiconductor', top: 0, bottom: -6 },
       { sector: 'unclassified', top: -6, bottom: -10 },
     ])
+  })
+
+  it('ends exactly at -height even with float rounding', () => {
+    const rows = [33.3, 33.3, 33.4].map((w) => ({ sector: 'auto' as const, weightPct: w }))
+    const seg = coreSegments(rows, 7)
+    expect(seg).toHaveLength(3)
+    expect(seg[seg.length - 1]!.bottom).toBe(-7)
   })
 
   it('normalises when weights do not sum to 100', () => {

@@ -15,6 +15,11 @@ describe('fallbackLevels', () => {
     expect(out[0]!.label).toBe('序章')
   })
 
+  it('shows one readout row on the excavator meter step', () => {
+    const meter = out.flatMap((l) => l.steps).find((s) => s.id === 'f-5')!
+    expect(meter.rows).toHaveLength(1)
+  })
+
   it('includes the live numbers each step would show', () => {
     const shock = out.flatMap((l) => l.steps).find((s) => s.id === 'c-2')!
     expect(shock.rows).toHaveLength(3)

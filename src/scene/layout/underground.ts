@@ -40,10 +40,11 @@ export function sectorBreakdown(u: Universe, productId: string): { sector: Secto
 export function coreSegments(rows: { sector: Sector; weightPct: number }[], height: number): { sector: Sector; top: number; bottom: number }[] {
   const total = rows.reduce((s, r) => s + r.weightPct, 0)
   let y = 0
-  return rows.map((r) => {
+  return rows.map((r, i) => {
     const len = total > 0 ? (r.weightPct / total) * height : 0
-    const seg = { sector: r.sector, top: y, bottom: y - len }
-    y -= len
+    const bottom = i === rows.length - 1 && total > 0 ? -height : y - len
+    const seg = { sector: r.sector, top: y, bottom }
+    y = bottom
     return seg
   })
 }
