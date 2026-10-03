@@ -1,7 +1,7 @@
 /** 所有介面文字（繁體中文）。新增文字一律加在這裡。 */
 export const T = {
   appTitle: '積木城市',
-  shock: { stock: '只買台積電', label: (name: string, pct: string) => `${name}：${pct}` },
+  shock: { stock: '只買台積電', legend: '紅色＝假設跌掉的部分', label: (name: string, pct: string) => `${name}：${pct}` },
   overlapLabel: (name: string, pct: string) => `${name} 重疊 ${pct}`,
   disclaimer: (date: string) => `資料為 ${date} 快照，僅供教學，不構成投資建議。`,
   heightNote: '大樓高度為市值的對數比例；籃子裡的方塊數量嚴格依照權重。',
@@ -38,7 +38,7 @@ export const T = {
   assumption: '假設',
   controls: {
     years: '持有年數',
-    yearsValue: (v: number) => `${v} 年`,
+    yearsValue: (v: number) => (v === 0 ? '未滿 1 年' : `${v} 年`),
     periods: '經過年數',
     periodsValue: (v: number) => `${v} 年`,
     phase: '時間軸',
@@ -65,6 +65,7 @@ export const T = {
   excavator: '經理人（怪手）',
   feeMeter: {
     title: '計費表',
+    elapsed: (year: number) => `第 ${year} 年`,
     rate: (er: number) => `內扣費用每年約 ${(er * 100).toFixed(2)}%`,
     ground: (amount: number) => `已磨掉約 ${Math.round(amount).toLocaleString('zh-TW')} 元`,
     note: '假設投入 100 萬元、時間快轉（6 秒 = 1 年）',

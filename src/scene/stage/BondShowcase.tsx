@@ -56,7 +56,7 @@ export function BondShowcase({ stressed, quality }: { stressed: boolean; quality
             {ready && (
               <Html position={atPlaza(s.x, -0.2, 2.6)} center style={labelStyle}>
                 {T.stage.bonds[s.key]}
-                {s.key !== 'stock' && T.stage.illustrativeTag}
+                {(s.key !== 'stock' || stressed) && T.stage.illustrativeTag}
               </Html>
             )}
           </group>

@@ -29,7 +29,7 @@ export function FeeMeter() {
   const [x, , z] = EXCHANGE_POSITION
   return (
     <Html position={[x, 1.2, z + 9.5]} center style={{ ...labelStyle, whiteSpace: 'normal', width: 220, maxWidth: 'none', textAlign: 'center', lineHeight: 1.5 }}>
-      <strong>{T.feeMeter.title}</strong>
+      <strong>{T.feeMeter.title}</strong>・{T.feeMeter.elapsed(Math.floor(years) + 1)}
       <br />
       {T.feeMeter.rate(er)} {!isVerified(product, 'fees.expenseRatio') && <span className="badge">{T.unverified}</span>}
       <br />

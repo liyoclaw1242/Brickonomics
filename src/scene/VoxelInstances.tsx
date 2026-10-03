@@ -22,7 +22,7 @@ type Props = {
 
 const DIM = 0.35
 const DAMAGE_COLOR = new Color('#e53935')
-const DAMAGE_MIX = 0.65
+const DAMAGE_MIX = 0.9
 
 /** 依材質分組：一種材質一個 InstancedMesh */
 export function VoxelInstances(props: Props) {

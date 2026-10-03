@@ -25,7 +25,7 @@ const SUBJECTS = [
 export function ShockStage({ active, quality }: { active: boolean; quality: Quality }) {
   const ready = useAfterFirstTick()
   const damage = useMemo(() => (active ? DAMAGE : undefined), [active])
-  const look = lookFor(universe.get('2330')!)
+  const look = useMemo(() => lookFor(universe.get('2330')!), [])
   const stockCount = active ? Math.round(STOCK_BLOCKS * (1 - DAMAGE['2330']!)) : STOCK_BLOCKS
   return (
     <>
@@ -42,6 +42,11 @@ export function ShockStage({ active, quality }: { active: boolean; quality: Qual
             </Html>
           )
         })}
+      {ready && active && (
+        <Html position={atPlaza(SUBJECTS[1].x, -0.2, 8.6)} center style={labelStyle}>
+          {T.shock.legend}
+        </Html>
+      )}
     </>
   )
 }
