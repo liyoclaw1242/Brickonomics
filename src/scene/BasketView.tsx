@@ -45,6 +45,7 @@ export function BasketView({ productId, quality, position }: Props) {
         d={spec.d}
         explode={explode}
         cut={cut}
+        quality={quality}
         highlightGroup={idx >= 0 ? idx : null}
         onPick={(g) => pick({ productId, holdingId: holdings[g]!.id })}
       />

@@ -3,6 +3,7 @@ import { useFrame, type ThreeEvent } from '@react-three/fiber'
 import { Color, type InstancedMesh, Object3D } from 'three'
 import type { BlockLook, MaterialKind } from './palette'
 import { BlockMaterial } from './materials'
+import type { Quality } from './quality'
 import { approach, explodeOffsetY, isHidden, voxelPosition, VOXEL_SCALE, type CutSpec, type Voxel } from './layout/voxels'
 
 type Props = {
@@ -13,6 +14,7 @@ type Props = {
   explode: number
   cut: CutSpec | null
   highlightGroup: number | null
+  quality: Quality
   onPick?: (group: number) => void
 }
 
@@ -40,7 +42,7 @@ export function VoxelInstances(props: Props) {
   )
 }
 
-function KindMesh({ kind, voxels, looks, w, d, explode, cut, highlightGroup, onPick }: Props & { kind: MaterialKind }) {
+function KindMesh({ kind, voxels, looks, w, d, explode, cut, highlightGroup, quality, onPick }: Props & { kind: MaterialKind }) {
   const ref = useRef<InstancedMesh>(null)
   const anim = useRef({ explode, dirty: true })
   const dummy = useMemo(() => new Object3D(), [])
@@ -82,6 +84,7 @@ function KindMesh({ kind, voxels, looks, w, d, explode, cut, highlightGroup, onP
 
   const handleClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation()
+    if (e.delta > 4) return // 拖曳轉視角不算點選
     if (e.instanceId === undefined) return
     const v = voxels[e.instanceId]
     if (v) onPick?.(v.group)
@@ -90,7 +93,7 @@ function KindMesh({ kind, voxels, looks, w, d, explode, cut, highlightGroup, onP
   return (
     <instancedMesh ref={ref} args={[undefined, undefined, voxels.length]} onClick={handleClick} castShadow receiveShadow>
       <boxGeometry />
-      <BlockMaterial kind={kind} />
+      <BlockMaterial kind={kind} quality={quality} />
     </instancedMesh>
   )
 }
