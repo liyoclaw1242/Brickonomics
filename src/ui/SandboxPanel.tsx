@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { universe } from '../data'
 import { useSandbox } from '../store/sandbox'
-import { formatPct, legendRows, productGroups } from './model'
+import { formatPct, legendMeta, legendRows, productGroups } from './model'
 import { T } from './strings'
 
 export function SandboxPanel() {
@@ -12,6 +12,7 @@ export function SandboxPanel() {
   const explode = useSandbox((s) => s.explode)
   const { selectProduct, setSliceAxis, setSlice, setExplode, pick } = useSandbox.getState()
   const rows = useMemo(() => (productId ? legendRows(universe, productId) : []), [productId])
+  const meta = useMemo(() => (productId ? legendMeta(universe, productId) : null), [productId])
 
   const chip = (id: string, name: string) => (
     <button key={id} className="chip" aria-pressed={id === productId} onClick={() => selectProduct(id)}>
@@ -52,12 +53,19 @@ export function SandboxPanel() {
       {productId && (
         <section>
           <h2>{T.legend}</h2>
+          {meta && (
+            <p className="hint">
+              {T.asOf}：{meta.asOf} {!meta.verified && <span className="badge">{T.unverified}</span>}
+            </p>
+          )}
           <ul className="legend">
             {rows.map((r) => (
               <li key={r.id}>
                 <button onClick={() => pick({ productId, holdingId: r.id })}>
                   <span className="swatch" style={{ background: r.color }} />
-                  <span className="legend__name">{r.name}</span>
+                  <span className={r.aggregate ? 'legend__name legend__name--aggregate' : 'legend__name'} title={r.aggregate ? T.aggregateNote : undefined}>
+                    {r.name}
+                  </span>
                   <span className="legend__pct">{formatPct(r.weightPct)}</span>
                 </button>
               </li>

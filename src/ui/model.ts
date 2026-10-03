@@ -22,6 +22,12 @@ export function legendRows(u: Universe, productId: string): LegendRow[] {
   })
 }
 
+export function legendMeta(u: Universe, productId: string): { asOf: string; verified: boolean } | null {
+  const p = u.get(productId)
+  if (!p?.holdings) return null
+  return { asOf: p.asOf, verified: isVerified(p, 'holdings') }
+}
+
 export const formatPct = (pct: number): string => `${pct.toFixed(2)}%`
 
 export type PickInfo = {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { universe } from '../data'
-import { productGroups, legendRows, formatPct, pickInfo, sourceLabel } from './model'
+import { productGroups, legendRows, formatPct, pickInfo, sourceLabel, legendMeta } from './model'
 
 describe('productGroups', () => {
   it('splits baskets into ETFs and funds in data order', () => {
@@ -53,6 +53,16 @@ describe('pickInfo', () => {
   it('returns null for nothing picked or unknown ids', () => {
     expect(pickInfo(universe, null)).toBeNull()
     expect(pickInfo(universe, { productId: 'NOPE', holdingId: 'NOPE' })).toBeNull()
+  })
+})
+
+describe('legendMeta', () => {
+  it('gives the basket data date and verification', () => {
+    expect(legendMeta(universe, '0050')).toEqual({ asOf: '2026-08-01', verified: true })
+    expect(legendMeta(universe, 'JH_BALANCED')?.verified).toBe(false)
+  })
+  it('is null for non-baskets', () => {
+    expect(legendMeta(universe, '2330')).toBeNull()
   })
 })
 
