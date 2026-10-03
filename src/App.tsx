@@ -10,7 +10,7 @@ export default function App() {
   const pick = useSandbox((s) => s.pick)
   return (
     <div style={{ position: 'fixed', inset: 0 }}>
-      <Canvas shadows={cfg.shadows} dpr={cfg.dpr} camera={{ position: [18, 26, 64], fov: 45 }} onPointerMissed={() => pick(null)}>
+      <Canvas shadows={cfg.shadows} dpr={cfg.dpr} camera={{ position: [10, 36, 58], fov: 45 }} onPointerMissed={() => pick(null)}>
         <Scene quality={quality} />
       </Canvas>
     </div>

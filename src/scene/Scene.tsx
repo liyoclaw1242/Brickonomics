@@ -1,6 +1,7 @@
 import { Environment, Lightformer, OrbitControls } from '@react-three/drei'
 import { useSandbox } from '../store/sandbox'
 import { BasketView } from './BasketView'
+import { City } from './City'
 import type { Quality } from './quality'
 
 /** 交易所櫃台的位置：兩座島中間偏前 */
@@ -41,6 +42,7 @@ export function Scene({ quality }: { quality: Quality }) {
         <planeGeometry args={[300, 300]} />
         <meshStandardMaterial color="#9cc9e8" />
       </mesh>
+      <City />
       <Pedestal />
       {productId && (
         <BasketView
@@ -50,7 +52,7 @@ export function Scene({ quality }: { quality: Quality }) {
           position={[EXCHANGE_POSITION[0], PEDESTAL_HEIGHT, EXCHANGE_POSITION[2]]}
         />
       )}
-      <OrbitControls makeDefault target={[0, 8, 14]} maxPolarAngle={Math.PI * 0.48} minDistance={8} maxDistance={90} />
+      <OrbitControls makeDefault target={[0, 5, 12]} maxPolarAngle={Math.PI * 0.48} minDistance={8} maxDistance={90} />
     </>
   )
 }
