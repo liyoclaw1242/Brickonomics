@@ -57,3 +57,11 @@ export function buildingVoxels(placements: Placement[]): BuildingVoxel[] {
   }
   return out
 }
+
+/** 假設情境：大樓高度乘以 (1 − f)，至少保留 1 層 */
+export function applyShrink(placements: Placement[], shrink: Readonly<Record<string, number>>): Placement[] {
+  return placements.map((p) => {
+    const f = shrink[p.id]
+    return f === undefined ? p : { ...p, height: Math.max(1, Math.round(p.height * (1 - f))) }
+  })
+}

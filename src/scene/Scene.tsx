@@ -1,14 +1,18 @@
 import { Environment, Lightformer, OrbitControls } from '@react-three/drei'
-import { useSandbox } from '../store/sandbox'
+import { effectiveExplode, useSandbox } from '../store/sandbox'
+import { currentStep, useTour } from '../store/tour'
+import { SHOCK_2330 } from '../tour/context'
 import { BasketView } from './BasketView'
 import { CameraRig } from './CameraRig'
 import { City } from './City'
 import type { Quality } from './quality'
+import { damageFromShocks } from './layout/stages'
 import { EXCHANGE_POSITION } from './stage/plaza'
 import { StageView } from './stage/StageView'
 import { ViewFraming } from './ViewFraming'
 
 const PEDESTAL_HEIGHT = 0.6
+const SHOCK_SHRINK = damageFromShocks(SHOCK_2330)
 
 function Pedestal() {
   return (
@@ -21,6 +25,11 @@ function Pedestal() {
 
 export function Scene({ quality }: { quality: Quality }) {
   const productId = useSandbox((s) => s.productId)
+  const mode = useTour((s) => s.mode)
+  const tourScene = useTour((s) => currentStep(s).scene)
+  const explode = useSandbox(effectiveExplode)
+  const labels = mode === 'tour' ? tourScene.cityLabels !== false : explode < 0.3
+  const shrink = mode === 'tour' && tourScene.stage?.kind === 'shock' && tourScene.stage.active ? SHOCK_SHRINK : undefined
   return (
     <>
       <color attach="background" args={['#cfe8ff']} />
@@ -45,7 +54,7 @@ export function Scene({ quality }: { quality: Quality }) {
         <meshStandardMaterial color="#6fb4e8" />
       </mesh>
       <ViewFraming />
-      <City />
+      <City labels={labels} shrink={shrink} />
       <Pedestal />
       <StageView quality={quality} />
       {productId && (

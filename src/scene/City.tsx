@@ -9,14 +9,15 @@ import { labelStyle } from './labelStyle'
 import { lookFor } from './palette'
 import { VOXEL_SCALE } from './layout/voxels'
 import { useAfterFirstTick } from './useAfterFirstTick'
-import { buildingVoxels, cityLayout, islandSize, ISLAND_CENTERS, type Region } from './layout/city'
+import { applyShrink, buildingVoxels, cityLayout, islandSize, ISLAND_CENTERS, type Region } from './layout/city'
 
 const ISLAND_COLORS: Record<Region, string> = { TW: '#a5d6a7', US: '#e6d3a3' }
 const ISLAND_THICKNESS = 0.5
 
 /** 兩座島與大樓；每棟大樓是一根方塊柱，所有大樓共用一個 InstancedMesh */
-export function City() {
-  const placements = useMemo(() => cityLayout([...universe.values()]), [])
+export function City({ labels, shrink }: { labels: boolean; shrink?: Readonly<Record<string, number>> }) {
+  const base = useMemo(() => cityLayout([...universe.values()]), [])
+  const placements = useMemo(() => (shrink ? applyShrink(base, shrink) : base), [base, shrink])
   const voxels = useMemo(() => buildingVoxels(placements), [placements])
   const ref = useRef<InstancedMesh>(null)
   const pick = useSandbox((s) => s.pick)
@@ -64,11 +65,11 @@ export function City() {
           </group>
         )
       })}
-      <instancedMesh ref={ref} args={[undefined, undefined, voxels.length]} castShadow receiveShadow onClick={onClick}>
+      <instancedMesh key={voxels.length} ref={ref} args={[undefined, undefined, voxels.length]} castShadow receiveShadow onClick={onClick}>
         <boxGeometry />
         <meshStandardMaterial roughness={0.8} />
       </instancedMesh>
-      {labelsReady && placements.map((p) => (
+      {labels && labelsReady && placements.map((p) => (
         <Html key={p.id} position={[p.x, p.height + 0.8, p.z]} center distanceFactor={38} style={labelStyle}>
           {universe.get(p.id)!.name}
         </Html>
