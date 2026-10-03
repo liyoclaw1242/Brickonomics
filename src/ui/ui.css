@@ -66,17 +66,20 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .info p { margin: 6px 0; font-size: 13px; }
 .info__sub { color: var(--muted); }
 .info__close { position: absolute; top: 8px; right: 10px; border: 0; background: none; font-size: 20px; color: var(--muted); cursor: pointer; }
-.info__src a, .info__src span { margin-right: 6px; color: var(--muted); word-break: break-all; }
+.info__src a, .info__src span { margin-right: 6px; color: var(--text); word-break: break-all; }
 .badge { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 6px; font-size: 11px; color: var(--badge); border: 1px solid currentColor; }
 
 .disclaimer {
-  position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
-  max-width: calc(100% - 24px); padding: 6px 12px; border-radius: 999px; font-size: 12px;
+  position: fixed; top: 12px; left: 336px;
+  max-width: calc(100% - 348px); padding: 6px 12px; border-radius: 999px; font-size: 12px;
   background: var(--surface); border: 1px solid var(--border); color: var(--muted); text-align: center;
 }
 
 @media (max-width: 720px) {
-  .panel { top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 42vh; border-radius: 14px 14px 0 0; }
-  .info { top: auto; bottom: calc(42vh + 8px); left: 12px; right: 12px; width: auto; }
-  .disclaimer { top: 8px; left: 8px; right: 8px; transform: none; max-width: none; border-radius: 10px; }
+  .panel { top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 42vh; max-height: 42dvh; overscroll-behavior: contain; border-radius: 14px 14px 0 0; }
+  .chip, .seg button { min-height: 36px; padding: 8px 12px; }
+  .seg button { flex: 1; }
+  .legend button { min-height: 36px; padding: 6px 2px; }
+  .info { top: auto; bottom: calc(42vh + 8px); bottom: calc(42dvh + 8px); left: 12px; right: 12px; width: auto; }
+  .disclaimer { top: 8px; left: 8px; right: 8px; max-width: none; border-radius: 10px; }
 }

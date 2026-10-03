@@ -1,15 +1,19 @@
 import { useEffect } from 'react'
 import { useSandbox } from '../store/sandbox'
 
-const isTyping = (t: EventTarget | null) =>
-  t instanceof HTMLTextAreaElement || (t instanceof HTMLInputElement && t.type !== 'range')
+const INTERACTIVE = 'button,a,select,textarea,input:not([type=range])'
+const isInteractive = (t: EventTarget | null) => !!(t as Element | null)?.closest?.(INTERACTIVE)
 
 /** 桌機：按住空白鍵拆開，放開復原 */
 export function useExplodeKey() {
   const setHeld = useSandbox((s) => s.setExplodeHeld)
   useEffect(() => {
     const onKey = (held: boolean) => (e: KeyboardEvent) => {
-      if (e.code !== 'Space' || isTyping(e.target)) return
+      if (e.code !== 'Space' || isInteractive(e.target)) return
+      if (held && e.repeat) {
+        e.preventDefault()
+        return
+      }
       e.preventDefault()
       setHeld(held)
     }

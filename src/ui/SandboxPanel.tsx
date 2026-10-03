@@ -40,12 +40,12 @@ export function SandboxPanel() {
             </button>
           ))}
         </div>
-        <input type="range" min={0} max={1} step={0.01} value={slice} aria-label={T.slice} onChange={(e) => setSlice(Number(e.target.value))} />
+        <input type="range" min={0} max={1} step={0.01} value={slice} aria-label={T.sliceAmount} onChange={(e) => setSlice(Number(e.target.value))} />
       </section>
 
       <section>
         <h2>{T.explode}</h2>
-        <input type="range" min={0} max={1} step={0.01} value={explode} aria-label={T.explode} onChange={(e) => setExplode(Number(e.target.value))} />
+        <input type="range" min={0} max={1} step={0.01} value={explode} aria-label={T.explodeAmount} onChange={(e) => setExplode(Number(e.target.value))} />
         <p className="hint">{T.explodeHint}</p>
       </section>
 

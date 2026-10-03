@@ -21,4 +21,7 @@ export const T = {
   aggregateNote: '這是彙總部位，不代表單一公司。',
   partOf: (name: string) => `${name} 的組成`,
   close: '關閉',
+  closeGlyph: '×',
+  sliceAmount: '切割位置',
+  explodeAmount: '拆開程度',
 } as const

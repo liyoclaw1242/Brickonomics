@@ -13,7 +13,7 @@ export function ViewFraming() {
     const dx = mobile ? 0 : 156
     const dy = mobile ? height * 0.21 : 0
     // 直式畫面太窄時縮小，讓兩座島都進得了畫面
-    camera.zoom = Math.min(1, (width / height) * 1.1)
+    camera.zoom = Math.min(1, (width / height) * (mobile ? 0.85 : 1.1))
     camera.setViewOffset(width, height, -dx, dy, width, height)
     camera.updateProjectionMatrix()
     return () => {

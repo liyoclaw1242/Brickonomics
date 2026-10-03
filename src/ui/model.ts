@@ -63,3 +63,13 @@ export function pickInfo(u: Universe, picked: Picked): PickInfo | null {
     sources: holding.source,
   }
 }
+
+export function sourceLabel(s: string): { href: string | null; text: string } {
+  if (!/^https?:\/\//i.test(s)) return { href: null, text: s }
+  try {
+    const u = new URL(s)
+    return { href: s, text: u.hostname }
+  } catch {
+    return { href: null, text: s }
+  }
+}

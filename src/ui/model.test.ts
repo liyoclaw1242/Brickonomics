@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { universe } from '../data'
-import { productGroups, legendRows, formatPct, pickInfo } from './model'
+import { productGroups, legendRows, formatPct, pickInfo, sourceLabel } from './model'
 
 describe('productGroups', () => {
   it('splits baskets into ETFs and funds in data order', () => {
@@ -53,5 +53,17 @@ describe('pickInfo', () => {
   it('returns null for nothing picked or unknown ids', () => {
     expect(pickInfo(universe, null)).toBeNull()
     expect(pickInfo(universe, { productId: 'NOPE', holdingId: 'NOPE' })).toBeNull()
+  })
+})
+
+describe('sourceLabel', () => {
+  it('links valid http(s) urls by hostname', () => {
+    expect(sourceLabel('https://www.yuantaetfs.com/x')).toEqual({ href: 'https://www.yuantaetfs.com/x', text: 'www.yuantaetfs.com' })
+  })
+  it('falls back to raw text for malformed urls', () => {
+    expect(sourceLabel('http://')).toEqual({ href: null, text: 'http://' })
+  })
+  it('keeps non-url text', () => {
+    expect(sourceLabel('公開說明書')).toEqual({ href: null, text: '公開說明書' })
   })
 })
