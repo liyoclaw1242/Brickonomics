@@ -4,10 +4,10 @@ import { BasketView } from './BasketView'
 import { CameraRig } from './CameraRig'
 import { City } from './City'
 import type { Quality } from './quality'
+import { EXCHANGE_POSITION } from './stage/plaza'
+import { StageView } from './stage/StageView'
 import { ViewFraming } from './ViewFraming'
 
-/** 交易所櫃台的位置：兩座島中間偏前 */
-export const EXCHANGE_POSITION: [number, number, number] = [0, 0, 14]
 const PEDESTAL_HEIGHT = 0.6
 
 function Pedestal() {
@@ -47,6 +47,7 @@ export function Scene({ quality }: { quality: Quality }) {
       <ViewFraming />
       <City />
       <Pedestal />
+      <StageView quality={quality} />
       {productId && (
         <BasketView
           key={`${productId}-${quality}`}

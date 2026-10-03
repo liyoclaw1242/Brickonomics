@@ -5,6 +5,7 @@ import { Color, type InstancedMesh, Object3D } from 'three'
 import { universe } from '../data'
 import { useSandbox } from '../store/sandbox'
 import { T } from '../ui/strings'
+import { labelStyle } from './labelStyle'
 import { lookFor } from './palette'
 import { VOXEL_SCALE } from './layout/voxels'
 import { useAfterFirstTick } from './useAfterFirstTick'
@@ -12,16 +13,6 @@ import { buildingVoxels, cityLayout, islandSize, ISLAND_CENTERS, type Region } f
 
 const ISLAND_COLORS: Record<Region, string> = { TW: '#a5d6a7', US: '#e6d3a3' }
 const ISLAND_THICKNESS = 0.5
-
-const labelStyle = {
-  pointerEvents: 'none',
-  whiteSpace: 'nowrap',
-  fontSize: 12,
-  padding: '1px 6px',
-  borderRadius: 6,
-  background: 'rgba(255,255,255,0.85)',
-  color: '#1f2933',
-} as const
 
 /** 兩座島與大樓；每棟大樓是一根方塊柱，所有大樓共用一個 InstancedMesh */
 export function City() {

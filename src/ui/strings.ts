@@ -43,4 +43,11 @@ export const T = {
     frontLoad: '假設的前收手續費',
     frontLoadValue: (v: number) => `${(v * 100).toFixed(2)}%`,
   },
+  stage: {
+    held: '你手上的方塊',
+    bonds: { stock: '股票方塊', gov: '國家債', corp: '公司債', hy: '高收益債' },
+    rateNote: '利息快慢為示意',
+    exdiv: { block: '方塊', coins: '金幣' },
+    illustrativeTag: '（示意）',
+  },
 } as const
