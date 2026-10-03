@@ -3,13 +3,13 @@ import type { Vec3 } from '../camera'
 export const COIN_RADIUS = 0.35
 export const COIN_HEIGHT = 0.12
 
-export type CoinParams = { from: Vec3; to: Vec3; rate: number; fallTime: number; arc: number }
+export type CoinParams = { from: Vec3; to: Vec3; rate: number; fallTime: number; arc: number; limit?: number }
 
-/** 時間 t 秒時，飛行中的金幣位置（最新的在前）；自 t = 0 起每 1/rate 秒產生一枚 */
+/** 時間 t 秒時，飛行中的金幣位置（最新的在前）；自 t = 0 起每 1/rate 秒產生一枚；limit 為總共只產生幾枚 */
 export function coinPositions(t: number, p: CoinParams, max = 64): Vec3[] {
   if (!(p.rate > 0) || !(p.fallTime > 0)) throw new RangeError(`rate and fallTime must be > 0: ${p.rate}, ${p.fallTime}`)
   const out: Vec3[] = []
-  for (let i = Math.floor(t * p.rate); i >= 0 && out.length < max; i--) {
+  for (let i = Math.min(Math.floor(t * p.rate), (p.limit ?? Infinity) - 1); i >= 0 && out.length < max; i--) {
     const age = t - i / p.rate
     if (age >= p.fallTime) break
     const s = age / p.fallTime

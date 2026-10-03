@@ -22,7 +22,8 @@ export function ExDividendStage({ outcome }: { outcome: ExDivOutcome; quality?: 
   const st = exDivTimeline(phase, outcome)
   const edge = BASE_EDGE * Math.cbrt(st.blockValue / 100)
   const look = lookFor(universe.get('2330')!)
-  const paying = phase >= 0.5 && phase < 0.62
+  // 一次性：越過配發點就掉出 round(cash) 枚金幣，掉完就停；往回拉到配發前再越過才會重播
+  const paying = phase >= 0.5
   return (
     <>
       <mesh position={atPlaza(-4, edge / 2, 0)} castShadow>
@@ -32,7 +33,7 @@ export function ExDividendStage({ outcome }: { outcome: ExDivOutcome; quality?: 
       <group position={atPlaza(3, 0, 0)} scale={COIN_SCALE}>
         <CoinPile count={Math.round(st.cash)} position={[0, 0, 0]} />
       </group>
-      {paying && <CoinDrip from={atPlaza(-4, edge, 0)} to={atPlaza(3, 0.3, 0)} rate={6} fallTime={0.8} size={COIN_SCALE} />}
+      {paying && <CoinDrip from={atPlaza(-4, edge, 0)} to={atPlaza(3, 0.3, 0)} rate={6} fallTime={0.8} size={COIN_SCALE} limit={Math.round(st.cash)} />}
       {ready && (
         <>
           <Html position={atPlaza(-4, -0.2, 3)} center style={labelStyle}>

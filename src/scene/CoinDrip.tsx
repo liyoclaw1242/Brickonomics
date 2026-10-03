@@ -4,7 +4,7 @@ import { type InstancedMesh, Object3D } from 'three'
 import type { Vec3 } from './camera'
 import { COIN_HEIGHT, COIN_RADIUS, coinPositions } from './layout/coins'
 
-type Props = { from: Vec3; to: Vec3; rate: number; fallTime?: number; arc?: number; active?: boolean; size?: number }
+type Props = { from: Vec3; to: Vec3; rate: number; fallTime?: number; arc?: number; active?: boolean; size?: number; limit?: number }
 
 export function CoinMaterial() {
   return <meshStandardMaterial color="#ffd54f" metalness={0.5} roughness={0.3} emissive="#7a5a00" emissiveIntensity={0.25} />
@@ -16,7 +16,7 @@ export function CoinDrip(props: Props) {
   return <CoinDripInner {...props} />
 }
 
-function CoinDripInner({ from, to, rate, fallTime = 1.2, arc = 1.5, active = true, size = 1 }: Props) {
+function CoinDripInner({ from, to, rate, fallTime = 1.2, arc = 1.5, active = true, size = 1, limit }: Props) {
   const max = Math.ceil(rate * fallTime) + 1
   const ref = useRef<InstancedMesh>(null)
   const t0 = useRef<number | null>(null)
@@ -25,7 +25,7 @@ function CoinDripInner({ from, to, rate, fallTime = 1.2, arc = 1.5, active = tru
     const mesh = ref.current
     if (!mesh) return
     if (t0.current === null) t0.current = clock.elapsedTime
-    const pts = active ? coinPositions(clock.elapsedTime - t0.current, { from, to, rate, fallTime, arc }, max) : []
+    const pts = active ? coinPositions(clock.elapsedTime - t0.current, { from, to, rate, fallTime, arc, limit }, max) : []
     for (let i = 0; i < max; i++) {
       const pt = pts[i]
       if (pt) {
