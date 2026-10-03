@@ -10,3 +10,5 @@ export const universe = parseUniverse([...stocks, ...buckets, ...etfs, ...funds]
 
 export type { Universe } from './universe'
 export type { Asset, AssetType } from './schema'
+export { isVerified } from './verified'
+export type { VerifiedKey } from './schema'

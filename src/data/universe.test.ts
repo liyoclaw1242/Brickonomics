@@ -80,4 +80,13 @@ describe('parseUniverse', () => {
     const errs = errorsOf([basket('E1', [{ id: 'E2', weightPct: 100 }]), basket('E2', [{ id: 'E1', weightPct: 100 }])])
     expect(errs.some((e) => e.startsWith('cycle:'))).toBe(true)
   })
+
+  it('accepts a positive marketCapUsdB and rejects a negative one', () => {
+    expect(() => parseUniverse([{ ...stock('A'), marketCapUsdB: 1200 }])).not.toThrow()
+    expect(errorsOf([{ ...stock('A'), marketCapUsdB: -1 }])[0]).toMatch(/^#0: marketCapUsdB/)
+  })
+
+  it('accepts the marketCap verified key', () => {
+    expect(() => parseUniverse([{ ...stock('A'), verified: { marketCap: true } }])).not.toThrow()
+  })
 })

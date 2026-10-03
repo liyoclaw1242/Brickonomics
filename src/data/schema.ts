@@ -31,6 +31,7 @@ export const VERIFIED_KEYS = [
   'distribution',
   'nameEn',
   'asOf',
+  'marketCap',
 ] as const
 
 export type VerifiedKey = (typeof VERIFIED_KEYS)[number]
@@ -58,6 +59,8 @@ export const AssetSchema = z
     type: z.enum(ASSET_TYPES),
     region: z.enum(['TW', 'US', 'GLOBAL']).optional(),
     sector: z.string().optional(),
+    /** 市值（十億美元）；只用於大樓高度（對數比例） */
+    marketCapUsdB: z.number().positive().optional(),
     domicile: z.enum(['onshore', 'offshore']).optional(),
     agent: z.string().optional(),
     holdings: z.array(HoldingSchema).optional(),
