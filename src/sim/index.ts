@@ -1,6 +1,6 @@
 export { allocateBlocks, type WeightInput, type BlockCount } from './allocate'
 export { exDividend, simulateDistribution, type DistributionParams, type PeriodState } from './dividend'
-export { profileFromFees, valueAfter, firstYearAhead, type FeeProfile, type TradingCost } from './fees'
+export { profileFromFees, valueAfter, firstYearAhead, type AnnualFee, type FeeProfile, type TradingCost } from './fees'
 export { flatten, type Exposure } from './holdings'
 export { overlap, type OverlapRow } from './overlap'
 export { shockImpact, type Shocks } from './scenario'

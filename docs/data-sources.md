@@ -9,7 +9,7 @@
 | SPY | expenseRatio | 0.0945% | 已驗證 | https://www.ssga.com/us/en/intermediary/etfs/spdr-sp-500-etf-trust-spy （SSGA 官網） | 2026-10-03 |
 | SPY | distribution.frequency | 季配 | 已驗證 | 同上（Distribution Frequency: Quarterly） | 2026-10-03 |
 | 0050 | asOf | 2026-08-01 | Yahoo 2026-08-01 資料；元大官方 2026-10-02 數字不同 | 權重為 Yahoo 持股頁 2026-08-01 資料；元大投信 2026-10-02 官網顯示 2330 約 56.31%，日後更新快照時改用元大官方數據 | 2026-10-03 |
-| 0050 | expenseRatio 0.14% | 0.14% | 沿用規格標記（本次未重新查證） | 元大官網頁面未顯示費率；沿用原標記 | 2026-10-03 |
+| 0050 | expenseRatio 0.14% | 0.14% | 本次未重新查證（verified: false） | 元大官網頁面未顯示費率；沿用原標記 | 2026-10-03 |
 | ALLIANZ_TAIWAN | expenseRatio | 1.75%（經理費 1.60% + 保管費 0.15%） | 未驗證（依 2018 公開說明書） | 簡式公開說明書 https://www.fundrich.com.tw/rpt/SmartManual/ALI005_S.pdf （刊印 2018-07-30）；2026-08 月報 https://tw.allianzgi.com/documents/mDDO01 （經理費 1.60%）。含交易稅的實際費用率 106 年度為 2.76%，最新年度總費用率查無 | 2026-10-03 |
 | ALLIANZ_TAIWAN | frontLoad | 4%（上限） | 未驗證（依 2018 公開說明書） | 同簡式公開說明書：申購手續費最高不得超過發行價格 4%；現行實收較低、確切數字查無 | 2026-10-03 |
 | ALLIANZ_TAIWAN | distribution | 無配息，僅累積 | 未驗證（依 2018 公開說明書） | 說明書「收益分配：無」；2026-08 月報只列 A 新臺幣類股 | 2026-10-03 |
@@ -23,7 +23,7 @@
 | SCHRODER_GLOBAL_INCOME_BOND | frontLoad（台灣） | — | 查無 | 台灣官網僅說明 A 級別為前收，未載明費率；香港月報的 3% 為香港通路，不採用 | 2026-10-03 |
 | SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD（U） | asOf | 2026-10-02 | 對齊主級別 | 持股與主級別（SCHRODER_GLOBAL_INCOME_BOND）相同；級別費用資料：2026-06-30 投資人通知 | 2026-10-03 |
 | SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD（U） | distribution.frequency | 月配 | 未驗證 | 月配推論自級別名稱『U 月配固定』，級別費用資料：2026-06-30 投資人通知 | 2026-10-03 |
-| SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD（U） | distributionFee、cdsc | 1.00%／年；3%、2%、1%（第 1、2、3 年），滿 3 年 0% | 已驗證（新增資產） | 施羅德環球基金系列投資人須知【第二部分】 https://api.schroders.com/document-store/SISF-FS-TWZH.pdf （2026-06-30 更新，系列通則）；永豐銀行後收型基金約定條款（2026.05）同為 3/2/1/0，施羅德 U 股；台灣有「環球收息債券(美元) U-月配固定」級別 | 2026-10-03 |
+| SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD（U） | distributionFee、cdsc | 1.00%／年；3%、2%、1%（第 1、2、3 年），滿 3 年 0%；滿 3 年後自動轉 A 級別，分銷費停止（distributionFeeYears: 3） | 已驗證（新增資產） | 施羅德環球基金系列投資人須知【第二部分】 https://api.schroders.com/document-store/SISF-FS-TWZH.pdf （2026-06-30 更新，系列通則）；永豐銀行後收型基金約定條款（2026.05）同為 3/2/1/0，施羅德 U 股；台灣有「環球收息債券(美元) U-月配固定」級別 | 2026-10-03 |
 | ALLIANZ_INCOME_GROWTH | 三大類對應 | 可轉債 32.0%、高收益債 30.4%、股票 31.9%、現金 5.7% | 已驗證 | 安聯 GI 新加坡 https://sg.allianzgi.com/documents/sg-allianz-income-and-growth-leaflet-en （2026-06-30），與快照 CONVERTIBLE_US 31.98／US_HIGH_YIELD 30.4／股票 31.91／CASH 5.71 一致 | 2026-10-03 |
 | ALLIANZ_INCOME_GROWTH | expenseRatio | 1.56% | 已驗證 | 同上（TER 1.56%，2026-06-30） | 2026-10-03 |
 | ALLIANZ_INCOME_GROWTH | frontLoad（台灣） | 3%（書面）／1.5%（網路） | 查無（資料過期，未採用） | https://tw.allianzgi.com/-/media/allianzgi/ap/taiwan/pdf/trading-info/offshore-rate.pdf 更新日 2021-01-20；新加坡版上限 5% 非台灣 | 2026-10-03 |

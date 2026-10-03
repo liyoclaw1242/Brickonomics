@@ -19,6 +19,7 @@ export type AssetType = (typeof ASSET_TYPES)[number]
 /**
  * 可標記查證狀態的欄位。`verified` 中缺少的 key 一律視為「未查證」。
  * 只有明確為 true 才可當成已查證事實呈現。
+ * 同時有細項 key（如 `fees.cdsc`）與總 key（`fees`）時，細項優先；沒有細項才看總 key；都沒有即未查證。
  */
 export const VERIFIED_KEYS = [
   'holdings',
