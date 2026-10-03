@@ -52,3 +52,5 @@
 | AMZN | marketCapUsdB | 2712 | 已驗證 | https://companiesmarketcap.com/（市值資料日 2026-10 初（companiesmarketcap.com 即時頁面，查證日 2026-10-03；頁面未標示確切時間）） | 2026-10-03 |
 | AVGO | marketCapUsdB | 1695 | 已驗證 | https://companiesmarketcap.com/（市值資料日 2026-10 初（companiesmarketcap.com 即時頁面，查證日 2026-10-03；頁面未標示確切時間）） | 2026-10-03 |
 | JPM | marketCapUsdB | 883.5 | 已驗證 | https://companiesmarketcap.com/（市值資料日 2026-10 初（companiesmarketcap.com 即時頁面，查證日 2026-10-03；頁面未標示確切時間）） | 2026-10-03 |
+| TW_TRADING | brokerFee（券商手續費） | 0.1425%（買、賣各收一次；實務常有折扣） | 已驗證（費率數字） | 財政部 台財證(二)字第10426號函（80-06-28）「按成交值千分之一．四二五計收」，登載於證交所法規知識庫 https://twse-regulation.twse.com.tw/TW/int/DAT01_print.aspx?FLCODE=FE064320 。註：該函釋已於 110-10-01 起不再作為裁罰依據，且為公告費率；是否為現行「法定上限」未能從官方條文確認，教學上僅稱公告費率 | 2026-10-03 |
+| TW_TRADING | etfSellCost（ETF 賣出交易成本） | 0.1%（僅賣出時） | 已驗證 | 證交所 ETF 專區「ETF 賣方課徵 0.1%」 https://www.twse.com.tw/zh/products/securities/etf/overview/rules.html ；證券交易稅條例第 2 條（其他經政府核准之有價證券千分之一）。債券型 ETF 依條例第 2-1 條目前停徵，本模擬的 0050 為股票型，不受影響 | 2026-10-03 |
