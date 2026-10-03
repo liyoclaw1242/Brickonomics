@@ -25,6 +25,12 @@ export function profileFromFees(fees: Asset['fees'], trading: TradingCost = { bu
   }
 }
 
+/**
+ * Calculates the value of an investment after applying all fees and growth.
+ * Selling at the end of year `years` uses `exitByYear[years - 1]`.
+ * Selling within the first year (years = 0) uses the year-1 rate `exitByYear[0]`.
+ * Beyond the schedule uses `exitDefault`.
+ */
 export function valueAfter(p: FeeProfile, years: number, opts: { amount?: number; grossReturn?: number } = {}): number {
   const amount = opts.amount ?? 100
   const growth = 1 + (opts.grossReturn ?? 0)

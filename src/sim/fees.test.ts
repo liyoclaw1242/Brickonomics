@@ -17,6 +17,11 @@ describe('valueAfter', () => {
     expect(valueAfter(back, 5)).toBeCloseTo(90.4382, 3) // CDSC 已歸零
   })
 
+  it('selling within the first year (years = 0) pays the year-1 CDSC', () => {
+    expect(valueAfter(back, 0)).toBeCloseTo(96, 6) // 100 * (1 - 0.04)
+    expect(valueAfter(front, 0)).toBeCloseTo(95, 6) // entry gate only
+  })
+
   it('applies gross return and amount', () => {
     expect(valueAfter({ entry: 0, annual: [], exitByYear: [], exitDefault: 0 }, 2, { amount: 1000, grossReturn: 0.1 })).toBeCloseTo(1210)
   })
