@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { currentStep, useTour } from '../store/tour'
+import { MAX_FRAME_DT } from './layout/voxels'
 import { approachVec, CAMERA_PRESETS, type Vec3 } from './camera'
 
 /** 導覽時把鏡頭移到步驟指定的位置；使用者一拖動就停止，不跟使用者搶控制權 */
@@ -34,7 +35,8 @@ export function CameraRig() {
     return () => controls.removeEventListener('start', stop)
   }, [controls])
 
-  useFrame((_, dt) => {
+  useFrame((_, rawDt) => {
+    const dt = Math.min(rawDt, MAX_FRAME_DT)
     if (!active.current || !controls) return
     const p = CAMERA_PRESETS[presetId]
     const a = approachVec(camera.position.toArray() as Vec3, p.position, dt)

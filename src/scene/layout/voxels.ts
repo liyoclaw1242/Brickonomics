@@ -74,6 +74,9 @@ export function cutPlanePosition(cut: CutSpec, w: number, d: number): number {
   return cut.threshold
 }
 
+/** demand 模式閒置後第一幀的 dt 可能是數秒；呼叫端用它夾住，避免動畫瞬間跳到終點 */
+export const MAX_FRAME_DT = 1 / 30
+
 /** 指數趨近，用於動畫；dt 秒 */
 export function approach(current: number, target: number, dt: number, rate = 8): number {
   return current + (target - current) * (1 - Math.exp(-rate * dt))

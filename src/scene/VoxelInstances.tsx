@@ -5,7 +5,7 @@ import type { BlockLook, MaterialKind } from './palette'
 import { BlockMaterial } from './materials'
 import type { Quality } from './quality'
 import { useLongPress } from './useLongPress'
-import { approach, explodeOffsetY, isHidden, voxelPosition, VOXEL_SCALE, type CutSpec, type Voxel } from './layout/voxels'
+import { approach, explodeOffsetY, MAX_FRAME_DT, isHidden, voxelPosition, VOXEL_SCALE, type CutSpec, type Voxel } from './layout/voxels'
 
 type Props = {
   voxels: Voxel[]
@@ -81,7 +81,7 @@ function KindMesh({ kind, voxels, looks, w, d, explode, cut, highlightGroup, qua
     if (!mesh) return
     const a = anim.current
     if (!a.dirty && Math.abs(explode - a.explode) < 1e-3) return
-    const next = approach(a.explode, explode, dt)
+    const next = approach(a.explode, explode, Math.min(dt, MAX_FRAME_DT))
     a.explode = Math.abs(next - explode) < 1e-3 ? explode : next
     a.dirty = false
     voxels.forEach((v, i) => {

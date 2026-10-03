@@ -5,7 +5,7 @@ import type { Mesh } from 'three'
 import { universe } from '../../data'
 import type { HeldItem } from '../../tour/types'
 import { T } from '../../ui/strings'
-import { approach } from '../layout/voxels'
+import { approach, MAX_FRAME_DT } from '../layout/voxels'
 import { labelStyle } from '../labelStyle'
 import { lookFor } from '../palette'
 import { useContinuousRender } from '../useContinuousRender'
@@ -25,7 +25,7 @@ function HeldBlock({ item, x }: { item: HeldItem; x: number }) {
   useFrame(({ clock }, dt) => {
     const m = ref.current
     if (!m) return
-    const s = approach(m.scale.x, TARGET_SCALE[item.motion], dt, 3)
+    const s = approach(m.scale.x, TARGET_SCALE[item.motion], Math.min(dt, MAX_FRAME_DT), 3)
     m.scale.setScalar(s)
     const amp = item.motion === 'shake' ? (item.amplitude ?? 0.15) : 0
     const t = clock.elapsedTime
