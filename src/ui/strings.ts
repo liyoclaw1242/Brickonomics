@@ -50,13 +50,13 @@ export const T = {
     exdiv: { block: '方塊', coins: '金幣' },
     illustrativeTag: '（示意）',
   },
-  towers: { lost: '被費用吃掉', value: (v: number) => `${v.toFixed(1)} 元` },
+  towers: { lost: '被費用吃掉', coins: '領到的金幣', base: '以投入 100 元計', value: (v: number) => `${v.toFixed(1)} 元` },
   feeRows: {
     front: (fl: number) => `前收型（假設 ${(fl * 100).toFixed(2)}%）`,
     back: '後收型（U 級別）',
     etf: 'ETF（0050）',
   },
-  accumulateRows: { accumulate: '累積型', payout: '配息型' },
+  accumulateRows: { accumulate: '累積型（示意）', payout: '配息型（示意）' },
   trapRow: '示意高配息基金',
   excavator: '經理人（怪手）',
   feeMeter: {

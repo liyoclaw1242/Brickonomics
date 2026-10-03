@@ -10,7 +10,7 @@ import { VoxelColumn } from './VoxelColumn'
 
 export type TowerSpec = { key: string; label: string; value: number; lost?: number; coins?: number; color: string; unverified?: boolean }
 
-const SPACING = 14
+const SPACING = 12
 const LOST = { color: '#e53935', kind: 'matte' as const }
 
 /** 一排方塊塔：塔＝剩下的價值；紅色小堆＝被費用吃掉；金幣堆＝領到的錢（皆 2 元一顆） */
@@ -19,18 +19,39 @@ export function TowerRow({ towers, quality }: { towers: TowerSpec[]; quality: Qu
   const start = -((towers.length - 1) * SPACING) / 2
   return (
     <>
+      {ready && (
+        <Html position={atPlaza(0, -0.2, 11.4)} center style={labelStyle}>
+          {T.towers.base}
+        </Html>
+      )}
       {towers.map((t, i) => {
         const x = start + i * SPACING
         return (
           <group key={t.key}>
             <VoxelColumn count={blocksFor(t.value)} look={{ color: t.color, kind: 'matte' }} position={atPlaza(x, 0, 0)} quality={quality} />
             {t.lost !== undefined && t.lost > 0 && (
-              <VoxelColumn count={blocksFor(t.lost)} look={LOST} position={atPlaza(x + 4.5, 0, 0)} w={3} d={3} quality={quality} />
+              <>
+                <VoxelColumn count={blocksFor(t.lost)} look={LOST} position={atPlaza(x + 3, 0, 5.5)} w={3} d={3} quality={quality} />
+                {ready && (
+                  <Html position={atPlaza(x + 3, -0.2, 7.6)} center style={labelStyle}>
+                    {T.towers.lost}
+                  </Html>
+                )}
+              </>
             )}
-            {t.coins !== undefined && <CoinPile count={blocksFor(t.coins)} position={atPlaza(x - 5.5, 0, 0)} />}
+            {t.coins !== undefined && (
+              <>
+                <CoinPile count={blocksFor(t.coins)} position={atPlaza(x - 3, 0, 5.5)} />
+                {ready && blocksFor(t.coins) > 0 && (
+                  <Html position={atPlaza(x - 3, -0.2, 7.6)} center style={labelStyle}>
+                    {T.towers.coins}
+                  </Html>
+                )}
+              </>
+            )}
             {ready && (
-              <Html position={atPlaza(x, -0.2, 4.2)} center style={labelStyle}>
-                {t.label}：{T.towers.value(t.value)}
+              <Html position={atPlaza(x, -0.2, 9.4)} center style={labelStyle}>
+                {t.label}：{T.towers.value(t.value)} {t.unverified && <span className="badge">{T.unverified}</span>}
               </Html>
             )}
           </group>

@@ -16,6 +16,7 @@ export function FeeMeter() {
   const ready = useAfterFirstTick()
   const [elapsed, setElapsed] = useState(0)
   useEffect(() => {
+    setElapsed(0)
     const start = performance.now()
     const id = setInterval(() => setElapsed((performance.now() - start) / 1000), 200)
     return () => clearInterval(id)
