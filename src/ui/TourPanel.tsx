@@ -53,12 +53,12 @@ export function TourPanel() {
         </table>
       )}
       {step.controls && <StageControls controls={step.controls} />}
-      {!ok && <p className="hint">{T.tryIt}</p>}
+      {!ok && <p className="hint" id="tour-hint">{T.tryIt}</p>}
       <div className="tour__nav">
         <button onClick={prev} disabled={pos.level === 0 && pos.step === 0}>
           {T.prev}
         </button>
-        <button className="primary" onClick={next} disabled={!ok}>
+        <button className="primary" onClick={next} disabled={!ok} aria-describedby={ok ? undefined : 'tour-hint'}>
           {isLast ? T.finish : T.next}
         </button>
       </div>
