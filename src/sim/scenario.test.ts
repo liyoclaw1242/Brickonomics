@@ -19,4 +19,11 @@ describe('shockImpact', () => {
     // SPY: NVDA 8.45% * -0.2 + TSLA 1.51% * -0.5 = -0.0169 - 0.00755
     expect(shockImpact(universe, 'SPY', { NVDA: -0.2, TSLA: -0.5, '2330': -0.9 })).toBeCloseTo(-0.02445, 5)
   })
+
+  it('rejects shocks that are not finite or below -1', () => {
+    expect(() => shockImpact(universe, 'SPY', { NVDA: -1.5 })).toThrow(RangeError)
+    expect(() => shockImpact(universe, 'SPY', { NVDA: -1.5 })).toThrow(/shocks\[NVDA\]/)
+    expect(() => shockImpact(universe, 'SPY', { NVDA: NaN })).toThrow(/shocks\[NVDA\]/)
+    expect(() => shockImpact(universe, 'SPY', { NVDA: -1 })).not.toThrow()
+  })
 })

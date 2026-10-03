@@ -34,4 +34,13 @@ describe('allocateBlocks', () => {
     expect(() => allocateBlocks([{ id: 'a', weight: -1 }], 10)).toThrow()
     expect(() => allocateBlocks([{ id: 'a', weight: 1 }], 2.5)).toThrow()
   })
+
+  it('rejects invalid parameters with RangeError naming the parameter', () => {
+    expect(() => allocateBlocks([{ id: 'a', weight: 1 }], -1)).toThrow(RangeError)
+    expect(() => allocateBlocks([{ id: 'a', weight: 1 }], 2.5)).toThrow(/total/)
+    expect(() => allocateBlocks([{ id: 'a', weight: Infinity }], 10)).toThrow(RangeError)
+    expect(() => allocateBlocks([{ id: 'a', weight: Infinity }], 10)).toThrow(/weights\[a\]/)
+    expect(() => allocateBlocks([{ id: 'a', weight: NaN }], 10)).toThrow(/weights\[a\]/)
+    expect(() => allocateBlocks([{ id: 'a', weight: -1 }], 10)).toThrow(/weights\[a\]/)
+  })
 })

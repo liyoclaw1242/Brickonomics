@@ -3,7 +3,7 @@ import { parseUniverse } from '../data/universe'
 import { universe } from '../data'
 import { overlap } from './overlap'
 
-const s = (id: string, type = 'stock') => ({ id, name: id, type, asOf: '2026-10-01', source: [] })
+const s = (id: string, type = 'stock', aggregate?: boolean) => ({ id, name: id, type, aggregate, asOf: '2026-10-01', source: [] })
 const e = (id: string, holdings: { id: string; weightPct: number }[]) => ({
   id, name: id, type: 'etf', holdings, asOf: '2026-10-01', source: ['x'],
 })
@@ -13,7 +13,7 @@ describe('overlap', () => {
     s('X'),
     s('Y'),
     s('Z'),
-    s('O', 'other'),
+    s('O', 'other', true),
     e('P', [{ id: 'X', weightPct: 10 }, { id: 'Y', weightPct: 5 }, { id: 'O', weightPct: 85 }]),
     e('Q', [{ id: 'X', weightPct: 8 }, { id: 'Z', weightPct: 2 }, { id: 'O', weightPct: 90 }]),
   ])
@@ -31,6 +31,6 @@ describe('overlap', () => {
   it('finds NVDA shared by QQQ and SPY in the real snapshot', () => {
     const r = overlap(universe, 'QQQ', 'SPY')
     expect(r.rows.map((x) => x.id)).toEqual(['NVDA', 'AAPL', 'MSFT', 'TSLA'])
-    expect(r.rows[0]?.shared).toBeCloseTo(0.0833)
+    expect(r.rows[0]?.shared).toBeCloseTo(0.0833, 4)
   })
 })

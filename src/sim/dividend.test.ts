@@ -12,6 +12,16 @@ describe('exDividend', () => {
     expect(() => exDividend(100, -1)).toThrow()
     expect(() => exDividend(100, 101)).toThrow()
   })
+
+  it('rejects invalid parameters with RangeError naming the parameter', () => {
+    expect(() => exDividend(0, 0)).toThrow(/price/)
+    expect(() => exDividend(NaN, 1)).toThrow(RangeError)
+    expect(() => exDividend(Infinity, 1)).toThrow(/price/)
+    expect(() => exDividend(100, -1)).toThrow(RangeError)
+    expect(() => exDividend(100, -1)).toThrow(/dividend/)
+    expect(() => exDividend(100, NaN)).toThrow(/dividend/)
+    expect(() => exDividend(100, 101)).toThrow(/dividend/)
+  })
 })
 
 describe('simulateDistribution', () => {
@@ -42,5 +52,26 @@ describe('simulateDistribution', () => {
     expect(s[1]?.value).toBeCloseTo(97)
     expect(s[1]?.cashReceived).toBeCloseTo(6)
     expect(s[1]?.fromPrincipal).toBeCloseTo(3)
+  })
+
+  it('rejects invalid parameters with RangeError naming the parameter', () => {
+    const run = (o: object) => () => simulateDistribution({ ...base, payoutRate: 0.05, mode: 'payout', ...o })
+    expect(run({ initialValue: -1 })).toThrow(/initialValue/)
+    expect(run({ initialValue: NaN })).toThrow(RangeError)
+    expect(run({ incomeYield: 1 })).toThrow(/incomeYield/)
+    expect(run({ incomeYield: -0.1 })).toThrow(RangeError)
+    expect(run({ priceReturn: -1 })).toThrow(/priceReturn/)
+    expect(run({ priceReturn: NaN })).toThrow(RangeError)
+    expect(run({ payoutRate: 1.5 })).toThrow(/payoutRate/)
+    expect(run({ payoutRate: Infinity })).toThrow(RangeError)
+    expect(run({ periods: 1.5 })).toThrow(/periods/)
+    expect(run({ periods: -1 })).toThrow(RangeError)
+  })
+
+  it('throws when a payout would make the value negative', () => {
+    // value 100, priceReturn -0.9, income 0, payout 0.95 -> 100 * 0.1 - 95 = -85 < 0
+    const bad = () => simulateDistribution({ initialValue: 100, incomeYield: 0, priceReturn: -0.9, payoutRate: 0.95, periods: 1, mode: 'payout' })
+    expect(bad).toThrow(RangeError)
+    expect(bad).toThrow(/payoutRate/)
   })
 })
