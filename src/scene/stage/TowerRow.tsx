@@ -20,7 +20,7 @@ export function TowerRow({ towers, quality }: { towers: TowerSpec[]; quality: Qu
   return (
     <>
       {ready && (
-        <Html position={atPlaza(0, -0.2, 11.4)} center style={labelStyle}>
+        <Html position={atPlaza(0, -0.2, 14)} center style={labelStyle}>
           {T.towers.base}
         </Html>
       )}
@@ -33,7 +33,7 @@ export function TowerRow({ towers, quality }: { towers: TowerSpec[]; quality: Qu
               <>
                 <VoxelColumn count={blocksFor(t.lost)} look={LOST} position={atPlaza(x + 3, 0, 5.5)} w={3} d={3} quality={quality} />
                 {ready && (
-                  <Html position={atPlaza(x + 3, -0.2, 7.6)} center style={labelStyle}>
+                  <Html position={atPlaza(x + 3, -0.2, 7.2)} center style={labelStyle}>
                     {T.towers.lost}
                   </Html>
                 )}
@@ -43,14 +43,14 @@ export function TowerRow({ towers, quality }: { towers: TowerSpec[]; quality: Qu
               <>
                 <CoinPile count={blocksFor(t.coins)} position={atPlaza(x - 3, 0, 5.5)} />
                 {ready && blocksFor(t.coins) > 0 && (
-                  <Html position={atPlaza(x - 3, -0.2, 7.6)} center style={labelStyle}>
+                  <Html position={atPlaza(x - 3, -0.2, 7.2)} center style={labelStyle}>
                     {T.towers.coins}
                   </Html>
                 )}
               </>
             )}
             {ready && (
-              <Html position={atPlaza(x, -0.2, 9.4)} center style={labelStyle}>
+              <Html position={atPlaza(x, -0.2, 11)} center style={labelStyle}>
                 {t.label}：{T.towers.value(t.value)} {t.unverified && <span className="badge">{T.unverified}</span>}
               </Html>
             )}

@@ -118,3 +118,16 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .readout td { text-align: right; font-variant-numeric: tabular-nums; padding: 4px 0; }
 .readout tr + tr { border-top: 1px solid var(--border); }
 .readout__note { display: block; font-size: 11px; color: var(--muted); font-weight: 400; }
+
+@media (max-width: 720px) {
+  .tour__text { margin: 8px 0; font-size: 14px; line-height: 1.65; }
+  .readout { margin: 4px 0; }
+  /* 手機抽屜：控制項放在即時數字之前，拉桿不必捲動就能碰到 */
+  .panel.tour { display: flex; flex-direction: column; }
+  .panel.tour > * { flex-shrink: 0; }
+  .panel.tour > .readout { order: 2; }
+  .panel.tour > .tour__nav { order: 3; }
+  .panel.tour > .link { order: 4; }
+  .readout th, .readout td { padding: 2px 0; }
+  .tour__nav { position: sticky; bottom: -14px; margin: 8px -16px -14px; padding: 8px 16px 14px; background: var(--surface); }
+}

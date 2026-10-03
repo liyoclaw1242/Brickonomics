@@ -27,7 +27,7 @@ export function PriceTicker() {
   const color = p > prev ? '#c62828' : p < prev ? '#2e7d32' : 'inherit'
   const [x, , z] = EXCHANGE_POSITION
   return (
-    <Html position={[x, 13, z]} center style={{ ...labelStyle, fontSize: 14, textAlign: 'center', lineHeight: 1.6 }}>
+    <Html position={[x, 13, z]} center style={{ ...labelStyle, fontSize: 14, maxWidth: 'none', lineHeight: 1.6 }}>
       {T.ticker.etf} <strong style={{ color }}>{p.toFixed(2)}</strong>
       <br />
       <small>{T.ticker.fund}</small>
