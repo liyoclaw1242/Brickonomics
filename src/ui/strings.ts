@@ -98,6 +98,7 @@ export const T = {
   fallbackIntro: '你的瀏覽器無法顯示 3D 畫面，以下是文字版課程。課文中提到的 3D 畫面與互動（拖曳、切開、拉桿）在文字版中省略，只保留文字與當下的數字。',
   underground: {
     goldVein: '黃金礦脈',
+    rodLegend: '細桿：快照只列出前幾大持股，這一層沒有列到，不代表完全沒有',
     unclassifiedStub: (pct: number) => `未細分 ${pct.toFixed(0)}%`,
     dig: '產業型 ETF（示意）',
     veins: '高股息型 ETF（示意）',

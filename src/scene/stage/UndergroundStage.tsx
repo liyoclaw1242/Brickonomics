@@ -18,7 +18,8 @@ const DEPTH = 30
 const FRONT_Z = CENTER_Z + DEPTH / 2
 const SOIL = new Color('#5d4037')
 const UNCLASSIFIED = '#cfd8dc'
-const ROD = '#37474f'
+const ROD = '#78909c'
+const ROD_OPACITY = 0.35
 const STUB_RADIUS = 1.3
 const CORE_Z = FRONT_Z + 2
 const LABEL_X = -24
@@ -74,7 +75,11 @@ export function UndergroundStage({ show, cores, quality }: { show: Show; cores?:
               <mesh key={d.sector} position={[c.x, (d.top + d.bottom) / 2, CORE_Z]}>
                 <cylinderGeometry args={[d.radius, d.radius, d.top - d.bottom, 32]} />
                 {/* 該產業 0%：細桿用中性深色，避免被讀成「有一點點」 */}
-                <BlockMaterial kind="matte" quality={quality} color={d.radius <= CORE_R_MIN ? ROD : colorOf(d.sector)} />
+                {d.radius <= CORE_R_MIN ? (
+                  <meshStandardMaterial color={ROD} roughness={0.8} metalness={0} transparent opacity={ROD_OPACITY} depthWrite={false} />
+                ) : (
+                  <BlockMaterial kind="matte" quality={quality} color={colorOf(d.sector)} />
+                )}
               </mesh>
             ))}
             {c.stub.height > 0 && (
@@ -131,6 +136,11 @@ export function UndergroundStage({ show, cores, quality }: { show: Show; cores?:
                 )}
               </group>
             ))}
+          {show === 'cores' && (
+            <Html position={[0, GROUND_TOP - 17, CORE_Z]} center style={labelStyle}>
+              {T.underground.rodLegend}
+            </Html>
+          )}
           {show === 'dig' && (
             <Html position={[0, digY + 1.4, 41]} center style={labelStyle}>
               {T.underground.dig}

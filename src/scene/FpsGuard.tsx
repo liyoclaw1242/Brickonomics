@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useQuality } from '../store/quality'
-import { isContinuous } from './continuous'
+import { idleEpoch, isContinuous, shouldSample, type FrameMark } from './continuous'
 import { FpsSampler } from './fps'
 import { useAfterFirstTick } from './useAfterFirstTick'
 
@@ -12,17 +12,17 @@ export function FpsGuard() {
   const mounted = useAfterFirstTick()
   const [settled, setSettled] = useState(false)
   const sampler = useRef(new FpsSampler())
-  const prevContinuous = useRef(false)
+  const prev = useRef<FrameMark>({ continuous: false, epoch: idleEpoch() })
   useEffect(() => {
     if (!mounted) return
     const t = setTimeout(() => setSettled(true), SETTLE_MS)
     return () => clearTimeout(t)
   }, [mounted])
   useFrame((_, dt) => {
-    const wasContinuous = prevContinuous.current
-    prevContinuous.current = isContinuous()
+    const sample = shouldSample(prev.current, idleEpoch())
+    prev.current = { continuous: isContinuous(), epoch: idleEpoch() }
     if (!settled) return
-    if (!wasContinuous) {
+    if (!sample) {
       sampler.current.reset()
       return
     }
