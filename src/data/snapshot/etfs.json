@@ -1,0 +1,49 @@
+[
+  {
+    "id": "0050", "name": "元大台灣50", "type": "etf", "region": "TW",
+    "holdings": [
+      { "id": "2330", "weightPct": 57.35 },
+      { "id": "2454", "weightPct": 5.64 },
+      { "id": "2308", "weightPct": 3.47 },
+      { "id": "2317", "weightPct": 2.98 },
+      { "id": "OTHER_TW_STOCK", "weightPct": 30.56 }
+    ],
+    "fees": { "expenseRatio": 0.0014 },
+    "distribution": { "frequency": "semiannual", "classes": ["distributing"] },
+    "asOf": "2026-09-26",
+    "source": ["Yahoo奇摩股市 0050 持股頁（2026-09-26）"],
+    "verified": { "holdings": true, "fees": true, "distribution": true },
+    "notes": "費用為經理費約 0.11% + 保管費 0.03%（級距制，2025-01 起）"
+  },
+  {
+    "id": "QQQ", "name": "Invesco QQQ", "nameEn": "Invesco QQQ Trust", "type": "etf", "region": "US",
+    "holdings": [
+      { "id": "NVDA", "weightPct": 8.33 },
+      { "id": "AAPL", "weightPct": 7.35 },
+      { "id": "MSFT", "weightPct": 5.76 },
+      { "id": "MU", "weightPct": 5.02 },
+      { "id": "TSLA", "weightPct": 2.82 },
+      { "id": "OTHER_US_STOCK", "weightPct": 70.72 }
+    ],
+    "fees": { "expenseRatio": 0.002 },
+    "distribution": { "frequency": "quarterly", "classes": ["distributing"] },
+    "asOf": "2026-09-30",
+    "source": ["https://stockanalysis.com/etf/qqq/holdings/"],
+    "verified": { "holdings": true, "fees": false, "distribution": false }
+  },
+  {
+    "id": "SPY", "name": "SPDR 標普500", "nameEn": "SPDR S&P 500 ETF Trust", "type": "etf", "region": "US",
+    "holdings": [
+      { "id": "NVDA", "weightPct": 8.45 },
+      { "id": "AAPL", "weightPct": 7.3 },
+      { "id": "MSFT", "weightPct": 5.76 },
+      { "id": "TSLA", "weightPct": 1.51 },
+      { "id": "OTHER_US_STOCK", "weightPct": 76.98 }
+    ],
+    "fees": { "expenseRatio": 0.000945 },
+    "distribution": { "frequency": "quarterly", "classes": ["distributing"] },
+    "asOf": "2026-10-01",
+    "source": ["https://stockanalysis.com/etf/spy/holdings/", "https://www.ssga.com/us/en/intermediary/etfs/spdr-sp-500-etf-trust-spy"],
+    "verified": { "holdings": true, "fees": true, "distribution": false }
+  }
+]

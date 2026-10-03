@@ -1,0 +1,11 @@
+[
+  { "id": "OTHER_TW_STOCK", "name": "其他台股", "type": "other", "region": "TW", "asOf": "2026-10-03", "source": [] },
+  { "id": "OTHER_US_STOCK", "name": "其他美股", "type": "other", "region": "US", "asOf": "2026-10-03", "source": [] },
+  { "id": "CASH", "name": "現金", "type": "cash", "asOf": "2026-10-03", "source": [] },
+  { "id": "US_TREASURY", "name": "美國公債", "type": "govBond", "region": "US", "asOf": "2026-10-03", "source": [] },
+  { "id": "BOND_MIXED_US", "name": "其他債券（未細分）", "type": "bondMixed", "region": "US", "asOf": "2026-10-03", "source": [] },
+  { "id": "GLOBAL_BOND_MIXED", "name": "全球債券（未細分）", "type": "bondMixed", "region": "GLOBAL", "asOf": "2026-10-03", "source": [] },
+  { "id": "CONVERTIBLE_US", "name": "美國可轉債", "type": "convertible", "region": "US", "asOf": "2026-10-03", "source": [] },
+  { "id": "US_HIGH_YIELD", "name": "美國高收益債", "type": "highYieldBond", "region": "US", "asOf": "2026-10-03", "source": [] },
+  { "id": "GOLD", "name": "黃金", "type": "gold", "region": "GLOBAL", "asOf": "2026-10-03", "source": [] }
+]

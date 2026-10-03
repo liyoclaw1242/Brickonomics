@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "prebuild": "vitest run src/data",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",

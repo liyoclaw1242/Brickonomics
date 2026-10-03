@@ -1,0 +1,87 @@
+[
+  {
+    "id": "ALLIANZ_TAIWAN", "name": "安聯台灣大壩基金", "nameEn": "Allianz Global Investors Taiwan Fund",
+    "type": "fund", "region": "TW", "domicile": "onshore", "agent": "安聯投信",
+    "holdings": [
+      { "id": "6223", "weightPct": 8.65 },
+      { "id": "3017", "weightPct": 6.44 },
+      { "id": "2330", "weightPct": 4.87 },
+      { "id": "5274", "weightPct": 4.77 },
+      { "id": "3037", "weightPct": 4.62 },
+      { "id": "8046", "weightPct": 4.11 },
+      { "id": "6669", "weightPct": 3.71 },
+      { "id": "3443", "weightPct": 3.56 },
+      { "id": "6274", "weightPct": 3.55 },
+      { "id": "3189", "weightPct": 3.52 },
+      { "id": "OTHER_TW_STOCK", "weightPct": 46.66 },
+      { "id": "CASH", "weightPct": 5.54 }
+    ],
+    "fees": { "expenseRatio": 0.016 },
+    "distribution": { "frequency": "none", "classes": ["accumulating"] },
+    "asOf": "2026-08-31",
+    "source": ["https://tw.allianzgi.com/documents/mDDO01"],
+    "verified": { "holdings": true, "fees": false, "distribution": false },
+    "notes": "expenseRatio 目前只有經理費 1.60%，不是總費用率；配息級別未查到"
+  },
+  {
+    "id": "JH_BALANCED", "name": "駿利亨德森平衡基金", "nameEn": "Janus Henderson Balanced Fund",
+    "type": "fund", "region": "US", "domicile": "offshore", "agent": "野村投信（總代理）",
+    "holdings": [
+      { "id": "NVDA", "weightPct": 5.86 },
+      { "id": "MSFT", "weightPct": 4.46 },
+      { "id": "GOOGL", "weightPct": 4.11 },
+      { "id": "AMZN", "weightPct": 3.01 },
+      { "id": "AAPL", "weightPct": 2.98 },
+      { "id": "AVGO", "weightPct": 2.19 },
+      { "id": "MU", "weightPct": 1.69 },
+      { "id": "JPM", "weightPct": 1.46 },
+      { "id": "OTHER_US_STOCK", "weightPct": 38.39 },
+      { "id": "US_TREASURY", "weightPct": 4.19 },
+      { "id": "BOND_MIXED_US", "weightPct": 30.36 },
+      { "id": "CASH", "weightPct": 1.3 }
+    ],
+    "fees": { "expenseRatio": 0.0188 },
+    "distribution": { "frequency": "monthly", "classes": ["accumulating", "distributing"] },
+    "asOf": "2026-08-31",
+    "source": [
+      "https://www.janushenderson.com/en-sg/investor/product/janus-henderson-balanced-fund/",
+      "https://www.janushenderson.com/en-us/investor/product/balanced-fund/",
+      "https://tw.stock.yahoo.com/fund/holdings/F00001F7IJ:FO"
+    ],
+    "verified": { "holdings": false, "fees": true, "distribution": true },
+    "notes": "股債比例（股 64.15／債 34.55／現金 1.30）暫用美國版 JANBX 代替；US_TREASURY 只計前十大中的單一公債，其餘債券併入 BOND_MIXED_US。級別：A2 累積、A5／A6 月配"
+  },
+  {
+    "id": "SCHRODER_GLOBAL_INCOME_BOND", "name": "施羅德環球基金系列－環球收息債券",
+    "type": "fund", "region": "GLOBAL", "domicile": "offshore", "agent": "施羅德投信（總代理）",
+    "holdings": [{ "id": "GLOBAL_BOND_MIXED", "weightPct": 100 }],
+    "fees": { "expenseRatio": 0.011 },
+    "distribution": { "frequency": "monthly", "classes": ["accumulating", "distributing"] },
+    "asOf": "2026-10-02",
+    "source": ["https://tw.stock.yahoo.com/fund/basic-info/F00000Y90J:FO"],
+    "verified": { "holdings": false, "fees": false, "distribution": true, "nameEn": false },
+    "notes": "前十大以公債期貨與交換合約為主，畫面只呈現資產類別；公債與公司債、投資等級與非投資等級的拆分待查。expenseRatio 目前只有經理費"
+  },
+  {
+    "id": "ALLIANZ_INCOME_GROWTH", "name": "安聯收益成長基金", "nameEn": "Allianz Income and Growth",
+    "type": "fund", "region": "US", "domicile": "offshore", "agent": "安聯投信（總代理）",
+    "holdings": [
+      { "id": "NVDA", "weightPct": 2.81 },
+      { "id": "AAPL", "weightPct": 2.44 },
+      { "id": "GOOGL", "weightPct": 2.53 },
+      { "id": "AMZN", "weightPct": 1.49 },
+      { "id": "MU", "weightPct": 1.1 },
+      { "id": "AVGO", "weightPct": 0.97 },
+      { "id": "OTHER_US_STOCK", "weightPct": 20.57 },
+      { "id": "CONVERTIBLE_US", "weightPct": 31.98 },
+      { "id": "US_HIGH_YIELD", "weightPct": 30.4 },
+      { "id": "CASH", "weightPct": 5.71 }
+    ],
+    "fees": { "expenseRatio": 0.0156 },
+    "distribution": { "frequency": "monthly", "classes": ["accumulating", "distributing"] },
+    "asOf": "2026-06-30",
+    "source": ["https://dokumenty.analizy.pl/pobierz/fzg/AGI026_A_USD/KA/2026-06-30"],
+    "verified": { "holdings": false, "fees": true, "distribution": true },
+    "notes": "三大類約 31.98／31.91／30.40%，來源圖表標籤不清，暫定為可轉債／股票／高收益債；GOOGL 合併兩檔 Alphabet 證券（1.36 + 1.17）"
+  }
+]
