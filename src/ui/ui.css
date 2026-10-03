@@ -119,6 +119,16 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .readout tr + tr { border-top: 1px solid var(--border); }
 .readout__note { display: block; font-size: 11px; color: var(--muted); font-weight: 400; }
 
+.notice {
+  position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
+  display: flex; gap: 10px; align-items: center; padding: 8px 14px; border-radius: 12px;
+  background: var(--surface); border: 1px solid var(--border); font-size: 13px; z-index: 5;
+}
+
+@media (max-width: 720px) {
+  .notice { bottom: auto; top: 56px; }
+}
+
 @media (max-width: 720px) {
   .tour__text { margin: 8px 0; font-size: 14px; line-height: 1.65; }
   .readout { margin: 4px 0; }

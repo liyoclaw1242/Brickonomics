@@ -3,7 +3,9 @@ import { createRoot } from 'react-dom/client'
 import App from './App'
 import { universe } from './data'
 import { isBasket } from './data/schema'
+import { detectQuality, readEnv } from './scene/quality'
 import { parseSandboxQuery, useSandbox } from './store/sandbox'
+import { useQuality } from './store/quality'
 import { LEVELS } from './tour/levels'
 import { parseTourQuery } from './tour/engine'
 import { loadProgress, useTour } from './store/tour'
@@ -12,6 +14,7 @@ const baskets = new Set([...universe.values()].filter(isBasket).map((a) => a.id)
 
 const progress = loadProgress()
 useTour.setState({ progress })
+useQuality.getState().setQuality(detectQuality(readEnv()))
 const tq = parseTourQuery(window.location.search, LEVELS)
 if (tq.mode === 'sandbox' || (!tq.pos && progress.sandboxUnlocked)) {
   useTour.setState({ mode: 'sandbox' })
@@ -21,6 +24,7 @@ if (tq.mode === 'sandbox' || (!tq.pos && progress.sandboxUnlocked)) {
 }
 if (import.meta.env.DEV) {
   ;(window as unknown as { __BCI_STEPS__: number[] }).__BCI_STEPS__ = LEVELS.map((l) => l.steps.length)
+  ;(window as unknown as { __BCI_DEGRADE__?: () => void }).__BCI_DEGRADE__ = () => useQuality.getState().degrade()
 }
 
 createRoot(document.getElementById('root')!).render(

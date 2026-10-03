@@ -92,4 +92,6 @@ export const T = {
     unverifiedParts: (parts: string) => `待驗證：${parts}`,
   },
   feeParts: { expenseRatio: '內扣費用', distributionFee: '分銷費', cdsc: '遞延手續費', trading: '交易成本' },
+  qualityNotice: '畫面有點卡，已自動切換成省電畫質。',
+  dismiss: '知道了',
 } as const
