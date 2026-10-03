@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useLayoutEffect, useMemo, useRef } from 'react'
 import type { ThreeEvent } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import { Color, type InstancedMesh, Object3D } from 'three'
@@ -7,6 +7,7 @@ import { useSandbox } from '../store/sandbox'
 import { T } from '../ui/strings'
 import { lookFor } from './palette'
 import { VOXEL_SCALE } from './layout/voxels'
+import { useAfterFirstTick } from './useAfterFirstTick'
 import { buildingVoxels, cityLayout, islandSize, ISLAND_CENTERS, type Region } from './layout/city'
 
 const ISLAND_COLORS: Record<Region, string> = { TW: '#a5d6a7', US: '#e6d3a3' }
@@ -28,12 +29,7 @@ export function City() {
   const voxels = useMemo(() => buildingVoxels(placements), [placements])
   const ref = useRef<InstancedMesh>(null)
   const pick = useSandbox((s) => s.pick)
-  // drei Html 與 StrictMode 的掛載→卸載→重掛同步競爭，會吃掉第一個 Html；延後一個 tick 再掛標籤
-  const [labelsReady, setLabelsReady] = useState(false)
-  useEffect(() => {
-    const t = setTimeout(() => setLabelsReady(true), 0)
-    return () => clearTimeout(t)
-  }, [])
+  const labelsReady = useAfterFirstTick()
 
   useLayoutEffect(() => {
     const mesh = ref.current
@@ -55,6 +51,7 @@ export function City() {
 
   const onClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation()
+    if (e.delta > 4) return // 拖曳轉視角不算點選
     if (e.instanceId === undefined) return
     const v = voxels[e.instanceId]
     if (v) pick({ productId: v.id, holdingId: v.id })

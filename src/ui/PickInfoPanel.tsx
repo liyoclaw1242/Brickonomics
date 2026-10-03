@@ -16,7 +16,7 @@ export function PickInfoPanel() {
   }, [picked, pick])
   if (!info) return null
   return (
-    <div className="info" role="region" aria-label={info.title}>
+    <div className="info" role="region" aria-live="polite" aria-label={info.title}>
       <button className="info__close" aria-label={T.close} onClick={() => pick(null)}>
         {T.closeGlyph}
       </button>

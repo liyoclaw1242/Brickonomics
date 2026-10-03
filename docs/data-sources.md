@@ -2,6 +2,8 @@
 
 查證日皆為 2026-10-03。「查無」表示找不到權威來源（基金公司官網／月報／公開說明書／交易所／台灣主要基金平台），維持原值與 `verified: false`，不使用猜測數字。
 
+個股市值的資料日：台股上櫃／部分上市標的取自 Yahoo 奇摩股市 2026-10-02 收盤；其餘取自 companiesmarketcap.com 2026-10 初的即時頁面（首頁數值會隨時間漂移，與本快照不一定相同）。
+
 | 資產 | 欄位 | 數值 | 狀態 | 來源（資料日） | 查證日 |
 |---|---|---|---|---|---|
 | QQQ | expenseRatio | 0.18%（原 0.20%，已更正） | 已驗證 | https://www.invesco.com/us/financial-products/etfs/product-detail?audienceType=Investor&ticker=QQQ （Invesco 官網，2026-06-30）；https://www.invesco.com/qqq-etf/en/performance.html | 2026-10-03 |
