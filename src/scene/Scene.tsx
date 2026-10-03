@@ -32,7 +32,7 @@ export function Scene({ quality }: { quality: Quality }) {
         shadow-camera-top={40}
         shadow-camera-bottom={-40}
       />
-      <Environment resolution={64} frames={1}>
+      <Environment resolution={64} frames={1} environmentIntensity={0.25}>
         <Lightformer form="rect" intensity={2} position={[0, 8, 0]} rotation-x={Math.PI / 2} scale={[20, 20, 1]} />
         <Lightformer form="rect" intensity={1.5} position={[-8, 3, 0]} rotation-y={Math.PI / 2} scale={[12, 8, 1]} />
         <Lightformer form="rect" intensity={1.5} position={[8, 3, 0]} rotation-y={-Math.PI / 2} scale={[12, 8, 1]} />
