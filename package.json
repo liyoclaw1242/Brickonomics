@@ -8,6 +8,7 @@
   },
   "scripts": {
     "screenshot": "node scripts/screenshot.mjs",
+    "walkthrough": "node scripts/walkthrough.mjs",
     "dev": "vite",
     "prebuild": "vitest run src/data",
     "build": "tsc --noEmit && vite build",

@@ -27,14 +27,16 @@ export function TourPanel() {
   const isLast = nextPosition(LEVELS, pos) === null
 
   return (
-    <aside className="panel tour" aria-live="polite">
-      <p className="tour__level">
-        {T.levelLabel(pos.level)}・{level.title}
-      </p>
-      <progress className="tour__progress" value={progressFraction(LEVELS, pos)} max={1} />
-      <p className="tour__text">{text}</p>
+    <aside className="panel tour">
+      <div aria-live="polite">
+        <p className="tour__level">
+          {T.levelLabel(pos.level)}・{level.title}
+        </p>
+        <p className="tour__text">{text}</p>
+      </div>
+      <progress className="tour__progress" value={progressFraction(LEVELS, pos)} max={1} aria-label={T.progressLabel} />
       {rows.length > 0 && (
-        <table className="readout">
+        <table className="readout" aria-live="off">
           <caption>{T.readout.title}</caption>
           <tbody>
             {rows.map((r) => (

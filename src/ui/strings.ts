@@ -32,7 +32,8 @@ export const T = {
   finish: '進入沙盒',
   skipToSandbox: '跳過導覽，直接進沙盒',
   replayTour: '重看導覽',
-  tryIt: '先試著操作下面的控制項',
+  tryIt: '先試著操作上面的控制項',
+  progressLabel: '課程進度',
   illustrative: '示意',
   assumption: '假設',
   controls: {

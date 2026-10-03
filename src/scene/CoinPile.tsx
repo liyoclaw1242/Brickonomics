@@ -5,7 +5,8 @@ import { COIN_HEIGHT, COIN_RADIUS, coinPileLayout } from './layout/coins'
 import { CoinMaterial } from './CoinDrip'
 
 /** 一堆金幣（數量即金額，單位由呼叫端決定） */
-export function CoinPile({ count, position }: { count: number; position: Vec3 }) {
+export function CoinPile({ count: rawCount, position }: { count: number; position: Vec3 }) {
+  const count = Math.max(0, Math.round(rawCount))
   const pts = useMemo(() => coinPileLayout(count), [count])
   const ref = useRef<InstancedMesh>(null)
   useLayoutEffect(() => {

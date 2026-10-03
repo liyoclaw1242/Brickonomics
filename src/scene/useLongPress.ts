@@ -12,7 +12,7 @@ export function useLongPress(onLong: (e: ThreeEvent<PointerEvent>) => void) {
   return useMemo(
     () => ({
       onPointerDown: (e: ThreeEvent<PointerEvent>) => {
-        if (e.pointerType !== 'touch') return
+        if (e.pointerType !== 'touch' || !e.isPrimary) return
         tracker.start(e.clientX, e.clientY)
         clearTimeout(timer.current)
         timer.current = setTimeout(() => {

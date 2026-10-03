@@ -15,6 +15,7 @@ import { atPlaza } from './plaza'
 const XA = -7
 const XB = 7
 const EXPLODE_T = 1
+const LABEL_DX = 2.2
 const BASKET_QUALITY: Quality = 'low'
 
 type Built = { productId: string; baseX: number; spec: ReturnType<typeof basketSpec>; voxels: ReturnType<typeof basketVoxels> }
@@ -54,7 +55,7 @@ export function OverlapStage({ a, b }: { a: string; b: string; quality: Quality 
       ))}
       {ready &&
         links.map((l, i) => (
-          <Html key={l.id} position={[(l.pa[0] + l.pb[0]) / 2, (l.pa[1] + l.pb[1]) / 2 + 0.6 + i * 1.1, (l.pa[2] + l.pb[2]) / 2]} center style={labelStyle}>
+          <Html key={l.id} position={[(l.pa[0] + l.pb[0]) / 2 + (i % 2 === 0 ? -LABEL_DX : LABEL_DX), (l.pa[1] + l.pb[1]) / 2 + 0.5, (l.pa[2] + l.pb[2]) / 2 + 1]} center style={labelStyle}>
             {T.overlapLabel(universe.get(l.id)!.name, `${(l.shared * 100).toFixed(1)}%`)}
           </Html>
         ))}

@@ -11,7 +11,12 @@ export function CoinMaterial() {
 }
 
 /** 從 from 持續拋出金幣到 to（股利、利息、配息） */
-export function CoinDrip({ from, to, rate, fallTime = 1.2, arc = 1.5, active = true }: Props) {
+export function CoinDrip(props: Props) {
+  if (!(props.rate > 0 && (props.fallTime ?? 1.2) > 0)) return null
+  return <CoinDripInner {...props} />
+}
+
+function CoinDripInner({ from, to, rate, fallTime = 1.2, arc = 1.5, active = true }: Props) {
   const max = Math.ceil(rate * fallTime) + 1
   const ref = useRef<InstancedMesh>(null)
   const t0 = useRef<number | null>(null)
