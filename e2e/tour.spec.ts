@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { setRange, settled } from './helpers'
+import { cameraSeq, setRange, settled } from './helpers'
 
 // 需要先操作才能前進的步驟：按課程設定的控制項與門檻
 const GATES: Record<string, { label: string; value: number }> = {
@@ -18,14 +18,16 @@ test('walks the whole tour by clicking 下一步 and unlocks the sandbox', async
   await page.goto('/')
   const next = page.getByRole('button', { name: /下一步|進入沙盒/ })
   const ids = await page.evaluate(() => (window as unknown as { __BCI_STEP_IDS__: string[] }).__BCI_STEP_IDS__)
+  let before = 0
   for (const id of ids) {
-    await settled(page)
+    await settled(page, before)
     const gate = GATES[id]
     if (gate) {
       await expect(next).toBeDisabled()
       await setRange(page, gate.label, gate.value)
     }
     await expect(next).toBeEnabled()
+    before = await cameraSeq(page)
     await next.click()
   }
   await expect(page.getByRole('button', { name: '重看導覽' })).toBeVisible()

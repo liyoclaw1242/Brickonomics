@@ -8,6 +8,7 @@ import { CameraRig } from './CameraRig'
 import { City } from './City'
 import { QUALITY, type Quality } from './quality'
 import { damageFromShocks } from './layout/stages'
+import { MAX_DISTANCE, MAX_POLAR, MIN_DISTANCE } from './camera'
 import { EXCHANGE_POSITION } from './stage/plaza'
 import { StageView } from './stage/StageView'
 import { ViewFraming } from './ViewFraming'
@@ -66,7 +67,7 @@ export function Scene({ quality }: { quality: Quality }) {
           position={[EXCHANGE_POSITION[0], PEDESTAL_HEIGHT, EXCHANGE_POSITION[2]]}
         />
       )}
-      <OrbitControls makeDefault target={[0, 5, 12]} maxPolarAngle={Math.PI * 0.48} minDistance={8} maxDistance={90} />
+      <OrbitControls makeDefault target={[0, 5, 12]} maxPolarAngle={MAX_POLAR} minDistance={MIN_DISTANCE} maxDistance={MAX_DISTANCE} />
       <CameraRig />
       {import.meta.env.DEV && <FrameCounter />}
     </>

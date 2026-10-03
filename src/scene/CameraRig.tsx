@@ -2,9 +2,16 @@ import { useEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { currentStep, useTour } from '../store/tour'
-import { approachVec, CAMERA_PRESETS, type Vec3 } from './camera'
+import { approachVec, CAMERA_PRESETS, rigDt, type Vec3 } from './camera'
 
-const MAX_RIG_DT = 0.25
+/** 連續這麼多幀距離沒有縮短（被 OrbitControls 限制擋住）就視為到位，避免永遠重繪 */
+const STUCK_FRAMES = 10
+
+function activate() {
+  const b = document.body
+  b.dataset.cameraSettled = 'false'
+  b.dataset.cameraSeq = String(Number(b.dataset.cameraSeq ?? '0') + 1)
+}
 
 /** 導覽時把鏡頭移到步驟指定的位置；使用者一拖動就停止，不跟使用者搶控制權 */
 export function CameraRig() {
@@ -14,6 +21,9 @@ export function CameraRig() {
   const controls = useThree((s) => s.controls) as OrbitControlsImpl | null
   const invalidate = useThree((s) => s.invalidate)
   const active = useRef(false)
+  const first = useRef(true)
+  const lastDist = useRef(Infinity)
+  const stuck = useRef(0)
   const presetId = mode === 'tour' ? scene.camera : 'overview'
 
   useEffect(() => {
@@ -24,7 +34,10 @@ export function CameraRig() {
       controls.update()
     }
     active.current = true
-    document.body.dataset.cameraSettled = mode === 'tour' ? 'false' : 'true'
+    first.current = true
+    lastDist.current = Infinity
+    stuck.current = 0
+    activate()
     invalidate()
   }, [mode, scene, camera, controls, invalidate])
 
@@ -39,16 +52,21 @@ export function CameraRig() {
   }, [controls])
 
   useFrame((_, rawDt) => {
-    // 指數趨近對任何 dt 都穩定（k<1）；上限放寬到 0.25s，慢機器（軟體渲染 ~1fps）也能在數幀內到位
-    const dt = Math.min(rawDt, MAX_RIG_DT)
     if (!active.current || !controls) return
+    const dt = rigDt(rawDt, first.current)
+    first.current = false
     const p = CAMERA_PRESETS[presetId]
     const a = approachVec(camera.position.toArray() as Vec3, p.position, dt)
     const b = approachVec(controls.target.toArray() as Vec3, p.target, dt)
     camera.position.set(...a.next)
     controls.target.set(...b.next)
     controls.update()
-    if (a.done && b.done) {
+    // 套用 OrbitControls 限制後，實際離目標還有多遠
+    const pos = camera.position.toArray() as Vec3
+    const dist = Math.hypot(pos[0] - p.position[0], pos[1] - p.position[1], pos[2] - p.position[2])
+    stuck.current = dist < lastDist.current - 1e-4 ? 0 : stuck.current + 1
+    lastDist.current = dist
+    if ((a.done && b.done) || stuck.current >= STUCK_FRAMES) {
       active.current = false
       document.body.dataset.cameraSettled = 'true'
     } else invalidate()

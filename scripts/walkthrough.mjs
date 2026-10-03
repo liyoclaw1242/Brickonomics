@@ -14,6 +14,7 @@ try {
   for (let level = 0; level < steps.length; level++) {
     for (let step = 0; step < steps[level]; step++) {
       await page.goto(`${base}/?level=${level}&step=${step}`, { waitUntil: 'networkidle' })
+      await page.waitForSelector('body[data-camera-seq]', { timeout: 15000 }).catch(() => {})
       await page
         .waitForSelector('body[data-camera-settled="true"]', { timeout: 15000 })
         .catch(() => page.waitForTimeout(3500))

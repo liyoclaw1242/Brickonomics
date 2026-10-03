@@ -12,8 +12,19 @@ export const CAMERA_PRESETS: Record<CameraPresetId, { position: Vec3; target: Ve
   exchangeWide: { position: [10, 30, 48], target: [0, 10, 14] },
   exchangeSide: { position: [34, 14, 20], target: [0, 7, 14] },
   plazaNear: { position: [0, 18, 52], target: [0, 2, 30] },
-  underground: { position: [0, -4, 98], target: [0, -9, 24] },
+  underground: { position: [0, -1, 98], target: [0, -9, 24] },
   plaza: { position: [0, 26, 66], target: [0, 4, 30] },
+}
+
+/** OrbitControls 的限制；預設鏡頭位置必須落在這些限制之內，否則鏡頭永遠到不了 */
+export const MAX_POLAR = Math.PI * 0.48
+export const MIN_DISTANCE = 8
+export const MAX_DISTANCE = 90
+
+/** 鏡頭 rig 的時間步長：首幀用固定 1/60；之後上限 0.25s（慢機器也能在數幀內到位）；非有限或負值退回 1/60 */
+export function rigDt(rawDt: number, firstFrame: boolean): number {
+  if (firstFrame || !Number.isFinite(rawDt) || rawDt < 0) return 1 / 60
+  return Math.min(rawDt, 0.25)
 }
 
 const SNAP = 0.05

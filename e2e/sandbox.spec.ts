@@ -1,8 +1,10 @@
 import { test, expect } from '@playwright/test'
+import { settled } from './helpers'
 
 test('sandbox stays idle when nothing moves', async ({ page }) => {
   await page.goto('/?mode=sandbox')
-  await page.waitForTimeout(3000)
+  await settled(page)
+  await page.waitForTimeout(1000)
   const f1 = await page.evaluate(() => (window as unknown as { __BCI_FRAMES__: number }).__BCI_FRAMES__)
   await page.waitForTimeout(2000)
   const f2 = await page.evaluate(() => (window as unknown as { __BCI_FRAMES__: number }).__BCI_FRAMES__)
