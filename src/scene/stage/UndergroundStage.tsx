@@ -106,7 +106,7 @@ export function UndergroundStage({ show, cores, quality }: { show: Show; cores?:
               {T.sectors[l.sector]}
             </Html>
           ))}
-          <Html position={[-13, (vein.top + vein.bottom) / 2, FRONT_Z + 0.5]} center style={labelStyle}>
+          <Html position={[-17, (vein.top + vein.bottom) / 2, FRONT_Z + 0.5]} center style={labelStyle}>
             {T.underground.goldVein}
           </Html>
           {show === 'cores' &&
