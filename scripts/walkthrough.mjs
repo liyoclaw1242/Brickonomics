@@ -14,7 +14,10 @@ try {
   for (let level = 0; level < steps.length; level++) {
     for (let step = 0; step < steps[level]; step++) {
       await page.goto(`${base}/?level=${level}&step=${step}`, { waitUntil: 'networkidle' })
-      await page.waitForTimeout(3500)
+      await page
+        .waitForSelector('body[data-camera-settled="true"]', { timeout: 15000 })
+        .catch(() => page.waitForTimeout(3500))
+      await page.waitForTimeout(500)
       await page.screenshot({ path: `${out}/L${level}-S${step}.png` })
     }
   }

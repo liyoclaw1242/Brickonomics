@@ -30,6 +30,7 @@ if (webgl) {
   }
   if (import.meta.env.DEV) {
     ;(window as unknown as { __BCI_STEPS__: number[] }).__BCI_STEPS__ = LEVELS.map((l) => l.steps.length)
+    ;(window as unknown as { __BCI_STEP_IDS__: string[] }).__BCI_STEP_IDS__ = LEVELS.flatMap((l) => l.steps.map((st) => st.id))
     ;(window as unknown as { __BCI_DEGRADE__?: () => void }).__BCI_DEGRADE__ = () => useQuality.getState().degrade()
   }
 }

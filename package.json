@@ -8,6 +8,7 @@
   },
   "scripts": {
     "screenshot": "node scripts/screenshot.mjs",
+    "e2e": "playwright test",
     "walkthrough": "node scripts/walkthrough.mjs",
     "dev": "vite",
     "prebuild": "vitest run src/data",
@@ -27,6 +28,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@types/three": "^0.186.0",
