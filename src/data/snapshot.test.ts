@@ -33,3 +33,11 @@ describe('snapshot', () => {
     }
   })
 })
+
+describe('aggregate buckets', () => {
+  it('flags every non-company bucket as aggregate and nothing else', () => {
+    const agg = [...universe.values()].filter((a) => a.aggregate).map((a) => a.id).sort()
+    expect(agg).toEqual(['BOND_MIXED_US', 'CASH', 'CONVERTIBLE_US', 'GLOBAL_BOND_MIXED', 'OTHER_TW_STOCK', 'OTHER_US_STOCK', 'US_HIGH_YIELD', 'US_TREASURY'])
+    expect(universe.get('GOLD')?.aggregate).toBeUndefined()
+  })
+})

@@ -80,7 +80,7 @@
       "https://api.schroders.com/document-store/SISF-FS-TWZH.pdf",
       "https://www.schroders.com/zh-tw/tw/individual/funds-and-strategies/global-credit-income/"
     ],
-    "verified": { "holdings": false, "fees": true, "distribution": false },
+    "verified": { "holdings": false, "fees.cdsc": true, "fees.distributionFee": true, "fees.expenseRatio": false, "distribution": false },
     "notes": "U 級別：免申購手續費；分銷費每年 1%（淨值內扣）；遞延銷售手續費 發行後第一年內 3%、第二年內 2%、第三年內 1%、滿 3 年 0%，滿 3 年後自動轉 A 級別。級別費用資料：2026-06-30 投資人通知（為整個系列通則）。持股與主級別相同。expenseRatio 僅經理費 1.10%，不含分銷費。月配推論自級別名稱『U 月配固定』"
   },
   {

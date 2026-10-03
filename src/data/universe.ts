@@ -32,10 +32,13 @@ export function parseUniverse(raw: unknown[]): Universe {
   for (const a of map.values()) {
     if (!a.holdings) continue
     const sum = a.holdings.reduce((s, h) => s + h.weightPct, 0)
-    if (Math.abs(sum - 100) > WEIGHT_TOLERANCE_PCT) {
+    if (Math.abs(sum - 100) > WEIGHT_TOLERANCE_PCT + 1e-9) {
       errors.push(`${a.id}: holdings sum ${sum.toFixed(2)}% (expected 100±${WEIGHT_TOLERANCE_PCT})`)
     }
+    const seen = new Set<string>()
     for (const h of a.holdings) {
+      if (seen.has(h.id)) errors.push(`${a.id}: duplicate holding ${h.id}`)
+      seen.add(h.id)
       if (!map.has(h.id)) {
         errors.push(`${a.id}: unknown holding ${h.id}`)
         refsOk = false

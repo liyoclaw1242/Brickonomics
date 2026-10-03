@@ -16,6 +16,24 @@ export const ASSET_TYPES = [
 
 export type AssetType = (typeof ASSET_TYPES)[number]
 
+/**
+ * 可標記查證狀態的欄位。`verified` 中缺少的 key 一律視為「未查證」。
+ * 只有明確為 true 才可當成已查證事實呈現。
+ */
+export const VERIFIED_KEYS = [
+  'holdings',
+  'fees',
+  'fees.frontLoad',
+  'fees.expenseRatio',
+  'fees.distributionFee',
+  'fees.cdsc',
+  'distribution',
+  'nameEn',
+  'asOf',
+] as const
+
+export type VerifiedKey = (typeof VERIFIED_KEYS)[number]
+
 const BASKET_TYPES: readonly AssetType[] = ['etf', 'fund']
 
 const HoldingSchema = z.object({
@@ -50,7 +68,9 @@ export const AssetSchema = z
       .optional(),
     asOf: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     source: z.array(z.string().min(1)),
-    verified: z.record(z.string(), z.boolean()).optional(),
+    /** 彙總桶（其他股票、現金、混合債券等）：不代表特定標的，不納入重疊計算 */
+    aggregate: z.boolean().optional(),
+    verified: z.partialRecord(z.enum(VERIFIED_KEYS), z.boolean()).optional(),
     notes: z.string().optional(),
   })
   .superRefine((a, ctx) => {

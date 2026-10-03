@@ -46,6 +46,28 @@ describe('parseUniverse', () => {
     expect(() => parseUniverse([stock('A'), stock('B'), basket('E', [{ id: 'A', weightPct: 60.3 }, { id: 'B', weightPct: 40 }])])).not.toThrow()
   })
 
+  it('accepts a sum of exactly 100.5 even when floating point gives 100.50000000000001', () => {
+    // 30.1 + 33.95 + 36.45 = 100.5 in decimal (|sum - 100| = 0.5, on the boundary);
+    // summed in binary floating point it is 100.50000000000001, so a bare `> 0.5` would reject it
+    const raw = [stock('A'), stock('B'), stock('C'),
+      basket('E', [{ id: 'A', weightPct: 30.1 }, { id: 'B', weightPct: 33.95 }, { id: 'C', weightPct: 36.45 }])]
+    expect(() => parseUniverse(raw)).not.toThrow()
+    // 30.1 + 33.95 + 36.55 = 100.6 -> clearly outside the tolerance
+    expect(errorsOf([stock('A'), stock('B'), stock('C'),
+      basket('E', [{ id: 'A', weightPct: 30.1 }, { id: 'B', weightPct: 33.95 }, { id: 'C', weightPct: 36.55 }])])[0]).toMatch(/holdings sum/)
+  })
+
+  it('rejects duplicate holding ids within one basket', () => {
+    expect(errorsOf([stock('A'), basket('E', [{ id: 'A', weightPct: 50 }, { id: 'A', weightPct: 50 }])]))
+      .toContain('E: duplicate holding A')
+  })
+
+  it('rejects unknown verified keys', () => {
+    const errs = errorsOf([{ ...stock('A'), verified: { fee: true } }])
+    expect(errs[0]).toMatch(/^#0: verified/)
+    expect(() => parseUniverse([{ ...stock('A'), verified: { 'fees.cdsc': true } }])).not.toThrow()
+  })
+
   it('rejects baskets without holdings and non-baskets with holdings', () => {
     const errs = errorsOf([
       { ...stock('S'), holdings: [{ id: 'S', weightPct: 100 }] },
