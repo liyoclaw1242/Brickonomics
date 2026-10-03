@@ -78,3 +78,23 @@ export function cutPlanePosition(cut: CutSpec, w: number, d: number): number {
 export function approach(current: number, target: number, dt: number, rate = 8): number {
   return current + (target - current) * (1 - Math.exp(-rate * dt))
 }
+
+/** 情境衝擊用：每個持股依比例打掉「該組最上方」的方塊，回傳被打掉的方塊集合 */
+export function damagedVoxels(voxels: Voxel[], damage: Readonly<Record<string, number>>): Set<Voxel> {
+  const byId = new Map<string, Voxel[]>()
+  for (const v of voxels) {
+    const list = byId.get(v.id)
+    if (list) list.push(v)
+    else byId.set(v.id, [v])
+  }
+  const out = new Set<Voxel>()
+  for (const [id, f] of Object.entries(damage)) {
+    if (!Number.isFinite(f) || f < 0 || f > 1) throw new RangeError(`damage[${id}] must be in [0, 1]: ${f}`)
+    const list = byId.get(id)
+    if (!list) continue
+    const n = Math.round(list.length * f)
+    const top = [...list].sort((a, b) => b.y - a.y || b.z - a.z || b.x - a.x)
+    for (const v of top.slice(0, n)) out.add(v)
+  }
+  return out
+}

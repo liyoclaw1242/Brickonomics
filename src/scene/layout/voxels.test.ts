@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { allocateBlocks } from '../../sim/allocate'
 import {
   stackVoxels, layersFor, voxelPosition, explodeOffsetY, sizeAlong,
-  cutThreshold, isHidden, cutPlanePosition, approach, EXPLODE_GAP, MAX_EXPLODE_SPAN, explodeGap, coordAlong,
+  cutThreshold, isHidden, cutPlanePosition, approach, EXPLODE_GAP, MAX_EXPLODE_SPAN, explodeGap, coordAlong, damagedVoxels,
 } from './voxels'
 
 describe('stackVoxels', () => {
@@ -125,5 +125,26 @@ describe('approach', () => {
     expect(mid).toBeLessThan(1)
     expect(approach(0, 1, 10)).toBeCloseTo(1, 6)
     expect(approach(1, 0, 0.1)).toBeLessThan(1)
+  })
+})
+
+describe('damagedVoxels', () => {
+  const counts = [{ id: 'a', count: 20 }, { id: 'b', count: 30 }]
+  const v = stackVoxels(counts, 5, 5)
+
+  it('removes the given fraction from the top of that holding only', () => {
+    const hit = damagedVoxels(v, { a: 0.3 })
+    expect(hit.size).toBe(6) // round(20 * 0.3)
+    const keptA = v.filter((x) => x.id === 'a' && !hit.has(x))
+    for (const h of hit) {
+      expect(h.id).toBe('a')
+      for (const k of keptA) expect(h.y).toBeGreaterThanOrEqual(k.y)
+    }
+  })
+
+  it('ignores unknown ids and rejects fractions outside [0, 1]', () => {
+    expect(damagedVoxels(v, { zzz: 0.5 }).size).toBe(0)
+    expect(() => damagedVoxels(v, { a: 1.5 })).toThrow(RangeError)
+    expect(() => damagedVoxels(v, { a: -0.1 })).toThrow(RangeError)
   })
 })

@@ -15,6 +15,7 @@ type Props = {
   cut: CutSpec | null
   highlightGroup: number | null
   quality: Quality
+  damaged?: ReadonlySet<Voxel>
   onPick?: (group: number) => void
 }
 
@@ -42,7 +43,7 @@ export function VoxelInstances(props: Props) {
   )
 }
 
-function KindMesh({ kind, voxels, looks, w, d, explode, cut, highlightGroup, quality, onPick }: Props & { kind: MaterialKind }) {
+function KindMesh({ kind, voxels, looks, w, d, explode, cut, highlightGroup, quality, damaged, onPick }: Props & { kind: MaterialKind }) {
   const ref = useRef<InstancedMesh>(null)
   const anim = useRef({ explode, dirty: true })
   const dummy = useMemo(() => new Object3D(), [])
@@ -61,7 +62,7 @@ function KindMesh({ kind, voxels, looks, w, d, explode, cut, highlightGroup, qua
 
   useLayoutEffect(() => {
     anim.current.dirty = true
-  }, [voxels, cut, w, d])
+  }, [voxels, cut, w, d, damaged])
 
   useFrame((_, dt) => {
     const mesh = ref.current
@@ -74,7 +75,8 @@ function KindMesh({ kind, voxels, looks, w, d, explode, cut, highlightGroup, qua
     voxels.forEach((v, i) => {
       const [x, y, z] = voxelPosition(v, w, d)
       dummy.position.set(x, y + explodeOffsetY(v.group, a.explode, looks.length), z)
-      dummy.scale.setScalar(cut !== null && isHidden(v, cut) ? 0 : VOXEL_SCALE)
+      const hidden = (cut !== null && isHidden(v, cut)) || (damaged?.has(v) ?? false)
+      dummy.scale.setScalar(hidden ? 0 : VOXEL_SCALE)
       dummy.updateMatrix()
       mesh.setMatrixAt(i, dummy.matrix)
     })
@@ -87,7 +89,7 @@ function KindMesh({ kind, voxels, looks, w, d, explode, cut, highlightGroup, qua
     if (e.delta > 4) return // 拖曳轉視角不算點選
     if (e.instanceId === undefined) return
     const v = voxels[e.instanceId]
-    if (v) onPick?.(v.group)
+    if (v && !(damaged?.has(v))) onPick?.(v.group)
   }
 
   return (
