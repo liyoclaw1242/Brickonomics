@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber'
-import { PerformanceMonitor } from '@react-three/drei'
+import { FpsGuard } from './scene/FpsGuard'
 import { Scene } from './scene/Scene'
 import { QUALITY } from './scene/quality'
 import { useQuality } from './store/quality'
@@ -22,7 +22,7 @@ export default function App() {
   return (
     <div className="app">
       <Canvas frameloop="demand" shadows={cfg.shadows} dpr={cfg.dpr} camera={{ position: [10, 36, 58], fov: 45 }} onPointerMissed={() => pick(null)}>
-        <PerformanceMonitor onDecline={() => useQuality.getState().degrade()} />
+        <FpsGuard />
         <Scene quality={quality} />
       </Canvas>
       {mode === 'tour' ? <TourPanel /> : <SandboxPanel />}

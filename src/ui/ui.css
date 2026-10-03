@@ -123,13 +123,13 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
   position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
   display: flex; gap: 10px; align-items: center; padding: 8px 14px; border-radius: 12px;
   background: var(--surface); border: 1px solid var(--border); font-size: 13px; z-index: 5;
+  max-width: calc(100vw - 32px);
 }
+.notice .link { white-space: nowrap; }
+.notice--hidden { position: absolute; width: 1px; height: 1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 @media (max-width: 720px) {
-  .notice { bottom: auto; top: 56px; }
-}
-
-@media (max-width: 720px) {
+  .notice { bottom: auto; top: 56px; left: 16px; right: 16px; transform: none; max-width: none; justify-content: space-between; }
   .tour__text { margin: 8px 0; font-size: 14px; line-height: 1.65; }
   .readout { margin: 4px 0; }
   /* 手機抽屜：控制項放在即時數字之前，拉桿不必捲動就能碰到 */

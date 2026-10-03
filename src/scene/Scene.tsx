@@ -6,7 +6,7 @@ import { BasketView } from './BasketView'
 import { FrameCounter } from './FrameCounter'
 import { CameraRig } from './CameraRig'
 import { City } from './City'
-import type { Quality } from './quality'
+import { QUALITY, type Quality } from './quality'
 import { damageFromShocks } from './layout/stages'
 import { EXCHANGE_POSITION } from './stage/plaza'
 import { StageView } from './stage/StageView'
@@ -38,7 +38,7 @@ export function Scene({ quality }: { quality: Quality }) {
       <directionalLight
         position={[20, 30, 15]}
         intensity={1.6}
-        castShadow
+        castShadow={QUALITY[quality].shadows}
         shadow-mapSize={[2048, 2048]}
         shadow-camera-left={-40}
         shadow-camera-right={40}
