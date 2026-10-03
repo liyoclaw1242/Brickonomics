@@ -18,7 +18,7 @@ const ISLAND_THICKNESS = 0.5
 /** 兩座島與大樓；每棟大樓是一根方塊柱，所有大樓共用一個 InstancedMesh */
 export function City({ labels, islandLabels = true, shrink }: { labels: boolean; islandLabels?: boolean; shrink?: Readonly<Record<string, number>> }) {
   const base = useMemo(() => cityLayout([...universe.values()]), [])
-  const placements = useMemo(() => (shrink ? applyShrink(base, shrink) : base), [base, shrink])
+  const placements = useMemo(() => (shrink ? applyShrink(base, shrink, (id) => universe.get(id)?.marketCapUsdB) : base), [base, shrink])
   const voxels = useMemo(() => buildingVoxels(placements), [placements])
   const ref = useRef<InstancedMesh>(null)
   const pick = useSandbox((s) => s.pick)

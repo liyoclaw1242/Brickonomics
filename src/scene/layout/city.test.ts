@@ -84,4 +84,15 @@ describe('applyShrink', () => {
     expect(out[1]!.height).toBe(19)
     expect(applyShrink(ps, { '2330': 1 })[0]!.height).toBe(1)
   })
+
+  it('uses the log height scale when the market cap is known', () => {
+    const caps: Record<string, number> = { '2330': 1000, NVDA: 5000 }
+    const capOf = (id: string) => caps[id]
+    // 2330：1000 × 0.7 = 700 → 2 + 6·log10(70) = 2 + 6 × 1.845098 = 13.07 → 13（單純 ×0.7 會是 11）
+    expect(applyShrink(ps, { '2330': 0.3 }, capOf)[0]!.height).toBe(13)
+    // NVDA：5000 × 0.5 = 2500 → 2 + 6·log10(250) = 2 + 6 × 2.39794 = 16.39 → 16
+    expect(applyShrink(ps, { NVDA: 0.5 }, capOf)[1]!.height).toBe(16)
+    // 跌 100% 不丟錯，保留 1 層
+    expect(applyShrink(ps, { '2330': 1 }, capOf)[0]!.height).toBe(1)
+  })
 })
