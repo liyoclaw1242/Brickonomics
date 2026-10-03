@@ -1,0 +1,96 @@
+import { useLayoutEffect, useMemo, useRef } from 'react'
+import { useFrame, type ThreeEvent } from '@react-three/fiber'
+import { Color, type InstancedMesh, Object3D } from 'three'
+import type { BlockLook, MaterialKind } from './palette'
+import { BlockMaterial } from './materials'
+import { approach, explodeOffsetY, isHidden, voxelPosition, VOXEL_SCALE, type CutSpec, type Voxel } from './layout/voxels'
+
+type Props = {
+  voxels: Voxel[]
+  looks: BlockLook[]
+  w: number
+  d: number
+  explode: number
+  cut: CutSpec | null
+  highlightGroup: number | null
+  onPick?: (group: number) => void
+}
+
+const DIM = 0.35
+
+/** 依材質分組：一種材質一個 InstancedMesh */
+export function VoxelInstances(props: Props) {
+  const { voxels, looks } = props
+  const byKind = useMemo(() => {
+    const m = new Map<MaterialKind, Voxel[]>()
+    for (const v of voxels) {
+      const kind = looks[v.group]!.kind
+      const list = m.get(kind)
+      if (list) list.push(v)
+      else m.set(kind, [v])
+    }
+    return [...m]
+  }, [voxels, looks])
+  return (
+    <>
+      {byKind.map(([kind, vs]) => (
+        <KindMesh key={`${kind}-${vs.length}`} {...props} kind={kind} voxels={vs} />
+      ))}
+    </>
+  )
+}
+
+function KindMesh({ kind, voxels, looks, w, d, explode, cut, highlightGroup, onPick }: Props & { kind: MaterialKind }) {
+  const ref = useRef<InstancedMesh>(null)
+  const anim = useRef({ explode, dirty: true })
+  const dummy = useMemo(() => new Object3D(), [])
+
+  useLayoutEffect(() => {
+    const mesh = ref.current
+    if (!mesh) return
+    const c = new Color()
+    voxels.forEach((v, i) => {
+      c.set(looks[v.group]!.color)
+      if (highlightGroup !== null && v.group !== highlightGroup) c.multiplyScalar(DIM)
+      mesh.setColorAt(i, c)
+    })
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
+  }, [voxels, looks, highlightGroup])
+
+  useLayoutEffect(() => {
+    anim.current.dirty = true
+  }, [voxels, cut, w, d])
+
+  useFrame((_, dt) => {
+    const mesh = ref.current
+    if (!mesh) return
+    const a = anim.current
+    const next = approach(a.explode, explode, dt)
+    if (!a.dirty && Math.abs(next - a.explode) < 1e-4) return
+    a.explode = Math.abs(next - explode) < 1e-3 ? explode : next
+    a.dirty = false
+    voxels.forEach((v, i) => {
+      const [x, y, z] = voxelPosition(v, w, d)
+      dummy.position.set(x, y + explodeOffsetY(v.group, a.explode), z)
+      dummy.scale.setScalar(cut !== null && isHidden(v, cut) ? 0 : VOXEL_SCALE)
+      dummy.updateMatrix()
+      mesh.setMatrixAt(i, dummy.matrix)
+    })
+    mesh.instanceMatrix.needsUpdate = true
+    mesh.computeBoundingSphere()
+  })
+
+  const handleClick = (e: ThreeEvent<MouseEvent>) => {
+    e.stopPropagation()
+    if (e.instanceId === undefined) return
+    const v = voxels[e.instanceId]
+    if (v) onPick?.(v.group)
+  }
+
+  return (
+    <instancedMesh ref={ref} args={[undefined, undefined, voxels.length]} onClick={handleClick} castShadow receiveShadow>
+      <boxGeometry />
+      <BlockMaterial kind={kind} />
+    </instancedMesh>
+  )
+}

@@ -1,17 +1,17 @@
+import { useMemo } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls } from '@react-three/drei'
+import { Scene } from './scene/Scene'
+import { QUALITY, detectQuality, readEnv } from './scene/quality'
+import { useSandbox } from './store/sandbox'
 
 export default function App() {
+  const quality = useMemo(() => detectQuality(readEnv()), [])
+  const cfg = QUALITY[quality]
+  const pick = useSandbox((s) => s.pick)
   return (
-    <div style={{ position: 'fixed', inset: 0, background: '#cfe8ff' }}>
-      <Canvas camera={{ position: [3, 3, 3] }}>
-        <ambientLight intensity={0.6} />
-        <directionalLight position={[5, 8, 3]} />
-        <mesh>
-          <boxGeometry />
-          <meshStandardMaterial color="#f4a261" />
-        </mesh>
-        <OrbitControls />
+    <div style={{ position: 'fixed', inset: 0 }}>
+      <Canvas shadows={cfg.shadows} dpr={cfg.dpr} camera={{ position: [18, 26, 64], fov: 45 }} onPointerMissed={() => pick(null)}>
+        <Scene quality={quality} />
       </Canvas>
     </div>
   )
