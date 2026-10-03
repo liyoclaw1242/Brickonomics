@@ -10,10 +10,10 @@
     ],
     "fees": { "expenseRatio": 0.0014 },
     "distribution": { "frequency": "semiannual", "classes": ["distributing"] },
-    "asOf": "2026-09-26",
+    "asOf": "2026-08-01",
     "source": ["https://tw.stock.yahoo.com/quote/0050/holding", "https://www.yuantaetfs.com/product/detail/0050/ratio"],
     "verified": { "holdings": true, "fees": true, "distribution": true },
-    "notes": "費用為經理費約 0.11% + 保管費 0.03%（級距制，2025-01 起）。2026-10-03 查證：Yahoo 持股頁前四大權重與快照一致；元大投信官網頁面（資料日 2026-10-02）權重已略有不同（2330 56.31%），快照仍用 Yahoo 版本"
+    "notes": "費用為經理費約 0.11% + 保管費 0.03%（級距制，2025-01 起）。權重為 Yahoo 持股頁 2026-08-01 資料；元大投信 2026-10-02 官網顯示 2330 約 56.31%，日後更新快照時改用元大官方數據"
   },
   {
     "id": "QQQ", "name": "Invesco QQQ", "nameEn": "Invesco QQQ Trust", "type": "etf", "region": "US",

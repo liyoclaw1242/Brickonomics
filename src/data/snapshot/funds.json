@@ -23,8 +23,8 @@
       "https://tw.allianzgi.com/documents/mDDO01",
       "https://www.fundrich.com.tw/rpt/SmartManual/ALI005_S.pdf"
     ],
-    "verified": { "holdings": true, "fees": true, "distribution": true },
-    "notes": "expenseRatio 為基金契約固定費用：經理費 1.60% + 保管費 0.15%（簡式公開說明書，刊印 2018-07-30，尚未找到更新版）；不含交易成本。含交易稅等的實際費用率 106 年度為 2.76%，快照不採用。frontLoad 0.04 為申購手續費「上限」（同份說明書），現行實收較低。無收益分配（說明書載明；2026-08 月報僅列 A 新臺幣類股）"
+    "verified": { "holdings": true, "fees": false, "distribution": false },
+    "notes": "expenseRatio 為基金契約固定費用：經理費 1.60% + 保管費 0.15%（2018 簡式公開說明書；僅契約固定費用）；不含交易成本。含交易稅等的實際費用率 106 年度為 2.76%，快照不採用。frontLoad 0.04 為申購手續費「上限」（同份說明書），現行實收較低。無收益分配（說明書載明；2026-08 月報僅列 A 新臺幣類股）"
   },
   {
     "id": "JH_BALANCED", "name": "駿利亨德森平衡基金", "nameEn": "Janus Henderson Balanced Fund",
@@ -75,13 +75,13 @@
     "holdings": [{ "id": "GLOBAL_BOND_MIXED", "weightPct": 100 }],
     "fees": { "expenseRatio": 0.011, "distributionFee": 0.01, "cdsc": [0.03, 0.02, 0.01] },
     "distribution": { "frequency": "monthly", "classes": ["distributing"] },
-    "asOf": "2026-06-30",
+    "asOf": "2026-10-02",
     "source": [
       "https://api.schroders.com/document-store/SISF-FS-TWZH.pdf",
       "https://www.schroders.com/zh-tw/tw/individual/funds-and-strategies/global-credit-income/"
     ],
-    "verified": { "holdings": false, "fees": true, "distribution": true },
-    "notes": "U 級別：免申購手續費；分銷費每年 1%（淨值內扣）；遞延銷售手續費 發行後第一年內 3%、第二年內 2%、第三年內 1%、滿 3 年 0%，滿 3 年後自動轉 A 級別（施羅德投資人須知，2026-06-30 更新，為整個系列通則，環球收息債券有 U 月配固定級別）。持股與主級別相同。expenseRatio 僅經理費 1.10%，不含分銷費"
+    "verified": { "holdings": false, "fees": true, "distribution": false },
+    "notes": "U 級別：免申購手續費；分銷費每年 1%（淨值內扣）；遞延銷售手續費 發行後第一年內 3%、第二年內 2%、第三年內 1%、滿 3 年 0%，滿 3 年後自動轉 A 級別。級別費用資料：2026-06-30 投資人通知（為整個系列通則）。持股與主級別相同。expenseRatio 僅經理費 1.10%，不含分銷費。月配推論自級別名稱『U 月配固定』"
   },
   {
     "id": "ALLIANZ_INCOME_GROWTH", "name": "安聯收益成長基金", "nameEn": "Allianz Income and Growth",
