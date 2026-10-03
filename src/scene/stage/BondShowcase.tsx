@@ -22,6 +22,9 @@ const SLOTS: Slot[] = [
   { key: 'hy', asset: universe.get('US_HIGH_YIELD')!, x: 12.5, rate: 1.5 }, // 示意
 ]
 
+/** 國家債 #d8f3ff 在白底上太淡：這個舞台局部改用較飽和的冰青色（不動共用的 palette） */
+const BOND_COLOR: Partial<Record<Slot['key'], string>> = { gov: '#5fd4ee', corp: '#78909c', hy: '#ffb300' }
+
 /** 股票方塊 vs 三種借據：材質表示信用品質，金幣快慢表示利息（示意） */
 export function BondShowcase({ stressed, quality }: { stressed: boolean; quality: Quality }) {
   const ready = useAfterFirstTick()
@@ -41,15 +44,14 @@ export function BondShowcase({ stressed, quality }: { stressed: boolean; quality
               {s.key === 'stock' ? (
                 <meshStandardMaterial color={stressed ? '#c0392b' : look.color} />
               ) : (
-                <BlockMaterial kind={look.kind} quality={quality} />
+                <BlockMaterial
+                  kind={look.kind}
+                  quality={quality}
+                  color={BOND_COLOR[s.key] ?? look.color}
+                  opacity={stressed && s.key === 'hy' ? 0.35 : 1}
+                />
               )}
             </mesh>
-            {s.key !== 'stock' && (
-              <mesh position={atPlaza(s.x, SIZE / 2, 0)} rotation-z={tilt}>
-                <boxGeometry args={[SIZE * 0.98, SIZE * 0.98, SIZE * 0.98]} />
-                <meshBasicMaterial color={look.color} transparent opacity={stressed && s.key === 'hy' ? 0.15 : 0.35} />
-              </mesh>
-            )}
             {dripping && <CoinDrip from={top} to={pile} rate={s.rate} />}
             {ready && (
               <Html position={atPlaza(s.x, -0.2, 2.6)} center style={labelStyle}>

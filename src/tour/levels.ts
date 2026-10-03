@@ -62,7 +62,7 @@ export const LEVELS: Level[] = [
       {
         id: 's-6',
         text: '方塊縮小的部分，剛好等於你拿到的金幣：方塊價值＋金幣＝不變。這叫「除息」。之後方塊如果慢慢長回原本大小，叫「填息」。（示意）',
-        scene: { camera: 'plaza', product: null, stage: { kind: 'exdiv', outcome: 'fill' }, values: { phase: 1 } },
+        scene: { camera: 'plaza', product: null, stage: { kind: 'exdiv', outcome: 'fill' }, values: { phase: 0.52 } },
         controls: ['phase'],
       },
       {
