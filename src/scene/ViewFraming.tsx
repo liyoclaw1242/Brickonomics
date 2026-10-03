@@ -7,6 +7,7 @@ import { PANEL_GUTTER, PANEL_WIDTH } from '../ui/layout'
 export function ViewFraming() {
   const camera = useThree((s) => s.camera)
   const size = useThree((s) => s.size)
+  const invalidate = useThree((s) => s.invalidate)
   useEffect(() => {
     if (!(camera instanceof PerspectiveCamera)) return
     const { width, height } = size
@@ -22,12 +23,14 @@ export function ViewFraming() {
     document.documentElement.style.setProperty('--label-scale', String(Math.max(0.6, Math.sqrt(zoom))))
     camera.setViewOffset(width, height, -dx, dy, width, height)
     camera.updateProjectionMatrix()
+    invalidate()
     return () => {
       camera.clearViewOffset()
       camera.zoom = 1
       document.documentElement.style.removeProperty('--label-scale')
       camera.updateProjectionMatrix()
+      invalidate()
     }
-  }, [camera, size])
+  }, [camera, size, invalidate])
   return null
 }

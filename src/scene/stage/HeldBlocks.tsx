@@ -8,6 +8,7 @@ import { T } from '../../ui/strings'
 import { approach } from '../layout/voxels'
 import { labelStyle } from '../labelStyle'
 import { lookFor } from '../palette'
+import { useContinuousRender } from '../useContinuousRender'
 import { useAfterFirstTick } from '../useAfterFirstTick'
 import { atPlaza } from './plaza'
 
@@ -20,6 +21,7 @@ function HeldBlock({ item, x }: { item: HeldItem; x: number }) {
   const ready = useAfterFirstTick()
   const asset = universe.get(item.assetId)!
   const look = lookFor(asset)
+  useContinuousRender()
   useFrame(({ clock }, dt) => {
     const m = ref.current
     if (!m) return

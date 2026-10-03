@@ -3,6 +3,7 @@ import { effectiveExplode, useSandbox } from '../store/sandbox'
 import { currentStep, useTour } from '../store/tour'
 import { SHOCK_2330 } from '../tour/context'
 import { BasketView } from './BasketView'
+import { FrameCounter } from './FrameCounter'
 import { CameraRig } from './CameraRig'
 import { City } from './City'
 import type { Quality } from './quality'
@@ -67,6 +68,7 @@ export function Scene({ quality }: { quality: Quality }) {
       )}
       <OrbitControls makeDefault target={[0, 5, 12]} maxPolarAngle={Math.PI * 0.48} minDistance={8} maxDistance={90} />
       <CameraRig />
+      {import.meta.env.DEV && <FrameCounter />}
     </>
   )
 }

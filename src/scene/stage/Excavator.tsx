@@ -5,12 +5,14 @@ import type { Group } from 'three'
 import { T } from '../../ui/strings'
 import { labelStyle } from '../labelStyle'
 import { EXCHANGE_POSITION } from './plaza'
+import { useContinuousRender } from '../useContinuousRender'
 import { useAfterFirstTick } from '../useAfterFirstTick'
 
 /** 方塊組成的小怪手（經理人），手臂來回擺動 */
 export function Excavator() {
   const arm = useRef<Group>(null)
   const ready = useAfterFirstTick()
+  useContinuousRender()
   useFrame(({ clock }) => {
     if (arm.current) arm.current.rotation.z = -0.5 + Math.sin(clock.elapsedTime * 1.4) * 0.35
   })

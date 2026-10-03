@@ -1,5 +1,5 @@
 import { useLayoutEffect, useMemo, useRef } from 'react'
-import { useFrame, type ThreeEvent } from '@react-three/fiber'
+import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import { Color, type InstancedMesh, Object3D } from 'three'
 import type { BlockLook, MaterialKind } from './palette'
 import { BlockMaterial } from './materials'
@@ -50,6 +50,7 @@ function KindMesh({ kind, voxels, looks, w, d, explode, cut, highlightGroup, qua
   const ref = useRef<InstancedMesh>(null)
   const anim = useRef({ explode, dirty: true })
   const dummy = useMemo(() => new Object3D(), [])
+  const invalidate = useThree((s) => s.invalidate)
 
   useLayoutEffect(() => {
     const mesh = ref.current
@@ -62,11 +63,18 @@ function KindMesh({ kind, voxels, looks, w, d, explode, cut, highlightGroup, qua
       mesh.setColorAt(i, c)
     })
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
-  }, [voxels, looks, highlightGroup, damaged])
+    invalidate()
+  }, [voxels, looks, highlightGroup, damaged, invalidate])
 
   useLayoutEffect(() => {
     anim.current.dirty = true
-  }, [voxels, cut, w, d])
+    invalidate()
+  }, [voxels, cut, w, d, invalidate])
+
+  // explode 是普通 prop（非 three 物件屬性），變動不會自動觸發重繪
+  useLayoutEffect(() => {
+    invalidate()
+  }, [explode, invalidate])
 
   useFrame((_, dt) => {
     const mesh = ref.current
@@ -86,6 +94,7 @@ function KindMesh({ kind, voxels, looks, w, d, explode, cut, highlightGroup, qua
     })
     mesh.instanceMatrix.needsUpdate = true
     mesh.computeBoundingSphere()
+    if (a.explode !== explode) invalidate()
   })
 
   const handleClick = (e: ThreeEvent<MouseEvent>) => {

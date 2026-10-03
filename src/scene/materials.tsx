@@ -20,11 +20,18 @@ function EnvMetal({
 }) {
   const ref = useRef<MeshStandardMaterial>(null)
   const scene = useThree((s) => s.scene)
+  const invalidate = useThree((s) => s.invalidate)
   useFrame(() => {
     const m = ref.current
-    if (m && scene.environment && m.envMap !== scene.environment) {
+    if (!m) return
+    if (!scene.environment) {
+      invalidate() // 環境貼圖還沒好：繼續要幀直到它出現
+      return
+    }
+    if (m.envMap !== scene.environment) {
       m.envMap = scene.environment
       m.needsUpdate = true
+      invalidate() // 指派後補畫一幀
     }
   })
   return (

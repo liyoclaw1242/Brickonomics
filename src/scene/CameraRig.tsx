@@ -10,6 +10,7 @@ export function CameraRig() {
   const scene = useTour((s) => currentStep(s).scene)
   const camera = useThree((s) => s.camera)
   const controls = useThree((s) => s.controls) as OrbitControlsImpl | null
+  const invalidate = useThree((s) => s.invalidate)
   const active = useRef(false)
   const presetId = mode === 'tour' ? scene.camera : 'overview'
 
@@ -21,7 +22,8 @@ export function CameraRig() {
       controls.update()
     }
     active.current = true
-  }, [mode, scene, camera, controls])
+    invalidate()
+  }, [mode, scene, camera, controls, invalidate])
 
   useEffect(() => {
     if (!controls) return
@@ -41,6 +43,7 @@ export function CameraRig() {
     controls.target.set(...b.next)
     controls.update()
     if (a.done && b.done) active.current = false
+    else invalidate()
   })
   return null
 }

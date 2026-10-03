@@ -19,7 +19,7 @@ export default function App() {
   useExplodeKey()
   return (
     <div className="app">
-      <Canvas shadows={cfg.shadows} dpr={cfg.dpr} camera={{ position: [10, 36, 58], fov: 45 }} onPointerMissed={() => pick(null)}>
+      <Canvas frameloop="demand" shadows={cfg.shadows} dpr={cfg.dpr} camera={{ position: [10, 36, 58], fov: 45 }} onPointerMissed={() => pick(null)}>
         <Scene quality={quality} />
       </Canvas>
       {mode === 'tour' ? <TourPanel /> : <SandboxPanel />}

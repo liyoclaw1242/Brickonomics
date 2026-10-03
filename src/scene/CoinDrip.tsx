@@ -1,7 +1,8 @@
-import { useMemo, useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useEffect, useMemo, useRef } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
 import { type InstancedMesh, Object3D } from 'three'
 import type { Vec3 } from './camera'
+import { useContinuousRender } from './useContinuousRender'
 import { COIN_HEIGHT, COIN_RADIUS, coinPositions } from './layout/coins'
 
 type Props = { from: Vec3; to: Vec3; rate: number; fallTime?: number; arc?: number; active?: boolean; size?: number; limit?: number }
@@ -21,6 +22,12 @@ function CoinDripInner({ from, to, rate, fallTime = 1.2, arc = 1.5, active = tru
   const ref = useRef<InstancedMesh>(null)
   const t0 = useRef<number | null>(null)
   const dummy = useMemo(() => new Object3D(), [])
+  const invalidate = useThree((s) => s.invalidate)
+  useContinuousRender(active)
+  // active 變成 false 時再畫一幀，把金幣清掉
+  useEffect(() => {
+    invalidate()
+  }, [active, invalidate])
   useFrame(({ clock }) => {
     const mesh = ref.current
     if (!mesh) return
