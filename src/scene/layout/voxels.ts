@@ -36,8 +36,15 @@ export function voxelPosition(v: Voxel, w: number, d: number): [number, number, 
   return [v.x - (w - 1) / 2, v.y + 0.5, v.z - (d - 1) / 2]
 }
 
-export function explodeOffsetY(group: number, t: number): number {
-  return group * EXPLODE_GAP * t
+/** 拆開後整座塔的最大高度（世界單位），組數多時縮小間距以免超出畫面 */
+export const MAX_EXPLODE_SPAN = 10
+
+export function explodeGap(groups: number): number {
+  return Math.min(EXPLODE_GAP, MAX_EXPLODE_SPAN / Math.max(1, groups - 1))
+}
+
+export function explodeOffsetY(group: number, t: number, groups: number): number {
+  return group * explodeGap(groups) * t
 }
 
 export function sizeAlong(axis: SliceAxis, w: number, d: number, layers: number): number {

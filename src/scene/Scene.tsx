@@ -1,4 +1,4 @@
-import { OrbitControls } from '@react-three/drei'
+import { Environment, Lightformer, OrbitControls } from '@react-three/drei'
 import { useSandbox } from '../store/sandbox'
 import { BasketView } from './BasketView'
 import type { Quality } from './quality'
@@ -32,6 +32,11 @@ export function Scene({ quality }: { quality: Quality }) {
         shadow-camera-top={40}
         shadow-camera-bottom={-40}
       />
+      <Environment resolution={64} frames={1}>
+        <Lightformer form="rect" intensity={2} position={[0, 8, 0]} rotation-x={Math.PI / 2} scale={[20, 20, 1]} />
+        <Lightformer form="rect" intensity={1.5} position={[-8, 3, 0]} rotation-y={Math.PI / 2} scale={[12, 8, 1]} />
+        <Lightformer form="rect" intensity={1.5} position={[8, 3, 0]} rotation-y={-Math.PI / 2} scale={[12, 8, 1]} />
+      </Environment>
       <mesh rotation-x={-Math.PI / 2} position-y={-0.5} receiveShadow>
         <planeGeometry args={[300, 300]} />
         <meshStandardMaterial color="#9cc9e8" />

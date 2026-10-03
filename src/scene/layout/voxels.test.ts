@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { allocateBlocks } from '../../sim/allocate'
 import {
   stackVoxels, layersFor, voxelPosition, explodeOffsetY, sizeAlong,
-  cutThreshold, isHidden, cutPlanePosition, approach, EXPLODE_GAP,
+  cutThreshold, isHidden, cutPlanePosition, approach, EXPLODE_GAP, MAX_EXPLODE_SPAN, explodeGap,
 } from './voxels'
 
 describe('stackVoxels', () => {
@@ -49,8 +49,20 @@ describe('geometry helpers', () => {
   })
 
   it('explodeOffsetY separates groups proportionally to t', () => {
-    expect(explodeOffsetY(0, 1)).toBe(0)
-    expect(explodeOffsetY(2, 0.5)).toBeCloseTo(EXPLODE_GAP) // 2 * 1.5 * 0.5
+    expect(explodeOffsetY(0, 1, 5)).toBe(0)
+    // groups=5: gap = min(1.5, 10/4 = 2.5) = 1.5; 2 * 1.5 * 0.5 = 1.5
+    expect(explodeOffsetY(2, 0.5, 5)).toBeCloseTo(EXPLODE_GAP)
+  })
+
+  it('explodeGap shrinks so the exploded tower never exceeds MAX_EXPLODE_SPAN', () => {
+    expect(MAX_EXPLODE_SPAN).toBe(10)
+    expect(explodeGap(1)).toBe(EXPLODE_GAP) // 10 / max(1, 0) = 10 -> 1.5
+    expect(explodeGap(5)).toBe(EXPLODE_GAP) // 10/4 = 2.5 -> 1.5
+    expect(explodeGap(12)).toBeCloseTo(10 / 11) // 0.909 < 1.5, cap binds
+    // groups=12, last group (11) at t=1: 11 * 10/11 = 10
+    expect(explodeOffsetY(11, 1, 12)).toBeCloseTo(MAX_EXPLODE_SPAN)
+    // groups=21: gap = 10/20 = 0.5; group 20 -> 10
+    expect(explodeOffsetY(20, 1, 21)).toBeCloseTo(10)
   })
 
   it('sizeAlong picks the grid size for an axis', () => {

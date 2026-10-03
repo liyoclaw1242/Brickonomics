@@ -65,13 +65,13 @@ function KindMesh({ kind, voxels, looks, w, d, explode, cut, highlightGroup, onP
     const mesh = ref.current
     if (!mesh) return
     const a = anim.current
+    if (!a.dirty && Math.abs(explode - a.explode) < 1e-3) return
     const next = approach(a.explode, explode, dt)
-    if (!a.dirty && Math.abs(next - a.explode) < 1e-4) return
     a.explode = Math.abs(next - explode) < 1e-3 ? explode : next
     a.dirty = false
     voxels.forEach((v, i) => {
       const [x, y, z] = voxelPosition(v, w, d)
-      dummy.position.set(x, y + explodeOffsetY(v.group, a.explode), z)
+      dummy.position.set(x, y + explodeOffsetY(v.group, a.explode, looks.length), z)
       dummy.scale.setScalar(cut !== null && isHidden(v, cut) ? 0 : VOXEL_SCALE)
       dummy.updateMatrix()
       mesh.setMatrixAt(i, dummy.matrix)

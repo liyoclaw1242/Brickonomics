@@ -4,7 +4,7 @@ import { allocateBlocks } from '../sim/allocate'
 import { useSandbox, effectiveExplode } from '../store/sandbox'
 import { productLooks } from './palette'
 import { QUALITY, type Quality } from './quality'
-import { cutThreshold, EXPLODE_GAP, layersFor, sizeAlong, stackVoxels, type CutSpec } from './layout/voxels'
+import { cutThreshold, explodeGap, layersFor, sizeAlong, stackVoxels, type CutSpec } from './layout/voxels'
 import { VoxelInstances } from './VoxelInstances'
 import { LaserPlane } from './LaserPlane'
 
@@ -48,7 +48,14 @@ export function BasketView({ productId, quality, position }: Props) {
         highlightGroup={idx >= 0 ? idx : null}
         onPick={(g) => pick({ productId, holdingId: holdings[g]!.id })}
       />
-      {cut && <LaserPlane cut={cut} w={spec.w} d={spec.d} height={layers + EXPLODE_GAP * holdings.length} />}
+      {cut && !(cut.axis === 'y' && explode > 0) && (
+        <LaserPlane
+          cut={cut}
+          w={spec.w}
+          d={spec.d}
+          height={layers + explodeGap(holdings.length) * (holdings.length - 1) * explode}
+        />
+      )}
     </group>
   )
 }
