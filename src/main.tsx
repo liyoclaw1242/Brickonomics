@@ -1,11 +1,12 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
+import { ErrorBoundary } from './ui/ErrorBoundary'
 import { FallbackApp } from './ui/FallbackApp'
 import { hasWebGL } from './ui/webgl'
 import { universe } from './data'
 import { isBasket } from './data/schema'
-import { detectQuality, readEnv } from './scene/quality'
+import { detectQuality, parseQualityParam, readEnv } from './scene/quality'
 import { parseSandboxQuery, useSandbox } from './store/sandbox'
 import { useQuality } from './store/quality'
 import { LEVELS } from './tour/levels'
@@ -20,7 +21,8 @@ const baskets = new Set([...universe.values()].filter(isBasket).map((a) => a.id)
 if (webgl) {
   const progress = loadProgress()
   useTour.setState({ progress })
-  useQuality.getState().setQuality(detectQuality(readEnv()))
+  const pinnedQuality = parseQualityParam(window.location.search)
+  useQuality.setState({ quality: pinnedQuality ?? detectQuality(readEnv()), pinned: pinnedQuality !== null })
   const tq = parseTourQuery(window.location.search, LEVELS)
   if (tq.mode === 'sandbox' || (!tq.pos && progress.sandboxUnlocked)) {
     useTour.setState({ mode: 'sandbox' })
@@ -31,12 +33,21 @@ if (webgl) {
   if (import.meta.env.DEV) {
     ;(window as unknown as { __BCI_STEPS__: number[] }).__BCI_STEPS__ = LEVELS.map((l) => l.steps.length)
     ;(window as unknown as { __BCI_STEP_IDS__: string[] }).__BCI_STEP_IDS__ = LEVELS.flatMap((l) => l.steps.map((st) => st.id))
+    ;(window as unknown as { __BCI_STEP_GATES__: { id: string; control: string; min: number }[] }).__BCI_STEP_GATES__ = LEVELS.flatMap((l) =>
+      l.steps.flatMap((st) => (st.until ? [{ id: st.id, control: st.until.control, min: st.until.min }] : [])),
+    )
     ;(window as unknown as { __BCI_DEGRADE__?: () => void }).__BCI_DEGRADE__ = () => useQuality.getState().degrade()
   }
 }
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    {webgl ? <App /> : <FallbackApp />}
+    {webgl ? (
+      <ErrorBoundary fallback={<FallbackApp />}>
+        <App />
+      </ErrorBoundary>
+    ) : (
+      <FallbackApp />
+    )}
   </StrictMode>,
 )
