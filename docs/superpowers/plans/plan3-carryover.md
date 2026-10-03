@@ -20,3 +20,13 @@ Plan 3 撰寫前必讀。來源：Plan 2 最終審查（2026-10-03）。
 - 配色亮度位移在大量同色持股時可能接近白色；etf/fund 白色底無法往上調亮。
 - `?slice=`（空值）解析為 0；最高大樓排序測試只檢查第一棟。
 - 720px 斷點在 TS 與 CSS 重複；721–760px 寬度時場景偏小。
+
+## Plan 3 完成後帶給 Plan 4 的事項（2026-10-03 最終審查）
+- `frameloop="demand"`：HeldBlocks、Excavator、CoinDrip、KindMesh 拆開動畫、CameraRig 需要在動畫期間持續 `invalidate()`；EnvMetal 每幀輪詢 `scene.environment`，要改成 effect。
+- 第 6 關地底：更新 `levels.test` 的關卡 id 清單；c-4 的「即將推出」上線時要改；擴充 `Stage`、`CameraPresetId`、StageView、readout；課程文字留在 `LEVELS`，只延遲載入舞台元件。
+- WebGL 備案可直接重用 `textOf` + `makeTextContext` 產生靜態卡片。
+- E2E：walkthrough 用 `?level=&step=` 直接跳步，會略過 `until` 條件；要另寫實際點「下一步」通過 f-2、f-6、f-8、f-9、e-2、s-5 的測試，並用就緒訊號取代固定等待 3.5 秒。
+- 畫質放進 store；廣場上的籃子目前寫死 `quality="low"`。
+- 進度只存「已完成的關卡」，中途重新整理會回到序章；可考慮一併保存目前位置。
+- 除息舞台：金幣堆在金幣還在飛時就已顯示 5 枚（純視覺）。
+- 重疊連線的標籤在手機上仍偏擠。
