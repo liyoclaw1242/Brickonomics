@@ -23,6 +23,23 @@ describe('useSandbox', () => {
     expect(useSandbox.getState()).toMatchObject({ productId: 'QQQ', slice: 0, explode: 0, picked: null })
   })
 
+  it('re-selecting the same product keeps cut, explode and pick', () => {
+    const s = useSandbox.getState()
+    s.setSlice(0.5)
+    s.setExplode(0.3)
+    s.pick({ productId: '0050', holdingId: '2330' })
+    s.selectProduct('0050')
+    expect(useSandbox.getState()).toMatchObject({ productId: '0050', slice: 0.5, explode: 0.3, picked: { productId: '0050', holdingId: '2330' } })
+  })
+
+  it('ignores unknown or non-basket product ids', () => {
+    const s = useSandbox.getState()
+    s.setSlice(0.5)
+    s.selectProduct('NOPE')
+    s.selectProduct('2330')
+    expect(useSandbox.getState()).toMatchObject({ productId: '0050', slice: 0.5 })
+  })
+
   it('clamps slider values to [0, 1] and maps NaN to 0', () => {
     const s = useSandbox.getState()
     s.setSlice(2)

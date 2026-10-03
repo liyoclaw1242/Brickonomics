@@ -1,4 +1,6 @@
 import { create } from 'zustand'
+import { universe } from '../data'
+import { isBasket } from '../data/schema'
 import type { SliceAxis } from '../scene/layout/voxels'
 
 export type Picked = { productId: string; holdingId: string } | null
@@ -23,14 +25,21 @@ type SandboxState = {
 
 const clamp01 = (v: number) => (Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 0)
 
-export const useSandbox = create<SandboxState>()((set) => ({
+export const useSandbox = create<SandboxState>()((set, get) => ({
   productId: '0050',
   sliceAxis: 'x',
   slice: 0,
   explode: 0,
   explodeHeld: false,
   picked: null,
-  selectProduct: (id) => set({ productId: id, slice: 0, explode: 0, picked: null }),
+  selectProduct: (id) => {
+    if (id === get().productId) return
+    if (id !== null) {
+      const a = universe.get(id)
+      if (!a || !isBasket(a)) return
+    }
+    set({ productId: id, slice: 0, explode: 0, picked: null })
+  },
   setSliceAxis: (a) => set({ sliceAxis: a }),
   setSlice: (v) => set({ slice: clamp01(v) }),
   setExplode: (v) => set({ explode: clamp01(v) }),
