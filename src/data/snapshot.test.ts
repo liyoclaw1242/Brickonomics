@@ -40,4 +40,18 @@ describe('aggregate buckets', () => {
     expect(agg).toEqual(['BOND_MIXED_US', 'CASH', 'CONVERTIBLE_US', 'GLOBAL_BOND_MIXED', 'OTHER_TW_STOCK', 'OTHER_US_STOCK', 'US_HIGH_YIELD', 'US_TREASURY'])
     expect(universe.get('GOLD')?.aggregate).toBeUndefined()
   })
+
+  it('landmark stocks have a market cap', () => {
+    for (const id of ['2330', 'NVDA', 'TSLA', 'AAPL', 'MSFT']) {
+      expect(universe.get(id)?.marketCapUsdB, id).toBeGreaterThan(0)
+    }
+  })
+
+  it('every market cap carries a verified flag and a source', () => {
+    for (const a of universe.values()) {
+      if (a.marketCapUsdB === undefined) continue
+      expect(a.verified?.marketCap, a.id).toBeDefined()
+      expect(a.source.length, a.id).toBeGreaterThan(0)
+    }
+  })
 })
