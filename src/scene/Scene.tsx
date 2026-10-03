@@ -3,6 +3,7 @@ import { useSandbox } from '../store/sandbox'
 import { BasketView } from './BasketView'
 import { City } from './City'
 import type { Quality } from './quality'
+import { ViewFraming } from './ViewFraming'
 
 /** 交易所櫃台的位置：兩座島中間偏前 */
 export const EXCHANGE_POSITION: [number, number, number] = [0, 0, 14]
@@ -40,8 +41,9 @@ export function Scene({ quality }: { quality: Quality }) {
       </Environment>
       <mesh rotation-x={-Math.PI / 2} position-y={-0.5} receiveShadow>
         <planeGeometry args={[300, 300]} />
-        <meshStandardMaterial color="#9cc9e8" />
+        <meshStandardMaterial color="#6fb4e8" />
       </mesh>
+      <ViewFraming />
       <City />
       <Pedestal />
       {productId && (
