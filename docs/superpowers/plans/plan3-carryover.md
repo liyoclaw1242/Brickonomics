@@ -30,3 +30,11 @@ Plan 3 撰寫前必讀。來源：Plan 2 最終審查（2026-10-03）。
 - 進度只存「已完成的關卡」，中途重新整理會回到序章；可考慮一併保存目前位置。
 - 除息舞台：金幣堆在金幣還在飛時就已顯示 5 枚（純視覺）。
 - 重疊連線的標籤在手機上仍偏擠。
+
+## Plan 4 完成後帶給 Plan 5（風格改版）的事項（2026-10-04 最終審查）
+- 場景顏色寫死在約 16 個 .tsx 檔裡（背景、半球光、地面、櫃台、土壤、金幣、怪手、廣場、`ROD` 等）：先建 `src/scene/theme.ts`（背景、霧、燈光組的顏色與強度、地面、標籤、強調色），並把燈光集中成一個由主題驅動的 `Lighting` 元件；`SECTOR_COLORS`／palette 要為深色背景重調。
+- `labelStyle`（以及 `dimLabelStyle`）是寫死的白色膠囊：改成 `Callout` 元件（CSS class + 變數，支援錨點與引線）；13 個使用 `<Html>` 的檔案改經由 `Callout`／`Label`。
+- 介面：`TourPanel` 混了標題、內文、數字、控制項、導航；拆成 `StepHeader`、`StepBody`、`Controls`、`ChapterTimeline`（由 LEVELS 與進度產生、編號、進度條）、`Toolbar`。`ViewFraming` 改讀單一版面模型的佔用邊距，修掉重複的 720px 斷點與寫死的 0.21。
+- 步驟沒有標題：`Step` 需要 `title`（可選 `caption`），放在 `levels.ts`，並加測試確認每一步都有。
+- CSS 變數是淺色優先：加一個強制的「黃昏」主題，加入 chip、pill、timeline、callout 的 token；Disclaimer、QualityNotice、文字版的固定位置會和右上工具列、底部時間軸衝突。
+- 可延後：地底淡化地層的透明排序殘影、未細分灰柱與城市重疊、延遲載入 App、手機標籤擁擠。
