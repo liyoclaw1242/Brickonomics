@@ -54,6 +54,29 @@ describe('simulateDistribution', () => {
     expect(s[1]?.fromPrincipal).toBeCloseTo(3)
   })
 
+  it('with a non-zero priceReturn: fromPrincipal ignores price gains', () => {
+    // initial 100, incomeYield 3%, priceReturn +5%, payoutRate 6%, payout mode
+    // 期 1：income = 100 * 0.03 = 3；payout = 100 * 0.06 = 6；fromPrincipal += 6 - 3 = 3
+    //       value = 100 * 1.05 + 3 - 6 = 102；cash = 6；total = 108
+    // 期 2：income = 102 * 0.03 = 3.06；payout = 102 * 0.06 = 6.12；fromPrincipal += 6.12 - 3.06 = 3.06 -> 6.06
+    //       value = 102 * 1.05 + 3.06 - 6.12 = 107.1 - 3.06 = 104.04；cash = 6 + 6.12 = 12.12；total = 116.16
+    const s = simulateDistribution({ initialValue: 100, incomeYield: 0.03, priceReturn: 0.05, payoutRate: 0.06, periods: 2, mode: 'payout' })
+    expect(s[1]?.value).toBeCloseTo(102, 9)
+    expect(s[1]?.fromPrincipal).toBeCloseTo(3, 9)
+    expect(s[2]?.value).toBeCloseTo(104.04, 9)
+    expect(s[2]?.cashReceived).toBeCloseTo(12.12, 9)
+    expect(s[2]?.fromPrincipal).toBeCloseTo(6.06, 9) // 價值已高於 100，仍累計「配出超過產出」
+    expect(s[2]?.total).toBeCloseTo(116.16, 9)
+  })
+
+  it('ex-dividend then price recovery (填息) restores the price and keeps the cash', () => {
+    // 除息：100 - 5 = 95，拿到 5。填息：95 * (1 + 5/95) = 95 + 5 = 100。
+    const ex = exDividend(100, 5)
+    const refilled = ex.price * (1 + 5 / 95)
+    expect(refilled).toBeCloseTo(100, 9)
+    expect(refilled + ex.cash).toBeCloseTo(105, 9) // 填息後價格回到 100，金幣 5 留在手上
+  })
+
   it('rejects invalid parameters with RangeError naming the parameter', () => {
     const run = (o: object) => () => simulateDistribution({ ...base, payoutRate: 0.05, mode: 'payout', ...o })
     expect(run({ initialValue: -1 })).toThrow(/initialValue/)

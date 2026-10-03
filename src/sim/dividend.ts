@@ -27,7 +27,10 @@ export type PeriodState = {
   period: number
   value: number
   cashReceived: number
-  /** 累計配出超過產出的部分（配息來自本金） */
+  /**
+   * 累計配出超過產出的部分（配息來自本金）。教學定義：每期 max(0, 配出 - 產出) 的累計，
+   * 不考慮價格漲跌——即使價格上漲讓價值回升，仍照此定義累計。僅供示意。
+   */
   fromPrincipal: number
   total: number
 }
