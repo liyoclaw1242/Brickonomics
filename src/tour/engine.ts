@@ -68,7 +68,15 @@ export function parseProgress(raw: string | null): Progress {
     if (typeof o !== 'object' || o === null) return { ...EMPTY_PROGRESS }
     const rec = o as Record<string, unknown>
     const completed = Array.isArray(rec.completed) ? rec.completed.filter((x): x is string => typeof x === 'string') : []
-    return { completed, sandboxUnlocked: rec.sandboxUnlocked === true }
+    const p: Progress = { completed, sandboxUnlocked: rec.sandboxUnlocked === true }
+    const pos = rec.pos
+    if (typeof pos === 'object' && pos !== null) {
+      const posRec = pos as Record<string, unknown>
+      if (typeof posRec.level === 'number' && typeof posRec.step === 'number' && Number.isInteger(posRec.level) && posRec.level >= 0 && Number.isInteger(posRec.step) && posRec.step >= 0) {
+        p.pos = { level: posRec.level, step: posRec.step }
+      }
+    }
+    return p
   } catch {
     return { ...EMPTY_PROGRESS }
   }

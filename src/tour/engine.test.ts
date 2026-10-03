@@ -76,6 +76,11 @@ describe('progress persistence', () => {
     expect(parseProgress('{oops')).toEqual({ completed: [], sandboxUnlocked: false })
     expect(parseProgress('{"completed":[1,"b"],"sandboxUnlocked":"yes"}')).toEqual({ completed: ['b'], sandboxUnlocked: false })
   })
+
+  it('round-trips a saved position and drops invalid ones', () => {
+    expect(parseProgress('{"completed":[],"sandboxUnlocked":false,"pos":{"level":2,"step":1}}').pos).toEqual({ level: 2, step: 1 })
+    expect(parseProgress('{"completed":[],"sandboxUnlocked":false,"pos":{"level":-1,"step":"x"}}').pos).toBeUndefined()
+  })
 })
 
 describe('parseTourQuery', () => {

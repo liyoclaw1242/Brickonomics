@@ -65,4 +65,4 @@ export type Step = {
 
 export type Level = { id: string; title: string; steps: Step[] }
 export type Position = { level: number; step: number }
-export type Progress = { completed: string[]; sandboxUnlocked: boolean }
+export type Progress = { completed: string[]; sandboxUnlocked: boolean; pos?: Position }

@@ -52,4 +52,9 @@ describe('useTour', () => {
     useTour.getState().enterStep(positionOf(LEVELS, 'e-3'))
     expect(currentStep(useTour.getState()).id).toBe('e-3')
   })
+
+  it('remembers the current position', () => {
+    useTour.getState().enterStep({ level: 1, step: 2 })
+    expect(useTour.getState().progress.pos).toEqual({ level: 1, step: 2 })
+  })
 })

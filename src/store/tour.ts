@@ -51,7 +51,9 @@ export const useTour = create<TourState>()((set, get) => ({
   enterStep: (pos) => {
     const step = stepAt(LEVELS, pos)
     useSandbox.getState().applyScene(sandboxPatchFor(step.scene))
-    set({ mode: 'tour', pos, values: { ...DEFAULT_VALUES, ...step.scene.values } })
+    const progress = { ...get().progress, pos }
+    saveProgress(progress)
+    set({ mode: 'tour', pos, values: { ...DEFAULT_VALUES, ...step.scene.values }, progress })
   },
   next: () => {
     const { pos, progress } = get()
