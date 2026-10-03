@@ -5,6 +5,14 @@ import type { SliceAxis } from '../scene/layout/voxels'
 
 export type Picked = { productId: string; holdingId: string } | null
 
+export type SandboxPatch = {
+  productId?: string | null
+  sliceAxis?: SliceAxis
+  slice?: number
+  explode?: number
+  picked?: Picked
+}
+
 type SandboxState = {
   productId: string | null
   sliceAxis: SliceAxis
@@ -21,23 +29,32 @@ type SandboxState = {
   setExplode: (v: number) => void
   setExplodeHeld: (held: boolean) => void
   pick: (p: Picked) => void
+  resetSandbox: () => void
+  /** 關卡用：直接套用場景（同一商品也套用），不合法的商品丟 RangeError */
+  applyScene: (p: SandboxPatch) => void
 }
 
 const clamp01 = (v: number) => (Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 0)
 
-export const useSandbox = create<SandboxState>()((set, get) => ({
-  productId: '0050',
-  sliceAxis: 'x',
+const INITIAL = {
+  productId: '0050' as string | null,
+  sliceAxis: 'x' as SliceAxis,
   slice: 0,
   explode: 0,
   explodeHeld: false,
-  picked: null,
+  picked: null as Picked,
+}
+
+const isBasketId = (id: string) => {
+  const a = universe.get(id)
+  return !!a && isBasket(a)
+}
+
+export const useSandbox = create<SandboxState>()((set, get) => ({
+  ...INITIAL,
   selectProduct: (id) => {
     if (id === get().productId) return
-    if (id !== null) {
-      const a = universe.get(id)
-      if (!a || !isBasket(a)) return
-    }
+    if (id !== null && !isBasketId(id)) return
     set({ productId: id, slice: 0, explode: 0, picked: null })
   },
   setSliceAxis: (a) => set({ sliceAxis: a }),
@@ -45,6 +62,19 @@ export const useSandbox = create<SandboxState>()((set, get) => ({
   setExplode: (v) => set({ explode: clamp01(v) }),
   setExplodeHeld: (held) => set({ explodeHeld: held }),
   pick: (p) => set({ picked: p }),
+  resetSandbox: () => set({ ...INITIAL }),
+  applyScene: (p) => {
+    const out: Partial<SandboxState> = {}
+    if (p.productId !== undefined) {
+      if (p.productId !== null && !isBasketId(p.productId)) throw new RangeError(`not a basket: ${p.productId}`)
+      out.productId = p.productId
+    }
+    if (p.sliceAxis !== undefined) out.sliceAxis = p.sliceAxis
+    if (p.slice !== undefined) out.slice = clamp01(p.slice)
+    if (p.explode !== undefined) out.explode = clamp01(p.explode)
+    if (p.picked !== undefined) out.picked = p.picked
+    set(out)
+  },
 }))
 
 export function effectiveExplode(s: { explode: number; explodeHeld: boolean }): number {

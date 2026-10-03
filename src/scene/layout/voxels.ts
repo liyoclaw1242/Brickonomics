@@ -1,6 +1,6 @@
 import type { BlockCount } from '../../sim/allocate'
 
-export type SliceAxis = 'x' | 'y' | 'z'
+export type SliceAxis = 'x' | 'y' | 'z' | 'd'
 /** 格點座標；group 是持股在 holdings 中的索引 */
 export type Voxel = { id: string; group: number; x: number; y: number; z: number }
 export type CutSpec = { axis: SliceAxis; threshold: number }
@@ -57,7 +57,8 @@ export function cutThreshold(size: number, amount: number): number {
 }
 
 export function isHidden(v: Voxel, cut: CutSpec): boolean {
-  return v[cut.axis] >= cut.threshold
+  const coord = cut.axis === 'd' ? v.x + v.z : v[cut.axis as 'x' | 'y' | 'z']
+  return coord >= cut.threshold
 }
 
 /** 切面在該軸上的世界座標（保留與切掉的方塊之間的交界） */
