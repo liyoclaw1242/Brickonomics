@@ -31,23 +31,23 @@ export const LEVELS: Level[] = [
       {
         id: 's-1',
         text: '買一張股票，就像從大樓抽出一顆方塊放進口袋：你成了這家公司的小股東，擁有它的一小部分。',
-        scene: { camera: 'plaza', product: null, stage: { kind: 'held', items: [{ assetId: '2330', motion: 'still' }] } },
+        scene: { camera: 'plazaNear', product: null, stage: { kind: 'held', items: [{ assetId: '2330', motion: 'still' }] } },
       },
       {
         id: 's-2',
         text: '假設公司變得更值錢，大樓長高，你手上的方塊也跟著變大。（示意）',
-        scene: { camera: 'plaza', product: null, stage: { kind: 'held', items: [{ assetId: '2330', motion: 'up' }] } },
+        scene: { camera: 'plazaNear', product: null, stage: { kind: 'held', items: [{ assetId: '2330', motion: 'up' }] } },
       },
       {
         id: 's-3',
         text: '反過來，假設公司價值下跌，方塊也會縮小。股票的價格，跟著公司走。（示意）',
-        scene: { camera: 'plaza', product: null, stage: { kind: 'held', items: [{ assetId: '2330', motion: 'down' }] } },
+        scene: { camera: 'plazaNear', product: null, stage: { kind: 'held', items: [{ assetId: '2330', motion: 'down' }] } },
       },
       {
         id: 's-4',
         text: '左邊是台積電，右邊是特斯拉。單一股票的價格常常上上下下，這叫「波動」；有些公司晃得特別厲害。（晃動幅度為示意，不代表真實數字）',
         scene: {
-          camera: 'plaza',
+          camera: 'plazaNear',
           product: null,
           stage: { kind: 'held', items: [{ assetId: '2330', motion: 'shake', amplitude: 0.12 }, { assetId: 'TSLA', motion: 'shake', amplitude: 0.45 }] },
         },
@@ -55,20 +55,20 @@ export const LEVELS: Level[] = [
       {
         id: 's-5',
         text: '有些公司賺了錢會發「股利」，就是金幣。拖動下方的時間軸，看看配發的那一刻發生了什麼事。（示意）',
-        scene: { camera: 'plaza', product: null, stage: { kind: 'exdiv', outcome: 'fill' }, values: { phase: 0 } },
+        scene: { camera: 'plazaNear', product: null, stage: { kind: 'exdiv', outcome: 'fill' }, values: { phase: 0 } },
         controls: ['phase'],
         until: { control: 'phase', min: 0.55 },
       },
       {
         id: 's-6',
         text: '方塊縮小的部分，剛好等於你拿到的金幣：方塊價值＋金幣＝不變。這叫「除息」。之後方塊如果慢慢長回原本大小，叫「填息」。（示意）',
-        scene: { camera: 'plaza', product: null, stage: { kind: 'exdiv', outcome: 'fill' }, values: { phase: 0.5 } },
+        scene: { camera: 'plazaNear', product: null, stage: { kind: 'exdiv', outcome: 'fill' }, values: { phase: 0.5 } },
         controls: ['phase'],
       },
       {
         id: 's-7',
         text: '方塊也可能長不回去，甚至更小，這叫「貼息」。所以配息不是白送的錢，真正要看的是「方塊＋金幣」加起來的總報酬。（示意）',
-        scene: { camera: 'plaza', product: null, stage: { kind: 'exdiv', outcome: 'gap' }, values: { phase: 1 } },
+        scene: { camera: 'plazaNear', product: null, stage: { kind: 'exdiv', outcome: 'gap' }, values: { phase: 1 } },
         controls: ['phase'],
       },
     ],
@@ -101,30 +101,30 @@ export const LEVELS: Level[] = [
       {
         id: 'f-1',
         text: '基金是把錢交給經理人，由他（就是這台怪手）去挑方塊，堆成一座小塔。這是駿利亨德森平衡基金。',
-        scene: { camera: 'exchange', product: 'JH_BALANCED', stage: { kind: 'excavator', meter: false } },
+        scene: { camera: 'exchange', product: 'JH_BALANCED', stage: { kind: 'excavator', meter: false }, cityLabels: false },
       },
       {
         id: 'f-2',
         text: '拖動「拆開」拉桿，看看這座塔裡裝了什麼。',
-        scene: { camera: 'exchange', product: 'JH_BALANCED', stage: { kind: 'excavator', meter: false } },
+        scene: { camera: 'exchangeWide', product: 'JH_BALANCED', stage: { kind: 'excavator', meter: false }, cityLabels: false },
         controls: ['explode'],
         until: { control: 'explode', min: 0.6 },
       },
       {
         id: 'f-3',
         text: '塔裡有輝達、微軟這些股票方塊，也有美國公債的鑽石借據。同時持有股票和債券的基金，叫「多重資產」或「平衡型」。',
-        scene: { camera: 'exchange', product: 'JH_BALANCED', explode: 1, stage: { kind: 'excavator', meter: false }, cityLabels: false },
+        scene: { camera: 'exchangeWide', product: 'JH_BALANCED', explode: 1, stage: { kind: 'excavator', meter: false }, cityLabels: false },
       },
       {
         id: 'f-4',
         text: (c) =>
           `同樣叫多重資產，安聯收益成長的內容就很不一樣：依目前快照，可轉債約 ${pct0(c.weightPct('ALLIANZ_INCOME_GROWTH', 'CONVERTIBLE_US'))}%、高收益債約 ${pct0(c.weightPct('ALLIANZ_INCOME_GROWTH', 'US_HIGH_YIELD'))}%。名稱一樣，裡面不一定一樣。`,
-        scene: { camera: 'exchange', product: 'ALLIANZ_INCOME_GROWTH', explode: 1, stage: { kind: 'excavator', meter: false }, cityLabels: false },
+        scene: { camera: 'exchangeWide', product: 'ALLIANZ_INCOME_GROWTH', explode: 1, stage: { kind: 'excavator', meter: false }, cityLabels: false },
       },
       {
         id: 'f-5',
         text: '怪手不是免費的。塔上的計費表一直在跑：管理費等內扣費用，每天都會從塔上磨掉一點點。',
-        scene: { camera: 'exchange', product: 'JH_BALANCED', stage: { kind: 'excavator', meter: true } },
+        scene: { camera: 'exchange', product: 'JH_BALANCED', stage: { kind: 'excavator', meter: true }, cityLabels: false },
       },
       {
         id: 'f-6',
@@ -162,12 +162,12 @@ export const LEVELS: Level[] = [
       {
         id: 'e-1',
         text: 'ETF 照一張藍圖（指數）自動挑方塊，壓縮成一顆混合方塊，放在交易所櫃台上買賣。這是元大台灣50（0050）。',
-        scene: { camera: 'exchange', product: '0050' },
+        scene: { camera: 'exchange', product: '0050', cityLabels: false },
       },
       {
         id: 'e-2',
         text: '拿起雷射刀，把它切開看看。',
-        scene: { camera: 'exchange', product: '0050', sliceAxis: 'x' },
+        scene: { camera: 'exchangeSide', product: '0050', sliceAxis: 'x', cityLabels: false },
         controls: ['slice'],
         until: { control: 'slice', min: 0.4 },
       },
@@ -175,17 +175,17 @@ export const LEVELS: Level[] = [
         id: 'e-3',
         text: (c) =>
           `看到那層特別厚的藍色了嗎？那是台積電，佔了約 ${pct0(c.weightPct('0050', '2330'))}%。第二名聯發科只佔約 ${pct0(c.weightPct('0050', '2454'))}%，差距很大。`,
-        scene: { camera: 'exchange', product: '0050', slice: 0.5, sliceAxis: 'x' },
+        scene: { camera: 'exchangeSide', product: '0050', slice: 0.5, sliceAxis: 'x', cityLabels: false },
       },
       {
         id: 'e-4',
         text: 'ETF 在交易所開盤時隨時都有成交價，可以像股票一樣買賣；一般基金則是每天收盤後才算出一個淨值。（價格跳動為示意）',
-        scene: { camera: 'exchange', product: '0050', stage: { kind: 'ticker' } },
+        scene: { camera: 'exchange', product: '0050', stage: { kind: 'ticker' }, cityLabels: false },
       },
       {
         id: 'e-5',
         text: '美國的 QQQ 和 SPY（標普500）也是 ETF。照藍圖自動配置、不需要怪手挑股，在目前快照裡，它們的費用率（每年從資產內扣的費用比例）都比本課的基金低。不過費用低不代表一定比較好，策略也不同。',
-        scene: { camera: 'exchange', product: 'QQQ' },
+        scene: { camera: 'exchange', product: 'QQQ', cityLabels: false },
       },
     ],
   },

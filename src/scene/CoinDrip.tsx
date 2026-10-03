@@ -4,7 +4,7 @@ import { type InstancedMesh, Object3D } from 'three'
 import type { Vec3 } from './camera'
 import { COIN_HEIGHT, COIN_RADIUS, coinPositions } from './layout/coins'
 
-type Props = { from: Vec3; to: Vec3; rate: number; fallTime?: number; arc?: number; active?: boolean }
+type Props = { from: Vec3; to: Vec3; rate: number; fallTime?: number; arc?: number; active?: boolean; size?: number }
 
 export function CoinMaterial() {
   return <meshStandardMaterial color="#ffd54f" metalness={0.5} roughness={0.3} emissive="#7a5a00" emissiveIntensity={0.25} />
@@ -16,7 +16,7 @@ export function CoinDrip(props: Props) {
   return <CoinDripInner {...props} />
 }
 
-function CoinDripInner({ from, to, rate, fallTime = 1.2, arc = 1.5, active = true }: Props) {
+function CoinDripInner({ from, to, rate, fallTime = 1.2, arc = 1.5, active = true, size = 1 }: Props) {
   const max = Math.ceil(rate * fallTime) + 1
   const ref = useRef<InstancedMesh>(null)
   const t0 = useRef<number | null>(null)
@@ -31,7 +31,7 @@ function CoinDripInner({ from, to, rate, fallTime = 1.2, arc = 1.5, active = tru
       if (pt) {
         dummy.position.set(...pt)
         dummy.rotation.set(Math.PI / 2, 0, clock.elapsedTime * 4 + i)
-        dummy.scale.setScalar(1)
+        dummy.scale.setScalar(size)
       } else {
         dummy.scale.setScalar(0)
       }

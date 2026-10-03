@@ -9,7 +9,7 @@ import type { Stage } from './types'
 
 const ctx = makeTextContext(universe)
 const steps = LEVELS.flatMap((l) => l.steps)
-const PRESETS = ['sky', 'overview', 'tw', 'us', 'exchange', 'plaza']
+const PRESETS = ['sky', 'overview', 'tw', 'us', 'exchange', 'exchangeWide', 'exchangeSide', 'plaza', 'plazaNear']
 
 const assetsIn = (s: Stage): string[] => {
   if (s.kind === 'held') return s.items.map((i) => i.assetId)

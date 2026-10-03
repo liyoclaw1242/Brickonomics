@@ -1,7 +1,7 @@
 import type { SliceAxis } from '../scene/layout/voxels'
 import type { Picked } from '../store/sandbox'
 
-export type CameraPresetId = 'sky' | 'overview' | 'tw' | 'us' | 'exchange' | 'plaza'
+export type CameraPresetId = 'sky' | 'overview' | 'tw' | 'us' | 'exchange' | 'exchangeWide' | 'exchangeSide' | 'plaza' | 'plazaNear'
 
 export type Motion = 'still' | 'up' | 'down' | 'shake'
 export type HeldItem = { assetId: string; motion: Motion; amplitude?: number }

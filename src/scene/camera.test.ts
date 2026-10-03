@@ -14,6 +14,6 @@ describe('approachVec', () => {
 
 describe('CAMERA_PRESETS', () => {
   it('defines every preset', () => {
-    expect(Object.keys(CAMERA_PRESETS).sort()).toEqual(['exchange', 'overview', 'plaza', 'sky', 'tw', 'us'])
+    expect(Object.keys(CAMERA_PRESETS).sort()).toEqual(['exchange', 'exchangeSide', 'exchangeWide', 'overview', 'plaza', 'plazaNear', 'sky', 'tw', 'us'])
   })
 })

@@ -30,6 +30,9 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 * { box-sizing: border-box; }
 
 .app { position: fixed; inset: 0; }
+/* Canvas（含 drei Html 標籤）自成層疊情境，永遠在 UI 面板下方 */
+.app > div:first-child { z-index: 0; }
+.panel, .info, .disclaimer { z-index: 10; }
 
 .panel {
   position: fixed; top: 12px; left: 12px; bottom: 12px; width: var(--panel-w);

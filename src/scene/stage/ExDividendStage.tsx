@@ -12,6 +12,8 @@ import { useAfterFirstTick } from '../useAfterFirstTick'
 import { atPlaza } from './plaza'
 
 const BASE_EDGE = 4
+/** 金幣放大，讓 5 枚金幣的堆疊在近景看得清楚 */
+const COIN_SCALE = 2
 
 /** 除息：方塊體積 ∝ 價值；金幣一枚 = 1（示意價格 100、股利 5） */
 export function ExDividendStage({ outcome }: { outcome: ExDivOutcome; quality?: Quality }) {
@@ -27,8 +29,10 @@ export function ExDividendStage({ outcome }: { outcome: ExDivOutcome; quality?: 
         <boxGeometry args={[edge, edge, edge]} />
         <meshStandardMaterial color={look.color} />
       </mesh>
-      <CoinPile count={Math.round(st.cash)} position={atPlaza(3, 0, 0)} />
-      {paying && <CoinDrip from={atPlaza(-4, edge, 0)} to={atPlaza(3, 0.3, 0)} rate={6} fallTime={0.8} />}
+      <group position={atPlaza(3, 0, 0)} scale={COIN_SCALE}>
+        <CoinPile count={Math.round(st.cash)} position={[0, 0, 0]} />
+      </group>
+      {paying && <CoinDrip from={atPlaza(-4, edge, 0)} to={atPlaza(3, 0.3, 0)} rate={6} fallTime={0.8} size={COIN_SCALE} />}
       {ready && (
         <>
           <Html position={atPlaza(-4, -0.2, 3)} center style={labelStyle}>
