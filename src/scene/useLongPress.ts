@@ -36,6 +36,11 @@ export function useLongPress(onLong: (e: ThreeEvent<PointerEvent>) => void) {
         tracker.end()
         clearTimeout(timer.current)
       },
+      onPointerCancel: () => {
+        activeId.current = null
+        tracker.end()
+        clearTimeout(timer.current)
+      },
     }),
     [tracker],
   )
