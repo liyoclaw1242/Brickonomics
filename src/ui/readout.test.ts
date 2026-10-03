@@ -46,4 +46,10 @@ describe('stageReadout', () => {
     const trap = stageReadout({ kind: 'principalTrap' }, v({ periods: 10 }), universe, null)
     expect(trap.map((r) => r.value)).toEqual(['73.7', '52.5', '26.3'])
   })
+
+  it('lists sector shares for underground cores and nothing otherwise', () => {
+    const rows = stageReadout({ kind: 'underground', show: 'cores', cores: ['QQQ', 'SPY'] }, v(), universe, null)
+    expect(rows[0]).toEqual({ label: 'Invesco QQQ・半導體', value: '13.3%' })
+    expect(stageReadout({ kind: 'underground', show: 'strata' }, v(), universe, null)).toEqual([])
+  })
 })

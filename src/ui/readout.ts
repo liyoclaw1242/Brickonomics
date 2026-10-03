@@ -1,5 +1,6 @@
 import type { Universe } from '../data/universe'
 import { isVerified } from '../data/verified'
+import { sectorBreakdown } from '../scene/layout/underground'
 import { accumulateVsPayout, exDivTimeline, principalTrap } from '../scene/layout/stages'
 import { feeRace, feeRaceLeader } from '../sim/feeRace'
 import { overlap } from '../sim/overlap'
@@ -72,6 +73,15 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
       const er = p?.fees?.expenseRatio
       if (!stage.meter || !p || er === undefined) return []
       return [{ label: T.readout.expenseRatio, value: `${(er * 100).toFixed(2)}%`, unverified: !isVerified(p, 'fees.expenseRatio') }]
+    }
+    case 'underground': {
+      if (stage.show !== 'cores' || !stage.cores) return []
+      return stage.cores.flatMap((id) =>
+        sectorBreakdown(u, id).map((r) => ({
+          label: `${u.get(id)!.name}・${T.sectors[r.sector]}`,
+          value: `${r.weightPct.toFixed(1)}%`,
+        })),
+      )
     }
     default:
       return []

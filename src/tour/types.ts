@@ -2,7 +2,7 @@ import type { SliceAxis } from '../scene/layout/voxels'
 import type { Picked } from '../store/sandbox'
 import type { Sector } from '../scene/layout/underground'
 
-export type CameraPresetId = 'sky' | 'overview' | 'tw' | 'us' | 'exchange' | 'exchangeWide' | 'exchangeSide' | 'plaza' | 'plazaNear'
+export type CameraPresetId = 'sky' | 'overview' | 'tw' | 'us' | 'exchange' | 'exchangeWide' | 'exchangeSide' | 'plaza' | 'plazaNear' | 'underground'
 
 export type Motion = 'still' | 'up' | 'down' | 'shake'
 export type HeldItem = { assetId: string; motion: Motion; amplitude?: number }
@@ -20,6 +20,7 @@ export type Stage =
   | { kind: 'ticker' }
   | { kind: 'shock'; active: boolean }
   | { kind: 'overlap'; a: string; b: string }
+  | { kind: 'underground'; show: 'strata' | 'cores' | 'dig' | 'veins' | 'gold'; cores?: [string, string] }
 
 export type StageKind = Stage['kind']
 

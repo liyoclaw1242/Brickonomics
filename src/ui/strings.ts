@@ -95,6 +95,11 @@ export const T = {
   qualityNotice: '畫面有點卡，已自動切換成省電畫質。',
   dismiss: '知道了',
   fallbackIntro: '你的瀏覽器無法顯示 3D 畫面，以下是文字版課程。',
+  underground: {
+    goldVein: '黃金礦脈',
+    dig: '產業型 ETF（示意）',
+    veins: '高股息型 ETF（示意）',
+  },
   sectors: {
     semiconductor: '半導體',
     electronics: '電子',

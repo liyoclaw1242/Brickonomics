@@ -211,7 +211,43 @@ export const LEVELS: Level[] = [
       },
       {
         id: 'c-4',
-        text: '恭喜完成！沙盒模式已經解鎖：所有商品都能自由切開、拆開、比較。進階章節「鑽進地底」即將推出。',
+        text: '接下來，我們鑽到城市底下，看看 ETF 還分成哪些種類。',
+        scene: { camera: 'overview', product: null },
+      },
+    ],
+  },  {
+    id: 'underground',
+    title: '鑽進地底：ETF 的種類',
+    steps: [
+      {
+        id: 'u-1',
+        text: '鏡頭往下鑽：城市底下的土層，就是「產業分類」。每一層是一種產業：半導體、電子、軟體、網路、汽車、金融。',
+        scene: { camera: 'underground', product: null, stage: { kind: 'underground', show: 'strata' }, cityLabels: false },
+      },
+      {
+        id: 'u-2',
+        text: (c) =>
+          `市值型 ETF 像一根垂直鑽下去的岩芯。左邊是 0050：依目前快照，約 ${pct0(c.sectorPct('0050', 'semiconductor'))}% 在半導體層。右邊是 QQQ：前幾大持股分屬半導體、電子、軟體、汽車等好幾種產業。灰色是快照裡沒有細分的部分。`,
+        scene: { camera: 'underground', product: null, stage: { kind: 'underground', show: 'cores', cores: ['0050', 'QQQ'] }, cityLabels: false },
+      },
+      {
+        id: 'u-3',
+        text: '產業型或主題型 ETF 則是沿著同一層水平挖，例如只挖半導體層。挖得越集中，那一層的好壞對它影響越大。（示意，不代表任何真實商品）',
+        scene: { camera: 'underground', product: null, stage: { kind: 'underground', show: 'dig' }, cityLabels: false },
+      },
+      {
+        id: 'u-4',
+        text: '高股息型 ETF 專挑會冒金幣（配息比較多）的礦脈。但別忘了第 1 關：配息不是白送的，要看「方塊＋金幣」的總報酬。（示意）',
+        scene: { camera: 'underground', product: null, stage: { kind: 'underground', show: 'veins' }, cityLabels: false },
+      },
+      {
+        id: 'u-5',
+        text: '最底下這條是黃金礦脈。黃金不是公司，不會配股利，也沒有利息；它的價格取決於市場願意用多少錢買它。（示意）',
+        scene: { camera: 'underground', product: null, stage: { kind: 'underground', show: 'gold' }, cityLabels: false },
+      },
+      {
+        id: 'u-6',
+        text: '恭喜完成全部課程！沙盒模式已經解鎖：所有商品都能自由切開、拆開、比較。',
         scene: { camera: 'overview', product: '0050' },
       },
     ],

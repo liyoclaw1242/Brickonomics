@@ -9,17 +9,18 @@ import type { Stage } from './types'
 
 const ctx = makeTextContext(universe)
 const steps = LEVELS.flatMap((l) => l.steps)
-const PRESETS = ['sky', 'overview', 'tw', 'us', 'exchange', 'exchangeWide', 'exchangeSide', 'plaza', 'plazaNear']
+const PRESETS = ['sky', 'overview', 'tw', 'us', 'exchange', 'exchangeWide', 'exchangeSide', 'plaza', 'plazaNear', 'underground']
 
 const assetsIn = (s: Stage): string[] => {
   if (s.kind === 'held') return s.items.map((i) => i.assetId)
   if (s.kind === 'overlap') return [s.a, s.b]
+  if (s.kind === 'underground') return s.cores ?? []
   return []
 }
 
 describe('LEVELS', () => {
-  it('has the prologue plus five levels in order', () => {
-    expect(LEVELS.map((l) => l.id)).toEqual(['prologue', 'stock', 'bond', 'fund', 'etf', 'scenario'])
+  it('has the prologue plus six levels in order', () => {
+    expect(LEVELS.map((l) => l.id)).toEqual(['prologue', 'stock', 'bond', 'fund', 'etf', 'scenario', 'underground'])
     for (const l of LEVELS) expect(l.steps.length, l.id).toBeGreaterThan(0)
   })
 
@@ -64,8 +65,11 @@ describe('LEVELS', () => {
 
   it('labels illustrative stages as 示意 in their text', () => {
     const illustrative = new Set(['held', 'exdiv', 'bonds', 'accumulate', 'principalTrap', 'ticker'])
+    const undergroundIllustrative = new Set(['dig', 'veins', 'gold'])
     for (const s of steps) {
-      const kind = s.scene.stage?.kind
+      const st = s.scene.stage
+      if (st?.kind === 'underground' && undergroundIllustrative.has(st.show)) expect(textOf(s, ctx), s.id).toContain('示意')
+      const kind = st?.kind
       if (kind && illustrative.has(kind) && !(kind === 'held' && s.scene.stage?.kind === 'held' && s.scene.stage.items.every((i) => i.motion === 'still'))) {
         expect(textOf(s, ctx), s.id).toContain('示意')
       }
@@ -77,6 +81,11 @@ describe('LEVELS', () => {
     expect(textOf(e3, ctx)).toContain('56%') // pct0(56.31)
     const c2 = steps.find((s) => s.id === 'c-2')!
     expect(textOf(c2, ctx)).toContain('−16.9%') // -0.3 * 56.31% = -16.893%
+  })
+
+  it('derives the u-2 semiconductor percentage from sectorPct', () => {
+    const u2 = steps.find((s) => s.id === 'u-2')!
+    expect(textOf(u2, ctx)).toContain(`${ctx.sectorPct('0050', 'semiconductor').toFixed(0)}%`)
   })
 
   it('data facts the lesson text relies on', () => {

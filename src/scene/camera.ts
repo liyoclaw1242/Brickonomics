@@ -12,6 +12,7 @@ export const CAMERA_PRESETS: Record<CameraPresetId, { position: Vec3; target: Ve
   exchangeWide: { position: [10, 30, 48], target: [0, 10, 14] },
   exchangeSide: { position: [34, 14, 20], target: [0, 7, 14] },
   plazaNear: { position: [0, 18, 52], target: [0, 2, 30] },
+  underground: { position: [0, -9, 98], target: [0, -9, 24] },
   plaza: { position: [0, 26, 66], target: [0, 4, 30] },
 }
 
