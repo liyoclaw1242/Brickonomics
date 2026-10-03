@@ -1,5 +1,6 @@
 import type { SliceAxis } from '../scene/layout/voxels'
 import type { Picked } from '../store/sandbox'
+import type { Sector } from '../scene/layout/underground'
 
 export type CameraPresetId = 'sky' | 'overview' | 'tw' | 'us' | 'exchange' | 'exchangeWide' | 'exchangeSide' | 'plaza' | 'plazaNear'
 
@@ -50,6 +51,7 @@ export type SceneDirective = {
 export type TextContext = {
   weightPct: (productId: string, holdingId: string) => number
   shock: (productId: string) => number
+  sectorPct: (productId: string, sector: Sector) => number
 }
 
 export type Step = {

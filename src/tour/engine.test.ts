@@ -62,7 +62,7 @@ describe('sandboxPatchFor', () => {
 
 describe('textOf', () => {
   it('returns static text or calls the template with the context', () => {
-    const ctx = { weightPct: () => 57.35, shock: () => -0.17 }
+    const ctx = { weightPct: () => 57.35, shock: () => -0.17, sectorPct: () => 0 }
     expect(textOf(L[0]!.steps[0]!, ctx)).toBe('x')
     expect(textOf(L[1]!.steps[0]!, ctx)).toBe('w=57.35')
   })

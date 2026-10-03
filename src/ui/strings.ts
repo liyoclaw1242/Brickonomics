@@ -95,4 +95,13 @@ export const T = {
   qualityNotice: '畫面有點卡，已自動切換成省電畫質。',
   dismiss: '知道了',
   fallbackIntro: '你的瀏覽器無法顯示 3D 畫面，以下是文字版課程。',
+  sectors: {
+    semiconductor: '半導體',
+    electronics: '電子',
+    software: '軟體',
+    internet: '網路',
+    auto: '汽車',
+    finance: '金融',
+    unclassified: '未細分',
+  },
 } as const

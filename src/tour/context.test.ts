@@ -14,6 +14,11 @@ describe('text context', () => {
     expect(c.shock('0050')).toBeCloseTo(-0.16893, 5) // -0.3 * 56.31 / 100
     expect(c.shock('SPY')).toBe(0)
   })
+
+  it('reports sector weights for a product', () => {
+    expect(c.sectorPct('QQQ', 'semiconductor')).toBeCloseTo(13.35, 6)
+    expect(c.sectorPct('QQQ', 'finance')).toBe(0)
+  })
 })
 
 describe('formatting', () => {

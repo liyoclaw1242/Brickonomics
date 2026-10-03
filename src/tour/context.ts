@@ -1,6 +1,7 @@
 import type { Universe } from '../data/universe'
 import { shockImpact } from '../sim/scenario'
 import type { TextContext } from './types'
+import { sectorBreakdown } from '../scene/layout/underground'
 
 /** 第 5 關的假設情境：台積電下跌 30% */
 export const SHOCK_2330: Readonly<Record<string, number>> = { '2330': -0.3 }
@@ -13,6 +14,7 @@ export function makeTextContext(u: Universe): TextContext {
       return w
     },
     shock: (productId) => shockImpact(u, productId, { ...SHOCK_2330 }),
+    sectorPct: (productId, sector) => sectorBreakdown(u, productId).find((r) => r.sector === sector)?.weightPct ?? 0,
   }
 }
 
