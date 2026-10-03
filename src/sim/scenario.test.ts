@@ -3,8 +3,8 @@ import { universe } from '../data'
 import { shockImpact } from './scenario'
 
 describe('shockImpact', () => {
-  it('2330 -30% moves 0050 by about -17.2%', () => {
-    expect(shockImpact(universe, '0050', { '2330': -0.3 })).toBeCloseTo(-0.17205, 5)
+  it('2330 -30% moves 0050 by about -16.9%', () => {
+    expect(shockImpact(universe, '0050', { '2330': -0.3 })).toBeCloseTo(-0.16893, 5) // -0.3 * 56.31 / 100
   })
 
   it('the same shock barely moves 安聯台灣大壩', () => {

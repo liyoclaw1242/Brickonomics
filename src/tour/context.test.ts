@@ -6,12 +6,12 @@ describe('text context', () => {
   const c = makeTextContext(universe)
 
   it('looks up holding weights and throws on unknown pairs', () => {
-    expect(c.weightPct('0050', '2330')).toBe(57.35)
+    expect(c.weightPct('0050', '2330')).toBe(56.31)
     expect(() => c.weightPct('0050', 'NVDA')).toThrow('no holding NVDA in 0050')
   })
 
   it('computes the 2330 -30% shock', () => {
-    expect(c.shock('0050')).toBeCloseTo(-0.17205, 5)
+    expect(c.shock('0050')).toBeCloseTo(-0.16893, 5) // -0.3 * 56.31 / 100
     expect(c.shock('SPY')).toBe(0)
   })
 })

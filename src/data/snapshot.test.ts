@@ -17,7 +17,7 @@ describe('snapshot', () => {
   })
 
   it('keeps the key teaching facts', () => {
-    expect(weightOf('0050', '2330')).toBe(57.35)
+    expect(weightOf('0050', '2330')).toBe(56.31)
     expect(weightOf('ALLIANZ_TAIWAN', '2330')).toBe(4.87)
     expect(weightOf('QQQ', 'NVDA')).toBe(8.33)
     expect(weightOf('SPY', 'NVDA')).toBe(8.45)

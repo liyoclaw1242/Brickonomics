@@ -74,9 +74,9 @@ describe('LEVELS', () => {
 
   it('computes numbers from data instead of hard-coding them', () => {
     const e3 = steps.find((s) => s.id === 'e-3')!
-    expect(textOf(e3, ctx)).toContain('57%')
+    expect(textOf(e3, ctx)).toContain('56%') // pct0(56.31)
     const c2 = steps.find((s) => s.id === 'c-2')!
-    expect(textOf(c2, ctx)).toContain('−17.2%')
+    expect(textOf(c2, ctx)).toContain('−16.9%') // -0.3 * 56.31% = -16.893%
   })
 
   it('data facts the lesson text relies on', () => {

@@ -12,7 +12,7 @@ describe('basket layout', () => {
   it('stacks voxels strictly by weight', () => {
     const v = basketVoxels(universe, '0050', QUALITY.high.etf)
     expect(v).toHaveLength(1000)
-    expect(v.filter((x) => x.id === '2330')).toHaveLength(573)
+    expect(v.filter((x) => x.id === '2330')).toHaveLength(563) // largest remainder over 1000: 563.1,67.1,33.5,28.2,308.1 -> floors sum 999, +1 to 2308 (.5)
   })
 
   it('throws for non-baskets', () => {

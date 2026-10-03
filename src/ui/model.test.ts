@@ -15,7 +15,7 @@ describe('productGroups', () => {
 describe('legendRows', () => {
   it('lists holdings with names, weights and distinct colors', () => {
     const rows = legendRows(universe, '0050')
-    expect(rows[0]).toMatchObject({ id: '2330', name: '台積電', weightPct: 57.35, aggregate: false })
+    expect(rows[0]).toMatchObject({ id: '2330', name: '台積電', weightPct: 56.31, aggregate: false })
     expect(rows.at(-1)).toMatchObject({ id: 'OTHER_TW_STOCK', aggregate: true })
     expect(new Set(rows.map((r) => r.color)).size).toBe(rows.length)
   })
@@ -35,7 +35,7 @@ describe('formatPct', () => {
 describe('pickInfo', () => {
   it('describes a holding inside a basket with the basket date and holdings flag', () => {
     expect(pickInfo(universe, { productId: '0050', holdingId: '2330' })).toMatchObject({
-      title: '台積電', subtitle: '元大台灣50 的組成', weightPct: 57.35, asOf: '2026-08-01', verified: true, aggregate: false,
+      title: '台積電', subtitle: '元大台灣50 的組成', weightPct: 56.31, asOf: '2026-10-02', verified: true, aggregate: false,
     })
   })
 
@@ -58,7 +58,7 @@ describe('pickInfo', () => {
 
 describe('legendMeta', () => {
   it('gives the basket data date and verification', () => {
-    expect(legendMeta(universe, '0050')).toEqual({ asOf: '2026-08-01', verified: true })
+    expect(legendMeta(universe, '0050')).toEqual({ asOf: '2026-10-02', verified: true })
     expect(legendMeta(universe, 'JH_BALANCED')?.verified).toBe(false)
   })
   it('is null for non-baskets', () => {

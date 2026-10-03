@@ -2,18 +2,18 @@
   {
     "id": "0050", "name": "元大台灣50", "type": "etf", "region": "TW",
     "holdings": [
-      { "id": "2330", "weightPct": 57.35 },
-      { "id": "2454", "weightPct": 5.64 },
-      { "id": "2308", "weightPct": 3.47 },
-      { "id": "2317", "weightPct": 2.98 },
-      { "id": "OTHER_TW_STOCK", "weightPct": 30.56 }
+      { "id": "2330", "weightPct": 56.31 },
+      { "id": "2454", "weightPct": 6.71 },
+      { "id": "2308", "weightPct": 3.35 },
+      { "id": "2317", "weightPct": 2.82 },
+      { "id": "OTHER_TW_STOCK", "weightPct": 30.81 }
     ],
     "fees": { "expenseRatio": 0.0014 },
     "distribution": { "frequency": "semiannual", "classes": ["distributing"] },
-    "asOf": "2026-08-01",
-    "source": ["https://tw.stock.yahoo.com/quote/0050/holding", "https://www.yuantaetfs.com/product/detail/0050/ratio"],
+    "asOf": "2026-10-02",
+    "source": ["https://www.yuantaetfs.com/product/detail/0050/ratio"],
     "verified": { "holdings": true, "fees": false, "distribution": true },
-    "notes": "費用為經理費約 0.11% + 保管費 0.03%（級距制，2025-01 起；未重新查證）。權重為 Yahoo 持股頁 2026-08-01 資料；元大投信 2026-10-02 官網顯示 2330 約 56.31%，日後更新快照時改用元大官方數據"
+    "notes": "費用為經理費約 0.11% + 保管費 0.03%（級距制，2025-01 起；未重新查證）。權重取自元大投信官網 0050 持股權重頁（交易日期 2026/10/02）；前四大個股為官網公告值，其餘為 100 減前四大合計"
   },
   {
     "id": "QQQ", "name": "Invesco QQQ", "nameEn": "Invesco QQQ Trust", "type": "etf", "region": "US",

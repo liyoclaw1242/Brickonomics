@@ -10,7 +10,7 @@
 | QQQ | distribution.frequency | 季配 | 查無（官方） | Invesco 官網產品頁與績效頁皆未載明配息頻率；僅第三方（stockanalysis 等）顯示為季配，不採為已驗證 | 2026-10-03 |
 | SPY | expenseRatio | 0.0945% | 已驗證 | https://www.ssga.com/us/en/intermediary/etfs/spdr-sp-500-etf-trust-spy （SSGA 官網） | 2026-10-03 |
 | SPY | distribution.frequency | 季配 | 已驗證 | 同上（Distribution Frequency: Quarterly） | 2026-10-03 |
-| 0050 | asOf | 2026-08-01 | Yahoo 2026-08-01 資料；元大官方 2026-10-02 數字不同 | 權重為 Yahoo 持股頁 2026-08-01 資料；元大投信 2026-10-02 官網顯示 2330 約 56.31%，日後更新快照時改用元大官方數據 | 2026-10-03 |
+| 0050 | holdings / asOf | 2330 56.31、2454 6.71、2308 3.35、2317 2.82、其餘 30.81；asOf 2026-10-02 | 已驗證（元大官方） | https://www.yuantaetfs.com/product/detail/0050/ratio （元大投信官網，頁面交易日期 2026/10/02）；其餘 = 100 − 前四大合計 | 2026-10-03 |
 | 0050 | expenseRatio 0.14% | 0.14% | 本次未重新查證（verified: false） | 元大官網頁面未顯示費率；沿用原標記 | 2026-10-03 |
 | ALLIANZ_TAIWAN | expenseRatio | 1.75%（經理費 1.60% + 保管費 0.15%） | 未驗證（依 2018 公開說明書） | 簡式公開說明書 https://www.fundrich.com.tw/rpt/SmartManual/ALI005_S.pdf （刊印 2018-07-30）；2026-08 月報 https://tw.allianzgi.com/documents/mDDO01 （經理費 1.60%）。含交易稅的實際費用率 106 年度為 2.76%，最新年度總費用率查無 | 2026-10-03 |
 | ALLIANZ_TAIWAN | frontLoad | 4%（上限） | 未驗證（依 2018 公開說明書） | 同簡式公開說明書：申購手續費最高不得超過發行價格 4%；現行實收較低、確切數字查無 | 2026-10-03 |
