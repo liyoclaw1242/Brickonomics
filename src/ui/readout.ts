@@ -78,7 +78,7 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
       if (stage.show !== 'cores' || !stage.cores) return []
       return stage.cores.flatMap((id) =>
         sectorBreakdown(u, id).map((r) => ({
-          label: `${u.get(id)!.name}・${T.sectors[r.sector]}`,
+          label: `${u.get(id)!.name}・${T.sectors[r.sector]}${r.sector === 'unclassified' ? '' : T.readout.atLeast}`,
           value: `${r.weightPct.toFixed(1)}%`,
         })),
       )

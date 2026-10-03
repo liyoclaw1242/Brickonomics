@@ -58,6 +58,8 @@ export type TextContext = {
 export type Step = {
   id: string
   text: string | ((c: TextContext) => string)
+  /** 文字版（沒有 3D）專用的課文；未填則沿用 text */
+  fallbackText?: string | ((c: TextContext) => string)
   scene: SceneDirective
   controls?: Control[]
   until?: Condition

@@ -83,6 +83,14 @@ describe('LEVELS', () => {
     expect(textOf(c2, ctx)).toContain('−16.9%') // -0.3 * 56.31% = -16.893%
   })
 
+  it('gives every step its own scene object so the camera sequence always bumps', () => {
+    expect(new Set(steps.map((s) => s.scene)).size).toBe(steps.length)
+  })
+
+  it('u-2 says the semiconductor share is a lower bound', () => {
+    expect(textOf(steps.find((s) => s.id === 'u-2')!, ctx)).toContain('至少約')
+  })
+
   it('derives the u-2 semiconductor percentage from sectorPct', () => {
     const u2 = steps.find((s) => s.id === 'u-2')!
     expect(textOf(u2, ctx)).toContain(`${ctx.sectorPct('0050', 'semiconductor').toFixed(0)}%`)

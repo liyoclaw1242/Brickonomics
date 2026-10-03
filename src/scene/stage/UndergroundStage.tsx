@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, type CSSProperties } from 'react'
 import { Html } from '@react-three/drei'
 import { Color } from 'three'
 import { universe } from '../../data'
@@ -9,7 +9,7 @@ import { BlockMaterial } from '../materials'
 import { SECTOR_COLORS } from '../palette'
 import type { Quality } from '../quality'
 import { useAfterFirstTick } from '../useAfterFirstTick'
-import { coreSegments, goldVein, GROUND_TOP, LAYER_THICKNESS, sectorBreakdown, SECTORS, strataLayout, type Sector } from '../layout/underground'
+import { CORE_R_MIN, coreDiscs, goldVein, GROUND_TOP, sectorBreakdown, strataLayout, STUB_MAX_HEIGHT, unclassifiedStub, type Sector } from '../layout/underground'
 
 type Show = 'strata' | 'cores' | 'dig' | 'veins' | 'gold'
 const CENTER_Z = 24
@@ -18,8 +18,8 @@ const DEPTH = 30
 const FRONT_Z = CENTER_Z + DEPTH / 2
 const SOIL = new Color('#5d4037')
 const UNCLASSIFIED = '#cfd8dc'
-const CORE_HEIGHT = SECTORS.length * LAYER_THICKNESS
-const CORE_RADIUS = 1.3
+const ROD = '#37474f'
+const STUB_RADIUS = 1.3
 const CORE_Z = FRONT_Z + 2
 const LABEL_X = -24
 const FADE = 0.35
@@ -30,6 +30,7 @@ const COIN_SCALE = 2.5
 const LEDGE_DEPTH = 2.4
 const LEDGE_HEIGHT = 0.2
 
+const dimLabelStyle: CSSProperties = { ...labelStyle, opacity: FADE }
 const colorOf = (s: Sector): string => (s === 'unclassified' ? UNCLASSIFIED : SECTOR_COLORS[s] ?? UNCLASSIFIED)
 const soilTint = (hex: string): string => `#${new Color(hex).lerp(SOIL, 0.25).getHexString()}`
 
@@ -42,12 +43,10 @@ export function UndergroundStage({ show, cores, quality }: { show: Show; cores?:
   const veinDim = show !== 'gold'
   const coreData = useMemo(
     () =>
-      (cores ?? []).map((id, i) => ({
-        id,
-        name: universe.get(id)?.name ?? id,
-        x: i === 0 ? -9 : 9,
-        segs: coreSegments(sectorBreakdown(universe, id), CORE_HEIGHT),
-      })),
+      (cores ?? []).map((id, i) => {
+        const rows = sectorBreakdown(universe, id)
+        return { id, name: universe.get(id)?.name ?? id, x: i === 0 ? -9 : 9, discs: coreDiscs(rows), stub: unclassifiedStub(rows) }
+      }),
     [cores],
   )
   const digLayer = layers.find((l) => l.sector === 'semiconductor') ?? layers[0]!
@@ -58,7 +57,8 @@ export function UndergroundStage({ show, cores, quality }: { show: Show; cores?:
       {layers.map((l) => (
         <mesh key={l.sector} position={[0, (l.top + l.bottom) / 2, CENTER_Z]}>
           <boxGeometry args={[WIDTH, l.top - l.bottom, DEPTH]} />
-          <BlockMaterial kind="matte" quality={quality} color={l.color} opacity={faded ? FADE : 1} />
+          {/* 半透明時不寫深度，避免層與層、層與礦脈之間的排序破面 */}
+          <meshStandardMaterial color={l.color} roughness={0.8} metalness={0} transparent={faded} opacity={faded ? FADE : 1} depthWrite={!faded} />
         </mesh>
       ))}
       <mesh position={[4, (vein.top + vein.bottom) / 2, 36]}>
@@ -69,12 +69,21 @@ export function UndergroundStage({ show, cores, quality }: { show: Show; cores?:
 
       {show === 'cores' &&
         coreData.map((c) =>
-          c.segs.map((s) => (
-            <mesh key={`${c.id}-${s.sector}`} position={[c.x, GROUND_TOP + (s.top + s.bottom) / 2, CORE_Z]}>
-              <cylinderGeometry args={[CORE_RADIUS, CORE_RADIUS, s.top - s.bottom, 24]} />
-              <BlockMaterial kind="matte" quality={quality} color={colorOf(s.sector)} />
-            </mesh>
-          )),
+          <group key={c.id}>
+            {c.discs.map((d) => (
+              <mesh key={d.sector} position={[c.x, (d.top + d.bottom) / 2, CORE_Z]}>
+                <cylinderGeometry args={[d.radius, d.radius, d.top - d.bottom, 32]} />
+                {/* 該產業 0%：細桿用中性深色，避免被讀成「有一點點」 */}
+                <BlockMaterial kind="matte" quality={quality} color={d.radius <= CORE_R_MIN ? ROD : colorOf(d.sector)} />
+              </mesh>
+            ))}
+            {c.stub.height > 0 && (
+              <mesh position={[c.x, GROUND_TOP + c.stub.height / 2, CORE_Z]}>
+                <cylinderGeometry args={[STUB_RADIUS, STUB_RADIUS, c.stub.height, 32]} />
+                <BlockMaterial kind="matte" quality={quality} color={UNCLASSIFIED} />
+              </mesh>
+            )}
+          </group>
         )}
 
       {show === 'dig' && (
@@ -106,14 +115,21 @@ export function UndergroundStage({ show, cores, quality }: { show: Show; cores?:
               {T.sectors[l.sector]}
             </Html>
           ))}
-          <Html position={[-17, (vein.top + vein.bottom) / 2, FRONT_Z + 0.5]} center style={labelStyle}>
+          <Html position={[-17, (vein.top + vein.bottom) / 2, FRONT_Z + 0.5]} center style={veinDim ? dimLabelStyle : labelStyle}>
             {T.underground.goldVein}
           </Html>
           {show === 'cores' &&
             coreData.map((c) => (
-              <Html key={c.id} position={[c.x, GROUND_TOP + 1.2, CORE_Z]} center style={labelStyle}>
-                {c.name}
-              </Html>
+              <group key={c.id}>
+                <Html position={[c.x, GROUND_TOP + STUB_MAX_HEIGHT + 1.6, CORE_Z]} center style={labelStyle}>
+                  {c.name}
+                </Html>
+                {c.stub.height > 0 && (
+                  <Html position={[c.x, GROUND_TOP + c.stub.height + 0.9, CORE_Z]} center style={labelStyle}>
+                    {T.underground.unclassifiedStub(c.stub.weightPct)}
+                  </Html>
+                )}
+              </group>
             ))}
           {show === 'dig' && (
             <Html position={[0, digY + 1.4, 41]} center style={labelStyle}>

@@ -49,7 +49,8 @@ describe('stageReadout', () => {
 
   it('lists sector shares for underground cores and nothing otherwise', () => {
     const rows = stageReadout({ kind: 'underground', show: 'cores', cores: ['QQQ', 'SPY'] }, v(), universe, null)
-    expect(rows[0]).toEqual({ label: 'Invesco QQQ・半導體', value: '13.3%' })
+    expect(rows[0]).toEqual({ label: 'Invesco QQQ・半導體（至少）', value: '13.3%' })
+    expect(rows.find((r) => r.label.endsWith('未細分'))).toBeDefined() // 未細分那一列不加「至少」
     expect(stageReadout({ kind: 'underground', show: 'strata' }, v(), universe, null)).toEqual([])
   })
 })

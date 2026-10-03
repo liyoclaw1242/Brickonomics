@@ -9,7 +9,7 @@ import './ui.css'
 export function FallbackApp() {
   const levels = useMemo(() => fallbackLevels(LEVELS, universe), [])
   return (
-    <main className="fallback">
+    <main className="fallback" data-levels={levels.length}>
       <Disclaimer />
       <h1>{T.appTitle}</h1>
       <p className="hint">{T.fallbackIntro}</p>

@@ -228,7 +228,7 @@ export const LEVELS: Level[] = [
       {
         id: 'u-2',
         text: (c) =>
-          `市值型 ETF 像一根垂直鑽下去的岩芯。左邊是 0050：依目前快照，約 ${pct0(c.sectorPct('0050', 'semiconductor'))}% 在半導體層。右邊是 QQQ：前幾大持股分屬半導體、電子、軟體、汽車等好幾種產業。灰色是快照裡沒有細分的部分。`,
+          `市值型 ETF 像一根垂直鑽下去的岩芯，穿過每一層。岩芯在每一層的粗細，代表它在那個產業的比例。左邊是 0050：快照裡已細分的持股中，至少約 ${pct0(c.sectorPct('0050', 'semiconductor'))}% 在半導體層。右邊是 QQQ：前幾大持股分屬半導體、電子、軟體、汽車等好幾種產業。地面上的灰色是快照裡沒有細分的部分。`,
         scene: { camera: 'underground', product: null, stage: { kind: 'underground', show: 'cores', cores: ['0050', 'QQQ'] }, cityLabels: false },
       },
       {
@@ -249,6 +249,7 @@ export const LEVELS: Level[] = [
       {
         id: 'u-6',
         text: '恭喜完成全部課程！沙盒模式已經解鎖：所有商品都能自由切開、拆開、比較。',
+        fallbackText: '恭喜完成全部課程！在支援 3D 的瀏覽器上，還可以進入沙盒自由切開、拆開、比較。',
         scene: { camera: 'overview', product: '0050' },
       },
     ],
