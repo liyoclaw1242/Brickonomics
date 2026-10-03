@@ -1,7 +1,7 @@
 /**
  * 幀率取樣器（純 TS）。
- * frameloop="demand" 下，閒置後的第一幀 dt 會很大；超過 maxGap 的 dt 視為閒置空檔，
- * 直接捨棄目前這一段，避免把「沒在畫」誤判成「畫得慢」。
+ * 閒置空檔由 continuous 登錄排除（FpsGuard 只在持續繪製時取樣、否則 reset）；
+ * maxGap（預設 2 秒）只是最後防線：單一幀超過它就視為被暫停（例如分頁在背景），捨棄目前這一段。
  */
 export class FpsSampler {
   private readonly maxGap: number
@@ -11,17 +11,22 @@ export class FpsSampler {
   private time = 0
 
   constructor(opts: { maxGap?: number; window?: number; minFps?: number } = {}) {
-    this.maxGap = opts.maxGap ?? 0.25
+    this.maxGap = opts.maxGap ?? 2
     this.window = opts.window ?? 1.5
     this.minFps = opts.minFps ?? 30
+  }
+
+  /** 捨棄目前累積的這一段（中斷連續繪製時呼叫） */
+  reset(): void {
+    this.frames = 0
+    this.time = 0
   }
 
   /** 回傳 true 表示這一段連續幀的平均 fps 過低，應降級 */
   push(dt: number): boolean {
     if (!(dt > 0)) return false
     if (dt > this.maxGap) {
-      this.frames = 0
-      this.time = 0
+      this.reset()
       return false
     }
     this.frames += 1

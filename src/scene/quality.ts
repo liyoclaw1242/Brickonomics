@@ -12,6 +12,12 @@ export function detectQuality(env: { coarsePointer: boolean; cores: number | und
   return env.coarsePointer || (env.cores ?? 8) <= 4 ? 'low' : 'high'
 }
 
+/** `?quality=high|low`：測試與除錯用，指定畫質並停用自動降級；其他值視為未指定 */
+export function parseQualityParam(search: string): Quality | null {
+  const v = new URLSearchParams(search).get('quality')
+  return v === 'high' || v === 'low' ? v : null
+}
+
 export function readEnv(): { coarsePointer: boolean; cores: number | undefined } {
   return {
     coarsePointer: typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches,

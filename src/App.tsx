@@ -16,13 +16,14 @@ import './ui/ui.css'
 export default function App() {
   const quality = useQuality((s) => s.quality)
   const cfg = QUALITY[quality]
+  const pinned = useQuality((s) => s.pinned)
   const mode = useTour((s) => s.mode)
   const pick = useSandbox((s) => s.pick)
   useExplodeKey()
   return (
     <div className="app">
       <Canvas frameloop="demand" shadows={cfg.shadows} dpr={cfg.dpr} camera={{ position: [10, 36, 58], fov: 45 }} onPointerMissed={() => pick(null)}>
-        <FpsGuard />
+        {!pinned && <FpsGuard />}
         <Scene quality={quality} />
       </Canvas>
       {mode === 'tour' ? <TourPanel /> : <SandboxPanel />}

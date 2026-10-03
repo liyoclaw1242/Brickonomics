@@ -1,5 +1,5 @@
-import { useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useEffect, useRef } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import type { Mesh } from 'three'
 import { universe } from '../../data'
@@ -8,7 +8,7 @@ import { T } from '../../ui/strings'
 import { approach, MAX_FRAME_DT } from '../layout/voxels'
 import { labelStyle } from '../labelStyle'
 import { lookFor } from '../palette'
-import { useContinuousRender } from '../useContinuousRender'
+import { acquire } from '../continuous'
 import { useAfterFirstTick } from '../useAfterFirstTick'
 import { atPlaza } from './plaza'
 
@@ -21,16 +21,36 @@ function HeldBlock({ item, x }: { item: HeldItem; x: number }) {
   const ready = useAfterFirstTick()
   const asset = universe.get(item.assetId)!
   const look = lookFor(asset)
-  useContinuousRender()
+  const invalidate = useThree((st) => st.invalidate)
+  const release = useRef<(() => void) | null>(null)
+  // 動作改變（或剛掛載）時要重新開始畫；卸載時歸還持續繪製登記
+  useEffect(() => {
+    invalidate()
+    return () => {
+      release.current?.()
+      release.current = null
+    }
+  }, [item.motion, invalidate])
   useFrame(({ clock }, dt) => {
     const m = ref.current
     if (!m) return
-    const s = approach(m.scale.x, TARGET_SCALE[item.motion], Math.min(dt, MAX_FRAME_DT), 3)
+    const target = TARGET_SCALE[item.motion]
+    let s = approach(m.scale.x, target, Math.min(dt, MAX_FRAME_DT), 3)
+    // 只有在晃動或縮放尚未收斂時才需要連續繪製；收斂後貼齊目標，這一幀畫完就停
+    const moving = item.motion !== 'still' || Math.abs(s - target) > 1e-3
+    if (!moving) s = target
     m.scale.setScalar(s)
     const amp = item.motion === 'shake' ? (item.amplitude ?? 0.15) : 0
     const t = clock.elapsedTime
     m.position.set(Math.sin(t * 9) * amp, (SIZE / 2) * s + Math.abs(Math.sin(t * 6.3)) * amp * 0.6, 0)
     m.rotation.z = Math.sin(t * 7.1) * amp * 0.15
+    if (moving) {
+      if (!release.current) release.current = acquire()
+      invalidate()
+    } else {
+      release.current?.()
+      release.current = null
+    }
   })
   return (
     <group position={atPlaza(x, 0, 0)}>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { type InstancedMesh, Object3D } from 'three'
 import type { Vec3 } from './camera'
@@ -23,15 +23,23 @@ function CoinDripInner({ from, to, rate, fallTime = 1.2, arc = 1.5, active = tru
   const t0 = useRef<number | null>(null)
   const dummy = useMemo(() => new Object3D(), [])
   const invalidate = useThree((s) => s.invalidate)
-  useContinuousRender(active)
-  // active 變成 false 時再畫一幀，把金幣清掉
+  // 有 limit 時，最後一枚落地後就不必再連續繪製
+  const [finished, setFinished] = useState(false)
+  useContinuousRender(active && !finished)
+  // active 或 limit 改變時重新開始；active 變成 false 時也再畫一幀，把金幣清掉
   useEffect(() => {
+    t0.current = null
+    setFinished(false)
     invalidate()
-  }, [active, invalidate])
+  }, [active, limit, invalidate])
   useFrame(({ clock }) => {
     const mesh = ref.current
     if (!mesh) return
     if (t0.current === null) t0.current = clock.elapsedTime
+    if (active && !finished && limit !== undefined && clock.elapsedTime - t0.current >= limit / rate + fallTime) {
+      setFinished(true)
+      invalidate() // 最後一幀：金幣已全部落地並清空
+    }
     const pts = active ? coinPositions(clock.elapsedTime - t0.current, { from, to, rate, fallTime, arc, limit }, max) : []
     for (let i = 0; i < max; i++) {
       const pt = pts[i]
