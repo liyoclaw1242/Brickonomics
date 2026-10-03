@@ -1,6 +1,7 @@
 import { Environment, Lightformer, OrbitControls } from '@react-three/drei'
 import { useSandbox } from '../store/sandbox'
 import { BasketView } from './BasketView'
+import { CameraRig } from './CameraRig'
 import { City } from './City'
 import type { Quality } from './quality'
 import { ViewFraming } from './ViewFraming'
@@ -55,6 +56,7 @@ export function Scene({ quality }: { quality: Quality }) {
         />
       )}
       <OrbitControls makeDefault target={[0, 5, 12]} maxPolarAngle={Math.PI * 0.48} minDistance={8} maxDistance={90} />
+      <CameraRig />
     </>
   )
 }

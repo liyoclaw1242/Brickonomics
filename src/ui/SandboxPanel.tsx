@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { universe } from '../data'
 import { useSandbox } from '../store/sandbox'
+import { useTour } from '../store/tour'
 import { formatPct, legendMeta, legendRows, productGroups } from './model'
 import { T } from './strings'
 
@@ -23,6 +24,9 @@ export function SandboxPanel() {
   return (
     <aside className="panel">
       <h1 className="panel__title">{T.appTitle}</h1>
+      <button className="link" onClick={() => useTour.getState().restartTour()}>
+        {T.replayTour}
+      </button>
 
       <section>
         <h2>{T.products}</h2>

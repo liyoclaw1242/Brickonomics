@@ -3,6 +3,8 @@ import { Canvas } from '@react-three/fiber'
 import { Scene } from './scene/Scene'
 import { QUALITY, detectQuality, readEnv } from './scene/quality'
 import { useSandbox } from './store/sandbox'
+import { useTour } from './store/tour'
+import { TourPanel } from './ui/TourPanel'
 import { SandboxPanel } from './ui/SandboxPanel'
 import { PickInfoPanel } from './ui/PickInfoPanel'
 import { Disclaimer } from './ui/Disclaimer'
@@ -12,6 +14,7 @@ import './ui/ui.css'
 export default function App() {
   const quality = useMemo(() => detectQuality(readEnv()), [])
   const cfg = QUALITY[quality]
+  const mode = useTour((s) => s.mode)
   const pick = useSandbox((s) => s.pick)
   useExplodeKey()
   return (
@@ -19,7 +22,7 @@ export default function App() {
       <Canvas shadows={cfg.shadows} dpr={cfg.dpr} camera={{ position: [10, 36, 58], fov: 45 }} onPointerMissed={() => pick(null)}>
         <Scene quality={quality} />
       </Canvas>
-      <SandboxPanel />
+      {mode === 'tour' ? <TourPanel /> : <SandboxPanel />}
       <PickInfoPanel />
       <Disclaimer />
     </div>
