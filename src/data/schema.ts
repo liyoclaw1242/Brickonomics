@@ -45,6 +45,7 @@ const FeesSchema = z.object({
   frontLoad: z.number().min(0).max(0.1).optional(),
   expenseRatio: z.number().min(0).max(0.05).optional(),
   distributionFee: z.number().min(0).max(0.05).optional(),
+  distributionFeeYears: z.number().int().positive().optional(), // 分銷費只收幾年；未填 = 持有期間都收
   cdsc: z.array(z.number().min(0).max(0.1)).optional(), // 第 1 年、第 2 年⋯的遞延手續費
 })
 

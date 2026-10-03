@@ -73,7 +73,7 @@
     "id": "SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD", "name": "施羅德環球基金系列－環球收息債券（U 後收級別）", "nameEn": "Schroder International Selection Fund Global Credit Income (U share class)",
     "type": "fund", "region": "GLOBAL", "domicile": "offshore", "agent": "施羅德投信（總代理）",
     "holdings": [{ "id": "GLOBAL_BOND_MIXED", "weightPct": 100 }],
-    "fees": { "expenseRatio": 0.011, "distributionFee": 0.01, "cdsc": [0.03, 0.02, 0.01] },
+    "fees": { "expenseRatio": 0.011, "distributionFee": 0.01, "distributionFeeYears": 3, "cdsc": [0.03, 0.02, 0.01] },
     "distribution": { "frequency": "monthly", "classes": ["distributing"] },
     "asOf": "2026-10-02",
     "source": [
