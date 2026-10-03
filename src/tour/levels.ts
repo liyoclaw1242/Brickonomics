@@ -1,5 +1,5 @@
 import type { Level } from './types'
-import { pct0, signedPct } from './context'
+import { pct0, SHOCK_2330, signedPct } from './context'
 
 /** 課程內文。數字一律由 TextContext 即時計算。示意參數必須在文中標「示意」。 */
 export const LEVELS: Level[] = [
@@ -195,13 +195,13 @@ export const LEVELS: Level[] = [
     steps: [
       {
         id: 'c-1',
-        text: '來做個假設：如果台積電下跌 30%，會發生什麼事？左邊只買台積電，中間是 0050，右邊是 SPY。',
+        text: () => `來做個假設：如果台積電下跌 ${pct0(-SHOCK_2330['2330']! * 100)}%，會發生什麼事？左邊只買台積電，中間是 0050，右邊是 SPY。`,
         scene: { camera: 'plaza', product: null, stage: { kind: 'shock', active: false } },
       },
       {
         id: 'c-2',
         text: (c) =>
-          `只買台積電：${signedPct(-0.3)}。0050：約 ${signedPct(c.shock('0050'))}，因為台積電佔了一半以上。SPY 裡沒有台積電，這個假設對它沒有直接影響（${signedPct(c.shock('SPY'))}）。分散，也有程度之分。`,
+          `只買台積電：${signedPct(SHOCK_2330['2330']!)}。0050：約 ${signedPct(c.shock('0050'))}，因為台積電佔了一半以上。SPY 裡沒有台積電，這個假設對它沒有直接影響（${signedPct(c.shock('SPY'))}）。分散，也有程度之分。`,
         scene: { camera: 'plaza', product: null, stage: { kind: 'shock', active: true } },
       },
       {

@@ -40,6 +40,20 @@ describe('LEVELS', () => {
     for (const s of steps) if (s.until) expect(s.controls ?? [], s.id).toContain(s.until.control)
   })
 
+  it('keeps the e-3 premise true: 2330 is 0050\'s largest holding and 2454 the second largest', () => {
+    // OTHER_* 是「其他」彙總部位，不是單一公司
+    const sorted = universe.get('0050')!.holdings!.filter((h) => !h.id.startsWith('OTHER')).sort((a, b) => b.weightPct - a.weightPct)
+    expect(sorted[0]!.id).toBe('2330')
+    expect(sorted[1]!.id).toBe('2454')
+  })
+
+  it('derives the shock percentage in c-1 and c-2 from SHOCK_2330', () => {
+    const c1 = textOf(steps.find((s) => s.id === 'c-1')!, ctx)
+    const c2 = textOf(steps.find((s) => s.id === 'c-2')!, ctx)
+    expect(c1).toContain('下跌 30%') // 0.3 × 100
+    expect(c2).toContain('只買台積電：−30.0%')
+  })
+
   it('renders every text without errors, non-empty, and never mentions 稅', () => {
     for (const s of steps) {
       const t = textOf(s, ctx)
