@@ -1,0 +1,28 @@
+# 資料來源與查證紀錄（快照 2026-10-03）
+
+查證日皆為 2026-10-03。「查無」表示找不到權威來源（基金公司官網／月報／公開說明書／交易所／台灣主要基金平台），維持原值與 `verified: false`，不使用猜測數字。
+
+| 資產 | 欄位 | 數值 | 狀態 | 來源（資料日） | 查證日 |
+|---|---|---|---|---|---|
+| QQQ | expenseRatio | 0.18%（原 0.20%，已更正） | 已驗證 | https://www.invesco.com/us/financial-products/etfs/product-detail?audienceType=Investor&ticker=QQQ （Invesco 官網，2026-06-30）；https://www.invesco.com/qqq-etf/en/performance.html | 2026-10-03 |
+| QQQ | distribution.frequency | 季配 | 查無（官方） | Invesco 官網產品頁與績效頁皆未載明配息頻率；僅第三方（stockanalysis 等）顯示為季配，不採為已驗證 | 2026-10-03 |
+| SPY | expenseRatio | 0.0945% | 已驗證 | https://www.ssga.com/us/en/intermediary/etfs/spdr-sp-500-etf-trust-spy （SSGA 官網） | 2026-10-03 |
+| SPY | distribution.frequency | 季配 | 已驗證 | 同上（Distribution Frequency: Quarterly） | 2026-10-03 |
+| 0050 | source | 改為實際網址 | 已驗證 | https://tw.stock.yahoo.com/quote/0050/holding （前四大 57.35／5.64／3.47／2.98 與快照一致；頁面標示資料日 2026-08-01，與快照 asOf 2026-09-26 不一致，待人工確認）；元大投信官網 https://www.yuantaetfs.com/product/detail/0050/ratio （資料日 2026-10-02，2330 為 56.31%，與快照略有差異，快照未採用） | 2026-10-03 |
+| 0050 | expenseRatio 0.14% | 0.14% | 未重新查證 | 元大官網頁面未顯示費率；沿用原標記 | 2026-10-03 |
+| ALLIANZ_TAIWAN | expenseRatio | 1.75%（經理費 1.60% + 保管費 0.15%；原 1.60%） | 已驗證（僅契約固定費用） | 簡式公開說明書 https://www.fundrich.com.tw/rpt/SmartManual/ALI005_S.pdf （刊印 2018-07-30，較舊）；2026-08 月報 https://tw.allianzgi.com/documents/mDDO01 （經理費 1.60%）。含交易稅的實際費用率 106 年度為 2.76%，最新年度總費用率查無 | 2026-10-03 |
+| ALLIANZ_TAIWAN | frontLoad | 4%（上限） | 已驗證（上限） | 同簡式公開說明書：申購手續費最高不得超過發行價格 4%；現行實收較低、確切數字查無 | 2026-10-03 |
+| ALLIANZ_TAIWAN | distribution | 無配息，僅累積 | 已驗證 | 說明書「收益分配：無」；2026-08 月報只列 A 新臺幣類股 | 2026-10-03 |
+| JH_BALANCED | expenseRatio | 1.88% | 已驗證 | https://www.janushenderson.com/en-hk/investor/product/janus-henderson-balanced-fund/ （A2 USD，2025-12-31） | 2026-10-03 |
+| JH_BALANCED | 股債比例 | 股 64.15／債 34.55／現金 1.30（美國版 JANBX） | 查無 | 境外版（Janus Henderson Capital Funds plc）官網只載明股票 35–70%／債券 30–65% 的區間，無實際月報比例；前十大 NVDA 5.86、MSFT 4.46、GOOGL 4.11 與官網 2026-08-31 一致。搜尋：官網 en-hk／en-sg／en-us offshore／zh-hk、Yahoo 持股頁（數值異常不可用） | 2026-10-03 |
+| JH_BALANCED | frontLoad（台灣） | — | 查無 | 官網新加坡版 5%、美國離岸版 2%，皆非台灣通路；台灣總代理野村投信投資人須知未找到 | 2026-10-03 |
+| JH_BALANCED_BACKLOAD（T2） | distributionFee | — | 查無 | Yahoo 顯示 T2 分銷費 0.01% 但疑為格式錯誤，無法與公開說明書核對。永豐銀行約定條款（2026.05）：駿利亨德森 T 股遞延手續費 3%／2%／1%／0%，但因分銷費查無，不新增資產 | 2026-10-03 |
+| SCHRODER_GLOBAL_INCOME_BOND | nameEn | Schroder International Selection Fund Global Credit Income | 已驗證 | https://www.schroders.com/zh-tw/tw/individual/funds-and-strategies/global-credit-income/ （台灣官網「施羅德(環)環球收息債券」對應此英文名稱） | 2026-10-03 |
+| SCHRODER_GLOBAL_INCOME_BOND | 公債／公司債、投資等級／非投資等級比例 | — | 查無 | 台灣官網僅文字描述（政府債／公司債／證券化、投資等級與非投資等級兼具）；香港月報（2026-08-31）https://api.schroders.com/document-store/SISF-Global-Credit-Income-A-Acc-FMR-HKEN.pdf 的圖表文字抽取後無法可靠對應基金與比較指數欄位，故不拆分 `GLOBAL_BOND_MIXED`，也未新增 buckets | 2026-10-03 |
+| SCHRODER_GLOBAL_INCOME_BOND | expenseRatio | 1.10%（僅管理費） | 部分／總費用率查無 | 同香港月報：管理費 1.10%；台灣總費用率未找到 | 2026-10-03 |
+| SCHRODER_GLOBAL_INCOME_BOND | frontLoad（台灣） | — | 查無 | 台灣官網僅說明 A 級別為前收，未載明費率；香港月報的 3% 為香港通路，不採用 | 2026-10-03 |
+| SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD（U） | distributionFee、cdsc | 1.00%／年；3%、2%、1%（第 1、2、3 年），滿 3 年 0% | 已驗證（新增資產） | 施羅德環球基金系列投資人須知【第二部分】 https://api.schroders.com/document-store/SISF-FS-TWZH.pdf （2026-06-30 更新，系列通則）；永豐銀行後收型基金約定條款（2026.05）同為 3/2/1/0，施羅德 U 股；台灣有「環球收息債券(美元) U-月配固定」級別 | 2026-10-03 |
+| ALLIANZ_INCOME_GROWTH | 三大類對應 | 可轉債 32.0%、高收益債 30.4%、股票 31.9%、現金 5.7% | 已驗證 | 安聯 GI 新加坡 https://sg.allianzgi.com/documents/sg-allianz-income-and-growth-leaflet-en （2026-06-30），與快照 CONVERTIBLE_US 31.98／US_HIGH_YIELD 30.4／股票 31.91／CASH 5.71 一致 | 2026-10-03 |
+| ALLIANZ_INCOME_GROWTH | expenseRatio | 1.56% | 已驗證 | 同上（TER 1.56%，2026-06-30） | 2026-10-03 |
+| ALLIANZ_INCOME_GROWTH | frontLoad（台灣） | 3%（書面）／1.5%（網路） | 查無（資料過期，未採用） | https://tw.allianzgi.com/-/media/allianzgi/ap/taiwan/pdf/trading-info/offshore-rate.pdf 更新日 2021-01-20；新加坡版上限 5% 非台灣 | 2026-10-03 |
+| ALLIANZ_INCOME_GROWTH_BACKLOAD（BM） | distributionFee、cdsc | — | 查無 | 安聯投信「境外基金配息類股規格一覽表」（2025-12-31）載明 B 類後收需支付最高每年 1% 分銷費（為上限，且含於單一行政管理費）；CDSC 級距只在永豐銀行平台文件（安聯 B 股 3/2/1）出現，無安聯官方具體級別數字，故不新增資產 | 2026-10-03 |

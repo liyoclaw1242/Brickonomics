@@ -11,9 +11,9 @@
     "fees": { "expenseRatio": 0.0014 },
     "distribution": { "frequency": "semiannual", "classes": ["distributing"] },
     "asOf": "2026-09-26",
-    "source": ["Yahoo奇摩股市 0050 持股頁（2026-09-26）"],
+    "source": ["https://tw.stock.yahoo.com/quote/0050/holding", "https://www.yuantaetfs.com/product/detail/0050/ratio"],
     "verified": { "holdings": true, "fees": true, "distribution": true },
-    "notes": "費用為經理費約 0.11% + 保管費 0.03%（級距制，2025-01 起）"
+    "notes": "費用為經理費約 0.11% + 保管費 0.03%（級距制，2025-01 起）。2026-10-03 查證：Yahoo 持股頁前四大權重與快照一致；元大投信官網頁面（資料日 2026-10-02）權重已略有不同（2330 56.31%），快照仍用 Yahoo 版本"
   },
   {
     "id": "QQQ", "name": "Invesco QQQ", "nameEn": "Invesco QQQ Trust", "type": "etf", "region": "US",
@@ -25,11 +25,12 @@
       { "id": "TSLA", "weightPct": 2.82 },
       { "id": "OTHER_US_STOCK", "weightPct": 70.72 }
     ],
-    "fees": { "expenseRatio": 0.002 },
+    "fees": { "expenseRatio": 0.0018 },
     "distribution": { "frequency": "quarterly", "classes": ["distributing"] },
     "asOf": "2026-09-30",
-    "source": ["https://stockanalysis.com/etf/qqq/holdings/"],
-    "verified": { "holdings": true, "fees": false, "distribution": false }
+    "source": ["https://stockanalysis.com/etf/qqq/holdings/", "https://www.invesco.com/us/financial-products/etfs/product-detail?audienceType=Investor&ticker=QQQ"],
+    "verified": { "holdings": true, "fees": true, "distribution": false },
+    "notes": "費用率 0.18% 取自 Invesco 官網（資料日 2026-06-30）；配息頻率（季配）僅有第三方資料，Invesco 官網未載明，尚未驗證"
   },
   {
     "id": "SPY", "name": "SPDR 標普500", "nameEn": "SPDR S&P 500 ETF Trust", "type": "etf", "region": "US",
@@ -44,6 +45,7 @@
     "distribution": { "frequency": "quarterly", "classes": ["distributing"] },
     "asOf": "2026-10-01",
     "source": ["https://stockanalysis.com/etf/spy/holdings/", "https://www.ssga.com/us/en/intermediary/etfs/spdr-sp-500-etf-trust-spy"],
-    "verified": { "holdings": true, "fees": true, "distribution": false }
+    "verified": { "holdings": true, "fees": true, "distribution": true },
+    "notes": "總費用率 0.0945%（SSGA 官網）；配息頻率：季配（SSGA 官網）"
   }
 ]

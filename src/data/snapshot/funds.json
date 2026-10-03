@@ -16,12 +16,15 @@
       { "id": "OTHER_TW_STOCK", "weightPct": 46.66 },
       { "id": "CASH", "weightPct": 5.54 }
     ],
-    "fees": { "expenseRatio": 0.016 },
+    "fees": { "frontLoad": 0.04, "expenseRatio": 0.0175 },
     "distribution": { "frequency": "none", "classes": ["accumulating"] },
     "asOf": "2026-08-31",
-    "source": ["https://tw.allianzgi.com/documents/mDDO01"],
-    "verified": { "holdings": true, "fees": false, "distribution": false },
-    "notes": "expenseRatio 目前只有經理費 1.60%，不是總費用率；配息級別未查到"
+    "source": [
+      "https://tw.allianzgi.com/documents/mDDO01",
+      "https://www.fundrich.com.tw/rpt/SmartManual/ALI005_S.pdf"
+    ],
+    "verified": { "holdings": true, "fees": true, "distribution": true },
+    "notes": "expenseRatio 為基金契約固定費用：經理費 1.60% + 保管費 0.15%（簡式公開說明書，刊印 2018-07-30，尚未找到更新版）；不含交易成本。含交易稅等的實際費用率 106 年度為 2.76%，快照不採用。frontLoad 0.04 為申購手續費「上限」（同份說明書），現行實收較低。無收益分配（說明書載明；2026-08 月報僅列 A 新臺幣類股）"
   },
   {
     "id": "JH_BALANCED", "name": "駿利亨德森平衡基金", "nameEn": "Janus Henderson Balanced Fund",
@@ -49,18 +52,36 @@
       "https://tw.stock.yahoo.com/fund/holdings/F00001F7IJ:FO"
     ],
     "verified": { "holdings": false, "fees": true, "distribution": true },
-    "notes": "股債比例（股 64.15／債 34.55／現金 1.30）暫用美國版 JANBX 代替；US_TREASURY 只計前十大中的單一公債，其餘債券併入 BOND_MIXED_US。級別：A2 累積、A5／A6 月配"
+    "notes": "股債比例（股 64.15／債 34.55／現金 1.30）暫用美國版 JANBX 代替，境外版（Janus Henderson Capital Funds plc）官網只列 35–70% 股票的區間，查無實際比例；前十大（NVDA 5.86、MSFT 4.46）與官網 2026-08-31 一致，總費用率 A2 1.88% 官網已確認；台灣通路前收手續費查無（官網新加坡版 5%、美國離岸版 2%，非台灣）；US_TREASURY 只計前十大中的單一公債，其餘債券併入 BOND_MIXED_US。級別：A2 累積、A5／A6 月配"
   },
   {
-    "id": "SCHRODER_GLOBAL_INCOME_BOND", "name": "施羅德環球基金系列－環球收息債券",
+    "id": "SCHRODER_GLOBAL_INCOME_BOND", "name": "施羅德環球基金系列－環球收息債券", "nameEn": "Schroder International Selection Fund Global Credit Income",
     "type": "fund", "region": "GLOBAL", "domicile": "offshore", "agent": "施羅德投信（總代理）",
     "holdings": [{ "id": "GLOBAL_BOND_MIXED", "weightPct": 100 }],
     "fees": { "expenseRatio": 0.011 },
     "distribution": { "frequency": "monthly", "classes": ["accumulating", "distributing"] },
     "asOf": "2026-10-02",
-    "source": ["https://tw.stock.yahoo.com/fund/basic-info/F00000Y90J:FO"],
-    "verified": { "holdings": false, "fees": false, "distribution": true, "nameEn": false },
-    "notes": "前十大以公債期貨與交換合約為主，畫面只呈現資產類別；公債與公司債、投資等級與非投資等級的拆分待查。expenseRatio 目前只有經理費"
+    "source": [
+      "https://tw.stock.yahoo.com/fund/basic-info/F00000Y90J:FO",
+      "https://www.schroders.com/zh-tw/tw/individual/funds-and-strategies/global-credit-income/",
+      "https://api.schroders.com/document-store/SISF-FS-TWZH.pdf"
+    ],
+    "verified": { "holdings": false, "fees": false, "distribution": true, "nameEn": true },
+    "notes": "英文名稱取自施羅德台灣官網（zh-tw 頁面「施羅德(環)環球收息債券」）。公債與公司債、投資等級與非投資等級的比例查無可靠數字（官網僅文字描述「政府債／公司債／證券化產品、投資等級與非投資等級兼具」），故不拆 GLOBAL_BOND_MIXED。expenseRatio 目前只有經理費 1.10%，總費用率與台灣前收手續費查無"
+  },
+  {
+    "id": "SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD", "name": "施羅德環球基金系列－環球收息債券（U 後收級別）", "nameEn": "Schroder International Selection Fund Global Credit Income (U share class)",
+    "type": "fund", "region": "GLOBAL", "domicile": "offshore", "agent": "施羅德投信（總代理）",
+    "holdings": [{ "id": "GLOBAL_BOND_MIXED", "weightPct": 100 }],
+    "fees": { "expenseRatio": 0.011, "distributionFee": 0.01, "cdsc": [0.03, 0.02, 0.01] },
+    "distribution": { "frequency": "monthly", "classes": ["distributing"] },
+    "asOf": "2026-06-30",
+    "source": [
+      "https://api.schroders.com/document-store/SISF-FS-TWZH.pdf",
+      "https://www.schroders.com/zh-tw/tw/individual/funds-and-strategies/global-credit-income/"
+    ],
+    "verified": { "holdings": false, "fees": true, "distribution": true },
+    "notes": "U 級別：免申購手續費；分銷費每年 1%（淨值內扣）；遞延銷售手續費 發行後第一年內 3%、第二年內 2%、第三年內 1%、滿 3 年 0%，滿 3 年後自動轉 A 級別（施羅德投資人須知，2026-06-30 更新，為整個系列通則，環球收息債券有 U 月配固定級別）。持股與主級別相同。expenseRatio 僅經理費 1.10%，不含分銷費"
   },
   {
     "id": "ALLIANZ_INCOME_GROWTH", "name": "安聯收益成長基金", "nameEn": "Allianz Income and Growth",
@@ -80,8 +101,11 @@
     "fees": { "expenseRatio": 0.0156 },
     "distribution": { "frequency": "monthly", "classes": ["accumulating", "distributing"] },
     "asOf": "2026-06-30",
-    "source": ["https://dokumenty.analizy.pl/pobierz/fzg/AGI026_A_USD/KA/2026-06-30"],
-    "verified": { "holdings": false, "fees": true, "distribution": true },
-    "notes": "三大類約 31.98／31.91／30.40%，來源圖表標籤不清，暫定為可轉債／股票／高收益債；GOOGL 合併兩檔 Alphabet 證券（1.36 + 1.17）"
+    "source": [
+      "https://dokumenty.analizy.pl/pobierz/fzg/AGI026_A_USD/KA/2026-06-30",
+      "https://sg.allianzgi.com/documents/sg-allianz-income-and-growth-leaflet-en"
+    ],
+    "verified": { "holdings": true, "fees": true, "distribution": true },
+    "notes": "三大類對應已查證（安聯 GI 新加坡月報，2026-06-30）：可轉債 32.0%、高收益債 30.4%、股票 31.9%、現金等 5.7%，與快照一致；TER 1.56%。台灣前收手續費參考 安聯投信境外基金手續費率表：網路 1.50%／書面 3.00%，但該表更新日為 2021-01-20，未採用。GOOGL 合併兩檔 Alphabet 證券（1.36 + 1.17）"
   }
 ]
