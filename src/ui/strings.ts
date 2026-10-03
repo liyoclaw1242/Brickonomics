@@ -10,7 +10,7 @@ export const T = {
   etfs: 'ETF（照藍圖壓縮的混合方塊）',
   funds: '基金（怪手堆的小塔）',
   slice: '雷射刀切割',
-  sliceAxis: { x: '直切（左右）', z: '直切（前後）', y: '橫切（上下）' },
+  sliceAxis: { x: '直切（左右）', z: '直切（前後）', y: '橫切（上下）', d: '斜切' },
   explode: '拆開',
   explodeHint: '桌機也可以按住空白鍵拆開',
   legend: '組成（依權重）',

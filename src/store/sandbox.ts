@@ -90,7 +90,7 @@ export function parseSandboxQuery(search: string, knownProducts: ReadonlySet<str
   const product = q.get('product')
   if (product && knownProducts.has(product)) out.productId = product
   const axis = q.get('axis')
-  if (axis === 'x' || axis === 'y' || axis === 'z') out.sliceAxis = axis
+  if (axis === 'x' || axis === 'y' || axis === 'z' || axis === 'd') out.sliceAxis = axis
   for (const key of ['slice', 'explode'] as const) {
     const raw = q.get(key)
     if (raw === null) continue

@@ -47,7 +47,13 @@ export function explodeOffsetY(group: number, t: number, groups: number): number
   return group * explodeGap(groups) * t
 }
 
+/** 沿某軸的格點座標；斜切 'd' 用 x + z */
+export function coordAlong(v: Voxel, axis: SliceAxis): number {
+  return axis === 'd' ? v.x + v.z : v[axis]
+}
+
 export function sizeAlong(axis: SliceAxis, w: number, d: number, layers: number): number {
+  if (axis === 'd') return w + d - 1
   return axis === 'x' ? w : axis === 'z' ? d : layers
 }
 
@@ -57,14 +63,14 @@ export function cutThreshold(size: number, amount: number): number {
 }
 
 export function isHidden(v: Voxel, cut: CutSpec): boolean {
-  const coord = cut.axis === 'd' ? v.x + v.z : v[cut.axis as 'x' | 'y' | 'z']
-  return coord >= cut.threshold
+  return coordAlong(v, cut.axis) >= cut.threshold
 }
 
 /** 切面在該軸上的世界座標（保留與切掉的方塊之間的交界） */
 export function cutPlanePosition(cut: CutSpec, w: number, d: number): number {
   if (cut.axis === 'x') return cut.threshold - w / 2
   if (cut.axis === 'z') return cut.threshold - d / 2
+  if (cut.axis === 'd') return cut.threshold - (w + d - 1) / 2
   return cut.threshold
 }
 

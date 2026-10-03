@@ -35,7 +35,7 @@ export function SandboxPanel() {
       <section>
         <h2>{T.slice}</h2>
         <div className="seg" role="group" aria-label={T.slice}>
-          {(['x', 'z', 'y'] as const).map((ax) => (
+          {(['x', 'z', 'y', 'd'] as const).map((ax) => (
             <button key={ax} aria-pressed={ax === sliceAxis} onClick={() => setSliceAxis(ax)}>
               {T.sliceAxis[ax]}
             </button>

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { allocateBlocks } from '../../sim/allocate'
 import {
   stackVoxels, layersFor, voxelPosition, explodeOffsetY, sizeAlong,
-  cutThreshold, isHidden, cutPlanePosition, approach, EXPLODE_GAP, MAX_EXPLODE_SPAN, explodeGap,
+  cutThreshold, isHidden, cutPlanePosition, approach, EXPLODE_GAP, MAX_EXPLODE_SPAN, explodeGap, coordAlong,
 } from './voxels'
 
 describe('stackVoxels', () => {
@@ -91,6 +91,29 @@ describe('cutting', () => {
     expect(cutPlanePosition({ axis: 'x', threshold: 5 }, 10, 10)).toBe(0) // x=4 中心 -0.5、x=5 中心 0.5
     expect(cutPlanePosition({ axis: 'z', threshold: 2 }, 10, 6)).toBe(-1)
     expect(cutPlanePosition({ axis: 'y', threshold: 3 }, 10, 10)).toBe(3)
+  })
+})
+
+describe('diagonal cut', () => {
+  it('uses x + z as the coordinate', () => {
+    expect(coordAlong({ id: 'a', group: 0, x: 3, y: 7, z: 4 }, 'd')).toBe(7)
+    expect(coordAlong({ id: 'a', group: 0, x: 3, y: 7, z: 4 }, 'y')).toBe(7)
+  })
+
+  it('spans w + d - 1 diagonal slices', () => {
+    expect(sizeAlong('d', 10, 10, 10)).toBe(19)
+    expect(sizeAlong('d', 6, 6, 14)).toBe(11)
+  })
+
+  it('hides voxels whose x + z reaches the threshold', () => {
+    const cut = { axis: 'd' as const, threshold: 10 }
+    expect(isHidden({ id: 'a', group: 0, x: 4, y: 0, z: 5 }, cut)).toBe(false) // 9
+    expect(isHidden({ id: 'a', group: 0, x: 5, y: 0, z: 5 }, cut)).toBe(true) // 10
+  })
+
+  it('puts the plane on the boundary x + z = threshold - (w + d - 1) / 2', () => {
+    // x+z=9 的方塊中心在世界座標 x+z = 9 - 9 = 0；x+z=10 的在 1；交界 0.5
+    expect(cutPlanePosition({ axis: 'd', threshold: 10 }, 10, 10)).toBe(0.5)
   })
 })
 

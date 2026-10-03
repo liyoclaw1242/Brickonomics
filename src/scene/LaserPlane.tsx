@@ -11,6 +11,15 @@ function LaserMaterial() {
 export function LaserPlane({ cut, w, d, height }: { cut: CutSpec; w: number; d: number; height: number }) {
   // isHidden 隱藏 v >= threshold，所以第一個被隱藏的索引是 ceil(threshold)；切面貼齊方塊面
   const p = cutPlanePosition({ ...cut, threshold: Math.ceil(cut.threshold) }, w, d)
+  if (cut.axis === 'd') {
+    // 平面 x + z = p：離原點最近的點是 (p/2, ·, p/2)，法向量 (1,0,1)/√2 → 繞 y 轉 π/4
+    return (
+      <mesh position={[p / 2, height / 2, p / 2]} rotation-y={Math.PI / 4}>
+        <planeGeometry args={[Math.hypot(w, d) + PAD, height + PAD]} />
+        <LaserMaterial />
+      </mesh>
+    )
+  }
   if (cut.axis === 'y') {
     return (
       <mesh position={[0, p, 0]} rotation-x={-Math.PI / 2}>

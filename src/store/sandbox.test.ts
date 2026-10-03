@@ -96,4 +96,8 @@ describe('parseSandboxQuery', () => {
     expect(parseSandboxQuery('?product=NOPE&axis=w&slice=abc', known)).toEqual({})
     expect(parseSandboxQuery('', known)).toEqual({})
   })
+
+  it('accepts the diagonal axis', () => {
+    expect(parseSandboxQuery('?axis=d', known)).toEqual({ sliceAxis: 'd' })
+  })
 })
