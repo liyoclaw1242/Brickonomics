@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { ThreeEvent } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import { Color, type InstancedMesh, Object3D } from 'three'
@@ -28,6 +28,12 @@ export function City() {
   const voxels = useMemo(() => buildingVoxels(placements), [placements])
   const ref = useRef<InstancedMesh>(null)
   const pick = useSandbox((s) => s.pick)
+  // drei Html 與 StrictMode 的掛載→卸載→重掛同步競爭，會吃掉第一個 Html；延後一個 tick 再掛標籤
+  const [labelsReady, setLabelsReady] = useState(false)
+  useEffect(() => {
+    const t = setTimeout(() => setLabelsReady(true), 0)
+    return () => clearTimeout(t)
+  }, [])
 
   useLayoutEffect(() => {
     const mesh = ref.current
@@ -54,20 +60,19 @@ export function City() {
     if (v) pick({ productId: v.id, holdingId: v.id })
   }
 
+  const sizeOf = (region: Region) => islandSize(placements.filter((p) => p.region === region).length)
+
   return (
     <group>
       {(['TW', 'US'] as const).map((region) => {
         const [x, z] = ISLAND_CENTERS[region]
-        const size = islandSize(placements.filter((p) => p.region === region).length)
+        const size = sizeOf(region)
         return (
           <group key={region}>
             <mesh position={[x, -ISLAND_THICKNESS / 2, z]} receiveShadow>
               <boxGeometry args={[size, ISLAND_THICKNESS, size]} />
               <meshStandardMaterial color={ISLAND_COLORS[region]} />
             </mesh>
-            <Html position={[x, 0.2, z + size / 2 + 1]} center distanceFactor={40} style={{ ...labelStyle, fontSize: 16, fontWeight: 600 }}>
-              {T.islands[region]}
-            </Html>
           </group>
         )
       })}
@@ -75,11 +80,20 @@ export function City() {
         <boxGeometry />
         <meshStandardMaterial roughness={0.8} />
       </instancedMesh>
-      {placements.map((p) => (
+      {labelsReady && placements.map((p) => (
         <Html key={p.id} position={[p.x, p.height + 0.8, p.z]} center distanceFactor={38} style={labelStyle}>
           {universe.get(p.id)!.name}
         </Html>
       ))}
+      {/* 島名標籤與大樓標籤都在 labelsReady 後才掛載 */}
+      {labelsReady && (['TW', 'US'] as const).map((region) => {
+        const [x, z] = ISLAND_CENTERS[region]
+        return (
+          <Html key={`island-${region}`} position={[x, 0.2, z + sizeOf(region) / 2 + 1]} center distanceFactor={40} style={{ ...labelStyle, fontSize: 16, fontWeight: 600 }}>
+            {T.islands[region]}
+          </Html>
+        )
+      })}
     </group>
   )
 }
