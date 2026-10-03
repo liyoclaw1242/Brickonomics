@@ -4,6 +4,7 @@ import { Color, type InstancedMesh, Object3D } from 'three'
 import type { BlockLook, MaterialKind } from './palette'
 import { BlockMaterial } from './materials'
 import type { Quality } from './quality'
+import { useLongPress } from './useLongPress'
 import { approach, explodeOffsetY, isHidden, voxelPosition, VOXEL_SCALE, type CutSpec, type Voxel } from './layout/voxels'
 
 type Props = {
@@ -95,8 +96,13 @@ function KindMesh({ kind, voxels, looks, w, d, explode, cut, highlightGroup, qua
     if (v && !(damaged?.has(v))) onPick?.(v.group)
   }
 
+  const press = useLongPress((e) => {
+    const v = e.instanceId === undefined ? undefined : voxels[e.instanceId]
+    if (v && !damaged?.has(v)) onPick?.(v.group)
+  })
+
   return (
-    <instancedMesh ref={ref} args={[undefined, undefined, voxels.length]} onClick={handleClick} castShadow receiveShadow>
+    <instancedMesh ref={ref} args={[undefined, undefined, voxels.length]} onClick={handleClick} {...press} castShadow receiveShadow>
       <boxGeometry />
       <BlockMaterial kind={kind} quality={quality} />
     </instancedMesh>

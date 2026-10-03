@@ -9,6 +9,7 @@ import { labelStyle } from './labelStyle'
 import { lookFor } from './palette'
 import { VOXEL_SCALE } from './layout/voxels'
 import { useAfterFirstTick } from './useAfterFirstTick'
+import { useLongPress } from './useLongPress'
 import { applyShrink, buildingVoxels, cityLayout, islandSize, ISLAND_CENTERS, type Region } from './layout/city'
 
 const ISLAND_COLORS: Record<Region, string> = { TW: '#a5d6a7', US: '#e6d3a3' }
@@ -49,6 +50,11 @@ export function City({ labels, islandLabels = true, shrink }: { labels: boolean;
     if (v) pick({ productId: v.id, holdingId: v.id })
   }
 
+  const press = useLongPress((e) => {
+    const v = e.instanceId === undefined ? undefined : voxels[e.instanceId]
+    if (v) pick({ productId: v.id, holdingId: v.id })
+  })
+
   const sizeOf = (region: Region) => islandSize(placements.filter((p) => p.region === region).length)
 
   return (
@@ -65,7 +71,7 @@ export function City({ labels, islandLabels = true, shrink }: { labels: boolean;
           </group>
         )
       })}
-      <instancedMesh key={voxels.length} ref={ref} args={[undefined, undefined, voxels.length]} castShadow receiveShadow onClick={onClick}>
+      <instancedMesh key={voxels.length} ref={ref} args={[undefined, undefined, voxels.length]} castShadow receiveShadow onClick={onClick} {...press}>
         <boxGeometry />
         <meshStandardMaterial roughness={0.8} />
       </instancedMesh>
