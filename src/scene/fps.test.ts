@@ -35,4 +35,11 @@ describe('FpsSampler', () => {
     const r = feed(s, 0.05, 30)
     expect(r.indexOf(true)).toBe(29)
   })
+  it('a continuously slow device (≈6.7 fps) still degrades', () => {
+    // dt 0.15 < maxGap 0.25：不是閒置空檔；10 幀 = 1.5 s、fps = 10/1.5 ≈ 6.7 < 30 → 第 10 幀觸發
+    const s = new FpsSampler()
+    const hits = Array.from({ length: 10 }, () => s.push(0.15))
+    expect(hits.slice(0, 9).every((h) => !h)).toBe(true)
+    expect(hits[9]).toBe(true)
+  })
 })

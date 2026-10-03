@@ -11,7 +11,7 @@ export class FpsSampler {
   private time = 0
 
   constructor(opts: { maxGap?: number; window?: number; minFps?: number } = {}) {
-    this.maxGap = opts.maxGap ?? 0.1
+    this.maxGap = opts.maxGap ?? 0.25
     this.window = opts.window ?? 1.5
     this.minFps = opts.minFps ?? 30
   }
