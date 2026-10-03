@@ -1,10 +1,16 @@
 import { currentStep, useTour } from '../../store/tour'
 import type { Stage } from '../../tour/types'
 import type { Quality } from '../quality'
+import { AccumulateStage } from './AccumulateStage'
 import { BondShowcase } from './BondShowcase'
+import { Excavator } from './Excavator'
 import { ExDividendStage } from './ExDividendStage'
+import { FeeMeter } from './FeeMeter'
+import { FeeRaceStage } from './FeeRaceStage'
 import { HeldBlocks } from './HeldBlocks'
 import { Plaza } from './Plaza'
+import { PriceTicker } from './PriceTicker'
+import { PrincipalTrapStage } from './PrincipalTrapStage'
 
 const NONE: Stage = { kind: 'none' }
 const ON_PLAZA = new Set<Stage['kind']>(['held', 'exdiv', 'bonds', 'feeRace', 'accumulate', 'principalTrap', 'shock', 'overlap'])
@@ -18,6 +24,12 @@ export function StageView({ quality }: { quality: Quality }) {
       {stage.kind === 'held' && <HeldBlocks items={stage.items} />}
       {stage.kind === 'bonds' && <BondShowcase stressed={stage.stressed} quality={quality} />}
       {stage.kind === 'exdiv' && <ExDividendStage outcome={stage.outcome} quality={quality} />}
+      {stage.kind === 'feeRace' && <FeeRaceStage quality={quality} />}
+      {stage.kind === 'accumulate' && <AccumulateStage quality={quality} />}
+      {stage.kind === 'principalTrap' && <PrincipalTrapStage quality={quality} />}
+      {stage.kind === 'excavator' && <Excavator />}
+      {stage.kind === 'excavator' && stage.meter && <FeeMeter />}
+      {stage.kind === 'ticker' && <PriceTicker />}
     </>
   )
 }

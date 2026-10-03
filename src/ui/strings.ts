@@ -50,4 +50,20 @@ export const T = {
     exdiv: { block: '方塊', coins: '金幣' },
     illustrativeTag: '（示意）',
   },
+  towers: { lost: '被費用吃掉', value: (v: number) => `${v.toFixed(1)} 元` },
+  feeRows: {
+    front: (fl: number) => `前收型（假設 ${(fl * 100).toFixed(2)}%）`,
+    back: '後收型（U 級別）',
+    etf: 'ETF（0050）',
+  },
+  accumulateRows: { accumulate: '累積型', payout: '配息型' },
+  trapRow: '示意高配息基金',
+  excavator: '經理人（怪手）',
+  feeMeter: {
+    title: '計費表',
+    rate: (er: number) => `內扣費用每年約 ${(er * 100).toFixed(2)}%`,
+    ground: (amount: number) => `已磨掉約 ${Math.round(amount).toLocaleString('zh-TW')} 元`,
+    note: '假設投入 100 萬元、時間快轉（6 秒 = 1 年）',
+  },
+  ticker: { etf: '成交價（示意）', fund: '基金淨值：每天收盤後才公布一次' },
 } as const
