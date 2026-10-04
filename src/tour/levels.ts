@@ -315,13 +315,13 @@ export const LEVELS: Level[] = [
       },
       {
         id: 'c-2',
-        title: '誰受傷最重',
+        title: '分散有程度',
         line: (c) => `0050 跟著跌約 **${(Math.abs(c.shock('0050')) * 100).toFixed(1)}%**`,
         more: (c) =>
           `只買台積電：${signedPct(SHOCK_2330['2330']!)}。0050：約 ${signedPct(c.shock('0050'))}。因為台積電佔了一半以上。SPY 沒有台積電，沒有直接影響（${signedPct(c.shock('SPY'))}）。`,
         bigNumber: (c) => {
           const s = c.shock('0050')
-          return { value: signedPct(s), label: '0050', fraction: Math.abs(s) / SHOCK_PCT }
+          return { value: signedPct(s), label: '假設下的 0050', fraction: Math.abs(s) / SHOCK_PCT }
         },
         scene: { camera: 'plaza', product: null, stage: { kind: 'shock', active: true } },
       },
