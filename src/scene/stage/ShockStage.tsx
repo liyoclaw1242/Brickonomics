@@ -66,7 +66,7 @@ export function ShockStage({ active, quality }: { active: boolean; quality: Qual
     <>
       <StormCloud quality={quality} position={atPlaza(...CLOUD.center)} spread={CLOUD.spread} size={CLOUD.size} />
       {active && <Lightning time={time} quality={quality} still={still} />}
-      {hit && <Callout anchor={atPlaza(...CLOUD_LABEL_ANCHOR)} offset={[0, 1.6, 0]} title={T.shock.struck} persistent />}
+      {hit && <Callout anchor={atPlaza(...CLOUD_LABEL_ANCHOR)} offset={[2.2, -0.8, 0]} title={T.shock.struck} persistent />}
       <VoxelColumn count={stockCount} look={look} position={atPlaza(SHOCK_SUBJECTS[0]!.x, 0, 0)} w={STOCK_W} d={STOCK_W} quality={quality} />
       <Basket productId="0050" quality="low" position={atPlaza(SHOCK_SUBJECTS[1]!.x, 0, 0)} slice={0} sliceAxis="x" explode={0} damage={damage} />
       <Basket productId="SPY" quality="low" position={atPlaza(SHOCK_SUBJECTS[2]!.x, 0, 0)} slice={0} sliceAxis="x" explode={0} />

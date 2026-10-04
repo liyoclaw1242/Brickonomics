@@ -1,6 +1,7 @@
 import { universe } from '../../data'
 import { shockImpact } from '../../sim/scenario'
 import { SHOCK_2330 } from '../../tour/context'
+import type { Stage } from '../../tour/types'
 import type { Vec3 } from '../camera'
 import { QUALITY, type Quality } from '../quality'
 import { basketVoxels } from './basket'
@@ -35,7 +36,11 @@ export function tsmcExposure(key: ShockKey): number {
 }
 
 /** 烏雲：中心、拉寬、大小（蓋住三組） */
-export const CLOUD = { center: [0, 13.6, 2] as Vec3, spread: [3.4, 0.9] as [number, number], size: 1.3 }
+/**
+ * 烏雲高掛在三組上方（鏡頭畫面上緣、工具列下面），小一點、薄一點，不擋後面的城市。
+ * 鏡頭（plaza）在廣場前上方往下看約 31°：雲放在 y 17、稍微往前（z 3），畫面上大約落在上緣下方一點。
+ */
+export const CLOUD = { center: [0, 17.2, 3] as Vec3, spread: [2.9, 0.75] as [number, number], size: 0.95 }
 
 /** 0050 裡被打掉（紅色）那幾顆方塊的中心，落在正面（z＝前表面）：閃電從前面打進那一層 */
 export function etfHitPoint(): Vec3 {
@@ -60,10 +65,11 @@ export function strikeTarget(key: ShockKey): Vec3 | null {
 }
 
 /** 閃電從雲底出來、往下一段後分岔 */
-export const BOLT_ORIGIN: Vec3 = [-7, 12.2, 2.5]
-export const BOLT_FORK: Vec3 = [-7.6, 10.2, 2.8]
-/** 「假設：台積電被打中」標在烏雲上（閃電退掉後仍指得到東西） */
-export const CLOUD_LABEL_ANCHOR: Vec3 = [-7, 14.6, 2.5]
+/** 主幹幾乎垂直：從雲底直直往下，到低處才分岔 */
+export const BOLT_ORIGIN: Vec3 = [-7, 16.2, 3]
+export const BOLT_FORK: Vec3 = [-7.3, 11.4, 3]
+/** 「假設：台積電被打中」標在雲底、主幹右邊（不靠近左上的面板） */
+export const CLOUD_LABEL_ANCHOR: Vec3 = [-4.5, 16, 3]
 
 export const LIGHTNING = {
   /** 鏡頭停下後先看雲一下，再打 */
@@ -139,13 +145,14 @@ export const BOLT_DETAIL: Record<Quality, { segments: number; twigs: boolean; gl
 }
 
 /**
- * 分岔先沿著雲底橫走到目標正上方，再直直劈下來（從高視角看，斜斜一條會像橫線、看不出「從天上打下來」）。
+ * 分岔從低處的分岔點斜斜往下到目標正上方，最後直直劈下來。
  * 回傳路線的轉折點（不含鋸齒）。
  */
 export function branchWaypoints(key: ShockKey): Vec3[] | null {
   const to = strikeTarget(key)
   if (!to) return null
-  const above: Vec3 = key === 'stock' ? [to[0] + 0.6, BOLT_FORK[1] - 0.6, to[2] + 1] : [to[0] - 0.8, BOLT_FORK[1] - 1, to[2]]
+  // 斜斜往下到目標正上方一點，最後一小段直直劈下
+  const above: Vec3 = key === 'stock' ? [to[0] + 0.5, to[1] + 1.6, to[2] + 0.6] : [to[0] - 0.6, 7.6, to[2]]
   return [BOLT_FORK, above, to]
 }
 
@@ -200,4 +207,9 @@ export function visibleSegments(segs: readonly BoltSegment[], reveal: number): n
   let n = 0
   while (n < segs.length && segs[n]!.appear < reveal) n++
   return n
+}
+
+/** 有閃電的步驟（c-2）：面板大數字等閃電打中才開始數（毫秒）；其他步驟 0 */
+export function bigNumberDelayMs(stage: Stage | undefined, reducedMotion: boolean): number {
+  return !reducedMotion && stage?.kind === 'shock' && stage.active ? IMPACT_TIME * 1000 : 0
 }

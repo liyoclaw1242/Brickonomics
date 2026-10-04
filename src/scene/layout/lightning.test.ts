@@ -9,6 +9,8 @@ import {
   boltGlow,
   boltReveal,
   boltSegments,
+  bigNumberDelayMs,
+  branchWaypoints,
   etfHitPoint,
   flashLevel,
   isStruck,
@@ -123,5 +125,31 @@ describe('timing: exactly one strike', () => {
     expect(boltGlow(Infinity)).toBe(0)
     expect(isStruck(Infinity)).toBe(true)
     expect(isStruck(-Infinity)).toBe(false)
+  })
+})
+
+describe('panel big number waits for the strike', () => {
+  it('delays the count-up to the impact on the active shock step only', () => {
+    expect(bigNumberDelayMs({ kind: 'shock', active: true }, false)).toBe(IMPACT_TIME * 1000)
+    expect(bigNumberDelayMs({ kind: 'shock', active: false }, false)).toBe(0)
+    expect(bigNumberDelayMs({ kind: 'none' }, false)).toBe(0)
+    expect(bigNumberDelayMs(undefined, false)).toBe(0)
+    // 減少動態：閃電是靜止的終點，數字也直接顯示
+    expect(bigNumberDelayMs({ kind: 'shock', active: true }, true)).toBe(0)
+  })
+})
+
+describe('bolt comes down from above', () => {
+  it('trunk is near-vertical and forks low, below the cloud and above the targets', () => {
+    const dx = Math.abs(BOLT_FORK[0] - BOLT_ORIGIN[0])
+    const dy = BOLT_ORIGIN[1] - BOLT_FORK[1]
+    expect(dy).toBeGreaterThan(4 * dx)
+    expect(BOLT_FORK[1]).toBeGreaterThan(strikeTarget('stock')![1])
+  })
+  it('every branch only goes down (never climbs back up)', () => {
+    for (const b of boltBranches('high').filter((x) => x.target)) {
+      const way = branchWaypoints(b.target!)!
+      for (let i = 1; i < way.length; i++) expect(way[i]![1]).toBeLessThan(way[i - 1]![1])
+    }
   })
 })

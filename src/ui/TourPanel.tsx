@@ -8,6 +8,7 @@ import { makeTextContext } from '../tour/context'
 import { isSatisfied, lineOf, moreOf, nextPosition, prevPosition, titleOf } from '../tour/engine'
 import { LEVELS } from '../tour/levels'
 import { BigNumberCard } from './panel/BigNumberCard'
+import { bigNumberDelayMs } from '../scene/layout/lightning'
 import { MoreSection } from './panel/MoreSection'
 import { OneLine } from './panel/OneLine'
 import { StepHeader } from './panel/StepHeader'
@@ -74,7 +75,7 @@ function StepPanel() {
       </StepHeader>
       {big && (
         <div className={revealed ? 'step-reveal is-revealed' : 'step-reveal'}>
-          <BigNumberCard key={step.id} n={big} color={big.colorKey ? colorOf(big.colorKey) : undefined} run={revealed} instant={instant} titleMarks={marks} />
+          <BigNumberCard key={step.id} n={big} color={big.colorKey ? colorOf(big.colorKey) : undefined} run={revealed} instant={instant} titleMarks={marks} delayMs={bigNumberDelayMs(step.scene.stage, instant)} />
         </div>
       )}
       {step.controls && <StageControls controls={step.controls} />}
