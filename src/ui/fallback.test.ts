@@ -21,6 +21,13 @@ describe('fallbackLevels', () => {
     expect(out[0]!.label).toBe('序章')
   })
 
+  it('carries step-level marks into the text-only version', () => {
+    const steps = LEVELS.flatMap((l) => l.steps).filter((s) => s.mark)
+    expect(steps.length).toBeGreaterThan(0)
+    const flat = out.flatMap((l) => l.steps)
+    for (const s of steps) expect(flat.find((f) => f.id === s.id)!.mark, s.id).toBe(s.mark)
+  })
+
   it('u-6 uses its own honest text: no 已經解鎖, no claim that the sandbox is here', () => {
     const u6 = out.flatMap((l) => l.steps).find((s) => s.id === 'u-6')!
     const step = LEVELS.flatMap((l) => l.steps).find((s) => s.id === 'u-6')!

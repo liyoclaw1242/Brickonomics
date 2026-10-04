@@ -40,7 +40,10 @@ export function FallbackApp() {
           <ol>
             {l.steps.map((s) => (
               <li key={s.id}>
-                <h3 className="fallback__title">{s.title}</h3>
+                <h3 className="fallback__title">
+                  {s.title}
+                  {s.mark && <MarkIcon kind={s.mark} />}
+                </h3>
                 <Line line={s.line} />
                 <details className="fallback__more">
                   <summary>{T.more}</summary>
