@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { Mark } from '../marks'
+import { markPlacement, type Mark } from '../marks'
 import { MarkIcon } from '../MarkIcon'
 import { T } from '../strings'
 
@@ -8,12 +8,13 @@ export function StepHeader({ level, levelCount, title, marks, revealed, children
   level: number
   levelCount: number
   title: string
-  /** 這一步的標示（≈ 舉例／✎ 假設的數字／？ 還沒查證），每種在標題旁出現一次 */
+  /** 這一步的標示，每種出現一次：≈ 舉例／✎ 假設的數字在標題旁，？ 資料待更新在一句話後面（r3） */
   marks: readonly Mark[]
   revealed: boolean
   children?: ReactNode
 }) {
   const chapter = T.chapters[level]
+  const placed = markPlacement(marks)
   return (
     <header className="step-header">
       <p className="brand">{T.brand}</p>
@@ -28,15 +29,22 @@ export function StepHeader({ level, levelCount, title, marks, revealed, children
       <div className={revealed ? 'step-reveal is-revealed' : 'step-reveal'} aria-live="polite" aria-atomic="true">
         <h1 className="step-title">
           <span className="step-title__text">{title}</span>
-          {marks.length > 0 && (
+          {placed.title.length > 0 && (
             <span className="step-title__marks">
-              {marks.map((k) => (
+              {placed.title.map((k) => (
                 <MarkIcon key={k} kind={k} />
               ))}
             </span>
           )}
         </h1>
         {children}
+        {placed.afterLine.length > 0 && (
+          <p className="step-marks-after">
+            {placed.afterLine.map((k) => (
+              <MarkIcon key={k} kind={k} />
+            ))}
+          </p>
+        )}
       </div>
     </header>
   )

@@ -64,7 +64,8 @@ export const T = {
   marks: {
     illustrative: { icon: '≈', word: '舉例', label: '舉例：為了說明而設計（示意），不是真實數字' },
     assumption: { icon: '✎', word: '假設的數字', label: '假設的數字：不是查到的資料，是拿來算給你看的' },
-    unverified: { icon: '？', word: '還沒查證', label: '還沒查證：這筆資料還沒核對過，可能不準' },
+    /** r3：「還沒查證」讓他不信任整堂課；記號照樣標（誠實），用詞改成資料在等更新，放在一句話後面 */
+    unverified: { icon: '？', word: '資料待更新', label: '資料待更新：這個數字來自公開資料，還在等最新一期核對' },
   },
   controls: {
     years: '持有年數',
@@ -140,7 +141,7 @@ export const T = {
     overlapTotal: '前幾大持股重疊（至少）',
     atLeast: '（至少）',
     overlapNote: '其餘持股沒有列出，實際重疊更多',
-    unverifiedParts: (parts: string) => `還沒查證：${parts}`,
+    unverifiedParts: (parts: string) => `資料待更新：${parts}`,
   },
   feeParts: { expenseRatio: '內扣費用', distributionFee: '分銷費', cdsc: '遞延手續費', trading: '交易成本' },
   qualityNotice: '畫面有點卡，已自動切換成省電畫質。',

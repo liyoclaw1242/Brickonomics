@@ -29,3 +29,12 @@ export function stepMarks(step: Step, u: Universe): Mark[] {
   }
   return out
 }
+
+/**
+ * 一步的標示放在哪裡（每種只出現一次）：≈ 舉例、✎ 假設的數字放在標題旁；
+ * ？ 資料待更新放在一句話後面（r3：放在標題下第一眼就看到，讓人不信任整堂課）。
+ */
+export function markPlacement(marks: readonly Mark[]): { title: Mark[]; afterLine: Mark[] } {
+  const uniq = [...new Set(marks)]
+  return { title: uniq.filter((m) => m !== 'unverified'), afterLine: uniq.filter((m) => m === 'unverified') }
+}

@@ -21,7 +21,7 @@
   --label-shadow: rgba(0, 0, 0, 0.45);
   /* 3D 標註的底：不透明，後面的大樓不會從字底下透出來（r2：「高收益債旁邊糊糊的」） */
   --callout-bg: #17131f;
-  /* 標示小膠囊（≈ 舉例／✎ 假設的數字／？ 還沒查證）：老花眼也看得清楚 */
+  /* 標示小膠囊（≈ 舉例／✎ 假設的數字／？ 資料待更新）：老花眼也看得清楚 */
   --mark-bg: rgba(143, 184, 200, 0.2);
   --mark-border: rgba(143, 184, 200, 0.7);
   --mark-text: #e3f3f9;
@@ -234,6 +234,10 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .mark__tip { position: absolute; top: 120%; left: 50%; transform: translateX(-50%); z-index: 10; width: max-content; max-width: 220px;
   padding: 8px 10px; border-radius: 8px; background: var(--callout-bg); border: 1px solid var(--border); font-size: 14px; font-weight: 400; line-height: 1.5; white-space: normal; }
 
+/* ？ 資料待更新：放在一句話後面，小一號但看得清楚（r3） */
+.step-marks-after { margin: -6px 0 10px; display: flex; gap: 6px; }
+.step-marks-after .mark__icon { height: 24px; font-size: 13px; font-weight: 500; padding: 0 8px; }
+.step-reveal:not(.is-revealed) .step-marks-after { opacity: 0; }
 @media (max-width: 720px) { .mark__icon { height: 26px; font-size: 13px; padding: 0 8px; } }
 
 /* 右上工具列、圖例色票列、底部章節時間軸（版面 insets 見 src/ui/layoutModel.ts） */
