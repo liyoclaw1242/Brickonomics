@@ -10,22 +10,10 @@ import { ACCENT_COLORS, SECTOR_COLORS } from '../palette'
 import type { Quality } from '../quality'
 import { THEMES } from '../theme'
 import { atPlaza } from './plaza'
+import { StormCloud } from './StormCloud'
 
 /** 捲起來的小方塊：城市裡的方塊顏色（積木城市被吹散的碎片） */
 const DEBRIS_COLORS = [SECTOR_COLORS.semiconductor, ACCENT_COLORS.loss, '#ffb300', SECTOR_COLORS.electronics, SECTOR_COLORS.software, '#90a4ae']
-/** 頂上的烏雲：幾團扁平的低面數雲塊（相對漏斗頂端的位置與大小） */
-const PUFFS: { x: number; z: number; y: number; s: number }[] = [
-  { x: 0, z: 0, y: 0.5, s: 3.2 },
-  { x: 3, z: 0.8, y: 0.1, s: 2.6 },
-  { x: -3, z: 0.5, y: 0.15, s: 2.7 },
-  { x: 1.4, z: -2.6, y: 0.35, s: 2.4 },
-  { x: -1.5, z: 2.4, y: 0.05, s: 2.3 },
-  { x: 5.2, z: -0.7, y: -0.25, s: 1.8 },
-  { x: -5, z: -0.9, y: -0.2, s: 1.9 },
-  { x: -2.8, z: -2.4, y: 0.1, s: 2 },
-  { x: 2.9, z: 2.6, y: -0.1, s: 1.9 },
-]
-const PUFFS_LOW = 5
 const CAP_Y = STORM.height + 0.6
 const RAIN_RADIUS = 6.5
 const RAIN_TOP = STORM.height + 0.5
@@ -53,7 +41,6 @@ type Props = {
  */
 export function Tornado({ time, quality, still }: Props) {
   const n = STORM_COUNTS[quality]
-  const puffs = quality === 'low' ? PUFFS.slice(0, PUFFS_LOW) : PUFFS
   const theme = THEMES[useThemeStore((s) => s.theme)].storm
   const root = useRef<Group>(null)
   const cap = useRef<Group>(null)
@@ -61,7 +48,6 @@ export function Tornado({ time, quality, still }: Props) {
   const dust = useRef<InstancedMesh>(null)
   const debris = useRef<InstancedMesh>(null)
   const rain = useRef<InstancedMesh>(null)
-  const clouds = useRef<InstancedMesh>(null)
   const dummy = useMemo(() => new Object3D(), [])
 
   // 顏色只在換主題時設定：環由下而上從漏斗色漸變到烏雲色
@@ -146,18 +132,6 @@ export function Tornado({ time, quality, still }: Props) {
       b.instanceMatrix.needsUpdate = true
     }
 
-    const c = clouds.current
-    if (c) {
-      for (let i = 0; i < puffs.length; i++) {
-        const p = puffs[i]!
-        dummy.position.set(p.x, CAP_Y + p.y + Math.sin(now * 0.8 + i) * 0.08, p.z)
-        dummy.rotation.set(0, i * 1.3, 0)
-        dummy.scale.set(p.s, p.s * 0.4, p.s)
-        dummy.updateMatrix()
-        c.setMatrixAt(i, dummy.matrix)
-      }
-      c.instanceMatrix.needsUpdate = true
-    }
     if (cap.current) cap.current.rotation.y = now * 0.25
 
     const w = rain.current
@@ -193,10 +167,7 @@ export function Tornado({ time, quality, still }: Props) {
         <BlockMaterial kind="matte" quality={quality} />
       </instancedMesh>
       <group ref={cap}>
-        <instancedMesh ref={clouds} args={[undefined, undefined, puffs.length]} frustumCulled={false}>
-          <icosahedronGeometry args={[1, quality === 'low' ? 0 : 1]} />
-          <meshStandardMaterial color={theme.cloud} flatShading roughness={1} />
-        </instancedMesh>
+        <StormCloud quality={quality} position={[0, CAP_Y, 0]} bob={!still} />
       </group>
       {n.streaks > 0 && (
         <instancedMesh ref={rain} args={[undefined, undefined, n.streaks]} frustumCulled={false}>
