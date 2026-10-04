@@ -9,6 +9,9 @@ import { TourPanel } from './ui/TourPanel'
 import { SandboxPanel } from './ui/SandboxPanel'
 import { PickInfoPanel } from './ui/PickInfoPanel'
 import { QualityNotice } from './ui/QualityNotice'
+import { Toolbar } from './ui/Toolbar'
+import { Legend } from './ui/Legend'
+import { ChapterTimeline } from './ui/ChapterTimeline'
 import { useExplodeKey } from './ui/useExplodeKey'
 import './ui/ui.css'
 
@@ -26,6 +29,9 @@ export default function App() {
         <Scene quality={quality} />
       </Canvas>
       {mode === 'tour' ? <TourPanel /> : <SandboxPanel />}
+      <ChapterTimeline />
+      <Toolbar />
+      <Legend />
       <PickInfoPanel />
       <QualityNotice />
     </div>

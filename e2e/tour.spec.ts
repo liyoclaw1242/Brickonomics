@@ -38,7 +38,7 @@ test('walks the whole tour by clicking 下一步 and unlocks the sandbox', async
     before = await cameraSeq(page)
     await next.click()
   }
-  await expect(page.getByRole('button', { name: '重看導覽' })).toBeVisible()
+  await expect(page.getByRole('navigation', { name: '畫面設定' }).getByRole('button', { name: '↺ 重看導覽' })).toBeVisible() // 沙盒模式才出現在右上工具列
   expect(errors).toEqual([])
 })
 

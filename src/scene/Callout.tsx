@@ -14,7 +14,10 @@ type Props = {
   marks?: Mark[]
   dim?: boolean
   wrap?: boolean
-  /** 規則：「標註」開關只藏名稱與指引線；內容、提醒、圖例與標示圖示一律留著（persistent） */
+  /**
+   * 「標註」開關關掉時，非 persistent 的標註（名稱類）整個隱藏（含指引線）；
+   * persistent（內容、提醒、圖例、帶標示圖示的數字）連同指引線一律留著。NameLabel 也一併隱藏。
+   */
   persistent?: boolean
 }
 

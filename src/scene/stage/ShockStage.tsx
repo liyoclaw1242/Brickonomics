@@ -40,6 +40,8 @@ export function ShockStage({ active, quality }: { active: boolean; quality: Qual
             title={active ? T.shock.label(name, pct) : name}
             // 圖例（紅色＝假設跌掉的部分）原本是中間那籃下方的另一個標籤，併成它的副標
             sub={active && s.key === '0050' ? T.shock.legend : undefined}
+            // 帶圖例的那一籃在衝擊發生時屬於內容，關掉「標註」也要留著
+            persistent={active && s.key === '0050'}
           />
         )
       })}

@@ -1,4 +1,4 @@
-/* 面板寬度；須與 src/ui/layout.ts 的 PANEL_WIDTH 一致（ViewFraming 用它推算可視區） */
+/* 面板寬度；須與 src/ui/layoutModel.ts 的 PANEL_WIDTH 一致（ViewFraming 用它推算可視區）。手機斷點 720px 須與 MOBILE_MAX 一致 */
 :root {
   --panel-w: 312px;
   font-family: 'Noto Sans TC', system-ui, -apple-system, 'PingFang TC', 'Microsoft JhengHei', sans-serif;
@@ -194,3 +194,37 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
   width: 18px; height: 18px; border-radius: 50%; font-size: 11px; line-height: 1; padding: 0; cursor: pointer; }
 .mark__tip { position: absolute; top: 120%; left: 50%; transform: translateX(-50%); z-index: 10; width: max-content; max-width: 220px;
   padding: 6px 8px; border-radius: 8px; background: var(--surface-strong); border: 1px solid var(--border); font-size: 12px; white-space: normal; }
+
+/* 右上工具列、圖例色票列、底部章節時間軸（版面 insets 見 src/ui/layoutModel.ts） */
+.toolbar { position: fixed; top: 12px; right: 12px; display: flex; gap: 8px; z-index: 6; }
+.pill { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 999px; padding: 8px 14px; font: inherit; font-size: 14px; cursor: pointer; backdrop-filter: blur(10px); }
+.pill[aria-pressed='true'] { border-color: var(--accent); }
+.legend-bar { position: fixed; top: 60px; right: 12px; display: flex; gap: 12px; padding: 8px 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); font-size: 13px; z-index: 6; }
+.legend-bar i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: middle; }
+.timeline { position: fixed; left: calc(var(--panel-w) + 24px); right: 12px; bottom: 12px; padding: 10px 16px 12px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); z-index: 5; }
+.timeline__chapters { display: flex; justify-content: space-between; gap: 4px; }
+.timeline__chapter { border: 0; background: none; color: var(--muted); font: inherit; font-size: 13px; letter-spacing: 0.12em; cursor: pointer; }
+.timeline__chapter[aria-current='step'] { color: var(--text); font-weight: 600; }
+.timeline__chapter:disabled { opacity: 0.35; cursor: default; }
+.timeline__bar { margin-top: 8px; height: 3px; border-radius: 2px; background: var(--border); overflow: hidden; }
+.timeline__bar span { display: block; height: 100%; background: var(--accent); }
+.timeline__chapter { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; padding: 4px 2px; }
+.timeline__icon { letter-spacing: 0; }
+.legend-bar { list-style: none; margin: 0; }
+.legend-bar li { white-space: nowrap; }
+/* 圖例列打開時，選取資訊卡往下讓位；品質提示讓出底部時間軸 */
+.legend-bar ~ .info { top: 108px; }
+@media (min-width: 721px) { .notice { bottom: 88px; } }
+@media (max-width: 720px) {
+  .toolbar { top: 8px; right: 8px; gap: 4px; }
+  .pill { padding: 6px 10px; font-size: 12px; }
+  .timeline { left: 8px; right: 8px; bottom: calc(42vh + 8px); padding: 6px 10px; }
+  .timeline__chapter .timeline__name { display: none; }
+  .timeline { bottom: calc(42dvh + 8px); }
+  /* 手機只留 7 個圖示小點；時間軸總高約 40px，與 layoutModel 的 bottom = 抽屜 + 40 一致 */
+  .timeline__chapter { min-width: 28px; padding: 2px 4px; justify-content: center; }
+  .timeline__bar { margin-top: 4px; }
+  .legend-bar { top: 48px; left: 8px; right: 8px; flex-wrap: wrap; gap: 6px 10px; font-size: 12px; }
+  .info { bottom: calc(42vh + 60px); bottom: calc(42dvh + 60px); }
+  .legend-bar ~ .info { top: auto; }
+}

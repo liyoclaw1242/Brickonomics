@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 import { universe } from '../data'
 import { useSandbox } from '../store/sandbox'
-import { useTour } from '../store/tour'
 import { formatPct, legendMeta, legendRows, productGroups } from './model'
 import { MarkIcon } from './MarkIcon'
 import { T } from './strings'
@@ -28,10 +27,6 @@ export function SandboxPanel() {
         <p className="brand">{T.brand}</p>
         <h1 className="step-title">{T.sandboxTitle}</h1>
       </header>
-      {/* Task 7 會把「重看導覽」移到右上工具列 */}
-      <button className="link" onClick={() => useTour.getState().restartTour()}>
-        {T.replayTour}
-      </button>
 
       <section>
         <h2>{T.products}</h2>
