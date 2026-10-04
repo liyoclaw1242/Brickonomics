@@ -126,7 +126,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .hint--try { font-size: 15px; font-weight: 600; color: var(--em); margin: 8px 0 0; }
 /* 最後一步的回顧清單 */
 .recap { list-style: none; margin: 8px 0 4px; padding: 10px 12px; display: grid; gap: 6px; border-radius: 12px; background: var(--chip); border: 1px solid var(--border); font-size: 15px; line-height: 1.5; }
-.recap li, .recap p { margin: 0; display: flex; gap: 8px; align-items: baseline; }
+.recap li, .recap p { margin: 0; display: flex; gap: 8px; align-items: baseline; word-break: keep-all; overflow-wrap: anywhere; } /* 中文只在標點、空白處換行：不會把「配息型」拆開或讓「型」單獨掉到下一行（m-fin） */
 .recap__icon { flex: none; width: 1.4em; text-align: center; }
 
 .info {
@@ -200,6 +200,8 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
   .panel.tour > .more { order: 2; }
   /* 結尾步：抽屜高度有限，口訣卡排在「下一階」按鈕之後，按鈕才不會被固定在底部的上一步／下一步蓋住 */
   .panel.tour > .recap { order: 1; }
+  /* 口訣卡在手機上緊一點：抽屜一打開整張卡就在固定的上一步／下一步上方，不被蓋住（Plan 6 walkthrough） */
+  .recap { margin: 4px 0 2px; padding: 8px 10px; gap: 2px; font-size: 14px; line-height: 1.45; }
   .panel.tour > .link { order: 4; }
   .readout th, .readout td { padding: 2px 0; }
   .step-nav { position: sticky; bottom: -14px; margin: 8px -16px -14px; padding: 8px 16px 14px; background: var(--surface-strong); }
