@@ -77,6 +77,7 @@ test('the chapter timeline jumps back to a finished chapter and locks future one
   const before = await cameraSeq(page)
   await timeline.getByRole('button', { name: '01 股票' }).click()
   await expect(page.locator('.step-counter')).toContainText('01 / 06')
+  await expect(timeline.getByRole('button', { name: '01 股票' })).toHaveAttribute('aria-current', 'step')
   await settled(page, before)
   await expect(page.locator('h1.step-title')).toHaveText('拿走一顆方塊') // 該章第一步
   await expect(page.locator('details.more')).not.toHaveAttribute('open', /.*/) // 多說一點預設收起
