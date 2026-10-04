@@ -11,7 +11,7 @@ import { parseSandboxQuery, useSandbox } from './store/sandbox'
 import { useQuality } from './store/quality'
 import { useThemeStore, parseThemeParam, loadTheme } from './store/theme'
 import { LEVELS } from './tour/levels'
-import { parseTourQuery, isValidPosition } from './tour/engine'
+import { parseTourQuery, resumePosition } from './tour/engine'
 import { loadProgress, useTour } from './store/tour'
 
 const forceFallback = new URLSearchParams(window.location.search).get('fallback') === '1'
@@ -37,7 +37,7 @@ if (webgl) {
     useTour.setState({ mode: 'sandbox' })
     useSandbox.setState(parseSandboxQuery(window.location.search, baskets))
   } else {
-    useTour.getState().enterStep(tq.pos ?? (progress.pos && isValidPosition(LEVELS, progress.pos) ? progress.pos : { level: 0, step: 0 }))
+    useTour.getState().enterStep(tq.pos ?? resumePosition(LEVELS, progress.pos))
   }
   if (import.meta.env.DEV) {
     ;(window as unknown as { __BCI_STEPS__: number[] }).__BCI_STEPS__ = LEVELS.map((l) => l.steps.length)

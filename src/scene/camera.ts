@@ -12,7 +12,8 @@ export const CAMERA_PRESETS: Record<CameraPresetId, { position: Vec3; target: Ve
   exchange: { position: [6, 18, 40], target: [0, 6, 14] },
   exchangeWide: { position: [10, 30, 48], target: [0, 10, 14] },
   exchangeSide: { position: [34, 14, 20], target: [0, 7, 14] },
-  plazaNear: { position: [0, 18, 52], target: [0, 2, 30] },
+  // 往下看多一點：後面城市的樓頂不會被畫面上緣切一半、也不會壓在工具列底下（使用者測試 r2）
+  plazaNear: { position: [0, 20, 42], target: [0, 1.5, 30] },
   underground: { position: [0, -1, 98], target: [0, -9, 24] },
   plaza: { position: [0, 26, 66], target: [0, 4, 30] },
 }

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  blocksFor, towerVoxels, exDivTimeline, accumulateVsPayout, principalTrap,
+  blocksFor, towerVoxels, exDivTimeline, exDivBands, accumulateVsPayout, principalTrap,
   illustrativeTicks, layerCentroid, damageFromShocks,
 } from './stages'
 import { stackVoxels } from './voxels'
@@ -90,5 +90,21 @@ describe('damageFromShocks', () => {
   it('turns negative shocks into knock-out fractions and ignores gains', () => {
     expect(damageFromShocks({ '2330': -0.3, NVDA: 0.2 })).toEqual({ '2330': 0.3 })
     expect(damageFromShocks({ X: -1.5 })).toEqual({ X: 1 })
+  })
+})
+
+describe('exDivBands (what the block lost, drawn above it)', () => {
+  it('before the payout nothing is missing', () => {
+    expect(exDivBands(100, 0)).toEqual({ gold: null, red: null })
+  })
+  it('at the payout the gold band is exactly the coins: 95 → 100', () => {
+    expect(exDivBands(95, 5)).toEqual({ gold: [95, 100], red: null })
+  })
+  it('when the block does not grow back, the red band is the extra loss: 92 → 95', () => {
+    expect(exDivBands(92, 5)).toEqual({ gold: [95, 100], red: [92, 95] })
+  })
+  it('when the block grows back the gold band shrinks', () => {
+    expect(exDivBands(97.5, 5)).toEqual({ gold: [97.5, 100], red: null })
+    expect(exDivBands(100, 5)).toEqual({ gold: null, red: null })
   })
 })

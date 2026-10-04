@@ -244,18 +244,19 @@ describe('LEVELS', () => {
     expect(bigOf(byId('f-5'))!.value).toBe('1.88%') // JH_BALANCED expenseRatio 0.0188
     expect(bigOf(byId('e-5'))!.value).toBe('0.18%') // QQQ expenseRatio 0.0018
     expect(bigOf(byId('c-3'))!.value).toBe(`至少 ${(overlap(universe, 'QQQ', 'SPY').total * 100).toFixed(1)}%`)
-    expect(bigOf(byId('s-6'))!).toEqual({ value: '100', label: '方塊 95 ＋ 金幣 5', mark: 'illustrative' }) // EXDIV 100 − 5 + 5
-    // 跟著即時時間軸，但只到配發那一刻（之後的填息不算）：配發前 100 ＋ 0，配發後 95 ＋ 5，合計永遠 100
-    expect(bigOf(byId('s-6'), { phase: 0 })).toEqual({ value: '100', label: '方塊 100 ＋ 金幣 0', mark: 'illustrative' })
+    // s-5 跟著即時時間軸，但只到配發那一刻（之後的填息不算）：配發前 100 ＋ 0，配發那一刻 95 ＋ 5，合計永遠 100
+    expect(bigOf(byId('s-5'))).toEqual({ value: '100', label: '方塊 100＋金幣 0', mark: 'illustrative' })
+    expect(bigOf(byId('s-5'), { phase: EXDIV_AFTER_PHASE })).toEqual({ value: '100', label: '方塊 95＋金幣 5', mark: 'illustrative' }) // EXDIV 100 − 5 + 5
     for (let i = 0; i <= 20; i++) {
       const phase = i * 0.05
-      const bn = bigOf(byId('s-6'), { phase })!
+      const bn = bigOf(byId('s-5'), { phase })!
       expect(bn.value, `phase ${phase}`).toBe('100')
       const [block, coins] = (bn.label.match(/\d+/g) ?? []).map(Number)
       expect(block! + coins!, `phase ${phase}: ${bn.label}`).toBe(100)
+      expect(bn.label, `never 100 ＋ 5 (phase ${phase})`).not.toBe('方塊 100＋金幣 5')
     }
-    expect(lineOf(byId('s-6'), ctx)).toContain('**金幣|coin**') // 金幣用金幣色（3b1b 顏色連結）
-    expect(lineOf(byId('s-6'), ctx)).toContain('**不變**')
+    expect(lineOf(byId('s-5'), ctx)).toContain('**金幣|coin**') // 金幣用金幣色（3b1b 顏色連結）
+    expect(lineOf(byId('s-5'), ctx)).toContain('**不變**')
   })
 
   it('says 配息來自本金 only on the illustrative principal-trap step', () => {
@@ -329,30 +330,39 @@ describe('control ranges and the dividend steps (user test r1)', () => {
     }
   })
 
-  it('s-6 stops the timeline at the payout moment so the card and the 3D tags always agree', () => {
-    const s6 = byId('s-6')
-    expect(controlRange(s6, 'phase')).toEqual([0, EXDIV_AFTER_PHASE])
-    expect(s6.scene.values?.phase).toBe(EXDIV_AFTER_PHASE)
+  it('s-5 is the one drag step: the timeline stops at the payout moment and the card and the 3D tags always agree', () => {
+    const s5 = byId('s-5')
+    expect(s5.title).toBe('發金幣那一刻')
+    expect(controlRange(s5, 'phase')).toEqual([0, EXDIV_AFTER_PHASE])
+    expect(s5.scene.values?.phase).toBe(0)
+    expect(s5.until).toEqual({ control: 'phase', min: EXDIV_AFTER_PHASE }) // 要拉到發金幣那一刻
     for (let i = 0; i <= 10; i++) {
       const phase = (i / 10) * EXDIV_AFTER_PHASE
       const e = exDivTimeline(phase, 'fill') // 3D 舞台用同一條時間軸
-      const bn = bigOf(s6, { phase })!
-      expect(bn.label, `phase ${phase}`).toBe(`方塊 ${e.blockValue.toFixed(0)} ＋ 金幣 ${e.cash.toFixed(0)}`)
+      const bn = bigOf(s5, { phase })!
+      expect(bn.label, `phase ${phase}`).toBe(`方塊 ${e.blockValue.toFixed(0)}＋金幣 ${e.cash.toFixed(0)}`)
     }
-    expect(s6.title).toBe('發金幣那一刻')
   })
 
-  it('s-7 starts at the payout moment and needs a drag that shows the block not growing back', () => {
-    const s7 = byId('s-7')
-    expect(s7.title).toBe('方塊沒長回來')
-    expect(s7.scene.values?.phase).toBe(EXDIV_AFTER_PHASE)
-    expect(s7.until?.control).toBe('phase')
-    expect(s7.until!.min).toBeGreaterThan(EXDIV_AFTER_PHASE)
-    expect(stripMarkup(lineOf(s7, ctx))).toContain('變少')
-    // 剛進來：95 ＋ 5 ＝ 100；拉到底：貼息到 92，92 ＋ 5 ＝ 97
-    expect(bigOf(s7)).toMatchObject({ value: '100', label: '方塊 95 ＋ 金幣 5', colorKey: 'loss', mark: 'illustrative' })
-    expect(bigOf(s7, { phase: 1 })).toMatchObject({ value: '97', label: '方塊 92 ＋ 金幣 5', colorKey: 'loss', mark: 'illustrative' })
-    expect(bigOf(s7, { phase: 1 })!.fraction).toBeCloseTo(0.97, 6)
+  it('has only two coin steps in a row (s-5, s-6), then the bond chapter', () => {
+    const ids = steps.map((s) => s.id)
+    const coin = steps.filter((s) => s.scene.stage?.kind === 'exdiv').map((s) => s.id)
+    expect(coin).toEqual(['s-5', 's-6'])
+    expect(ids.slice(ids.indexOf('s-5'), ids.indexOf('s-5') + 3)).toEqual(['s-5', 's-6', 'b-1'])
+  })
+
+  it('s-6 shows the result without another drag: cause in plain words, total down in red', () => {
+    const s6 = byId('s-6')
+    expect(s6.title).toBe('方塊沒長回來')
+    expect(s6.controls).toBeUndefined()
+    expect(s6.until).toBeUndefined()
+    const line = stripMarkup(lineOf(s6, ctx))
+    expect(line).toContain('不爭氣') // 原因（白話）
+    expect(line).toContain('沒長回來') // 結果
+    // 95 ＋ 5 之後貼息到 92：92 ＋ 5 ＝ 97，紅色
+    expect(bigOf(s6)).toMatchObject({ value: '97', label: '方塊 92＋金幣 5', colorKey: 'loss', mark: 'illustrative' })
+    expect(bigOf(s6)!.fraction).toBeCloseTo(0.97, 6)
+    expect(moreOf(s6, ctx)).toContain('剩 97')
   })
 
   it('keeps 除息／填息／貼息 out of titles and lines (多說一點 only)', () => {

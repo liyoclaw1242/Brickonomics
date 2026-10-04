@@ -63,7 +63,11 @@ describe('fallbackLevels', () => {
   it('includes the live numbers each step would show', () => {
     const shock = out.flatMap((l) => l.steps).find((s) => s.id === 'c-2')!
     expect(shock.rows).toHaveLength(3)
-    const exdiv = out.flatMap((l) => l.steps).find((s) => s.id === 's-6')!
+    // 文字版不能拖：有門檻的步驟顯示「做完那個動作」之後的數字（s-5：拉到發金幣那一刻）
+    const exdiv = out.flatMap((l) => l.steps).find((s) => s.id === 's-5')!
     expect(exdiv.rows.map((r) => r.value)).toEqual(['95.0', '5.0', '100.0'])
+    const gap = out.flatMap((l) => l.steps).find((s) => s.id === 's-6')!
+    expect(gap.rows.map((r) => r.value)).toEqual(['92.0', '5.0', '97.0'])
+    expect(exdiv.line).not.toMatch(/^拖/) // 文字版沒有拉桿
   })
 })

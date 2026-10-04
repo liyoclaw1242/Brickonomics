@@ -21,6 +21,17 @@ export function isValidPosition(levels: readonly Level[], pos: Position): boolea
   return Number.isInteger(pos.level) && Number.isInteger(pos.step) && !!levels[pos.level]?.steps[pos.step]
 }
 
+/**
+ * 存檔的位置在課程改版後可能不存在了（例如 r2 把三個金幣步驟併成兩個）：
+ * 同一章還在就停在該章最後一步，整章不見或沒有存檔就從頭開始。
+ */
+export function resumePosition(levels: readonly Level[], pos: Position | undefined): Position {
+  if (pos && isValidPosition(levels, pos)) return pos
+  const level = pos && Number.isInteger(pos.level) ? levels[pos.level] : undefined
+  if (pos && level && level.steps.length > 0) return { level: pos.level, step: level.steps.length - 1 }
+  return { level: 0, step: 0 }
+}
+
 export function stepAt(levels: readonly Level[], pos: Position): Step {
   const s = levels[pos.level]?.steps[pos.step]
   if (!s) throw new RangeError(`no step at ${pos.level}/${pos.step}`)

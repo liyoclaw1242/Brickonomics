@@ -54,8 +54,8 @@ function HeldBlock({ item, x }: { item: HeldItem; x: number }) {
         <boxGeometry args={[SIZE, SIZE, SIZE]} />
         <meshStandardMaterial color={look.color} emissive={item.motion === 'up' ? look.color : '#000000'} emissiveIntensity={item.motion === 'up' ? 0.25 : 0} />
       </mesh>
-      {/* 標註跟著方塊最後的大小：縮小時不要飄在半空中 */}
-      <Callout anchor={[0, SIZE * TARGET_SCALE[item.motion] + 0.2, 0]} offset={[0, 1.2, 0]} title={asset.name} marks={item.motion !== 'still' ? ['illustrative'] : undefined} persistent={item.motion !== 'still'} />
+      {/* 標註放在方塊前方的地上（鏡頭從上往下看，放頭頂會蓋住方塊）；示意標示只在面板標題旁出現一次 */}
+      <Callout anchor={[0, 0.1, (SIZE * TARGET_SCALE[item.motion]) / 2]} offset={[0, -0.3, 1.6]} title={asset.name} persistent={item.motion !== 'still'} />
     </group>
   )
 }

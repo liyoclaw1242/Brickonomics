@@ -77,7 +77,7 @@ export const T = {
     bondRanks: { gov: '最穩・利息少', corp: '中間', hy: '不穩・利息多' },
     bondHurt: (name: string) => `${name}：出問題了`,
     rateNote: '利息快慢為示意',
-    exdiv: { block: '方塊', coins: '金幣' },
+    exdiv: { block: '方塊', coins: '金幣', lost: (v: number) => `沒長回來 ${v}` },
   },
   towers: { lost: '費用扣掉的', lostPrincipal: '削掉的本金', coins: (v: number) => `領到的金幣 ${v.toFixed(1)} 元`, exit: (v: number) => `出門費 ${v.toFixed(1)} 元`, held: '每年的費用', base: '只比費用', baseDemo: '以投入 100 元計（示意參數）', value: (v: number) => `${v.toFixed(1)} 元` },
   feeRaceCaveat: '三者投資內容與風險不同，費用低不代表比較好',

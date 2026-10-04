@@ -17,7 +17,7 @@ const NICK = T.nick
 /** f-6／f-7 的後收級別（出門費＝遞延手續費 CDSC） */
 const BACKLOAD = 'SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD'
 
-/** s-6 進入時停在「剛配發」的時間軸位置；大數字讀即時 phase，但只算到配發那一刻（之後的填息不算），所以合計永遠不變 */
+/** 時間軸上「發金幣那一刻」的位置；s-5 拉到這裡為止（大數字只算到這一刻，合計永遠不變） */
 export const EXDIV_AFTER_PHASE = 0.5
 
 /** 內扣費用大數字；資料沒有時不顯示 */
@@ -98,45 +98,38 @@ export const LEVELS: Level[] = [
       },
       {
         id: 's-5',
-        title: '發金幣',
-        line: '拖**時間軸**。看**發金幣|coin**那一刻',
-        more: '有些公司賺了錢，會發配息給你。配息＝金幣。拖時間軸，看發金幣那一刻發生什麼事。這是示意。',
+        title: '發金幣那一刻',
+        line: '拖**時間軸**。**金幣|coin**從方塊來，總數**不變**',
+        fallbackLine: '**金幣|coin**從方塊來，總數**不變**',
+        more: '有些公司賺了錢，會發配息給你。配息＝金幣。金幣是從方塊挖出來的：方塊變小，合起來不變。這叫除息，數字是示意。',
         mark: 'illustrative',
+        // 跟著即時時間軸，但只到配發那一刻：發之前 100 ＋ 0，發的那一刻 95 ＋ 5，合計永遠不變
+        bigNumber: (_c, v) => {
+          const e = exDivTimeline(Math.min(v.phase, EXDIV_AFTER_PHASE), 'fill')
+          return { value: n0(e.blockValue + e.cash), label: `方塊 ${n0(e.blockValue)}＋金幣 ${n0(e.cash)}`, mark: 'illustrative' }
+        },
         scene: { camera: 'plazaNear', product: null, stage: { kind: 'exdiv', outcome: 'fill' }, values: { phase: 0 } },
         controls: ['phase'],
-        until: { control: 'phase', min: 0.55 },
+        // 時間軸停在配發那一刻：方塊不會「長回來」，卡片和 3D 標籤永遠一致；要拉到那一刻才能下一步
+        ranges: { phase: [0, EXDIV_AFTER_PHASE] },
+        until: { control: 'phase', min: EXDIV_AFTER_PHASE },
       },
       {
         id: 's-6',
-        title: '發金幣那一刻',
-        line: '**金幣|coin**掉出來，方塊變小。合起來**不變**',
-        more: '方塊縮小的部分，剛好等於你拿到的金幣。這叫除息：方塊價值＋金幣＝不變。這一步的時間軸只到發金幣那一刻。數字是示意。',
-        mark: 'illustrative',
-        bigNumber: (_c, v) => {
-          const e = exDivTimeline(Math.min(v.phase, EXDIV_AFTER_PHASE), 'fill')
-          return { value: n0(e.blockValue + e.cash), label: `方塊 ${n0(e.blockValue)} ＋ 金幣 ${n0(e.cash)}`, mark: 'illustrative' }
-        },
-        scene: { camera: 'plazaNear', product: null, stage: { kind: 'exdiv', outcome: 'fill' }, values: { phase: EXDIV_AFTER_PHASE } },
-        controls: ['phase'],
-        // 時間軸停在配發那一刻：方塊不會「長回來」，卡片和 3D 標籤永遠一致
-        ranges: { phase: [0, EXDIV_AFTER_PHASE] },
-      },
-      {
-        id: 's-7',
         title: '方塊沒長回來',
-        line: '拖**時間軸**。合起來**變少了|loss**',
-        more: '方塊沒長回去，方塊＋金幣合起來變少了。這叫貼息；長回去則叫填息。配息不是白送的錢，要看總報酬。這是示意。',
+        line: '公司後來不爭氣，方塊**沒長回來|loss**',
+        more: () => {
+          const e = exDivTimeline(1, 'gap')
+          return `發完金幣後，公司表現不好，方塊沒長回去。方塊＋金幣合起來剩 ${n0(e.blockValue + e.cash)}，變少了。這叫貼息；長回去則叫填息。配息不是白送的錢，要看總報酬，這是示意。`
+        },
         mark: 'illustrative',
-        // 從配發那一刻開始，拉到底看貼息：95 ＋ 5 → 92 ＋ 5
+        // 不用再拉：一進來就是「過了一陣子」的結果（95 ＋ 5 → 92 ＋ 5），畫面上紅色＝沒長回來的部分
         bigNumber: (_c, v) => {
           const e = exDivTimeline(Math.max(v.phase, EXDIV_AFTER_PHASE), 'gap')
           const total = e.blockValue + e.cash
-          return { value: n0(total), label: `方塊 ${n0(e.blockValue)} ＋ 金幣 ${n0(e.cash)}`, fraction: total / 100, colorKey: 'loss', mark: 'illustrative' }
+          return { value: n0(total), label: `方塊 ${n0(e.blockValue)}＋金幣 ${n0(e.cash)}`, fraction: total / 100, colorKey: 'loss', mark: 'illustrative' }
         },
-        scene: { camera: 'plazaNear', product: null, stage: { kind: 'exdiv', outcome: 'gap' }, values: { phase: EXDIV_AFTER_PHASE } },
-        controls: ['phase'],
-        ranges: { phase: [EXDIV_AFTER_PHASE, 1] },
-        until: { control: 'phase', min: 0.9 },
+        scene: { camera: 'plazaNear', product: null, stage: { kind: 'exdiv', outcome: 'gap' }, values: { phase: 1 } },
       },
     ],
   },

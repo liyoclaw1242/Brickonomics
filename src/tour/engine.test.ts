@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import type { Level } from './types'
 import {
   DEFAULT_VALUES, stepAt, isValidPosition, nextPosition, prevPosition, positionOf, progressFraction,
-  isSatisfied, sandboxPatchFor, lineOf, moreOf, titleOf, parseProgress, serializeProgress, parseTourQuery, controlRange,
+  isSatisfied, sandboxPatchFor, lineOf, moreOf, titleOf, parseProgress, serializeProgress, parseTourQuery, controlRange, resumePosition,
 } from './engine'
 
 const L: Level[] = [
@@ -131,5 +131,18 @@ describe('parseTourQuery', () => {
     expect(parseTourQuery('?product=0050&slice=0.5', L)).toEqual({ mode: 'sandbox' })
     expect(parseTourQuery('?level=9&step=0', L)).toEqual({})
     expect(parseTourQuery('', L)).toEqual({})
+  })
+})
+
+describe('resumePosition (saved progress after the lesson changed)', () => {
+  it('keeps a valid saved position', () => {
+    expect(resumePosition(L, { level: 1, step: 0 })).toEqual({ level: 1, step: 0 })
+  })
+  it('a step that no longer exists falls back to the last step of the same chapter', () => {
+    expect(resumePosition(L, { level: 0, step: 5 })).toEqual({ level: 0, step: L[0]!.steps.length - 1 })
+  })
+  it('a chapter that no longer exists, or no saved position, starts from the beginning', () => {
+    expect(resumePosition(L, { level: 9, step: 0 })).toEqual({ level: 0, step: 0 })
+    expect(resumePosition(L, undefined)).toEqual({ level: 0, step: 0 })
   })
 })

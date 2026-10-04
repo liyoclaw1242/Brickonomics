@@ -20,7 +20,9 @@ export function fallbackLevels(levels: readonly Level[], u: Universe): FallbackL
     title: level.title,
     steps: level.steps.map((step) => {
       const patch = sandboxPatchFor(step.scene)
+      // 文字版不能拖：有門檻的步驟用「做完那個動作」之後的值（例如 s-5 拉到發金幣那一刻）
       const values = { ...DEFAULT_VALUES, ...step.scene.values, slice: patch.slice ?? 0, explode: patch.explode ?? 0 }
+      if (step.until) values[step.until.control] = step.until.min
       const productId = step.scene.product ?? null
       return {
         id: step.id,

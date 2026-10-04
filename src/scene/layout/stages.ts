@@ -14,7 +14,7 @@ export function towerVoxels(count: number, w = 5, d = 5): Voxel[] {
 }
 
 export type ExDivOutcome = 'fill' | 'gap'
-const EXDIV = { price: 100, dividend: 5, gapTo: 92 } // 示意
+export const EXDIV = { price: 100, dividend: 5, gapTo: 92 } // 示意
 
 /** 時間軸 0～1：0.5 配發（除息），之後線性填息到 100 或貼息到 92 */
 export function exDivTimeline(phase: number, outcome: ExDivOutcome): { blockValue: number; cash: number } {
@@ -24,6 +24,22 @@ export function exDivTimeline(phase: number, outcome: ExDivOutcome): { blockValu
   const end = outcome === 'fill' ? EXDIV.price : EXDIV.gapTo
   const s = (t - 0.5) / 0.5
   return { blockValue: after.price + (end - after.price) * s, cash: after.cash }
+}
+
+export type Band = [number, number] | null
+
+/**
+ * 方塊少掉的部分（畫在方塊上方，單位＝價值）：
+ * gold＝變成金幣的那一段（配發後、方塊還沒長回去的部分）；red＝金幣以外、真的少掉的部分（沒長回來）。
+ */
+export function exDivBands(blockValue: number, cash: number): { gold: Band; red: Band } {
+  if (cash <= 0) return { gold: null, red: null }
+  const after = EXDIV.price - cash
+  const goldLo = Math.max(blockValue, after)
+  return {
+    gold: goldLo < EXDIV.price ? [goldLo, EXDIV.price] : null,
+    red: blockValue < after ? [blockValue, after] : null,
+  }
 }
 
 /** 示意：本金 100、每年產出 4%、價格每年 +3%、配息型每年配 4% */

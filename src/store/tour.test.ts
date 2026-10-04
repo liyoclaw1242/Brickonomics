@@ -48,14 +48,13 @@ describe('useTour', () => {
     expect(useTour.getState().values.frontLoad).toBe(0)
   })
 
-  it('setValue also clamps to the current step range (s-6 stops at the payout moment)', () => {
+  it('setValue also clamps to the current step range (s-5 stops at the payout moment)', () => {
+    useTour.getState().enterStep(positionOf(LEVELS, 's-5'))
+    expect(useTour.getState().values.phase).toBe(0)
+    useTour.getState().setValue('phase', 1)
+    expect(useTour.getState().values.phase).toBe(EXDIV_AFTER_PHASE)
     useTour.getState().enterStep(positionOf(LEVELS, 's-6'))
-    useTour.getState().setValue('phase', 1)
-    expect(useTour.getState().values.phase).toBe(EXDIV_AFTER_PHASE)
-    useTour.getState().enterStep(positionOf(LEVELS, 's-7'))
-    expect(useTour.getState().values.phase).toBe(EXDIV_AFTER_PHASE)
-    useTour.getState().setValue('phase', 1)
-    expect(useTour.getState().values.phase).toBe(1)
+    expect(useTour.getState().values.phase).toBe(1) // 一進來就是結果
   })
 
   it('currentStep follows pos', () => {
