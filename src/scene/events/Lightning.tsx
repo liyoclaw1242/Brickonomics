@@ -5,26 +5,14 @@ import { useThemeStore } from '../../store/theme'
 import { T } from '../../ui/strings'
 import { Callout } from '../Callout'
 import type { Vec3 } from '../camera'
-import {
-  BOLT_DETAIL,
-  CLOUD,
-  CLOUD_LABEL_ANCHOR,
-  IMPACT_TIME,
-  boltGlow,
-  boltReveal,
-  boltSegments,
-  flashLevel,
-  strikeAt,
-  strikeTarget,
-  SHOCK_SUBJECTS,
-  visibleSegments,
-} from './lightning'
+import { IMPACT_TIME, boltGlow, boltReveal, flashLevel, strikeAt } from './lightning'
+import { BOLT_DETAIL, CLOUD, CLOUD_LABEL_ANCHOR, SHOCK_SUBJECTS, boltSegments, strikeTarget, visibleSegments } from './lightningBolt'
 import type { Quality } from '../quality'
 import { THEMES } from '../theme'
 import { atPlaza } from '../stage/plaza'
-import { useEventValue } from '../useEventClock'
+import { useDevEventLog, useEventValue } from '../useEventClock'
 import { StormCloud } from './StormCloud'
-import type { EventProps } from './types'
+import type { EventProps, SpecOf } from './types'
 
 const CORE = 0.07
 const CORE_PER_WIDTH = 0.16
@@ -152,8 +140,9 @@ function Bolt({ time, quality, still }: BoltProps) {
  * 打中那一刻雲底出現「假設：台積電被打中」。閃電只打一次（≤ 1 次閃光）；減少動態時直接顯示終點與一道靜止的閃電。
  * 受損（柱子變矮、0050 的紅色方塊、跌幅）由舞台（ShockStage）以 strikeAt 讀同一個時鐘決定。
  */
-export function Lightning({ spec, clock, quality }: EventProps) {
+export function Lightning({ spec, clock, quality }: EventProps<SpecOf<'lightning'>>) {
   const struck = useEventValue(clock, (t) => strikeAt(spec, t))
+  useDevEventLog('struck', struck)
   return (
     <>
       <StormCloud quality={quality} position={atPlaza(...CLOUD.center)} spread={CLOUD.spread} size={CLOUD.size} />

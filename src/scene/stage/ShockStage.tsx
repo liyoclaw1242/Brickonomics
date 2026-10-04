@@ -6,11 +6,12 @@ import { displayName } from '../../ui/names'
 import { T } from '../../ui/strings'
 import { Basket } from '../Basket'
 import { Callout } from '../Callout'
-import { SHOCK_DAMAGE, SHOCK_SUBJECTS, STOCK_BLOCKS, STOCK_W, stockBlocksAfter, strikeAt } from '../events/lightning'
+import { strikeAt } from '../events/lightning'
+import { SHOCK_DAMAGE, SHOCK_SUBJECTS, STOCK_BLOCKS, STOCK_W, stockBlocksAfter } from '../events/lightningBolt'
 import type { EventClock } from '../events/types'
 import { lookFor } from '../palette'
 import type { Quality } from '../quality'
-import { useEventValue } from '../useEventClock'
+import { useDevEventLog, useEventValue } from '../useEventClock'
 import { atPlaza } from './plaza'
 import { VoxelColumn } from './VoxelColumn'
 
@@ -21,6 +22,7 @@ import { VoxelColumn } from './VoxelColumn'
  */
 export function ShockStage({ quality, event }: { quality: Quality; event: EventClock }) {
   const hit = useEventValue(event, (t) => strikeAt(event.spec, t))
+  useDevEventLog('shock-damage', hit)
   const damage = useMemo(() => (hit ? SHOCK_DAMAGE : undefined), [hit])
   const look = useMemo(() => lookFor(universe.get('2330')!), [])
   const stockCount = hit ? stockBlocksAfter : STOCK_BLOCKS

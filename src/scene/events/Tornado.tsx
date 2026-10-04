@@ -10,7 +10,7 @@ import { ACCENT_COLORS, SECTOR_COLORS } from '../palette'
 import { THEMES } from '../theme'
 import { atPlaza } from '../stage/plaza'
 import { StormCloud } from './StormCloud'
-import type { EventProps } from './types'
+import type { EventProps, SpecOf } from './types'
 
 /** 捲起來的小方塊：城市裡的方塊顏色（積木城市被吹散的碎片） */
 const DEBRIS_COLORS = [SECTOR_COLORS.semiconductor, ACCENT_COLORS.loss, '#ffb300', SECTOR_COLORS.electronics, SECTOR_COLORS.software, '#90a4ae']
@@ -32,7 +32,7 @@ const rand = (i: number, k: number) => {
  * 時間來自事件時鐘：t 為 null（鏡頭還沒停下）時藏起來；clock.reduced（減少動態）時不轉、不移動，只擺一個靜止的龍捲風。
  * 每種材質一個 InstancedMesh；useFrame 內不配置物件。持續繪製由事件時鐘（useEventClock）負責。
  */
-export function Tornado({ clock, quality }: EventProps) {
+export function Tornado({ clock, quality }: EventProps<SpecOf<'tornado'>>) {
   const time = clock.t
   const still = clock.reduced
   const n = STORM_COUNTS[quality]

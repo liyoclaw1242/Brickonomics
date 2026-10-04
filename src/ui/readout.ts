@@ -7,7 +7,7 @@ import { overlap } from '../sim/overlap'
 import { shockImpact } from '../sim/scenario'
 import { SHOCK_2330, signedPct } from '../tour/context'
 import type { Stage, TourValues } from '../tour/types'
-import { isStrike } from '../scene/events/lightning'
+import { eventAftermath } from '../scene/events'
 import type { EventSpec } from '../scene/events/types'
 import { feeRowMarks, type Mark } from './marks'
 import { T } from './strings'
@@ -59,7 +59,7 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
       ]
     }
     case 'shock':
-      if (!isStrike(event)) return []
+      if (!eventAftermath(event)) return []
       return [
         { label: T.shock.stock, value: signedPct(SHOCK_2330['2330']!) },
         { label: u.get('0050')!.name, value: signedPct(shockImpact(u, '0050', { ...SHOCK_2330 })) },

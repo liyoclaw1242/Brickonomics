@@ -5,23 +5,30 @@ import type { Quality } from '../quality'
  * 一種金融事件只對應一種自然現象：tornado＝經濟衰退／金融風暴、lightning＝單一公司出事。
  */
 
-/** 事件種類（Plan 7/8 會再加 quake、freeze、heatwave、bubble、sunnyTree、wave） */
-export type EventKind = 'tornado' | 'lightning'
+/** 閃電的階段：gather＝烏雲聚集（還沒打）、strike＝打一次 */
+export type LightningPhase = 'gather' | 'strike'
 
-/** 分段事件的階段：lightning 的 gather＝烏雲聚集（還沒打）、strike＝打一次；tornado 沒有階段 */
-export type EventPhase = 'gather' | 'strike'
+/**
+ * 步驟資料用 `scene.event` 叫用事件。每種事件一個分支（依 kind 區分），各自的參數在自己的分支裡檢查型別。
+ * Plan 7/8 會再加 quake、freeze、heatwave、bubble、sunnyTree、wave。
+ */
+export type EventSpec = { kind: 'tornado' } | { kind: 'lightning'; phase: LightningPhase }
 
-/** 步驟資料用 `scene.event` 叫用事件；新事件需要的參數（targets、params…）以選填欄位加在這裡 */
-export type EventSpec = { kind: EventKind; phase?: EventPhase }
+export type EventKind = EventSpec['kind']
 
-/** 每種事件的時間軸摘要：共用時鐘（useEventClock）與面板只透過它認識事件 */
-export type EventTimeline = {
+/** 某一種事件的 spec（例如 SpecOf<'lightning'>） */
+export type SpecOf<K extends EventKind> = Extract<EventSpec, { kind: K }>
+
+/** 每種事件的時間軸摘要：共用時鐘（useEventClock）、面板、讀數與城市只透過它認識事件 */
+export type EventTimeline<S extends EventSpec = EventSpec> = {
   /** 從鏡頭停下起算，走到終點（＝最終狀態）的秒數；0＝靜態畫面，不跑動畫 */
-  duration: (spec: EventSpec) => number
+  duration: (spec: S) => number
   /** 終點之後是否仍每幀重繪（例如龍捲風停在旁邊原地轉）；false＝到終點就停止持續繪製 */
-  lingers: (spec: EventSpec) => boolean
+  lingers: (spec: S) => boolean
   /** 面板大數字等幾秒才開始數（例如等閃電打中）；0＝不等 */
-  numberDelay: (spec: EventSpec) => number
+  numberDelay: (spec: S) => number
+  /** 這一步的終點有沒有「事件造成的後果」（損傷、跌幅）：沒有 3D 的地方（讀數、文字版）與城市用它決定要不要顯示結果 */
+  aftermath: (spec: S) => boolean
 }
 
 /**
@@ -36,9 +43,9 @@ export type EventClock = {
   done: boolean
   /** prefers-reduced-motion：直接顯示終點的靜態畫面 */
   reduced: boolean
-  /** 每次重新開始（換步驟、鏡頭停下）加一 */
-  version: number
+  /** 每次重新開始（換步驟、換事件、鏡頭停下）都會變：useEventValue 用它立刻重算 */
+  epoch: string
 }
 
-/** 每個事件元件收到的 props */
-export type EventProps = { spec: EventSpec; clock: EventClock; quality: Quality }
+/** 每個事件元件收到的 props（spec 已縮小到自己的那一種） */
+export type EventProps<S extends EventSpec = EventSpec> = { spec: S; clock: EventClock; quality: Quality }

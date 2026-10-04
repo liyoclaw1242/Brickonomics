@@ -1,24 +1,18 @@
 import { describe, expect, it } from 'vitest'
+import { IMPACT_TIME, LIGHTNING, STRIKE_END, boltGlow, boltReveal, flashLevel, isStruck } from './lightning'
 import {
   BOLT_FORK,
   BOLT_ORIGIN,
-  IMPACT_TIME,
-  LIGHTNING,
-  STRIKE_END,
   boltBranches,
-  boltGlow,
-  boltReveal,
   boltSegments,
   branchWaypoints,
   etfHitPoint,
-  flashLevel,
-  isStruck,
   jagged,
   stockBlocksAfter,
   strikeTarget,
   tsmcExposure,
   visibleSegments,
-} from './lightning'
+} from './lightningBolt'
 import { bigNumberDelayMs } from './index'
 
 describe('who gets hit', () => {
