@@ -1,5 +1,6 @@
 import type { BigNumber, Level, TextContext } from './types'
-import { pct0, SHOCK_2330, signedPct } from './context'
+import { movePct, pct0, SHOCK_2330, signedPct, wan } from './context'
+import { DEFAULT_VALUES } from './engine'
 import { exDivTimeline } from '../scene/layout/stages'
 import { T } from '../ui/strings'
 
@@ -13,9 +14,17 @@ import { T } from '../ui/strings'
 const SHOCK_PCT = -SHOCK_2330['2330']! // 0.3
 const pctOf = (er: number): string => `${(er * 100).toFixed(2)}%`
 const n0 = (v: number): string => v.toFixed(0)
+/** 0.015 → '1.5%' */
+const pct1 = (r: number): string => `${Number((r * 100).toFixed(2))}%`
 const NICK = T.nick
-/** f-6／f-7 的後收級別（出門費＝遞延手續費 CDSC） */
+/** f-6 的後收級別（出門費＝遞延手續費 CDSC） */
 const BACKLOAD = 'SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD'
+/** 持有滿幾年後出門費歸零（從資料找第一個 0） */
+const exitFreeYears = (c: TextContext): number => {
+  let y = 0
+  while (c.exitFee(BACKLOAD, y) > 0 && y < 50) y++
+  return y
+}
 
 /** 時間軸上「發金幣那一刻」的位置；s-5 拉到這裡為止（大數字只算到這一刻，合計永遠不變） */
 export const EXDIV_AFTER_PHASE = 0.5
@@ -225,32 +234,29 @@ export const LEVELS: Level[] = [
       },
       {
         id: 'f-6',
-        title: '入口門、出口門',
-        line: '拖**持有年數**。看誰**剩最多**',
-        more: '前收型＝買時先付手續費（假設值），像入口門。後收 U 級別＝賣時才付，像出口門。兩座都是施羅德環球收息債券，只差收費方式。費用資料有些還沒查證，標在下面的數字表。',
+        title: '進門費、出門費',
+        line: '拖**持有年數**。前收**進門**扣，後收**早出門|loss**才扣',
+        fallbackLine: '前收**進門**先扣；後收**早出門|loss**才扣',
+        more: (c) =>
+          `兩座都是施羅德環球收息債券，只差收費方式。前收型買時先付進門費，這裡假設 ${pct1(DEFAULT_VALUES.frontLoad)}。後收型未滿 1 年賣，出門費 ${n0(c.exitFee(BACKLOAD, 0) * 100)}%，滿 ${exitFreeYears(c)} 年不收。兩座每年都還在扣費用，後收前幾年扣得更多。`,
         mark: 'assumption',
-        // 只放兩座基金塔：0050 等到 ETF 那一章才出場
+        // 只放兩座基金塔：0050 等到 ETF 那一章才出場。大數字＝後收「現在賣」要付的出門費（和 3D 的出門費標籤同一個數字）
+        bigNumber: (c, v) => {
+          const rows = c.fundFeeRows(v.years, v.frontLoad)
+          const back = rows.find((r) => r.id === 'back')!
+          const first = c.fundFeeRows(0, v.frontLoad).find((r) => r.id === 'back')!.exit
+          return {
+            value: wan(back.exit),
+            label: '後收現在賣的出門費',
+            fraction: first > 0 ? back.exit / first : 0,
+            colorKey: 'loss',
+            // 金額用到還沒查證的內扣費用（拆項見多說一點的數字表）
+            ...(back.unverified.length > 0 ? { mark: 'unverified' as const } : {}),
+          }
+        },
         scene: { camera: 'plaza', product: null, stage: { kind: 'feeRace', etf: false }, values: { years: 0 } },
         controls: ['years'],
-        until: { control: 'years', min: 3 },
-      },
-      {
-        id: 'f-7',
-        title: '後收不是免費',
-        line: '拖**持有年數**。看**出門費|loss**變少',
-        more: (c) =>
-          `後收型買時不收手續費，賣時才收出門費（遞延手續費）。未滿 1 年賣，出門費 ${n0(c.exitFee(BACKLOAD, 0) * 100)}%，之後每年變少。前幾年每年還多收分銷費。划不划算，要看你持有多久。`,
-        mark: 'assumption',
-        // 出門費（CDSC）跟著持有年數即時變；資料：未滿 1 年 3%、第 2 年 2%、第 3 年 1%，之後 0
-        bigNumber: (c, v) => {
-          const fee = c.exitFee(BACKLOAD, v.years)
-          const first = c.exitFee(BACKLOAD, 0)
-          return { value: `${n0(fee * 100)}%`, label: '現在賣要付的出門費', fraction: first > 0 ? fee / first : 0, colorKey: 'loss' }
-        },
-        scene: { camera: 'plaza', product: null, stage: { kind: 'feeRace', focus: 'back', etf: false }, values: { years: 0 } },
-        controls: ['years'],
-        // 只拉到出門費歸零之後一年，拉到底的畫面和 f-6 不一樣
-        ranges: { years: [0, 4] },
+        // 拉到出門費歸零（滿 3 年）才能下一步
         until: { control: 'years', min: 3 },
       },
       {

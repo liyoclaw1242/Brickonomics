@@ -41,6 +41,16 @@ describe('feeRace', () => {
     }
   })
 
+  it('splits out the entry fee (進門費) paid when buying', () => {
+    expect(row(0, 'front').entry).toBeCloseTo(1.5, 9) // 100 × 0.015
+    expect(row(5, 'front').entry).toBeCloseTo(1.5, 9) // 進門費只付一次
+    expect(row(0, 'back').entry).toBe(0)
+    for (const y of [0, 1, 3, 10]) for (const id of ['front', 'back'] as const) {
+      const r = row(y, id)
+      expect(r.entry + r.exit, `${id} year ${y}`).toBeLessThanOrEqual(r.lost + 1e-9)
+    }
+  })
+
   it('picks the leader by remaining value', () => {
     expect(feeRaceLeader(feeRace(universe, 3, 0.015))).toBe('etf')
   })

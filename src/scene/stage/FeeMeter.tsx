@@ -36,7 +36,9 @@ export function FeeMeter() {
         {/* 費率沒查證時的 ？ 標在面板標題旁（stepMarks），這裡不重複 */}
         {T.feeMeter.ground(ground)}
       </span>
-      <span className="callout__sub">{T.feeMeter.note}</span>
+      {/* 投入金額和其他基金步驟同一個底（100 萬）；快轉另起一行、字不小於 13px（r3：「6 秒＝1 年」看不懂） */}
+      <span className="callout__sub">{T.feeMeter.base}</span>
+      <span className="callout__sub callout__sub--min13">{T.feeMeter.fastForward}</span>
     </Html>
   )
 }

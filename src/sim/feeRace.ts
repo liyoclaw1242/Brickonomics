@@ -11,8 +11,8 @@ export const FEE_RACE = {
 } as const
 
 export type FeePart = 'expenseRatio' | 'distributionFee' | 'cdsc' | 'trading'
-/** exit：賣出那一刻付的出門費（金額，已含在 lost 裡） */
-export type FeeRaceRow = { id: 'front' | 'back' | 'etf'; value: number; lost: number; exit: number; unverified: FeePart[] }
+/** entry：買進那一刻付的進門費；exit：賣出那一刻付的出門費（金額，都已含在 lost 裡） */
+export type FeeRaceRow = { id: 'front' | 'back' | 'etf'; value: number; lost: number; entry: number; exit: number; unverified: FeePart[] }
 
 const need = (u: Universe, id: string) => {
   const a = u.get(id)
@@ -44,7 +44,7 @@ export function feeRace(u: Universe, years: number, frontLoad: number): FeeRaceR
     const exitRate = profile.exitByYear[Math.floor(years)] ?? profile.exitDefault
     // value ＝ 賣前價值 ×（1 − exitRate），所以出門費 ＝ value ÷（1 − exitRate）× exitRate
     const exit = exitRate === 0 ? 0 : (value / (1 - exitRate)) * exitRate
-    return { id, value, lost: 100 - value, exit, unverified }
+    return { id, value, lost: 100 - value, entry: 100 * profile.entry, exit, unverified }
   }
   const parts = (asset: typeof fund, keys: Exclude<FeePart, 'trading'>[]) =>
     keys.filter((k) => !isVerified(asset, `fees.${k}` as const))

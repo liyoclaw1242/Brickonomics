@@ -7,14 +7,8 @@ import { blocksFor } from '../layout/stages'
 import { ACCENT_COLORS, type BlockLook } from '../palette'
 import type { Quality } from '../quality'
 import { atPlaza } from './plaza'
+import { towerTitle, type TowerSpec } from '../layout/towers'
 import { VoxelColumn } from './VoxelColumn'
-
-/**
- * lostLabel：紅色小堆的標註，未填則為「費用扣掉的」。
- * exit：出門費（金額，已含在 lost 裡）；有填就另外堆一小堆、寫上金額。
- * focus：這座是焦點（鮮豔）；同一排有焦點時，其他塔變暗、不畫紅色小堆。
- */
-export type TowerSpec = { key: string; label: string; value: number; lost?: number; lostLabel?: string; exit?: number; coins?: number; color: string; focus?: boolean }
 
 const SPACING = 12
 /** VoxelColumn 預設 5×5 一層 */
@@ -40,16 +34,16 @@ export function TowerRow({ towers, quality, base, baseSub }: { towers: TowerSpec
   // 手機畫面窄：相鄰塔的數值標註會撞在一起，奇數塔的標註再往上錯開一排
   const stagger = layoutModel(size.width, size.height).mobile ? 2.5 : 0
   const anyFocus = towers.some((t) => t.focus)
-  // 手機上出門費和每年費用兩個標註會撞在一起：出門費的往前（往下）錯開一排
-  const exitDrop = stagger > 0 ? 2.4 : 0
+  // 手機上進門／出門費和每年費用兩個標註會撞在一起：門的那個往前（往下）錯開一排
+  const doorDrop = stagger > 0 ? 2.4 : 0
   return (
     <>
       {base && <Callout anchor={atPlaza(0, -0.2, 12)} offset={[0, 0, 0]} title={base} sub={baseSub} wrap persistent />}
       {towers.map((t, i) => {
         const x = start + i * SPACING
         const dim = anyFocus && !t.focus
-        // 拆出出門費後剩下的費用；浮點誤差可能讓它變成 −0.000…，夾到 0
-        const held = t.lost !== undefined && t.exit !== undefined ? Math.max(0, t.lost - t.exit) : t.lost
+        // 拆出進門／出門費後剩下的（每年的）費用；浮點誤差可能讓它變成 −0.000…，夾到 0
+        const held = t.lost !== undefined && t.door !== undefined ? Math.max(0, t.lost - t.door.amount) : t.lost
         return (
           <group key={t.key}>
             <VoxelColumn count={blocksFor(t.value)} look={matteLook(t.color)} position={atPlaza(x, 0, 0)} quality={quality} vivid={!!t.focus} />
@@ -59,11 +53,11 @@ export function TowerRow({ towers, quality, base, baseSub }: { towers: TowerSpec
                 <Callout anchor={atPlaza(x + 3, -0.2, 7.2)} offset={[0, 0, 0]} title={t.lostLabel ?? T.towers.lost} persistent={t.lostLabel !== undefined} />
               </>
             )}
-            {/* 出門費：放在塔的另一側，金額寫在標註上（拉年數時看它一年一年變少） */}
-            {!dim && t.exit !== undefined && (
+            {/* 進門費／出門費：放在塔的另一側，金額寫在標註上（拉年數時看出門費一年一年變少） */}
+            {!dim && t.door !== undefined && (
               <>
-                <VoxelColumn count={blocksFor(t.exit)} look={LOST} position={atPlaza(x - 3.5, 0, 5.5)} w={2} d={2} quality={quality} vivid />
-                <Callout anchor={atPlaza(x - 3.5, -0.2, 7.2 + exitDrop)} offset={[0, 0, 0]} title={T.towers.exit(t.exit)} color={ACCENT_COLORS.loss} persistent />
+                <VoxelColumn count={blocksFor(t.door.amount)} look={LOST} position={atPlaza(x - 3.5, 0, 5.5)} w={2} d={2} quality={quality} vivid />
+                <Callout anchor={atPlaza(x - 3.5, -0.2, 7.2 + doorDrop)} offset={[0, 0, 0]} title={t.door.label} color={ACCENT_COLORS.loss} persistent />
               </>
             )}
             {t.coins !== undefined && (
@@ -77,7 +71,7 @@ export function TowerRow({ towers, quality, base, baseSub }: { towers: TowerSpec
               anchor={atPlaza(x, Math.ceil(blocksFor(t.value) / TOWER_FLOOR) + 0.1, 0)}
               // 高塔（例如累積型 20 年）頂上的標註會疊到後面城市的大樓：改放塔的右邊（r2）
               offset={Math.ceil(blocksFor(t.value) / TOWER_FLOOR) > TALL_LAYERS ? [3.6, -0.6, 0] : [0, 2.4 + (i % 2) * stagger, 0]}
-              title={T.towers.value(t.value)}
+              title={towerTitle(t)}
               sub={t.label}
               color={t.color}
               dim={dim}

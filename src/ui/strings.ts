@@ -1,4 +1,7 @@
 /** 所有介面文字（繁體中文）。新增文字一律加在這裡。 */
+/** 基金那一章的錢：投入 100＝100 萬（和計費表同一個底），所以 1＝1 萬。一位小數、去掉「.0」：98.5 → '98.5 萬'、1.958 → '2 萬' */
+const wan = (v: number): string => `${Number(Math.max(0, v).toFixed(1))} 萬`
+
 export const T = {
   appTitle: '積木城市',
   brand: '積 木 城 市',
@@ -81,11 +84,27 @@ export const T = {
     rateNote: '利息快慢為示意',
     exdiv: { block: '方塊', coins: '金幣', lost: (v: number) => `沒長回來 ${v}` },
   },
-  towers: { lost: '費用扣掉的', lostPrincipal: '削掉的本金', coins: (v: number) => `領到的金幣 ${v.toFixed(1)} 元`, exit: (v: number) => `出門費 ${v.toFixed(1)} 元`, held: '每年的費用', base: '只比費用', baseDemo: '以投入 100 元計（示意參數）', value: (v: number) => `${v.toFixed(1)} 元` },
+  /** 基金那一章的錢：投入 100＝100 萬（和計費表同一個底），一位小數、去掉「.0」 */
+  wan,
+  /** 大數字、3D 跌幅標籤用字說漲跌（負號太細，r3 看成正的） */
+  move: { down: '跌', up: '漲' },
+  towers: {
+    lost: '費用扣掉的',
+    lostPrincipal: '削掉的本金',
+    coins: (v: number) => `領到的金幣 ${wan(v)}`,
+    entry: (v: number) => `進門費 ${wan(v)}`,
+    exit: (v: number) => `出門費 ${wan(v)}`,
+    /** 一直在扣：出門費歸零時，後收那座才不會看起來「免費」 */
+    held: '每年費用（一直在扣）',
+    base: '假設投入 100 萬',
+    baseDemo: '假設投入 100 萬（舉例的數字）',
+    value: (v: number) => wan(v),
+  },
   feeRaceCaveat: '三者投資內容與風險不同，費用低不代表比較好',
   feeRaceCaveatFunds: '同一檔基金，只差收費方式；前收手續費是假設值',
   /** 費用比一比的塔名（短）；即時數字表用下面的 feeRows（完整） */
-  feeTowers: { front: '前收：進門先付', back: '後收：出門才付', etf: '0050：門票便宜' },
+  feeTowers: { front: '進門先付', back: '出門才付', etf: '門票便宜' },
+  feeTowerNames: { front: '前收', back: '後收', etf: '0050' },
   feeRows: {
     front: (fl: number) => `前收型（假設 ${(fl * 100).toFixed(2)}%）`,
     back: '後收型（U 級別）',
@@ -98,16 +117,17 @@ export const T = {
     title: '計費表',
     elapsed: (year: number) => `第 ${year} 年`,
     ground: (amount: number) => `已磨掉約 ${Math.round(amount).toLocaleString('zh-TW')} 元`,
-    note: '假設投入 100 萬元、時間快轉（6 秒 = 1 年）',
+    base: '假設投入 100 萬',
+    fastForward: '快轉：每 6 秒＝1 年',
   },
   ticker: { etf: '0050：隨時有價錢', fund: '基金：一天一個價錢' },
   readout: {
     title: '即時數字',
-    invested: '投入 100 元',
+    invested: '投入 100 萬',
     block: '方塊價值',
     coins: '手上的金幣',
     total: '合計',
-    remaining: (v: number) => `剩 ${v.toFixed(1)} 元`,
+    remaining: (v: number) => `剩 ${wan(v)}`,
     leader: '費用最少（只比費用）',
     accumulate: '累積型的塔',
     payoutTower: '配息型的塔',

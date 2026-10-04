@@ -4,7 +4,7 @@ import { isBasket } from '../data/schema'
 import { overlap } from '../sim/overlap'
 import { EXDIV_AFTER_PHASE, LEVELS } from './levels'
 import { exDivTimeline } from '../scene/layout/stages'
-import { makeTextContext, pct0 } from './context'
+import { makeTextContext, pct0, wan } from './context'
 import { controlRange, DEFAULT_VALUES, lineOf, moreOf } from './engine'
 import { ACTION_VERBS, forbiddenWordsIn, jargonIn, LINE_SENTENCE_MAX, LINE_SENTENCES_MAX, MORE_SENTENCE_MAX, MORE_SENTENCES_MAX, sentences } from './glossary'
 import { parseEmphasis, stripMarkup, visibleLength } from '../ui/emphasis'
@@ -140,7 +140,6 @@ describe('LEVELS', () => {
     const SOURCES: Record<string, [string, VerifiedKey][]> = {
       'f-4': [['ALLIANZ_INCOME_GROWTH', 'holdings']],
       'f-5': [['JH_BALANCED', 'fees.expenseRatio']],
-      'f-7': [['SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD', 'fees.cdsc']],
       'e-3': [['0050', 'holdings']],
       'e-5': [['QQQ', 'fees.expenseRatio']],
       'c-2': [['0050', 'holdings']],
@@ -475,8 +474,8 @@ describe('jargon diet (user test r1)', () => {
     expect(moreOf(f4, ctx)).toContain('高收益債')
   })
 
-  it('f-6 and f-7 show only the two fund towers: 0050 is not named before the ETF chapter', () => {
-    for (const id of ['f-6', 'f-7']) expect(byId(id).scene.stage, id).toMatchObject({ kind: 'feeRace', etf: false })
+  it('f-6 shows only the two fund towers: 0050 is not named before the ETF chapter', () => {
+    expect(byId('f-6').scene.stage).toMatchObject({ kind: 'feeRace', etf: false })
     const firstEtf = steps.findIndex((s) => s.id === 'e-1')
     for (const s of steps.slice(0, firstEtf)) {
       const texts = [s.title, lineOf(s, ctx), moreOf(s, ctx), resolve(s.fallbackLine), resolve(s.fallbackMore), ...(s.callouts ?? []).flatMap((c) => [resolve(c.title), resolve(c.sub)])]
@@ -484,25 +483,49 @@ describe('jargon diet (user test r1)', () => {
     }
   })
 
-  it('f-6 and f-7 carry their marks once, next to the title: ✎ assumption and ？ unverified (from the data)', () => {
+  it('f-6 carries ✎ assumption and ？ unverified (from the data), once each', () => {
     expect(stepMarks(byId('f-6'), universe)).toEqual(['assumption', 'unverified'])
-    expect(stepMarks(byId('f-7'), universe)).toEqual(['assumption', 'unverified'])
     expect(stepMarks(byId('s-5'), universe)).toEqual(['illustrative'])
     expect(stepMarks(byId('p-1'), universe)).toEqual([])
   })
 
-  it('f-7 looks different from f-6: back-load only, from year 0, exit fee shrinking to 0', () => {
+  it('f-6 tells the whole fee-door story in one step (r3: f-6/f-7 looked the same and both asked for the same drag)', () => {
     const f6 = byId('f-6')
-    const f7 = byId('f-7')
-    expect(f7.scene.stage).toEqual({ kind: 'feeRace', focus: 'back', etf: false })
-    expect(f7.scene.values?.years).toBe(0)
-    expect(f7.controls).toEqual(['years'])
-    expect(f7.until?.control).toBe('years')
-    expect(controlRange(f7, 'years')[1]).not.toBe(controlRange(f6, 'years')[1]) // 拉到底的結果不同
-    // 出門費（CDSC）：未滿 1 年 3%，滿 3 年 0%（資料：[0.03, 0.02, 0.01]）
-    expect(bigOf(f7)).toMatchObject({ value: '3%', colorKey: 'loss', fraction: 1 })
-    expect(bigOf(f7, { years: 1 })!.value).toBe('2%')
-    expect(bigOf(f7, { years: controlRange(f7, 'years')[1] })).toMatchObject({ value: '0%', fraction: 0 })
+    expect(steps.some((s) => s.id === 'f-7')).toBe(false)
+    expect(LEVELS.find((l) => l.id === 'fund')!.steps.map((s) => s.id)).toEqual(['f-1', 'f-2', 'f-3', 'f-4', 'f-5', 'f-6', 'f-8', 'f-9'])
+    expect(f6.title).toBe('進門費、出門費')
+    expect(f6.controls).toEqual(['years'])
+    expect(f6.scene.stage).toEqual({ kind: 'feeRace', etf: false })
+    expect(f6.scene.values?.years).toBe(0)
+    expect(f6.until).toEqual({ control: 'years', min: 3 }) // 出門費滿 3 年歸零
+    const line = stripMarkup(lineOf(f6, ctx))
+    for (const w of ['前收', '進門', '後收', '出門']) expect(line, w).toContain(w)
+    expect(stripMarkup(resolve(f6.fallbackLine)!)).not.toMatch(/^拖/) // 文字版沒有拉桿
+    // 大數字＝後收「現在賣」要付的出門費，100 萬為底、單位萬（跟 3D 的出門費標籤同一個數字）
+    expect(bigOf(f6, { years: 0 })).toMatchObject({ value: '3 萬', colorKey: 'loss', fraction: 1 }) // 100 × 3%
+    expect(bigOf(f6, { years: 1 })!.value).toBe('2 萬') // 賣前 97.911 × 2% = 1.958
+    expect(bigOf(f6, { years: 2 })!.value).toBe('1 萬') // 賣前 95.866 × 1% = 0.959
+    expect(bigOf(f6, { years: 3 })).toMatchObject({ value: '0 萬', fraction: 0 })
+    for (let y = 0; y <= 10; y += 0.5) expect(bigOf(f6, { years: y })!.value, `year ${y}`).toBe(wan(ctx.fundFeeRows(y, DEFAULT_VALUES.frontLoad)[1]!.exit))
+    expect(bigOf(f6)!.label).not.toMatch(/0%|免費/)
+    // 多說一點的數字從資料算：出門費 cdsc[0] = 3%、滿 3 年歸零；前收手續費是預設的假設值 1.5%
+    expect(moreOf(f6, ctx)).toContain('出門費 3%')
+    expect(moreOf(f6, ctx)).toContain('滿 3 年不收')
+    expect(moreOf(f6, ctx)).toContain('假設 1.5%')
+  })
+
+  it('the fund chapter talks in 萬 on a 100-萬 base, like the fee meter (r3: 100 萬 then 100 元)', () => {
+    expect(T.feeMeter.base).toContain('100 萬')
+    expect(T.towers.base).toBe(T.feeMeter.base)
+    expect(T.towers.baseDemo).toContain('100 萬')
+    expect(T.towers.value(98.5)).toBe('98.5 萬')
+    expect(T.towers.coins(107.46)).toBe('領到的金幣 107.5 萬')
+    expect(T.readout.remaining(88.24)).toBe('剩 88.2 萬')
+    const fund = LEVELS.find((l) => l.id === 'fund')!
+    for (const s of fund.steps) {
+      const texts = [lineOf(s, ctx), moreOf(s, ctx), resolve(s.fallbackLine), resolve(s.fallbackMore), bigOf(s)?.value, bigOf(s)?.label]
+      for (const t of texts) if (t !== undefined) expect(t, s.id).not.toMatch(/\d\s*元/)
+    }
   })
 
   it('c-3 says plainly that both boxes hold the same companies', () => {

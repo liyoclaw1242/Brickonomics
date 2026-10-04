@@ -2,6 +2,7 @@ import type { SliceAxis } from '../scene/layout/voxels'
 import type { Picked } from '../store/sandbox'
 import type { Sector } from '../scene/layout/underground'
 import type { Mark } from '../ui/marks'
+import type { FeeRaceRow } from '../sim/feeRace'
 
 export type { Mark }
 
@@ -18,11 +19,8 @@ export type Stage =
   /** ranks：每張借據下面寫「穩不穩、利息多少」 */
   | { kind: 'bonds'; stressed: boolean; ranks?: boolean }
   | { kind: 'excavator'; meter: boolean }
-  /**
-   * focus 'back'：只看後收那座塔（其他塔變暗），出門費另外堆一小堆。
-   * etf false：只比同一檔基金的前收、後收兩座塔（導覽在 ETF 那一章之前，還沒教 0050）；預設 true（三座）
-   */
-  | { kind: 'feeRace'; focus?: 'back'; etf?: boolean }
+  /** etf false：只比同一檔基金的前收、後收兩座塔（導覽在 ETF 那一章之前，還沒教 0050）；預設 true（三座） */
+  | { kind: 'feeRace'; etf?: boolean }
   | { kind: 'accumulate' }
   | { kind: 'principalTrap' }
   | { kind: 'ticker' }
@@ -69,6 +67,8 @@ export type TextContext = {
   assetClassPct: (productId: string, kind: 'stock' | 'bond') => number
   /** 持有 years 年後賣出的遞延手續費率（出門費，小數）；超出資料表為 0 */
   exitFee: (productId: string, years: number) => number
+  /** 同一檔基金的前收、後收（投入 100＝100 萬、報酬 0，只比費用）；進門費、出門費另外拆出來 */
+  fundFeeRows: (years: number, frontLoad: number) => FeeRaceRow[]
 }
 
 /** 大數字卡：value 已格式化；fraction（0–1）畫色條；colorKey 對應物體顏色；note＝標籤下一行白話補充（例如為什麼是「至少」） */
