@@ -2,6 +2,9 @@ import { useSandbox, effectiveExplode } from '../store/sandbox'
 import type { Quality } from './quality'
 import { Basket } from './Basket'
 
+// Task 5 才會從導覽步驟取 focus.holdings
+const NO_FOCUS: string[] = []
+
 type Props = { productId: string; quality: Quality; position: [number, number, number] }
 
 /** 沙盒的籃子：狀態來自 useSandbox */
@@ -19,6 +22,7 @@ export function BasketView({ productId, quality, position }: Props) {
       slice={slice}
       sliceAxis={sliceAxis}
       explode={explode}
+      focusIds={NO_FOCUS}
       highlightId={picked?.productId === productId ? picked.holdingId : null}
       onPick={(holdingId) => pick({ productId, holdingId })}
     />

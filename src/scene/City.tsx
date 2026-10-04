@@ -1,5 +1,5 @@
 import { useLayoutEffect, useMemo, useRef } from 'react'
-import type { ThreeEvent } from '@react-three/fiber'
+import { useThree, type ThreeEvent } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import { Color, type InstancedMesh, Object3D } from 'three'
 import { universe } from '../data'
@@ -8,6 +8,7 @@ import { useThemeStore } from '../store/theme'
 import { T } from '../ui/strings'
 import { labelStyle } from './labelStyle'
 import { lookFor } from './palette'
+import { toneColor } from './layout/tone'
 import { VOXEL_SCALE } from './layout/voxels'
 import { THEMES } from './theme'
 import { useAfterFirstTick } from './useAfterFirstTick'
@@ -22,9 +23,12 @@ export function City({ labels, islandLabels = true, shrink }: { labels: boolean;
   const placements = useMemo(() => (shrink ? applyShrink(base, shrink, (id) => universe.get(id)?.marketCapUsdB) : base), [base, shrink])
   const voxels = useMemo(() => buildingVoxels(placements), [placements])
   const ref = useRef<InstancedMesh>(null)
+  const invalidate = useThree((s) => s.invalidate)
   const pick = useSandbox((s) => s.pick)
   const labelsReady = useAfterFirstTick()
   const theme = useThemeStore((s) => s.theme)
+  const picked = useSandbox((s) => s.picked)
+  const pickedId = picked?.productId ?? null
 
   useLayoutEffect(() => {
     const mesh = ref.current
@@ -36,13 +40,14 @@ export function City({ labels, islandLabels = true, shrink }: { labels: boolean;
       o.scale.setScalar(VOXEL_SCALE)
       o.updateMatrix()
       mesh.setMatrixAt(i, o.matrix)
-      c.set(lookFor(universe.get(v.id)!).color)
+      c.set(toneColor(lookFor(universe.get(v.id)!).color, pickedId === v.id ? 'vivid' : 'muted', THEMES[theme]))
       mesh.setColorAt(i, c)
     })
     mesh.instanceMatrix.needsUpdate = true
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
     mesh.computeBoundingSphere()
-  }, [voxels])
+    invalidate()
+  }, [voxels, pickedId, theme, invalidate])
 
   const onClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation()
