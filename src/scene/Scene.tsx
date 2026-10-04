@@ -11,6 +11,7 @@ import type { Quality } from './quality'
 import { THEMES } from './theme'
 import { useThemeStore } from '../store/theme'
 import { damageFromShocks } from './layout/stages'
+import { isStrike } from './events/lightning'
 import { MAX_DISTANCE, MAX_POLAR, MIN_DISTANCE } from './camera'
 import { cityNamesOnPlaza, EXCHANGE_POSITION, PEDESTAL_HEIGHT, showPedestal } from './stage/plaza'
 import { StageView } from './stage/StageView'
@@ -37,7 +38,7 @@ export function Scene({ quality }: { quality: Quality }) {
   const explode = useSandbox(effectiveExplode)
   const tourNames = tourScene.cityLabels !== false && cityNamesOnPlaza(tourScene.stage?.kind ?? 'none')
   const labels = mode === 'tour' ? tourNames : explode < 0.3
-  const shrink = mode === 'tour' && tourScene.stage?.kind === 'shock' && tourScene.stage.active ? SHOCK_SHRINK : undefined
+  const shrink = mode === 'tour' && isStrike(tourScene.event) ? SHOCK_SHRINK : undefined
   return (
     <>
       <Lighting quality={quality} />

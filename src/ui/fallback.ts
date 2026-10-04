@@ -38,7 +38,7 @@ function fallbackStep(step: Step, ctx: TextContext, u: Universe): FallbackStep {
     line: resolve(step.fallbackLine ?? step.line, ctx),
     more: resolve(step.fallbackMore ?? step.more, ctx),
     marks: stepMarks(step, u),
-    rows: stageReadout(step.scene.stage ?? { kind: 'none' }, values, u, productId),
+    rows: stageReadout(step.scene.stage ?? { kind: 'none' }, values, u, productId, step.scene.event),
     ...(step.recap ? { recap: step.recap } : {}),
   }
 }

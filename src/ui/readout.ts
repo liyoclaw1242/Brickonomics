@@ -7,6 +7,8 @@ import { overlap } from '../sim/overlap'
 import { shockImpact } from '../sim/scenario'
 import { SHOCK_2330, signedPct } from '../tour/context'
 import type { Stage, TourValues } from '../tour/types'
+import { isStrike } from '../scene/events/lightning'
+import type { EventSpec } from '../scene/events/types'
 import { feeRowMarks, type Mark } from './marks'
 import { T } from './strings'
 
@@ -15,7 +17,7 @@ export type ReadoutRow = { label: string; value: string; marks?: Mark[]; note?: 
 const n1 = (x: number) => x.toFixed(1)
 
 /** 每個舞台在面板上的即時數字（純函式，畫面與測試共用） */
-export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId: string | null): ReadoutRow[] {
+export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId: string | null, event?: EventSpec): ReadoutRow[] {
   switch (stage.kind) {
     case 'exdiv': {
       const s = exDivTimeline(v.phase, stage.outcome)
@@ -57,7 +59,7 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
       ]
     }
     case 'shock':
-      if (!stage.active) return []
+      if (!isStrike(event)) return []
       return [
         { label: T.shock.stock, value: signedPct(SHOCK_2330['2330']!) },
         { label: u.get('0050')!.name, value: signedPct(shockImpact(u, '0050', { ...SHOCK_2330 })) },

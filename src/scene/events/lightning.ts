@@ -1,12 +1,12 @@
 import { universe } from '../../data'
 import { shockImpact } from '../../sim/scenario'
 import { SHOCK_2330 } from '../../tour/context'
-import type { Stage } from '../../tour/types'
 import type { Vec3 } from '../camera'
 import { QUALITY, type Quality } from '../quality'
 import { basketVoxels } from '../layout/basket'
 import { damageFromShocks } from '../layout/stages'
 import { damagedVoxels, voxelPosition } from '../layout/voxels'
+import type { EventSpec, EventTimeline } from './types'
 
 /**
  * c-1／c-2「假設台積電跌 30%」的閃電（純 TS）：烏雲位置、閃電的路徑（只分岔到有台積電的地方）、時間。
@@ -209,7 +209,15 @@ export function visibleSegments(segs: readonly BoltSegment[], reveal: number): n
   return n
 }
 
-/** 有閃電的步驟（c-2）：面板大數字等閃電打中才開始數（毫秒）；其他步驟 0 */
-export function bigNumberDelayMs(stage: Stage | undefined, reducedMotion: boolean): number {
-  return !reducedMotion && stage?.kind === 'shock' && stage.active ? IMPACT_TIME * 1000 : 0
+/** 事件時間軸：gather（c-1）只有烏雲、靜態；strike（c-2）打一次，光退掉就停止持續繪製；面板大數字等打中才數 */
+export const LIGHTNING_TIMELINE: EventTimeline = {
+  duration: (spec) => (spec.phase === 'strike' ? STRIKE_END : 0),
+  lingers: () => false,
+  numberDelay: (spec) => (spec.phase === 'strike' ? IMPACT_TIME : 0),
 }
+
+/** 這個事件會不會打下來（c-2）；也給沒有 3D 的地方（城市縮小、讀數）判斷用 */
+export const isStrike = (spec: EventSpec | undefined): boolean => spec?.kind === 'lightning' && spec.phase === 'strike'
+
+/** 舞台讀事件時鐘用：t（null＝還沒開始）時是否已經打中 */
+export const strikeAt = (spec: EventSpec | undefined, t: number | null): boolean => isStrike(spec) && t !== null && isStruck(t)

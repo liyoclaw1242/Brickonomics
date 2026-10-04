@@ -160,7 +160,7 @@ export const LEVELS: Level[] = [
         line: '債券＝**借據**，固定給**金幣|coin**',
         more: '債券＝借錢給別人，換一張借據方塊。它不跟著大樓長高，只固定給你利息。到期時，本金還給你。金幣快慢是示意。',
         mark: 'illustrative',
-        scene: { camera: 'plaza', product: null, stage: { kind: 'bonds', stressed: false } },
+        scene: { camera: 'plaza', product: null, stage: { kind: 'bonds' } },
       },
       {
         id: 'b-2',
@@ -168,7 +168,7 @@ export const LEVELS: Level[] = [
         line: '越**穩**的，利息通常**越少**',
         more: '國家債＝借給政府，像鑽石一樣堅固，利息通常最少。公司債＝借給體質好的公司，金屬材質。高收益債＝借給體質弱的公司，玻璃材質。它利息通常較多，也較容易裂（利息快慢是示意）。',
         mark: 'illustrative',
-        scene: { camera: 'plaza', product: null, stage: { kind: 'bonds', stressed: false, ranks: true } },
+        scene: { camera: 'plaza', product: null, stage: { kind: 'bonds', ranks: true } },
       },
       {
         id: 'b-3',
@@ -177,7 +177,7 @@ export const LEVELS: Level[] = [
         // 初階沒有 b-2（三種借據，在中階），所以這裡自己說高收益債是什麼
         more: '高收益債＝借給體質弱的公司，利息較多。假設遇上一場經濟風暴。股票方塊大幅縮水，高收益債裂開、停付利息（紅色）。國家債通常比較穩，這是示意。',
         mark: 'illustrative',
-        scene: { camera: 'plaza', product: null, stage: { kind: 'bonds', stressed: true } },
+        scene: { camera: 'plaza', product: null, stage: { kind: 'bonds' }, event: { kind: 'tornado' } },
       },
     ],
   },
@@ -400,7 +400,7 @@ export const LEVELS: Level[] = [
         title: '假設台積電跌',
         line: () => `假設台積電跌 **${pct0(SHOCK_PCT * 100)}%**`,
         more: () => `來做個假設：台積電跌 ${pct0(SHOCK_PCT * 100)}%。左邊只買台積電，中間是 0050（台灣50大）。右邊是 SPY（美國500大）。`,
-        scene: { camera: 'plaza', product: null, stage: { kind: 'shock', active: false } },
+        scene: { camera: 'plaza', product: null, stage: { kind: 'shock' }, event: { kind: 'lightning', phase: 'gather' } },
       },
       {
         id: 'c-2',
@@ -412,7 +412,7 @@ export const LEVELS: Level[] = [
           const s = c.shock('0050')
           return { value: movePct(s), label: '假設下的 0050', fraction: Math.abs(s) / SHOCK_PCT }
         },
-        scene: { camera: 'plaza', product: null, stage: { kind: 'shock', active: true } },
+        scene: { camera: 'plaza', product: null, stage: { kind: 'shock' }, event: { kind: 'lightning', phase: 'strike' } },
       },
       {
         id: 'c-3',

@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useRef, useState, type RefObject } from 'react'
-import { useFrame, useThree } from '@react-three/fiber'
+import { useMemo, useRef, type RefObject } from 'react'
+import { useFrame } from '@react-three/fiber'
 import { Color, type Group, type Mesh, type MeshStandardMaterial } from 'three'
 import { universe } from '../../data'
-import { currentStep, useTour } from '../../store/tour'
 import type { Asset } from '../../data/schema'
 import { T } from '../../ui/strings'
 import type { Vec3 } from '../camera'
@@ -12,11 +11,10 @@ import { Callout } from '../Callout'
 import { BlockMaterial } from '../materials'
 import { ACCENT_COLORS, lookFor } from '../palette'
 import type { Quality } from '../quality'
-import { BOND_SLOT_X, CRACK_GAP, CRACK_TILT, STOCK_STRESSED_SCALE, isHit, slotState, type BondKey } from '../events/tornado'
-import { prefersReducedMotion, useRevealAfterCamera } from '../useRevealAfterCamera'
-import { useContinuousRender } from '../useContinuousRender'
+import { BOND_SLOT_X, CRACK_GAP, CRACK_TILT, STOCK_STRESSED_SCALE, tornadoHitAt, tornadoSlotAt, type BondKey } from '../events/tornado'
+import type { EventClock } from '../events/types'
+import { useEventValue } from '../useEventClock'
 import { atPlaza, bondSub } from './plaza'
-import { Tornado } from '../events/Tornado'
 
 const SIZE = 2.4
 /** 金幣放大（r2：遠景下 1 倍的金幣小到像一條線） */
@@ -39,9 +37,9 @@ const BOND_COLOR: Partial<Record<Slot['key'], string>> = { gov: '#5fd4ee', corp:
 const HALF = SIZE / 2
 /** 依序被龍捲風掃到的順序（HIT_TIME 由小到大） */
 const ORDER: readonly BondKey[] = ['stock', 'gov', 'corp', 'hy']
-const hitCount = (t: number) => {
+const hitCount = (t: number | null) => {
   let n = 0
-  for (const k of ORDER) if (isHit(k, t)) n += 1
+  for (const k of ORDER) if (tornadoHitAt(t, k)) n += 1
   return n
 }
 
@@ -85,21 +83,14 @@ function CrackedBond({ x, refs }: { x: number; refs: Refs }) {
 /**
  * 股票方塊 vs 三種借據：材質表示信用品質，金幣快慢表示利息（示意）。
  * 每張借據的標籤下面一行（bondSub）：平常寫「借給誰」；ranks（b-2）改寫「穩不穩、利息多少」（三顆長得很像，要用字分出來）。
- * stressed：經濟風暴（b-3）。鏡頭停下後一陣龍捲風從左掃到右（events/tornado.ts）：
- * 掃到股票→縮水變紅；國家債、公司債晃一下就站穩；掃到高收益債→裂成兩半、變紅、停付利息。最後龍捲風停在右後方原地轉。
- * 終點與原本靜態的 stressed 畫面一模一樣；prefers-reduced-motion 直接顯示終點與靜止的龍捲風。
+ * 經濟風暴（b-3）：步驟的 scene.event 是龍捲風（events/tornado.ts、Tornado.tsx）。這個舞台不畫天氣，只讀同一個事件時鐘：
+ * 掃到股票→縮水變紅；國家債、公司債晃一下就站穩；掃到高收益債→裂成兩半、變紅、停付利息。
+ * 終點與原本靜態的 stressed 畫面一模一樣；減少動態時時鐘直接在終點。
  */
-export function BondShowcase({ stressed, ranks = false, quality }: { stressed: boolean; ranks?: boolean; quality: Quality }) {
-  const stepId = useTour((s) => currentStep(s).id)
-  const [still] = useState(prefersReducedMotion)
-  const revealed = useRevealAfterCamera(stepId, still)
-  const animate = stressed && !still && revealed
-  const invalidate = useThree((s) => s.invalidate)
-  /** 風暴時間（秒）：null＝還沒開始；Infinity＝終點 */
-  const time = useRef<number | null>(stressed && still ? Infinity : null)
-  const t0 = useRef<number | null>(null)
-  const [hits, setHits] = useState(stressed && still ? ORDER.length : 0)
-  const hitsRef = useRef(hits)
+export function BondShowcase({ ranks = false, quality, event }: { ranks?: boolean; quality: Quality; event: EventClock }) {
+  const stressed = event.spec?.kind === 'tornado'
+  /** 龍捲風掃過了幾個（離散：換標籤、停金幣） */
+  const hits = useEventValue(event, (t) => (stressed ? hitCount(t) : 0))
   const refs: Refs = {
     stock: useRef<Mesh>(null),
     stockMat: useRef<MeshStandardMaterial>(null),
@@ -114,31 +105,9 @@ export function BondShowcase({ stressed, ranks = false, quality }: { stressed: b
     [stockColor],
   )
 
-  // 換步驟（b-2 ↔ b-3 共用這個元件）或鏡頭停下時重新開始
-  useEffect(() => {
-    t0.current = null
-    time.current = stressed && still ? Infinity : null
-    const h = stressed && still ? ORDER.length : 0
-    hitsRef.current = h
-    setHits(h)
-    invalidate()
-  }, [stressed, still, revealed, invalidate])
-
-  // 龍捲風在旁邊原地轉：整個 b-3 都持續繪製，離開這一步就停
-  useContinuousRender(animate)
-
-  useFrame(({ clock }) => {
-    if (animate) {
-      if (t0.current === null) t0.current = clock.elapsedTime
-      time.current = clock.elapsedTime - t0.current
-    }
-    const t = stressed ? (time.current ?? -Infinity) : -Infinity
-    const h = hitCount(t)
-    if (h !== hitsRef.current) {
-      hitsRef.current = h
-      setHits(h)
-    }
-    const st = slotState('stock', t)
+  useFrame(() => {
+    const t = stressed ? event.t.current : null
+    const st = tornadoSlotAt(t, 'stock')
     const m = refs.stock.current
     if (m) {
       m.scale.y = st.scaleY
@@ -147,9 +116,9 @@ export function BondShowcase({ stressed, ranks = false, quality }: { stressed: b
     refs.stockMat.current?.color.copy(colors.stock).lerp(colors.loss, st.red)
     for (const k of ['gov', 'corp'] as const) {
       const g = refs[k].current
-      if (g) g.rotation.z = slotState(k, t).sway
+      if (g) g.rotation.z = tornadoSlotAt(t, k).sway
     }
-    const hy = slotState('hy', t)
+    const hy = tornadoSlotAt(t, 'hy')
     if (hy.broken) {
       const [px] = atPlaza(BOND_SLOT_X.hy)
       ;[-1, 1].forEach((side, i) => {
@@ -210,7 +179,6 @@ export function BondShowcase({ stressed, ranks = false, quality }: { stressed: b
           </group>
         )
       })}
-      {stressed && <Tornado time={time} quality={quality} still={still} />}
     </>
   )
 }

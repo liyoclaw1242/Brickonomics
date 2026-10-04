@@ -1,15 +1,20 @@
-import { useLayoutEffect, useMemo, useRef, type RefObject } from 'react'
+import { useLayoutEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { type AmbientLight, type Group, type InstancedMesh, type MeshBasicMaterial, Object3D, Vector3 } from 'three'
 import { useThemeStore } from '../../store/theme'
+import { T } from '../../ui/strings'
+import { Callout } from '../Callout'
 import type { Vec3 } from '../camera'
 import {
   BOLT_DETAIL,
+  CLOUD,
+  CLOUD_LABEL_ANCHOR,
   IMPACT_TIME,
   boltGlow,
   boltReveal,
   boltSegments,
   flashLevel,
+  strikeAt,
   strikeTarget,
   SHOCK_SUBJECTS,
   visibleSegments,
@@ -17,6 +22,9 @@ import {
 import type { Quality } from '../quality'
 import { THEMES } from '../theme'
 import { atPlaza } from '../stage/plaza'
+import { useEventValue } from '../useEventClock'
+import { StormCloud } from './StormCloud'
+import type { EventProps } from './types'
 
 const CORE = 0.07
 const CORE_PER_WIDTH = 0.16
@@ -25,9 +33,9 @@ const GLOW_OPACITY = 0.5
 const SPARK_TIME = 0.5
 const UP = new Vector3(0, 1, 0)
 
-type Props = {
+type BoltProps = {
   /** 閃電時間（秒，c-2 鏡頭停下後起算）；null＝還沒開始 */
-  time: RefObject<number | null>
+  time: { readonly current: number | null }
   quality: Quality
   /** prefers-reduced-motion：直接擺一道靜止的閃電，不長、不閃、不退 */
   still: boolean
@@ -36,9 +44,9 @@ type Props = {
 /**
  * 一道閃電：從烏雲打下來，分岔到有台積電的地方（只買台積電那柱、0050 裡的台積電層）；SPY 沒有分岔。
  * 每段是一個細長方塊（白色芯＋外圈光暈各一個 InstancedMesh），調 count 逐段長出來；
- * 打中那一刻全場補光一次（ambientLight 脈衝）、打中點各一團光，之後退掉。持續繪製由呼叫端（ShockStage）負責。
+ * 打中那一刻全場補光一次（ambientLight 脈衝）、打中點各一團光，之後退掉。持續繪製由事件時鐘（useEventClock）負責。
  */
-export function Lightning({ time, quality, still }: Props) {
+function Bolt({ time, quality, still }: BoltProps) {
   const theme = THEMES[useThemeStore((s) => s.theme)].bolt
   const detail = BOLT_DETAIL[quality]
   const segs = useMemo(() => boltSegments(quality), [quality])
@@ -135,6 +143,22 @@ export function Lightning({ time, quality, still }: Props) {
           <meshBasicMaterial ref={sparkMat} color={theme.glow} transparent depthWrite={false} toneMapped={false} />
         </instancedMesh>
       </group>
+    </>
+  )
+}
+
+/**
+ * 閃電事件（單一公司出事）：c-1（gather）只有一片烏雲高掛在三組上方；c-2（strike）鏡頭停下後一道閃電打下來，
+ * 打中那一刻雲底出現「假設：台積電被打中」。閃電只打一次（≤ 1 次閃光）；減少動態時直接顯示終點與一道靜止的閃電。
+ * 受損（柱子變矮、0050 的紅色方塊、跌幅）由舞台（ShockStage）以 strikeAt 讀同一個時鐘決定。
+ */
+export function Lightning({ spec, clock, quality }: EventProps) {
+  const struck = useEventValue(clock, (t) => strikeAt(spec, t))
+  return (
+    <>
+      <StormCloud quality={quality} position={atPlaza(...CLOUD.center)} spread={CLOUD.spread} size={CLOUD.size} />
+      {spec.phase === 'strike' && <Bolt time={clock.t} quality={quality} still={clock.reduced} />}
+      {struck && <Callout anchor={atPlaza(...CLOUD_LABEL_ANCHOR)} offset={[2.2, -0.8, 0]} title={T.shock.struck} persistent />}
     </>
   )
 }

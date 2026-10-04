@@ -53,8 +53,8 @@ describe('stageReadout', () => {
   })
 
   it('shows shock impacts only when active', () => {
-    expect(stageReadout({ kind: 'shock', active: false }, v(), universe, null)).toEqual([])
-    const rows = stageReadout({ kind: 'shock', active: true }, v(), universe, null)
+    expect(stageReadout({ kind: 'shock' }, v(), universe, null, { kind: 'lightning', phase: 'gather' })).toEqual([])
+    const rows = stageReadout({ kind: 'shock' }, v(), universe, null, { kind: 'lightning', phase: 'strike' })
     expect(rows.map((r) => r.value)).toEqual(['−30.0%', '−16.9%', '0.0%'])
   })
 

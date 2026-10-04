@@ -3,6 +3,7 @@ import type { Picked } from '../store/sandbox'
 import type { Sector } from '../scene/layout/underground'
 import type { Mark } from '../ui/marks'
 import type { FeeRaceRow } from '../sim/feeRace'
+import type { EventSpec } from '../scene/events/types'
 
 export type { Mark }
 
@@ -16,8 +17,8 @@ export type Stage =
   | { kind: 'none' }
   | { kind: 'held'; items: HeldItem[] }
   | { kind: 'exdiv'; outcome: 'fill' | 'gap' }
-  /** ranks：每張借據下面寫「穩不穩、利息多少」 */
-  | { kind: 'bonds'; stressed: boolean; ranks?: boolean }
+  /** ranks：每張借據下面寫「穩不穩、利息多少」；受損程度由 scene.event（tornado）決定 */
+  | { kind: 'bonds'; ranks?: boolean }
   /** other：另一位經理人（怪手換顏色、標註不同） */
   | { kind: 'excavator'; meter: boolean; other?: boolean }
   /** etf false：只比同一檔基金的前收、後收兩座塔（導覽在 ETF 那一章之前，還沒教 0050）；預設 true（三座） */
@@ -25,7 +26,8 @@ export type Stage =
   | { kind: 'accumulate' }
   | { kind: 'principalTrap' }
   | { kind: 'ticker' }
-  | { kind: 'shock'; active: boolean }
+  /** 台積電跌 30% 的比較；烏雲與閃電由 scene.event（lightning gather／strike）決定 */
+  | { kind: 'shock' }
   | { kind: 'overlap'; a: string; b: string }
   | { kind: 'underground'; show: 'strata' | 'cores' | 'dig' | 'veins' | 'gold'; cores?: [string, string] }
 
@@ -50,6 +52,8 @@ export type SceneDirective = {
   explode?: number
   picked?: Picked
   stage?: Stage
+  /** 這一步發生的事件（龍捲風、閃電…；src/scene/events）：鏡頭停下後才發生，舞台讀它的進度 */
+  event?: EventSpec
   values?: Partial<StageValues>
   /** 城市大樓名稱標籤，預設 true */
   cityLabels?: boolean

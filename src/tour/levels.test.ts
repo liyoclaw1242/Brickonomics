@@ -495,9 +495,18 @@ describe('jargon diet (user test r1)', () => {
     expect(byId('f-6').mark).toBe('assumption') // 預設的前收手續費仍是假設值
   })
 
-  it('b-2 ranks the three bonds on the stage; b-3 stresses them', () => {
-    expect(byId('b-2').scene.stage).toEqual({ kind: 'bonds', stressed: false, ranks: true })
-    expect(byId('b-3').scene.stage).toMatchObject({ kind: 'bonds', stressed: true })
+  it('b-2 ranks the three bonds on the stage; b-3 stresses them with the tornado event', () => {
+    expect(byId('b-2').scene.stage).toEqual({ kind: 'bonds', ranks: true })
+    expect(byId('b-2').scene.event).toBeUndefined()
+    expect(byId('b-3').scene.stage).toEqual({ kind: 'bonds' })
+    expect(byId('b-3').scene.event).toEqual({ kind: 'tornado' })
+  })
+
+  it('c-1 gathers the lightning cloud, c-2 strikes', () => {
+    expect(byId('c-1').scene.stage).toEqual({ kind: 'shock' })
+    expect(byId('c-1').scene.event).toEqual({ kind: 'lightning', phase: 'gather' })
+    expect(byId('c-2').scene.stage).toEqual({ kind: 'shock' })
+    expect(byId('c-2').scene.event).toEqual({ kind: 'lightning', phase: 'strike' })
   })
 
   it('names the two biggest layers on f-2 (after the explode) and e-1', () => {

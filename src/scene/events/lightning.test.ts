@@ -9,7 +9,6 @@ import {
   boltGlow,
   boltReveal,
   boltSegments,
-  bigNumberDelayMs,
   branchWaypoints,
   etfHitPoint,
   flashLevel,
@@ -20,6 +19,7 @@ import {
   tsmcExposure,
   visibleSegments,
 } from './lightning'
+import { bigNumberDelayMs } from './index'
 
 describe('who gets hit', () => {
   it('only TSMC holders: stock and 0050 get a branch, SPY gets none', () => {
@@ -129,13 +129,13 @@ describe('timing: exactly one strike', () => {
 })
 
 describe('panel big number waits for the strike', () => {
-  it('delays the count-up to the impact on the active shock step only', () => {
-    expect(bigNumberDelayMs({ kind: 'shock', active: true }, false)).toBe(IMPACT_TIME * 1000)
-    expect(bigNumberDelayMs({ kind: 'shock', active: false }, false)).toBe(0)
-    expect(bigNumberDelayMs({ kind: 'none' }, false)).toBe(0)
+  it('delays the count-up to the impact on the strike step only', () => {
+    expect(bigNumberDelayMs({ kind: 'lightning', phase: 'strike' }, false)).toBe(IMPACT_TIME * 1000)
+    expect(bigNumberDelayMs({ kind: 'lightning', phase: 'gather' }, false)).toBe(0)
+    expect(bigNumberDelayMs({ kind: 'tornado' }, false)).toBe(0)
     expect(bigNumberDelayMs(undefined, false)).toBe(0)
     // 減少動態：閃電是靜止的終點，數字也直接顯示
-    expect(bigNumberDelayMs({ kind: 'shock', active: true }, true)).toBe(0)
+    expect(bigNumberDelayMs({ kind: 'lightning', phase: 'strike' }, true)).toBe(0)
   })
 })
 
