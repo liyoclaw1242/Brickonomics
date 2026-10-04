@@ -3,11 +3,11 @@ import type { Theme } from '../theme'
 
 export type Tone = 'vivid' | 'muted'
 
-/** 優先順序：選取 > 導覽焦點 > 拆開（全部鮮豔）> 低飽和 */
-export function groupTone(p: { group: number; focus: readonly number[]; picked: number | null; explode: number }): Tone {
+/** 優先順序：選取 > 導覽焦點 > 拆開或切開（全部鮮豔，切面看得到真正的地層顏色）> 低飽和 */
+export function groupTone(p: { group: number; focus: readonly number[]; picked: number | null; explode: number; cut?: boolean }): Tone {
   if (p.picked !== null) return p.group === p.picked ? 'vivid' : 'muted'
   if (p.focus.length > 0) return p.focus.includes(p.group) ? 'vivid' : 'muted'
-  if (p.explode > 0.3) return 'vivid'
+  if (p.explode > 0.3 || p.cut) return 'vivid'
   return 'muted'
 }
 

@@ -11,6 +11,7 @@ import { parseEmphasis, stripMarkup, visibleLength } from '../ui/emphasis'
 import { colorForKey } from '../scene/palette'
 import { isVerified } from '../data/verified'
 import { T } from '../ui/strings'
+import { CAMERA_PRESETS } from '../scene/camera'
 import { stepMarks } from '../ui/marks'
 import type { VerifiedKey } from '../data/schema'
 import type { Stage, StageValues, Step } from './types'
@@ -369,6 +370,21 @@ describe('control ranges and the dividend steps (user test r1)', () => {
     for (const s of steps) for (const w of ['除息', '填息', '貼息']) {
       expect(s.title.includes(w), `${s.id}: ${w}`).toBe(false)
       expect(lineOf(s, ctx).includes(w), `${s.id}: ${w}`).toBe(false)
+    }
+  })
+
+  it('the laser steps look at the cut from an angle, not straight along the cut axis (r2: only a pink frame)', () => {
+    // 鏡頭若正對切割軸，切掉的是靠近鏡頭那一面：剩下的方塊看起來一模一樣，只多一個粉紅框
+    const AXIS = { x: [1, 0, 0], z: [0, 0, 1], y: [0, 1, 0] } as const
+    for (const s of steps) {
+      if (!(s.controls?.includes('slice') || (s.scene.slice ?? 0) > 0)) continue
+      const p = CAMERA_PRESETS[s.scene.camera]
+      const d = p.position.map((v, i) => v - p.target[i]!)
+      const len = Math.hypot(...d)
+      const axis = AXIS[(s.scene.sliceAxis ?? 'x') as keyof typeof AXIS]
+      const along = Math.abs(d.reduce((sum, v, i) => sum + v * axis[i]!, 0)) / len
+      expect(along, s.id).toBeLessThanOrEqual(0.85)
+      expect(along, s.id).toBeGreaterThanOrEqual(0.3) // 也要看得到切面
     }
   })
 
