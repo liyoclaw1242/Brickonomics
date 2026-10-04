@@ -35,7 +35,6 @@ export const T = {
     pill: (current: string) => `${current} ▾`,
     menuLabel: '選擇課程',
     nextTier: (name: string) => `下一階：${name} →`,
-    toSandbox: '去自由玩',
     /** 文字版選階的群組名 */
     pickLabel: '選擇課程',
   },

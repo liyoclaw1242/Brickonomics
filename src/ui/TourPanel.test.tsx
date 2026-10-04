@@ -41,12 +41,19 @@ describe('TourPanel start card', () => {
     expect(after).toContain(T.next)
   })
 
-  it('a finish step offers the next tier, or the sandbox when the next tier is not open', () => {
+  it('a finish step offers the next tier; the last course’s finish step does not (only 自由玩), and no skip link', () => {
+    useTour.setState({ progress: { ...useTour.getState().progress, sandboxUnlocked: true } })
+    useTour.getState().enterStep({ course: 'beginner', index: 1 })
+    expect(render()).toContain(T.skipToSandbox) // 平常的步驟：解鎖後有「跳過導覽」
     useTour.getState().enterStep({ course: 'beginner', index: stepsOf('beginner').length - 1 })
-    expect(render()).toContain(T.course.nextTier('中階'))
-    useTour.getState().switchCourse('intermediate')
-    expect(render()).not.toContain(T.course.nextTier('中階'))
+    const u6 = render()
+    expect(u6).toContain(T.course.nextTier('中階'))
+    expect(u6).not.toContain(T.skipToSandbox)
     useTour.getState().enterStep({ course: 'intermediate', index: stepsOf('intermediate').length - 1 })
-    expect(render()).toContain(T.course.toSandbox)
+    const mfin = render()
+    expect(mfin).not.toContain('下一階')
+    expect(mfin).not.toContain('去自由玩')
+    expect(mfin).not.toContain(T.skipToSandbox)
+    expect(mfin).toContain(T.finish)
   })
 })

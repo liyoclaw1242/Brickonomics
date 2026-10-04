@@ -150,4 +150,11 @@ test('the toolbar course switcher opens a menu, closes on Escape, and switches c
   await expect(page.locator('.step-title__text')).toHaveText('歡迎來到積木城市') // 初階沒有 s-5 → 第一步
   await expect(toolbar.getByRole('button', { name: /初階，換階/ })).toBeFocused()
   await expect(page.getByRole('navigation', { name: '章節' }).getByRole('button', { name: '00 序章' })).toBeVisible()
+  // 空白鍵也能選；回到還沒上完的中階時，停在上次的那一步
+  await page.keyboard.press('Space')
+  await page.keyboard.press('ArrowDown')
+  await expect(menu.getByRole('menuitemradio', { name: /中階/ })).toBeFocused()
+  await page.keyboard.press('Space')
+  await expect(menu).toHaveCount(0)
+  await expect(page.locator('.step-title__text')).toHaveText('發金幣那一刻')
 })

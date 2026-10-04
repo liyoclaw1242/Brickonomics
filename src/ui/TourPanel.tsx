@@ -59,7 +59,7 @@ function StepPanel() {
   const chapters = courseById(pos.course).chapters
   const here = chapterOfIndex(pos.course, pos.index)
   const chapter = chapters[here]
-  // 結尾步：口訣卡下面推薦下一階（照課程順序；下一階還沒開放就去自由玩）
+  // 結尾步：口訣卡下面推薦下一階（照課程順序；下一階還沒開放就不顯示）
   const upNext = isLast ? nextCourse(pos.course) : null
   const [instant] = useState(prefersReducedMotion)
   const revealed = useRevealAfterCamera(step.id, instant)
@@ -94,14 +94,16 @@ function StepPanel() {
           ))}
         </ul>
       )}
-      {isLast && (
-        <button className="next-tier" onClick={goNextCourse}>
-          {upNext ? T.course.nextTier(courseById(upNext).name) : T.course.toSandbox}
+      {/* 有下一階才推薦；最後一門課的結尾步只留「自由玩」（下一步按鈕） */}
+      {upNext && (
+        <button className="next-tier" onClick={() => ok && goNextCourse()} disabled={!ok}>
+          {T.course.nextTier(courseById(upNext).name)}
         </button>
       )}
       <StepNav onPrev={prev} onNext={next} canPrev={canPrev} canNext={ok} isLast={isLast} hintId={HINT_ID} />
       <MoreSection key={step.id} more={more} rows={rows} />
-      {unlocked && (
+      {/* 結尾步本來就是去自由玩，不再另外放「跳過導覽」 */}
+      {unlocked && !isLast && (
         <button className="link" onClick={enterSandbox}>
           {T.skipToSandbox}
         </button>

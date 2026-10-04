@@ -43,6 +43,8 @@ export function Toolbar() {
 }
 
 const MENU_ID = 'course-menu'
+/** 可上的課（固定資料，放模組層級：每次 render 都是同一個陣列） */
+const COURSE_LIST = availableCourses()
 
 /**
  * 換階選單（menu button 模式）：Enter／空白／↓ 打開並聚焦目前階，↑↓ Home End 移動，Enter 選，
@@ -53,20 +55,20 @@ function CourseSwitcher({ current }: { current: CourseId }) {
   const trigger = useRef<HTMLButtonElement>(null)
   const items = useRef<(HTMLButtonElement | null)[]>([])
   const wrap = useRef<HTMLDivElement>(null)
-  const courses = availableCourses()
+  const courses = COURSE_LIST
   const name = courseById(current).name
 
+  // 打開時聚焦目前這一階，並在點選單外面時關上
   useEffect(() => {
     if (!open) return
-    const i = Math.max(0, courses.findIndex((c) => c.id === current))
+    const i = Math.max(0, COURSE_LIST.findIndex((c) => c.id === current))
     items.current[i]?.focus()
     const outside = (e: PointerEvent) => {
       if (!wrap.current?.contains(e.target as Node)) setOpen(false)
     }
     document.addEventListener('pointerdown', outside)
     return () => document.removeEventListener('pointerdown', outside)
-    // 只在打開時聚焦一次（current 變了選單會關上）
-  }, [open])
+  }, [open, current])
 
   const close = (focusTrigger: boolean) => {
     setOpen(false)
@@ -88,8 +90,16 @@ function CourseSwitcher({ current }: { current: CourseId }) {
     else if (e.key === 'Home') move(0)
     else if (e.key === 'End') move(n - 1)
     else if (e.key === 'Escape') {
+      // 只關選單：不要再傳出去（例如關掉點選的資訊卡）
       e.preventDefault()
+      e.stopPropagation()
       close(true)
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      // 自己處理選取：不讓空白鍵傳到「按住空白鍵拆開」，也不等 keyup 的 click（選單那時已經關了）
+      e.preventDefault()
+      e.stopPropagation()
+      const c = courses[at]
+      if (c) choose(c.id)
     } else if (e.key === 'Tab') close(false)
   }
 
