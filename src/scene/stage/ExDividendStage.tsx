@@ -111,8 +111,9 @@ export function ExDividendStage({ outcome }: { outcome: ExDivOutcome; quality?: 
       {/* 紅色那一段寫明是什麼：沒長回來、真的少掉的部分 */}
       {lost > 0.5 && (
         <Callout
-          anchor={atPlaza(BLOCK_X - FOOT / 2, hOf((bands.red![0] + bands.red![1]) / 2), 0)}
-          offset={[-3, 0, 0]}
+          // 往右（金幣那一側的上方）：往左在手機上會超出畫面
+          anchor={atPlaza(BLOCK_X + FOOT / 2, hOf((bands.red![0] + bands.red![1]) / 2), 0)}
+          offset={[2.2, 0, 0]}
           title={T.stage.exdiv.lost(Math.round(lost))}
           color={ACCENT_COLORS.loss}
           persistent
