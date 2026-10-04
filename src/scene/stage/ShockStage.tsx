@@ -37,11 +37,12 @@ export function ShockStage({ active, quality }: { active: boolean; quality: Qual
             key={s.key}
             anchor={atPlaza(s.x, 0.1, 4)}
             offset={[0, -0.3, 3]}
-            title={active ? T.shock.label(name, pct) : name}
-            // 圖例（紅色＝假設跌掉的部分）原本是中間那籃下方的另一個標籤，併成它的副標
-            sub={active && s.key === '0050' ? T.shock.legend : undefined}
-            // 帶圖例的那一籃在衝擊發生時屬於內容，關掉「標註」也要留著
-            persistent={active && s.key === '0050'}
+            // 衝擊後：跌幅當標題、名稱當副標（字塊窄，手機上三個並排不會互撞或超出畫面）
+            title={active ? pct : name}
+            // 圖例（紅色＝假設跌掉的部分）併進中間那籃的副標
+            sub={active ? (s.key === '0050' ? T.shock.withLegend(name) : name) : undefined}
+            // 衝擊發生後，帶圖例的那一籃屬於內容（關掉「標註」也留著）；三籃的跌幅都是內容
+            persistent={active}
           />
         )
       })}

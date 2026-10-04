@@ -10,6 +10,7 @@ export function AccumulateStage({ quality }: { quality: Quality }) {
   return (
     <TowerRow
       quality={quality}
+      base={T.towers.baseDemo}
       towers={[
         { key: 'acc', label: T.accumulateRows.accumulate, value: r.accumulate.value, color: '#2bb3a3', marks: ['illustrative'] },
         { key: 'pay', label: T.accumulateRows.payout, value: r.payout.value, coins: r.payout.cashReceived, color: '#5c6bc0', marks: ['illustrative'] },

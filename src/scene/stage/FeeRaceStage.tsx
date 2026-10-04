@@ -4,8 +4,6 @@ import { feeRace } from '../../sim/feeRace'
 import { feeRowMarks } from '../../ui/marks'
 import { T } from '../../ui/strings'
 import type { Quality } from '../quality'
-import { Callout } from '../Callout'
-import { atPlaza } from './plaza'
 import { TowerRow, type TowerSpec } from './TowerRow'
 
 const COLORS = { front: '#5c6bc0', back: '#8a5cf6', etf: '#2bb3a3' } as const
@@ -23,8 +21,8 @@ export function FeeRaceStage({ quality }: { quality: Quality }) {
   }))
   return (
     <>
-      <TowerRow towers={towers} quality={quality} />
-      <Callout anchor={atPlaza(0, -0.2, 16)} offset={[0, 0, 0]} title={T.feeRaceCaveat} persistent />
+      {/* 前提與提醒合成一個標註，免得兩條長字串疊在一起或掉到時間軸底下 */}
+      <TowerRow towers={towers} quality={quality} base={T.towers.base} baseSub={T.feeRaceCaveat} />
     </>
   )
 }

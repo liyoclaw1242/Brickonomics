@@ -27,12 +27,14 @@ export function City({ labels, islandLabels = true, shrink }: { labels: boolean;
   const theme = useThemeStore((s) => s.theme)
   const picked = useSandbox((s) => s.picked)
   const pickedId = picked?.productId ?? null
+  // 從籃子選到某層持股（holdingId）時，若那是城市裡的公司，那棟大樓也一起鮮豔
+  const pickedHolding = picked?.holdingId ?? null
   // 導覽步驟標註錨在某棟大樓：那棟鮮豔；名稱由標註顯示，NameLabel 隱藏以免重複（字串 key 讓 selector 穩定）
   const anchorKey = useTour((s) =>
     s.mode === 'tour' ? (currentStep(s).callouts ?? []).flatMap((c) => (c.anchor.kind === 'building' ? [c.anchor.id] : [])).join(',') : '',
   )
   const anchored = useMemo(() => new Set(anchorKey === '' ? [] : anchorKey.split(',')), [anchorKey])
-  const isActive = (id: string) => pickedId === id || anchored.has(id)
+  const isActive = (id: string) => pickedId === id || pickedHolding === id || anchored.has(id)
 
   useLayoutEffect(() => {
     const mesh = ref.current
@@ -51,7 +53,7 @@ export function City({ labels, islandLabels = true, shrink }: { labels: boolean;
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
     mesh.computeBoundingSphere()
     invalidate()
-  }, [voxels, pickedId, anchored, theme, invalidate])
+  }, [voxels, pickedId, pickedHolding, anchored, theme, invalidate])
 
   const onClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation()
@@ -88,7 +90,7 @@ export function City({ labels, islandLabels = true, shrink }: { labels: boolean;
       </instancedMesh>
       {/* NameLabel 自己在第一個 tick 後才掛 Html，並受「標註」開關控制 */}
       {labels && placements.filter((p) => !anchored.has(p.id)).map((p) => (
-        <NameLabel key={p.id} position={[p.x, p.height + 0.8, p.z]} text={universe.get(p.id)!.name} active={pickedId === p.id} />
+        <NameLabel key={p.id} position={[p.x, p.height + 0.8, p.z]} text={universe.get(p.id)!.name} active={pickedId === p.id || pickedHolding === p.id} />
       ))}
       {islandLabels && (['TW', 'US'] as const).map((region) => {
         const [x, z] = ISLAND_CENTERS[region]

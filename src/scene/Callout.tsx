@@ -14,16 +14,18 @@ type Props = {
   marks?: Mark[]
   dim?: boolean
   wrap?: boolean
+  /** 窄邊距的小字塊（地層名稱這類一層一個、上下很密的標註） */
+  compact?: boolean
   /**
-   * 「標註」開關關掉時，非 persistent 的標註（名稱類）整個隱藏（含指引線）；
-   * persistent（內容、提醒、圖例、帶標示圖示的數字）連同指引線一律留著。NameLabel 也一併隱藏。
+   * 「標註」開關只藏非 persistent 的標註（名稱類，連同引線）和 NameLabel。
+   * persistent 的標註（內容、提醒、圖例、帶標示圖示的數字）連同引線一律留著。
    */
   persistent?: boolean
   /** 3b1b 顏色連結：標題前的小色點與引線錨點用這個顏色（和物體、課文關鍵詞同色） */
   color?: string
 }
 
-export function Callout({ anchor, offset = [0, 2, 0], title, sub, marks, dim = false, wrap = false, persistent = false, color }: Props) {
+export function Callout({ anchor, offset = [0, 2, 0], title, sub, marks, dim = false, wrap = false, compact = false, persistent = false, color }: Props) {
   const ready = useAfterFirstTick()
   const labels = useThemeStore((s) => s.labels)
   const t = THEMES[useThemeStore((s) => s.theme)]
@@ -47,7 +49,7 @@ export function Callout({ anchor, offset = [0, 2, 0], title, sub, marks, dim = f
       )}
       {ready && (
         <Html position={end} center={!side}>
-          <div className={`callout${side ? ` ${side}` : ''}${dim ? ' callout--dim' : ''}${wrap ? ' callout--wrap' : ''}`}>
+          <div className={`callout${side ? ` ${side}` : ''}${dim ? ' callout--dim' : ''}${wrap ? ' callout--wrap' : ''}${compact ? ' callout--compact' : ''}`}>
             <span className="callout__title">
               {color && <span className="callout__dot" style={{ background: color }} />}
               {title}

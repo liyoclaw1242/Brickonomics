@@ -13,7 +13,7 @@ export const T = {
     { icon: '🪨', name: '地底' },
   ],
   chapterCounter: (i: number, n: number) => `${String(i).padStart(2, '0')} / ${String(n - 1).padStart(2, '0')}`,
-  shock: { stock: '只買台積電', legend: '紅色＝假設跌掉的部分', label: (name: string, pct: string) => `${name}：${pct}` },
+  shock: { stock: '只買台積電', withLegend: (name: string) => `${name}・紅色＝假設跌掉的部分` },
   overlapLabel: (name: string, pct: string) => `${name} 重疊 ${pct}`,
   heightNote: '大樓高度為市值的對數比例；籃子裡的方塊數量嚴格依照權重。',
   islands: { TW: '台灣島', US: '美國大陸' },
@@ -43,8 +43,12 @@ export const T = {
   skipToSandbox: '跳過導覽，直接進沙盒',
   toolbar: { dusk: '☾ 黃昏', day: '☀ 白天', labels: '🏷 標註', legend: '🎨 圖例', replay: '↺ 重看導覽' },
   toolbarLabel: '畫面設定',
+  themeNames: { dusk: '黃昏', day: '白天' },
   themeLabel: '切換黃昏／白天',
+  /** 主題按鈕的無障礙名稱：先念看得到的文字（WCAG 2.5.3），再說按下會做什麼 */
+  themeAction: (current: string, to: string) => `${current}，切換到${to}`,
   chaptersLabel: '章節',
+  chapterName: (i: number, name: string) => `${String(i).padStart(2, '0')} ${name}`,
   legendLabel: '產業顏色',
   tryIt: '先試著操作上面的控制項',
   progressLabel: '課程進度',
@@ -70,7 +74,7 @@ export const T = {
     rateNote: '利息快慢為示意',
     exdiv: { block: '方塊', coins: '金幣' },
   },
-  towers: { lost: '費用扣掉的', lostPrincipal: '削掉的本金', coins: '領到的金幣', base: '以投入 100 元、假設報酬為 0 計（只比費用）', value: (v: number) => `${v.toFixed(1)} 元` },
+  towers: { lost: '費用扣掉的', lostPrincipal: '削掉的本金', coins: '領到的金幣', base: '以投入 100 元、假設報酬為 0 計（只比費用）', baseDemo: '以投入 100 元計（示意參數）', value: (v: number) => `${v.toFixed(1)} 元` },
   feeRaceCaveat: '三者投資內容與風險不同，費用低不代表比較好',
   feeRows: {
     front: (fl: number) => `前收型（假設 ${(fl * 100).toFixed(2)}%）`,
@@ -83,7 +87,6 @@ export const T = {
   feeMeter: {
     title: '計費表',
     elapsed: (year: number) => `第 ${year} 年`,
-    rate: (er: number) => `內扣費用每年約 ${(er * 100).toFixed(2)}%`,
     ground: (amount: number) => `已磨掉約 ${Math.round(amount).toLocaleString('zh-TW')} 元`,
     note: '假設投入 100 萬元、時間快轉（6 秒 = 1 年）',
   },

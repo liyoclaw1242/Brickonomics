@@ -19,7 +19,8 @@ const FRONT_Z = CENTER_Z + DEPTH / 2
 const ROD_OPACITY = 0.35
 const STUB_RADIUS = 1.3
 const CORE_Z = FRONT_Z + 2
-const LABEL_X = -24
+// 地層名稱貼在地層正面左側（地層寬 44，左緣 −22）：手機窄畫面也不會被左邊界切掉
+const LABEL_X = -18
 const FADE = 0.35
 const VEIN_SECTORS: Sector[] = ['semiconductor', 'finance', 'electronics']
 const VEIN_XS = [-12, 0, 12]
@@ -89,8 +90,9 @@ export function UndergroundStage({ show, cores, quality }: { show: Show; cores?:
         )}
 
       {show === 'dig' && (
-        <mesh position={[0, digY, 40]}>
-          <boxGeometry args={[40, 1.2, 2]} />
+        // 挖掘帶從地層名稱右邊開始（名稱貼在 x≈−18），不和「半導體」字塊疊在一起
+        <mesh position={[2.5, digY, 40]}>
+          <boxGeometry args={[35, 1.2, 2]} />
           <meshBasicMaterial color={ACCENT_COLORS.coin} transparent opacity={0.85} />
         </mesh>
       )}
@@ -112,9 +114,12 @@ export function UndergroundStage({ show, cores, quality }: { show: Show; cores?:
 
       {/* 地層名稱貼在地層正面：純說明，不畫引線 */}
       {layers.map((l) => (
-        <Callout key={l.sector} anchor={[LABEL_X, (l.top + l.bottom) / 2, FRONT_Z + 0.5]} offset={[0, 0, 0]} title={T.sectors[l.sector]} />
+        <Callout key={l.sector} anchor={[LABEL_X, (l.top + l.bottom) / 2, FRONT_Z + 0.5]} offset={[0, 0, 0]} title={T.sectors[l.sector]} compact />
       ))}
-      <Callout anchor={[-17, (vein.top + vein.bottom) / 2, FRONT_Z + 0.5]} offset={[0, 0, 0]} title={T.underground.goldVein} dim={veinDim} />
+      {/* 黃金礦脈只在介紹地層與黃金時標名；其他步驟它只是背景，少一個字塊 */}
+      {(show === 'strata' || show === 'gold') && (
+        <Callout anchor={[-17, (vein.top + vein.bottom) / 2, FRONT_Z + 0.5]} offset={[0, 0, 0]} title={T.underground.goldVein} dim={veinDim} compact />
+      )}
       {show === 'cores' &&
         coreData.map((c) => (
           <group key={c.id}>
@@ -124,7 +129,7 @@ export function UndergroundStage({ show, cores, quality }: { show: Show; cores?:
             )}
           </group>
         ))}
-      {show === 'cores' && <Callout anchor={[0, GROUND_TOP - 17, CORE_Z]} offset={[0, 0, 0]} title={T.underground.rodLegend} wrap persistent />}
+      {show === 'cores' && <Callout anchor={[0, GROUND_TOP - 19.5, CORE_Z]} offset={[0, 0, 0]} title={T.underground.rodLegend} wrap persistent />}
       {show === 'dig' && <Callout anchor={[0, digY, 40]} offset={[0, 1.4, 1]} title={T.underground.dig} marks={['illustrative']} persistent />}
       {show === 'veins' && <Callout anchor={[0, GROUND_TOP + 1.2, FRONT_Z + 1]} offset={[0, 0, 0]} title={T.underground.veins} marks={['illustrative']} persistent />}
     </group>
