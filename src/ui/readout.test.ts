@@ -9,15 +9,15 @@ describe('stageReadout', () => {
   it('shows the conservation equation for ex-dividend', () => {
     const rows = stageReadout({ kind: 'exdiv', outcome: 'fill' }, v({ phase: 0.5 }), universe, null)
     expect(rows.map((r) => r.value)).toEqual(['95.0', '5.0', '100.0'])
-    expect(rows[0]!.mark).toBe('illustrative')
+    expect(rows[0]!.marks).toEqual(['illustrative'])
   })
 
   it('lists the fee race rows, unverified parts and the leader', () => {
     const rows = stageReadout({ kind: 'feeRace' }, v({ years: 3, frontLoad: 0.015 }), universe, null)
     expect(rows[0]!.label).toContain('假設 1.50%')
-    expect(rows[0]!.mark).toBe('assumption')
-    expect(rows[1]!.mark).toBe('unverified')
-    expect(rows[2]!.mark).toBe('unverified') // 0050 的內扣費用也待驗證
+    expect(rows[0]!.marks).toEqual(['assumption', 'unverified']) // 前收：假設值，且內扣費用待驗證
+    expect(rows[1]!.marks).toEqual(['unverified'])
+    expect(rows[2]!.marks).toEqual(['unverified']) // 0050 的內扣費用也待驗證
     expect(rows[0]!.note).toBe('待驗證：內扣費用')
     expect(rows.at(-1)!.label).toBe('費用最少（只比費用）')
     expect(rows.at(-1)!.value).toBe('ETF（0050）')
@@ -46,7 +46,7 @@ describe('stageReadout', () => {
   it('shows accumulate and trap numbers', () => {
     const acc = stageReadout({ kind: 'accumulate' }, v({ periods: 10 }), universe, null)
     expect(acc[0]!.value).toBe('196.7')
-    expect(acc[0]!.mark).toBe('illustrative')
+    expect(acc[0]!.marks).toEqual(['illustrative'])
     const trap = stageReadout({ kind: 'principalTrap' }, v({ periods: 10 }), universe, null)
     expect(trap.map((r) => r.value)).toEqual(['73.7', '52.5', '26.3'])
   })

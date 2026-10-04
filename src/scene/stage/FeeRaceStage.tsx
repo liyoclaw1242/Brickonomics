@@ -1,6 +1,7 @@
 import { universe } from '../../data'
 import { useTour } from '../../store/tour'
 import { feeRace } from '../../sim/feeRace'
+import { feeRowMarks } from '../../ui/marks'
 import { T } from '../../ui/strings'
 import type { Quality } from '../quality'
 import { Callout } from '../Callout'
@@ -18,12 +19,12 @@ export function FeeRaceStage({ quality }: { quality: Quality }) {
     value: r.value,
     lost: r.lost,
     color: COLORS[r.id],
-    mark: r.id === 'front' ? 'assumption' : r.unverified.length > 0 ? 'unverified' : undefined,
+    marks: feeRowMarks(r.id, r.unverified.length),
   }))
   return (
     <>
       <TowerRow towers={towers} quality={quality} />
-      <Callout anchor={atPlaza(0, -0.2, 16)} offset={[0, 0, 0]} title={T.feeRaceCaveat} />
+      <Callout anchor={atPlaza(0, -0.2, 16)} offset={[0, 0, 0]} title={T.feeRaceCaveat} persistent />
     </>
   )
 }

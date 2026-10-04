@@ -124,9 +124,9 @@ export function UndergroundStage({ show, cores, quality }: { show: Show; cores?:
             )}
           </group>
         ))}
-      {show === 'cores' && <Callout anchor={[0, GROUND_TOP - 17, CORE_Z]} offset={[0, 0, 0]} title={T.underground.rodLegend} wrap />}
-      {show === 'dig' && <Callout anchor={[0, digY, 40]} offset={[0, 1.4, 1]} title={T.underground.dig} mark="illustrative" />}
-      {show === 'veins' && <Callout anchor={[0, GROUND_TOP + 1.2, FRONT_Z + 1]} offset={[0, 0, 0]} title={T.underground.veins} mark="illustrative" />}
+      {show === 'cores' && <Callout anchor={[0, GROUND_TOP - 17, CORE_Z]} offset={[0, 0, 0]} title={T.underground.rodLegend} wrap persistent />}
+      {show === 'dig' && <Callout anchor={[0, digY, 40]} offset={[0, 1.4, 1]} title={T.underground.dig} marks={['illustrative']} persistent />}
+      {show === 'veins' && <Callout anchor={[0, GROUND_TOP + 1.2, FRONT_Z + 1]} offset={[0, 0, 0]} title={T.underground.veins} marks={['illustrative']} persistent />}
     </group>
   )
 }

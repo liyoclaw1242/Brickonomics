@@ -31,7 +31,7 @@ export function ExDividendStage({ outcome }: { outcome: ExDivOutcome; quality?: 
         <CoinPile count={Math.round(st.cash)} position={[0, 0, 0]} />
       </group>
       {paying && <CoinDrip from={atPlaza(-4, edge, 0)} to={atPlaza(3, 0.3, 0)} rate={6} fallTime={0.8} size={COIN_SCALE} limit={Math.round(st.cash)} />}
-      <Callout anchor={atPlaza(-4, 0.1, edge / 2)} offset={[0, -0.3, 3 - edge / 2]} title={`${T.stage.exdiv.block} ${st.blockValue.toFixed(1)}`} mark="illustrative" />
+      <Callout anchor={atPlaza(-4, 0.1, edge / 2)} offset={[0, -0.3, 3 - edge / 2]} title={`${T.stage.exdiv.block} ${st.blockValue.toFixed(1)}`} marks={['illustrative']} persistent />
       <Callout anchor={atPlaza(3.5, 0.1, 1.5)} offset={[0, -0.3, 1.5]} title={`${T.stage.exdiv.coins} ${st.cash.toFixed(1)}`} />
     </>
   )

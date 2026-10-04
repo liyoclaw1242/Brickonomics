@@ -54,7 +54,8 @@ export function BondShowcase({ stressed, quality }: { stressed: boolean; quality
               anchor={atPlaza(s.x, 0.1, SIZE / 2)}
               offset={[0, -0.3, 1.4]}
               title={T.stage.bonds[s.key]}
-              mark={s.key !== 'stock' || stressed ? 'illustrative' : undefined}
+              marks={s.key !== 'stock' || stressed ? ['illustrative'] : undefined}
+              persistent={s.key !== 'stock' || stressed}
             />
           </group>
         )

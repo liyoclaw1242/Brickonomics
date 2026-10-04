@@ -44,7 +44,7 @@ export function TourPanel() {
               <tr key={r.label}>
                 <th scope="row">
                   {r.label}
-                  {r.mark && <MarkIcon kind={r.mark} />}
+                  {r.marks?.map((k) => <MarkIcon key={k} kind={k} />)}
                   {r.note && <small className="readout__note">{r.note}</small>}
                 </th>
                 <td>{r.value}</td>

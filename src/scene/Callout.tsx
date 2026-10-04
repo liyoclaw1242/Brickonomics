@@ -6,33 +6,49 @@ import type { Vec3 } from './camera'
 import { THEMES } from './theme'
 import { useAfterFirstTick } from './useAfterFirstTick'
 
-type Props = { anchor: Vec3; offset?: Vec3; title: string; sub?: string; mark?: Mark; dim?: boolean; wrap?: boolean }
+type Props = {
+  anchor: Vec3
+  offset?: Vec3
+  title: string
+  sub?: string
+  marks?: Mark[]
+  dim?: boolean
+  wrap?: boolean
+  /** 規則：「標註」開關只藏名稱與指引線；內容、提醒、圖例與標示圖示一律留著（persistent） */
+  persistent?: boolean
+}
 
-export function Callout({ anchor, offset = [0, 2, 0], title, sub, mark, dim = false, wrap = false }: Props) {
+export function Callout({ anchor, offset = [0, 2, 0], title, sub, marks, dim = false, wrap = false, persistent = false }: Props) {
   const ready = useAfterFirstTick()
-  const show = useThemeStore((s) => s.labels)
+  const labels = useThemeStore((s) => s.labels)
   const t = THEMES[useThemeStore((s) => s.theme)]
-  if (!show) return null
+  if (!labels && !persistent) return null
   const end: Vec3 = [anchor[0] + offset[0], anchor[1] + offset[1], anchor[2] + offset[2]]
   const leader = offset[0] !== 0 || offset[1] !== 0 || offset[2] !== 0
+  const opacity = dim ? 0.3 : 0.75
+  // 框往引線外側長：向左的引線框在左，向右在右，垂直或沒有引線就置中
+  const side = offset[0] < 0 ? 'callout--left' : offset[0] > 0 ? 'callout--right' : ''
+  // drei 的 Html 會把 inline transform 放在外層（center ? translate(-50%,-50%) : none），所以位移放在內層 div
   return (
     <group>
       {leader && (
         <>
-          <mesh position={anchor}>
+          <mesh position={anchor} renderOrder={11}>
             <sphereGeometry args={[0.12, 12, 12]} />
-            <meshBasicMaterial color={t.calloutLine} />
+            <meshBasicMaterial color={t.calloutLine} transparent opacity={opacity} depthTest={false} />
           </mesh>
-          <Line points={[anchor, end]} color={t.calloutLine} lineWidth={1} transparent opacity={dim ? 0.3 : 0.75} />
+          <Line points={[anchor, end]} color={t.calloutLine} lineWidth={1} transparent opacity={opacity} depthTest={false} renderOrder={10} />
         </>
       )}
       {ready && (
-        <Html position={end} center={!leader} className={`callout${dim ? ' callout--dim' : ''}${wrap ? ' callout--wrap' : ''}`}>
-          <span className="callout__title">
-            {title}
-            {mark && <MarkIcon kind={mark} />}
-          </span>
-          {sub && <span className="callout__sub">{sub}</span>}
+        <Html position={end} center={!side}>
+          <div className={`callout${side ? ` ${side}` : ''}${dim ? ' callout--dim' : ''}${wrap ? ' callout--wrap' : ''}`}>
+            <span className="callout__title">
+              {title}
+              {marks?.map((k) => <MarkIcon key={k} kind={k} />)}
+            </span>
+            {sub && <span className="callout__sub">{sub}</span>}
+          </div>
         </Html>
       )}
     </group>

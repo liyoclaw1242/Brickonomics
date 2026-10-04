@@ -8,7 +8,7 @@ import type { Quality } from '../quality'
 import { atPlaza } from './plaza'
 import { VoxelColumn } from './VoxelColumn'
 
-export type TowerSpec = { key: string; label: string; value: number; lost?: number; coins?: number; color: string; mark?: Mark }
+export type TowerSpec = { key: string; label: string; value: number; lost?: number; coins?: number; color: string; marks?: Mark[] }
 
 const SPACING = 12
 const looks = new Map<string, BlockLook>()
@@ -25,7 +25,7 @@ export function TowerRow({ towers, quality }: { towers: TowerSpec[]; quality: Qu
   const start = -((towers.length - 1) * SPACING) / 2
   return (
     <>
-      <Callout anchor={atPlaza(0, -0.2, 14)} offset={[0, 0, 0]} title={T.towers.base} />
+      <Callout anchor={atPlaza(0, -0.2, 14)} offset={[0, 0, 0]} title={T.towers.base} persistent />
       {towers.map((t, i) => {
         const x = start + i * SPACING
         return (
@@ -34,16 +34,16 @@ export function TowerRow({ towers, quality }: { towers: TowerSpec[]; quality: Qu
             {t.lost !== undefined && blocksFor(t.lost) > 0 && (
               <>
                 <VoxelColumn count={blocksFor(t.lost)} look={LOST} position={atPlaza(x + 3, 0, 5.5)} w={3} d={3} quality={quality} />
-                <Callout anchor={atPlaza(x + 3, 0.1, 7)} offset={[0, -0.3, 0.2]} title={T.towers.lost} />
+                <Callout anchor={atPlaza(x + 3, -0.2, 7.2)} offset={[0, 0, 0]} title={T.towers.lost} />
               </>
             )}
             {t.coins !== undefined && (
               <>
                 <CoinPile count={blocksFor(t.coins)} position={atPlaza(x - 3, 0, 5.5)} />
-                {blocksFor(t.coins) > 0 && <Callout anchor={atPlaza(x - 3, 0.1, 7)} offset={[0, -0.3, 0.2]} title={T.towers.coins} />}
+                {blocksFor(t.coins) > 0 && <Callout anchor={atPlaza(x - 3, -0.2, 7.2)} offset={[0, 0, 0]} title={T.towers.coins} />}
               </>
             )}
-            <Callout anchor={atPlaza(x, 0.1, 3)} offset={[0, -0.3, 8]} title={`${t.label}：${T.towers.value(t.value)}`} mark={t.mark} />
+            <Callout anchor={atPlaza(x, 0.1, 3)} offset={[0, -0.3, 8]} title={`${t.label}：${T.towers.value(t.value)}`} marks={t.marks} persistent={!!t.marks?.length} />
           </group>
         )
       })}
