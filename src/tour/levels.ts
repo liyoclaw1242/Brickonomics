@@ -334,7 +334,7 @@ export const LEVELS: Level[] = [
       {
         id: 'e-5',
         title: '內扣費用低',
-        line: `${NICK.QQQ}。**內扣費用**很低`,
+        line: `${NICK.QQQ}。**內扣費用**低`,
         more: 'QQQ 照美國科技 100 大的藍圖自動挑。SPY 照美國 500 大的藍圖。目前快照裡，它們的內扣費用比本課的基金低。費用低不代表比較好，策略也不同。',
         bigNumber: (c) => expenseNumber(c, 'QQQ', '每年內扣費用'),
         scene: { camera: 'exchange', product: 'QQQ', cityLabels: false },
