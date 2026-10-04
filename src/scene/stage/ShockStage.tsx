@@ -8,19 +8,19 @@ import { displayName } from '../../ui/names'
 import { T } from '../../ui/strings'
 import { Basket } from '../Basket'
 import { Callout } from '../Callout'
-import { CLOUD, CLOUD_LABEL_ANCHOR, SHOCK_DAMAGE, SHOCK_SUBJECTS, STOCK_BLOCKS, STOCK_W, STRIKE_END, isStruck, stockBlocksAfter } from '../layout/lightning'
+import { CLOUD, CLOUD_LABEL_ANCHOR, SHOCK_DAMAGE, SHOCK_SUBJECTS, STOCK_BLOCKS, STOCK_W, STRIKE_END, isStruck, stockBlocksAfter } from '../events/lightning'
 import { lookFor } from '../palette'
 import type { Quality } from '../quality'
 import { prefersReducedMotion, useRevealAfterCamera } from '../useRevealAfterCamera'
 import { useContinuousRender } from '../useContinuousRender'
-import { Lightning } from './Lightning'
+import { Lightning } from '../events/Lightning'
 import { atPlaza } from './plaza'
-import { StormCloud } from './StormCloud'
+import { StormCloud } from '../events/StormCloud'
 import { VoxelColumn } from './VoxelColumn'
 
 /**
  * 假設台積電下跌 30%：只買台積電、0050、SPY 並排比較，上面一片烏雲（c-1 還沒打）。
- * active（c-2）：鏡頭停下後一道閃電打下來（layout/lightning.ts），只分岔到台積電——只買台積電那柱、0050 裡的台積電層；
+ * active（c-2）：鏡頭停下後一道閃電打下來（events/lightning.ts），只分岔到台積電——只買台積電那柱、0050 裡的台積電層；
  * SPY 沒有台積電，沒被打到。打中那一刻才出現損傷（柱子變矮、0050 的紅色方塊）和跌幅標籤；終點與原本靜態的 active 畫面一樣。
  * 閃電只打一次：動畫結束後停止持續繪製，烏雲靜止。prefers-reduced-motion：直接顯示終點與一道靜止的閃電。
  */

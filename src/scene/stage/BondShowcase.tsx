@@ -12,11 +12,11 @@ import { Callout } from '../Callout'
 import { BlockMaterial } from '../materials'
 import { ACCENT_COLORS, lookFor } from '../palette'
 import type { Quality } from '../quality'
-import { BOND_SLOT_X, CRACK_GAP, CRACK_TILT, STOCK_STRESSED_SCALE, isHit, slotState, type BondKey } from '../layout/storm'
+import { BOND_SLOT_X, CRACK_GAP, CRACK_TILT, STOCK_STRESSED_SCALE, isHit, slotState, type BondKey } from '../events/tornado'
 import { prefersReducedMotion, useRevealAfterCamera } from '../useRevealAfterCamera'
 import { useContinuousRender } from '../useContinuousRender'
 import { atPlaza, bondSub } from './plaza'
-import { Tornado } from './Tornado'
+import { Tornado } from '../events/Tornado'
 
 const SIZE = 2.4
 /** 金幣放大（r2：遠景下 1 倍的金幣小到像一條線） */
@@ -85,7 +85,7 @@ function CrackedBond({ x, refs }: { x: number; refs: Refs }) {
 /**
  * 股票方塊 vs 三種借據：材質表示信用品質，金幣快慢表示利息（示意）。
  * 每張借據的標籤下面一行（bondSub）：平常寫「借給誰」；ranks（b-2）改寫「穩不穩、利息多少」（三顆長得很像，要用字分出來）。
- * stressed：經濟風暴（b-3）。鏡頭停下後一陣龍捲風從左掃到右（layout/storm.ts）：
+ * stressed：經濟風暴（b-3）。鏡頭停下後一陣龍捲風從左掃到右（events/tornado.ts）：
  * 掃到股票→縮水變紅；國家債、公司債晃一下就站穩；掃到高收益債→裂成兩半、變紅、停付利息。最後龍捲風停在右後方原地轉。
  * 終點與原本靜態的 stressed 畫面一模一樣；prefers-reduced-motion 直接顯示終點與靜止的龍捲風。
  */

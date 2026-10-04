@@ -12,7 +12,7 @@ import {
   stormPos,
   timeAtX,
   type BondKey,
-} from './storm'
+} from './tornado'
 
 const KEYS: BondKey[] = ['stock', 'gov', 'corp', 'hy']
 

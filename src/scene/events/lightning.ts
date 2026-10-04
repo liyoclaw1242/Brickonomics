@@ -4,9 +4,9 @@ import { SHOCK_2330 } from '../../tour/context'
 import type { Stage } from '../../tour/types'
 import type { Vec3 } from '../camera'
 import { QUALITY, type Quality } from '../quality'
-import { basketVoxels } from './basket'
-import { damageFromShocks } from './stages'
-import { damagedVoxels, voxelPosition } from './voxels'
+import { basketVoxels } from '../layout/basket'
+import { damageFromShocks } from '../layout/stages'
+import { damagedVoxels, voxelPosition } from '../layout/voxels'
 
 /**
  * c-1／c-2「假設台積電跌 30%」的閃電（純 TS）：烏雲位置、閃電的路徑（只分岔到有台積電的地方）、時間。

@@ -13,10 +13,10 @@ import {
   strikeTarget,
   SHOCK_SUBJECTS,
   visibleSegments,
-} from '../layout/lightning'
+} from './lightning'
 import type { Quality } from '../quality'
 import { THEMES } from '../theme'
-import { atPlaza } from './plaza'
+import { atPlaza } from '../stage/plaza'
 
 const CORE = 0.07
 const CORE_PER_WIDTH = 0.16
