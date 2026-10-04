@@ -36,7 +36,7 @@ export const T = {
     action: (current: string, to: string) => `簡單版／完整版：目前${current}，切換到${to}`,
   },
   chapterCounter: (i: number, n: number) => `${String(i).padStart(2, '0')} / ${String(n - 1).padStart(2, '0')}`,
-  shock: { stock: '只買台積電', withLegend: (name: string) => `${name}・紅色＝假設跌掉的部分` },
+  shock: { stock: '只買台積電', withLegend: (name: string) => `${name}・紅色＝假設跌掉的部分`, struck: '假設：台積電被打中' },
   overlapLabel: (name: string) => `${name}：兩盒都有`,
   heightNote: '大樓高度為市值的對數比例；籃子裡的方塊數量嚴格依照權重。',
   islands: { TW: '台灣島', US: '美國大陸' },
