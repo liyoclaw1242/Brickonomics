@@ -32,6 +32,7 @@ export const T = {
   replayTour: '重看導覽',
   tryIt: '先試著操作上面的控制項',
   progressLabel: '課程進度',
+  more: '多說一點',
   marks: {
     illustrative: { icon: '≈', label: '示意：為了說明而設計，不是真實數字' },
     assumption: { icon: '✎', label: '假設值：可以自己調整' },
@@ -53,7 +54,7 @@ export const T = {
     rateNote: '利息快慢為示意',
     exdiv: { block: '方塊', coins: '金幣' },
   },
-  towers: { lost: '被費用吃掉', coins: '領到的金幣', base: '以投入 100 元、假設報酬為 0 計（只比費用）', value: (v: number) => `${v.toFixed(1)} 元` },
+  towers: { lost: '費用扣掉的', coins: '領到的金幣', base: '以投入 100 元、假設報酬為 0 計（只比費用）', value: (v: number) => `${v.toFixed(1)} 元` },
   feeRaceCaveat: '三者投資內容與風險不同，費用低不代表比較好',
   feeRows: {
     front: (fl: number) => `前收型（假設 ${(fl * 100).toFixed(2)}%）`,

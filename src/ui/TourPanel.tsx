@@ -3,7 +3,7 @@ import { universe } from '../data'
 import { effectiveExplode, useSandbox } from '../store/sandbox'
 import { currentStep, useTour } from '../store/tour'
 import { makeTextContext } from '../tour/context'
-import { isSatisfied, nextPosition, progressFraction, textOf } from '../tour/engine'
+import { isSatisfied, moreOf, nextPosition, progressFraction } from '../tour/engine'
 import { LEVELS } from '../tour/levels'
 import { stageReadout } from './readout'
 import { StageControls } from './StageControls'
@@ -22,7 +22,7 @@ export function TourPanel() {
   const productId = useSandbox((s) => s.productId)
   const step = currentStep({ pos })
   const level = LEVELS[pos.level]!
-  const text = useMemo(() => textOf(step, ctx), [step])
+  const text = useMemo(() => moreOf(step, ctx), [step])
   const ok = isSatisfied(step.until, { ...values, slice, explode })
   const rows = stageReadout(step.scene.stage ?? { kind: 'none' }, { ...values, slice, explode }, universe, productId)
   const isLast = nextPosition(LEVELS, pos) === null

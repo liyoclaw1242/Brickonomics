@@ -16,6 +16,9 @@ export const SECTOR_COLORS: Record<string, string> = {
 
 const FALLBACK_STOCK = '#90a4ae'
 
+/** 金幣色與損失紅：課文顏色鍵 coin／loss 與 3D 物體共用同一個顏色 */
+export const ACCENT_COLORS = { coin: '#ffd54f', loss: '#e53935' } as const
+
 /** 股票依產業上色；債券用材質表示信用品質（國家債鑽石、公司債金屬、高收益債玻璃）。 */
 export function lookFor(asset: Asset): BlockLook {
   switch (asset.type) {
@@ -69,4 +72,12 @@ export function productLooks(u: Universe, productId: string): BlockLook[] {
       return a
     }),
   )
+}
+
+/** 課文顏色鍵 → 顏色：coin／loss、產業 id（SECTOR_COLORS）、或持股／資產 id（lookFor）。未知鍵回傳 undefined。 */
+export function colorForKey(u: Universe, key: string): string | undefined {
+  if (key === 'coin' || key === 'loss') return ACCENT_COLORS[key]
+  if (Object.hasOwn(SECTOR_COLORS, key)) return SECTOR_COLORS[key]
+  const asset = u.get(key)
+  return asset ? lookFor(asset).color : undefined
 }

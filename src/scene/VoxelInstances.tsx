@@ -1,7 +1,7 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import { Color, type InstancedMesh, Object3D } from 'three'
-import type { BlockLook, MaterialKind } from './palette'
+import { ACCENT_COLORS, type BlockLook, type MaterialKind } from './palette'
 import { BlockMaterial } from './materials'
 import type { Quality } from './quality'
 import { useLongPress } from './useLongPress'
@@ -31,7 +31,7 @@ type Props = {
 /** 導覽模式等鏡頭停穩才開始漸變；超過這個秒數就不等 */
 const SETTLE_TIMEOUT_SEC = 1.5
 const NO_FOCUS: number[] = []
-const DAMAGE_COLOR = new Color('#e53935')
+const DAMAGE_COLOR = new Color(ACCENT_COLORS.loss)
 const DAMAGE_MIX = 0.9
 
 /** 依材質分組：一種材質一個 InstancedMesh */

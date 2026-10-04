@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { universe } from '../data'
 import type { Asset } from '../data/schema'
-import { lookFor, basketLooks, productLooks, SECTOR_COLORS } from './palette'
+import { lookFor, basketLooks, productLooks, SECTOR_COLORS, ACCENT_COLORS, colorForKey } from './palette'
 
 const a = (id: string, type: Asset['type'], sector?: string): Asset => ({ id, name: id, type, sector, asOf: '2026-10-03', source: [] })
 
@@ -48,5 +48,26 @@ describe('productLooks', () => {
 
   it('throws for non-baskets', () => {
     expect(() => productLooks(universe, '2330')).toThrow('not a basket: 2330')
+  })
+})
+
+describe('colorForKey', () => {
+  it('maps coin and loss to the accent colours', () => {
+    expect(colorForKey(universe, 'coin')).toBe(ACCENT_COLORS.coin)
+    expect(colorForKey(universe, 'loss')).toBe(ACCENT_COLORS.loss)
+  })
+
+  it('maps sector ids to their sector colour', () => {
+    expect(colorForKey(universe, 'semiconductor')).toBe(SECTOR_COLORS.semiconductor)
+  })
+
+  it('maps holding and asset ids to their block colour', () => {
+    expect(colorForKey(universe, '2330')).toBe(lookFor(universe.get('2330')!).color)
+    expect(colorForKey(universe, 'CONVERTIBLE_US')).toBe(lookFor(universe.get('CONVERTIBLE_US')!).color)
+  })
+
+  it('returns undefined for unknown keys', () => {
+    expect(colorForKey(universe, 'nope')).toBeUndefined()
+    expect(colorForKey(universe, 'toString')).toBeUndefined()
   })
 })

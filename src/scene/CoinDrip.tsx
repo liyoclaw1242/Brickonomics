@@ -3,12 +3,13 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { type InstancedMesh, Object3D } from 'three'
 import type { Vec3 } from './camera'
 import { useContinuousRender } from './useContinuousRender'
+import { ACCENT_COLORS } from './palette'
 import { COIN_HEIGHT, COIN_RADIUS, coinPositions } from './layout/coins'
 
 type Props = { from: Vec3; to: Vec3; rate: number; fallTime?: number; arc?: number; active?: boolean; size?: number; limit?: number }
 
 export function CoinMaterial() {
-  return <meshStandardMaterial color="#ffd54f" metalness={0.5} roughness={0.3} emissive="#7a5a00" emissiveIntensity={0.25} />
+  return <meshStandardMaterial color={ACCENT_COLORS.coin} metalness={0.5} roughness={0.3} emissive="#7a5a00" emissiveIntensity={0.25} />
 }
 
 /** 從 from 持續拋出金幣到 to（股利、利息、配息） */
