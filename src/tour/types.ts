@@ -102,6 +102,8 @@ export type Step = {
   /** 文字版（沒有 3D）專用的多說一點；未填則沿用 more */
   fallbackMore?: LessonText
   mark?: 'illustrative' | 'assumption'
+  /** 這一步顯示的比例、百分比是從這些產品的持股算出來的；其中有沒查證的，stepMarks 就加 ？ */
+  holdingsFrom?: string[]
   /** 回傳 undefined 時不顯示大數字（例如資料沒有內扣費用）；values＝導覽目前的拉桿值（跟著拉桿即時變） */
   bigNumber?: (c: TextContext, values: Readonly<StageValues>) => BigNumber | undefined
   focus?: { holdings?: string[] }
@@ -117,4 +119,4 @@ export type Step = {
 
 export type Level = { id: string; title: string; steps: Step[] }
 export type Position = { level: number; step: number }
-export type Progress = { completed: string[]; sandboxUnlocked: boolean; pos?: Position }
+export type Progress = { completed: string[]; sandboxUnlocked: boolean; pos?: Position; /** 存檔時所在步驟的 id：課程改版後用它找回位置（比 pos 可靠） */ stepId?: string }

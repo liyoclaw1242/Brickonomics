@@ -67,7 +67,7 @@ export const T = {
     illustrative: { icon: '≈', word: '舉例', label: '舉例：為了說明而設計（示意），不是真實數字' },
     assumption: { icon: '✎', word: '假設的數字', label: '假設的數字：不是查到的資料，是拿來算給你看的' },
     /** r3：「還沒查證」讓他不信任整堂課；記號照樣標（誠實），用詞改成資料在等更新，放在一句話後面 */
-    unverified: { icon: '？', word: '資料待更新', label: '資料待更新：這個數字來自公開資料，還在等最新一期核對' },
+    unverified: { icon: '？', word: '資料待更新', label: '資料待更新：這個數字還沒有和官方最新資料核對過' },
   },
   controls: {
     years: '持有年數',

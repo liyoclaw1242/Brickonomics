@@ -27,7 +27,9 @@ export function stepMarks(step: Step, u: Universe): Mark[] {
     const p = u.get(step.scene.product)
     if (p?.fees?.expenseRatio !== undefined && !isVerified(p, 'fees.expenseRatio')) out.push('unverified')
   }
-  return out
+  // 這一步顯示的比例來自持股資料，持股沒查證就加 ？
+  if (step.holdingsFrom?.some((id) => { const a = u.get(id); return !a || !isVerified(a, 'holdings') })) out.push('unverified')
+  return [...new Set(out)]
 }
 
 /**

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { Level } from './types'
+import { LEVELS as REAL } from './levels'
 import {
   DEFAULT_VALUES, stepAt, isValidPosition, nextPosition, prevPosition, positionOf, progressFraction,
   isSatisfied, sandboxPatchFor, lineOf, moreOf, titleOf, parseProgress, serializeProgress, parseTourQuery, controlRange, resumePosition,
@@ -140,6 +141,29 @@ describe('resumePosition (saved progress after the lesson changed)', () => {
   })
   it('a step that no longer exists falls back to the last step of the same chapter', () => {
     expect(resumePosition(L, { level: 0, step: 5 })).toEqual({ level: 0, step: L[0]!.steps.length - 1 })
+  })
+  it('finds the saved step by id even when its index moved', () => {
+    const last = L[L.length - 1]!
+    const lastStep = last.steps[last.steps.length - 1]!
+    expect(resumePosition(L, { level: 0, step: 0 }, lastStep.id)).toEqual({ level: L.length - 1, step: last.steps.length - 1 })
+  })
+  it('an unknown or invalid saved id falls back to the saved position, then to the start', () => {
+    expect(resumePosition(L, { level: 1, step: 0 }, 'nope')).toEqual({ level: 1, step: 0 })
+    expect(resumePosition(L, { level: 99, step: 0 }, 'nope')).toEqual({ level: 0, step: 0 })
+    expect(resumePosition(L, undefined, 'nope')).toEqual({ level: 0, step: 0 })
+  })
+  it('migrates an old save (no id) in the fund chapter, where f-6 and f-7 merged into one step', () => {
+    const fund = REAL.findIndex((l) => l.id === 'fund')
+    const at = (step: number) => REAL[fund]!.steps[resumePosition(REAL, { level: fund, step }).step]!.id
+    expect(at(4)).toBe('f-5')
+    expect(at(5)).toBe('f-6')
+    expect(at(6)).toBe('f-6') // 舊 f-7
+    expect(at(7)).toBe('f-8') // 舊 f-8
+    expect(at(8)).toBe('f-9') // 舊 f-9
+  })
+  it('parseProgress keeps a string stepId and ignores a non-string one', () => {
+    expect(parseProgress('{"completed":[],"sandboxUnlocked":false,"stepId":"f-8"}').stepId).toBe('f-8')
+    expect(parseProgress('{"completed":[],"sandboxUnlocked":false,"stepId":5}').stepId).toBeUndefined()
   })
   it('a chapter that no longer exists, or no saved position, starts from the beginning', () => {
     expect(resumePosition(L, { level: 9, step: 0 })).toEqual({ level: 0, step: 0 })

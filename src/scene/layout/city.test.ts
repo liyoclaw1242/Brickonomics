@@ -1,6 +1,8 @@
+import { LEVELS } from '../../tour/levels'
+import { displayName } from '../../ui/names'
 import { describe, it, expect } from 'vitest'
 import { universe } from '../../data'
-import { applyShrink, buildingHeight, cityLayout, islandSize, buildingVoxels, ISLAND_CENTERS, HEIGHT, labeledBuildings, declutterLabels, labelWidth, CITY_LABELS_PER_ISLAND } from './city'
+import { applyShrink, buildingHeight, cityLayout, islandSize, buildingVoxels, ISLAND_CENTERS, HEIGHT, labeledBuildings, declutterLabels, labelWidth, CITY_LABELS_PER_ISLAND, mentionedBuildings } from './city'
 
 describe('buildingHeight', () => {
   it('is logarithmic in market cap (USD billions)', () => {
@@ -134,6 +136,22 @@ describe('city names at most 3 per island and never on top of each other (r3: �
   it('treats step callouts as obstacles and always keeps forced (picked) labels', () => {
     const kept = declutterLabels([box('a', 100, 100), box('p', 300, 100)], [box('callout', 100, 95, 160, 50), box('callout2', 300, 100, 160, 50)], new Set(['p']))
     expect(kept).toEqual(['p'])
+  })
+
+  it('places a mentioned building before taller ones, but still not on top of a kept label (user test: p-3 hid 蘋果)', () => {
+    const cands = [box('tall', 100, 100), box('apple', 110, 105), box('far', 300, 100)]
+    expect(declutterLabels(cands, [], new Set(), 3, new Set(['apple']))).toEqual(['apple', 'far'])
+    // 疊到步驟標註就不標
+    expect(declutterLabels(cands, [box('callout', 110, 105, 160, 50)], new Set(), 3, new Set(['apple']))).toEqual(['far'])
+  })
+
+  it('finds the buildings named in a step line or callouts, even beyond the per-island limit', () => {
+    const placements = cityLayout([...universe.values()])
+    const p3 = LEVELS.flatMap((l) => l.steps).find((st) => st.id === 'p-3')!
+    const ids = mentionedBuildings(placements, [p3.line as string], (id) => displayName(universe, id))
+    expect([...ids].sort()).toEqual(expect.arrayContaining(['AAPL', 'MSFT', 'NVDA']))
+    const named = labeledBuildings(placements, CITY_LABELS_PER_ISLAND, ids)
+    for (const id of ids) expect(named.has(id), id).toBe(true)
   })
 
   it('drops labels whose anchor is behind the camera', () => {

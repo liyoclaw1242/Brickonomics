@@ -22,15 +22,26 @@ export function isValidPosition(levels: readonly Level[], pos: Position): boolea
 }
 
 /**
- * 存檔的位置在課程改版後可能不存在了（例如 r2 把三個金幣步驟併成兩個）：
- * 同一章還在就停在該章最後一步，整章不見或沒有存檔就從頭開始。
+ * 存檔的位置在課程改版後可能不對了。優先用存的步驟 id 找回；
+ * 舊存檔沒有 id 時，基金章在 r3 把 f-6、f-7 併成一步，所以舊的第 7 步起要往前一步；
+ * 位置還是不存在就停在同一章最後一步，整章不見或沒有存檔就從頭開始。
  */
-export function resumePosition(levels: readonly Level[], pos: Position | undefined): Position {
+export function resumePosition(levels: readonly Level[], pos: Position | undefined, stepId?: string): Position {
+  if (stepId !== undefined) {
+    for (let level = 0; level < levels.length; level++) {
+      const step = levels[level]!.steps.findIndex((s) => s.id === stepId)
+      if (step >= 0) return { level, step }
+    }
+  }
+  if (pos && stepId === undefined && levels[pos.level]?.id === 'fund' && pos.step >= LEGACY_FUND_MERGED_AT) pos = { level: pos.level, step: pos.step - 1 }
   if (pos && isValidPosition(levels, pos)) return pos
   const level = pos && Number.isInteger(pos.level) ? levels[pos.level] : undefined
   if (pos && level && level.steps.length > 0) return { level: pos.level, step: level.steps.length - 1 }
   return { level: 0, step: 0 }
 }
+
+/** 舊基金章第 7 步（索引 6，f-7）起，f-6、f-7 併成一步後都往前一步 */
+const LEGACY_FUND_MERGED_AT = 6
 
 export function stepAt(levels: readonly Level[], pos: Position): Step {
   const s = levels[pos.level]?.steps[pos.step]
@@ -111,6 +122,7 @@ export function parseProgress(raw: string | null): Progress {
         p.pos = { level: posRec.level, step: posRec.step }
       }
     }
+    if (typeof rec.stepId === 'string') p.stepId = rec.stepId
     return p
   } catch {
     return { ...EMPTY_PROGRESS }

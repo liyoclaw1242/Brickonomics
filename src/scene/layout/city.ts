@@ -104,12 +104,20 @@ const overlaps = (a: LabelBox, b: LabelBox, pad: number) =>
 
 /**
  * 依優先順序放名稱：跟已放的名稱或步驟標註（obstacles）疊到就不放。
- * forced（選到的大樓）一定放；回傳要顯示的 id（依原順序）。
+ * forced（選到的大樓）一定放；priority（這一步提到名字的大樓）優先放，但不疊才放；回傳要顯示的 id（依原順序）。
  */
-export function declutterLabels(candidates: readonly LabelBox[], obstacles: readonly LabelBox[] = [], forced: ReadonlySet<string> = new Set(), pad = 3): string[] {
+export function declutterLabels(
+  candidates: readonly LabelBox[],
+  obstacles: readonly LabelBox[] = [],
+  forced: ReadonlySet<string> = new Set(),
+  pad = 3,
+  priority: ReadonlySet<string> = new Set(),
+): string[] {
   const placed: LabelBox[] = candidates.filter((c) => forced.has(c.id) && !c.behind)
   const blockers = [...obstacles.filter((o) => !o.behind), ...placed]
-  for (const c of candidates) {
+  // 這一步的一句話或標註提到的大樓先放（還是不能疊到別人）；其餘照原順序
+  const ordered = [...candidates.filter((c) => priority.has(c.id)), ...candidates.filter((c) => !priority.has(c.id))]
+  for (const c of ordered) {
     if (c.behind || forced.has(c.id)) continue
     if (blockers.some((b) => overlaps(c, b, pad))) continue
     placed.push(c)
@@ -117,4 +125,10 @@ export function declutterLabels(candidates: readonly LabelBox[], obstacles: read
   }
   const keep = new Set(placed.map((p) => p.id))
   return candidates.filter((c) => keep.has(c.id)).map((c) => c.id)
+}
+
+/** 這一步的文字（一句話、標註）提到名字的大樓 id：它們一定要有名稱標籤（不受每島三棟限制，疊到才不標） */
+export function mentionedBuildings(placements: readonly Placement[], texts: readonly string[], nameOf: (id: string) => string): Set<string> {
+  const all = texts.join('\n').replace(/\*\*|\|\w+/g, '')
+  return new Set(placements.filter((p) => all.includes(nameOf(p.id))).map((p) => p.id))
 }

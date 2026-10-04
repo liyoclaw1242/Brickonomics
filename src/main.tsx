@@ -37,7 +37,7 @@ if (webgl) {
     useTour.setState({ mode: 'sandbox' })
     useSandbox.setState(parseSandboxQuery(window.location.search, baskets))
   } else {
-    useTour.getState().enterStep(tq.pos ?? resumePosition(LEVELS, progress.pos))
+    useTour.getState().enterStep(tq.pos ?? resumePosition(LEVELS, progress.pos, progress.stepId))
   }
   if (import.meta.env.DEV) {
     ;(window as unknown as { __BCI_STEPS__: number[] }).__BCI_STEPS__ = LEVELS.map((l) => l.steps.length)

@@ -156,6 +156,40 @@ describe('LEVELS', () => {
     }
   })
 
+  it('marks ？ on every step whose numbers come from unverified holdings (user test: f-2 had no mark)', () => {
+    const used = (s: Step): Set<string> => {
+      const seen = new Set<string>()
+      const rec = new Proxy(ctx, {
+        get: (t, k: keyof typeof ctx) => {
+          const f = t[k] as (...a: never[]) => unknown
+          return (...a: never[]) => {
+            if (k === 'weightPct' || k === 'assetClassPct' || k === 'sectorPct') seen.add(String(a[0]))
+            if (k === 'overlapShared') { seen.add(String(a[0])); seen.add(String(a[1])) }
+            return f(...a)
+          }
+        },
+      })
+      const values = { ...DEFAULT_VALUES, ...s.scene.values }
+      const texts = [s.line, s.more, s.fallbackLine, s.fallbackMore, ...(s.callouts ?? []).flatMap((c) => [c.title, c.sub])]
+      for (const t of texts) if (typeof t === 'function') t(rec)
+      s.bigNumber?.(rec, values)
+      return seen
+    }
+    let checked = 0
+    for (const s of steps) {
+      for (const id of used(s)) {
+        const a = universe.get(id)
+        if (a && !isVerified(a, 'holdings')) {
+          checked++
+          expect(stepMarks(s, universe), `${s.id}: shows numbers from ${id} holdings, which are unverified`).toContain('unverified')
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(0)
+    expect(stepMarks(byId('f-2'), universe)).toContain('unverified')
+    expect(stepMarks(byId('f-4'), universe)).toContain('unverified')
+  })
+
   it('exposes the assumed front-load fee only on steps marked ✎', () => {
     for (const s of steps) if (s.controls?.includes('frontLoad')) expect(s.mark, s.id).toBe('assumption')
   })

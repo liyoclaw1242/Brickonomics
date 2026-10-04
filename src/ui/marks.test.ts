@@ -11,7 +11,7 @@ describe('mark words (user test r2: 示意／假設／待查 were not understood
     expect(T.marks.assumption.word).toBe('假設的數字')
     expect(T.marks.unverified.word).toBe('資料待更新') // r3：「你自己都沒查證，那是在教我什麼？」
     expect(T.marks.unverified.icon).toBe('？')
-    expect(T.marks.unverified.label).toBe('資料待更新：這個數字來自公開資料，還在等最新一期核對')
+    expect(T.marks.unverified.label).toBe('資料待更新：這個數字還沒有和官方最新資料核對過')
   })
 
   it('each tooltip starts with the word it explains', () => {
