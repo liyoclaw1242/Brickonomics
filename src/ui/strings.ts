@@ -83,7 +83,7 @@ export const T = {
     bondRanks: { gov: '最穩・利息少', corp: '中間', hy: '不穩・利息多' },
     bondHurt: (name: string) => `${name}：出問題了`,
     rateNote: '利息快慢為示意',
-    exdiv: { block: '方塊', coins: '金幣', lost: (v: number) => `沒長回來 ${v}` },
+    exdiv: { block: '方塊', coins: '金幣', lost: (v: number) => `少了 ${v}` },
   },
   /** 基金那一章的錢：投入 100＝100 萬（和計費表同一個底），一位小數、去掉「.0」 */
   wan,

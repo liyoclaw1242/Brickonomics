@@ -4,12 +4,11 @@ import { Edges } from '@react-three/drei'
 import type { Mesh } from 'three'
 import { universe } from '../../data'
 import { useTour } from '../../store/tour'
-import { T } from '../../ui/strings'
 import { acquire } from '../continuous'
 import { CoinDrip } from '../CoinDrip'
 import { CoinPile } from '../CoinPile'
 import { Callout } from '../Callout'
-import { EXDIV, exDivBands, exDivTimeline, type Band, type ExDivOutcome } from '../layout/stages'
+import { EXDIV, exDivBands, exDivLabels, exDivTimeline, type Band, type ExDivOutcome } from '../layout/stages'
 import { approach, MAX_FRAME_DT } from '../layout/voxels'
 import { ACCENT_COLORS, lookFor } from '../palette'
 import type { Quality } from '../quality'
@@ -91,9 +90,9 @@ export function ExDividendStage({ outcome }: { outcome: ExDivOutcome; quality?: 
     }
   })
   const bands = exDivBands(st.blockValue, st.cash)
+  const text = exDivLabels(outcome, phase)
   // 一次性：越過配發點就掉出 round(cash) 枚金幣，掉完就停；往回拉到配發前再越過才會重播
   const paying = phase >= 0.5
-  const lost = bands.red ? bands.red[1] - bands.red[0] : 0
   return (
     <>
       <mesh ref={block} castShadow>
@@ -106,15 +105,15 @@ export function ExDividendStage({ outcome }: { outcome: ExDivOutcome; quality?: 
         <CoinPile count={Math.round(st.cash)} position={[0, 0, 0]} />
       </group>
       {paying && <CoinDrip from={atPlaza(BLOCK_X, hOf(EXDIV.price), 0)} to={atPlaza(COIN_X, 0.3, 0)} rate={6} fallTime={0.8} size={COIN_SCALE} limit={Math.round(st.cash)} />}
-      <Callout anchor={atPlaza(BLOCK_X, 0.1, FOOT / 2)} offset={[0, -0.3, 1.5]} title={`${T.stage.exdiv.block} ${st.blockValue.toFixed(0)}`} persistent />
-      <Callout anchor={atPlaza(COIN_X, 0.1, 1.5)} offset={[0, -0.3, 1.5]} title={`${T.stage.exdiv.coins} ${st.cash.toFixed(0)}`} color={GOLD} persistent />
-      {/* 紅色那一段寫明是什麼：沒長回來、真的少掉的部分 */}
-      {lost > 0.5 && (
+      <Callout anchor={atPlaza(BLOCK_X, 0.1, FOOT / 2)} offset={[0, -0.3, 1.5]} title={text.block} persistent />
+      <Callout anchor={atPlaza(COIN_X, 0.1, 1.5)} offset={[0, -0.3, 1.5]} title={text.coins} color={GOLD} persistent />
+      {/* 紅色那一段寫明是什麼：真的少掉的部分（s-6 畫面上唯一的數字） */}
+      {text.lost && bands.red && (
         <Callout
           // 往右（金幣那一側的上方）：往左在手機上會超出畫面
           anchor={atPlaza(BLOCK_X + FOOT / 2, hOf((bands.red![0] + bands.red![1]) / 2), 0)}
           offset={[2.2, 0, 0]}
-          title={T.stage.exdiv.lost(Math.round(lost))}
+          title={text.lost}
           color={ACCENT_COLORS.loss}
           persistent
         />

@@ -1,7 +1,7 @@
 import type { BigNumber, Level, TextContext } from './types'
 import { movePct, pct0, SHOCK_2330, signedPct, wan } from './context'
 import { DEFAULT_VALUES } from './engine'
-import { exDivTimeline } from '../scene/layout/stages'
+import { EXDIV, exDivTimeline } from '../scene/layout/stages'
 import { T } from '../ui/strings'
 
 /**
@@ -126,17 +126,17 @@ export const LEVELS: Level[] = [
       {
         id: 's-6',
         title: '方塊沒長回來',
-        line: '公司後來不爭氣，方塊**沒長回來|loss**',
+        // 先鋪陳「會長回來」是可能的，「沒長回來」才有意思（r3）；不說「通常」：填息不是保證
+        line: '方塊**有時會長回來**，這次**沒有|loss**',
         more: () => {
           const e = exDivTimeline(1, 'gap')
-          return `發完金幣後，公司表現不好，方塊沒長回去。方塊＋金幣合起來剩 ${n0(e.blockValue + e.cash)}，變少了。這叫貼息；長回去則叫填息。配息不是白送的錢，要看總報酬，這是示意。`
+          return `發完金幣後，方塊有時會慢慢長回去，這次沒有。方塊 ${n0(e.blockValue)}＋金幣 ${n0(e.cash)}＝${n0(e.blockValue + e.cash)}，比原來少。長回去叫填息，沒長回去叫貼息。配息不是白送的錢，要看總報酬，這是示意。`
         },
         mark: 'illustrative',
-        // 不用再拉：一進來就是「過了一陣子」的結果（95 ＋ 5 → 92 ＋ 5），畫面上紅色＝沒長回來的部分
+        // 不用再拉：一進來就是「過了一陣子」的結果（95 ＋ 5 → 92 ＋ 5）。卡片只放一個數字：少了多少
         bigNumber: (_c, v) => {
           const e = exDivTimeline(Math.max(v.phase, EXDIV_AFTER_PHASE), 'gap')
-          const total = e.blockValue + e.cash
-          return { value: n0(total), label: `方塊 ${n0(e.blockValue)}＋金幣 ${n0(e.cash)}`, fraction: total / 100, colorKey: 'loss', mark: 'illustrative' }
+          return { value: `少 ${n0(EXDIV.price - (e.blockValue + e.cash))}`, label: '方塊＋金幣，合起來變少', colorKey: 'loss', mark: 'illustrative' }
         },
         scene: { camera: 'plazaNear', product: null, stage: { kind: 'exdiv', outcome: 'gap' }, values: { phase: 1 } },
       },

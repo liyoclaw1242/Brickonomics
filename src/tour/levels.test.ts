@@ -365,18 +365,21 @@ describe('control ranges and the dividend steps (user test r1)', () => {
     expect(ids.slice(ids.indexOf('s-5'), ids.indexOf('s-5') + 3)).toEqual(['s-5', 's-6', 'b-1'])
   })
 
-  it('s-6 shows the result without another drag: cause in plain words, total down in red', () => {
+  it('s-6 shows the result without another drag: set-up in the line, one number on the card (r3)', () => {
     const s6 = byId('s-6')
     expect(s6.title).toBe('方塊沒長回來')
     expect(s6.controls).toBeUndefined()
     expect(s6.until).toBeUndefined()
     const line = stripMarkup(lineOf(s6, ctx))
-    expect(line).toContain('不爭氣') // 原因（白話）
-    expect(line).toContain('沒長回來') // 結果
-    // 95 ＋ 5 之後貼息到 92：92 ＋ 5 ＝ 97，紅色
-    expect(bigOf(s6)).toMatchObject({ value: '97', label: '方塊 92＋金幣 5', colorKey: 'loss', mark: 'illustrative' })
-    expect(bigOf(s6)!.fraction).toBeCloseTo(0.97, 6)
-    expect(moreOf(s6, ctx)).toContain('剩 97')
+    expect(line).toContain('有時會長回來') // 先說「會長回來」是可能的（不說「通常」：那不是事實保證）
+    expect(line).toContain('這次沒有') // 結果
+    // 95 ＋ 5 之後貼息到 92：合起來 97，比 100 少 3。卡片只放一個數字
+    const bn = bigOf(s6)!
+    expect(bn).toMatchObject({ value: '少 3', colorKey: 'loss', mark: 'illustrative' })
+    expect(bn.label.match(/\d/g)).toBeNull() // 標籤裡沒有別的數字
+    expect(bn.fraction).toBeUndefined()
+    // 唯一的算式放在多說一點
+    expect(moreOf(s6, ctx)).toContain('方塊 92＋金幣 5＝97')
   })
 
   it('keeps 除息／填息／貼息 out of titles and lines (多說一點 only)', () => {
