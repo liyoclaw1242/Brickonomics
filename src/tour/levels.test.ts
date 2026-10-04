@@ -455,12 +455,25 @@ describe('jargon diet (user test r1)', () => {
     for (const c of byId('f-2').callouts!) expect(c.when, 'f-2 shows names once the tower is apart').toEqual(byId('f-2').until)
   })
 
+  it('f-2 names every layer through its two labels: 股票方塊 (incl. the big companies below) and 借據 (r3: 30% + 38% = 68%, the rest?)', () => {
+    const f2 = byId('f-2')
+    expect((f2.callouts ?? []).map((c) => resolve(c.title))).toEqual(['股票方塊', '借據'])
+    const subs = (f2.callouts ?? []).map((c) => resolve(c.sub)!)
+    expect(subs[0]).toContain(`約 ${pct0(ctx.assetClassPct('JH_BALANCED', 'stock'))}%`) // 64.15 → 64
+    expect(subs[0]).toContain('輝達')
+    expect(subs[1]).toBe(`約 ${pct0(ctx.assetClassPct('JH_BALANCED', 'bond'))}%`) // 34.55 → 35
+    for (const t of [...subs, stripMarkup(lineOf(f2, ctx))]) expect(t).not.toContain('美股')
+  })
+
   it('f-4 is purely visual: another 怪手 picked a different tower (股票 vs 借據), no jargon on screen', () => {
     const f4 = byId('f-4')
     const onScreen = [f4.title, stripMarkup(lineOf(f4, ctx)), ...(f4.callouts ?? []).flatMap((c) => [resolve(c.title)!, resolve(c.sub) ?? ''])]
     for (const t of onScreen) expect(t, t).not.toMatch(/可轉債|高收益債|多重資產|安聯|平衡|檔|同名/)
     expect(stripMarkup(lineOf(f4, ctx))).toContain('股票＋借據') // 事實：股票＋借據（不說它是平衡型）
-    expect(stripMarkup(lineOf(f4, ctx))).toContain('怪手挑的不一樣')
+    expect(stripMarkup(lineOf(f4, ctx))).toContain('比例差很多')
+    // 另一位經理人：怪手換顏色、標註寫「另一位經理人」（r3：怪手一模一樣，不信是另一台）
+    expect(f4.scene.stage).toEqual({ kind: 'excavator', meter: false, other: true })
+    expect(T.excavatorOther).toContain('另一位經理人')
     expect(f4.bigNumber).toBeUndefined()
     // 亮的＝借據（所有債券層），暗的＝股票
     const bonds = universe.get('ALLIANZ_INCOME_GROWTH')!.holdings!.filter((h) => ['convertible', 'highYieldBond', 'govBond', 'corpBond', 'bondMixed'].includes(universe.get(h.id)!.type)).map((h) => h.id)

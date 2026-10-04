@@ -116,6 +116,7 @@ export const T = {
   accumulateRows: { accumulate: '累積型', payout: '配息型' },
   trapRow: '高配息基金',
   excavator: '經理人（怪手）',
+  excavatorOther: '另一位經理人（怪手）',
   feeMeter: {
     title: '計費表',
     elapsed: (year: number) => `第 ${year} 年`,

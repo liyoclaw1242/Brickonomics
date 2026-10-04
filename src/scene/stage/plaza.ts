@@ -23,3 +23,8 @@ export const ON_PLAZA: ReadonlySet<Stage['kind']> = new Set<Stage['kind']>(['hel
 export function cityNamesOnPlaza(kind: Stage['kind']): boolean {
   return !ON_PLAZA.has(kind)
 }
+
+/** 交易所台座：上面有東西（籃子）或在自由玩時才顯示（r3：空著的黑板子像壞掉、沒收乾淨） */
+export function showPedestal(mode: 'tour' | 'sandbox', productId: string | null): boolean {
+  return mode === 'sandbox' || productId !== null
+}

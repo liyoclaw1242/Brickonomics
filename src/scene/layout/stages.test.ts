@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  blocksFor, towerVoxels, exDivTimeline, exDivBands, exDivLabels, accumulateVsPayout, principalTrap,
+  blocksFor, towerVoxels, exDivTimeline, exDivBands, exDivLabels, HELD_SCALE, accumulateVsPayout, principalTrap,
   illustrativeTicks, layerCentroid, damageFromShocks,
 } from './stages'
 import { stackVoxels } from './voxels'
@@ -118,5 +118,14 @@ describe('exDivLabels (r3: s-6 had 97, 92, 5 and 3 in three places)', () => {
   it('s-6 (gap) shows one number only: the red tag 少了 3; the parts are just named', () => {
     expect(exDivLabels('gap', 1)).toEqual({ block: '方塊', coins: '金幣', lost: '少了 3' }) // 95 − 92
     expect(exDivLabels('gap', 0.75)).toEqual({ block: '方塊', coins: '金幣', lost: '少了 2' }) // 95 − 93.5 = 1.5 → 2
+  })
+})
+
+describe('HELD_SCALE (r3: 公司變值錢 — the block only grew a little)', () => {
+  it('grows and shrinks the held block clearly (edge ×1.7 ≈ 5× the volume)', () => {
+    expect(HELD_SCALE.up).toBeGreaterThanOrEqual(1.6)
+    expect(HELD_SCALE.down).toBeLessThanOrEqual(0.6)
+    expect(HELD_SCALE.still).toBe(1)
+    expect(HELD_SCALE.shake).toBe(1)
   })
 })

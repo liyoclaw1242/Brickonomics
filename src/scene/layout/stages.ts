@@ -14,6 +14,9 @@ export function towerVoxels(count: number, w = 5, d = 5): Voxel[] {
   return stackVoxels([{ id: 'tower', count }], w, d)
 }
 
+/** 手上那顆方塊的邊長倍數（示意）：變值錢 ×1.7（體積約 5 倍）、變不值錢 ×0.6（r3：只大一點點看不出來） */
+export const HELD_SCALE = { still: 1, up: 1.7, down: 0.6, shake: 1 } as const
+
 export type ExDivOutcome = 'fill' | 'gap'
 export const EXDIV = { price: 100, dividend: 5, gapTo: 92 } // 示意
 

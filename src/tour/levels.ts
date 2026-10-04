@@ -187,11 +187,13 @@ export const LEVELS: Level[] = [
         id: 'f-2',
         title: '拆開看看',
         line: '拖**拆開**。看裡面有什麼',
-        more: '拖「拆開」拉桿。看看這座塔裡裝了什麼。最大的兩層是其他美股和其他債券（快照沒有細分）。',
-        // 拆開之後才標出最大的兩層，免得層層只有顏色、沒有名字
+        more: (c) =>
+          `拖「拆開」拉桿，看看這座塔裡裝了什麼。股票方塊約 ${pct0(c.assetClassPct('JH_BALANCED', 'stock'))}%，最下面幾層是輝達、微軟等大公司。借據約 ${pct0(c.assetClassPct('JH_BALANCED', 'bond'))}%，剩下一點是現金。`,
+        // 拆開之後才標名字。兩個標註就要說完每一層（r3：只標兩層、底下紅綠紫三層沒名字，30%＋38% 不到一百）：
+        // 錨在最大的兩層，寫的是整類的比例——股票（含最下面幾層大公司）、借據
         callouts: [
-          { anchor: { kind: 'holding', holdingId: 'OTHER_US_STOCK' }, title: '其他美股', sub: (c) => `股票方塊・約 ${pct0(c.weightPct('JH_BALANCED', 'OTHER_US_STOCK'))}%`, when: { control: 'explode', min: 0.6 } },
-          { anchor: { kind: 'holding', holdingId: 'BOND_MIXED_US' }, title: '其他債券', sub: (c) => `借據・約 ${pct0(c.weightPct('JH_BALANCED', 'BOND_MIXED_US'))}%`, when: { control: 'explode', min: 0.6 } },
+          { anchor: { kind: 'holding', holdingId: 'OTHER_US_STOCK' }, title: '股票方塊', sub: (c) => `約 ${pct0(c.assetClassPct('JH_BALANCED', 'stock'))}%・含底下的輝達、微軟`, when: { control: 'explode', min: 0.6 } },
+          { anchor: { kind: 'holding', holdingId: 'BOND_MIXED_US' }, title: '借據', sub: (c) => `約 ${pct0(c.assetClassPct('JH_BALANCED', 'bond'))}%`, when: { control: 'explode', min: 0.6 } },
         ],
         scene: { camera: 'exchangeWide', product: 'JH_BALANCED', stage: { kind: 'excavator', meter: false }, cityLabels: false },
         controls: ['explode'],
@@ -212,7 +214,7 @@ export const LEVELS: Level[] = [
       {
         id: 'f-4',
         title: '另一台怪手',
-        line: '也是股票＋借據，**怪手挑的不一樣**',
+        line: '同樣股票＋借據，**比例差很多**',
         // 純看圖：換一台怪手，股票和借據的多少整個反過來；專有名詞（可轉債、高收益債）只在多說一點
         more: (c) =>
           `這是安聯收益成長基金，也是股票＋借據。前一座約 ${pct0(c.assetClassPct('JH_BALANCED', 'stock'))}% 是股票，這座只有約 ${pct0(c.assetClassPct('ALLIANZ_INCOME_GROWTH', 'stock'))}%。它的借據裡，可轉債約 ${pct0(c.weightPct('ALLIANZ_INCOME_GROWTH', 'CONVERTIBLE_US'))}%，高收益債約 ${pct0(c.weightPct('ALLIANZ_INCOME_GROWTH', 'US_HIGH_YIELD'))}%。可轉債＝能換成股票的借據；名稱像，裡面不一定一樣。`,
@@ -222,7 +224,8 @@ export const LEVELS: Level[] = [
           { anchor: { kind: 'holding', holdingId: 'OTHER_US_STOCK' }, title: '股票', sub: (c) => `約 ${pct0(c.assetClassPct('ALLIANZ_INCOME_GROWTH', 'stock'))}%` },
           { anchor: { kind: 'holding', holdingId: 'CONVERTIBLE_US' }, title: '借據', sub: (c) => `約 ${pct0(c.assetClassPct('ALLIANZ_INCOME_GROWTH', 'bond'))}%` },
         ],
-        scene: { camera: 'exchangeWide', product: 'ALLIANZ_INCOME_GROWTH', explode: 1, stage: { kind: 'excavator', meter: false }, cityLabels: false },
+        // 另一位經理人：怪手換一個顏色（r3：一模一樣的怪手，他不信是「另一台」）
+        scene: { camera: 'exchangeWide', product: 'ALLIANZ_INCOME_GROWTH', explode: 1, stage: { kind: 'excavator', meter: false, other: true }, cityLabels: false },
       },
       {
         id: 'f-5',

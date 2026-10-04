@@ -18,7 +18,8 @@ export type Stage =
   | { kind: 'exdiv'; outcome: 'fill' | 'gap' }
   /** ranks：每張借據下面寫「穩不穩、利息多少」 */
   | { kind: 'bonds'; stressed: boolean; ranks?: boolean }
-  | { kind: 'excavator'; meter: boolean }
+  /** other：另一位經理人（怪手換顏色、標註不同） */
+  | { kind: 'excavator'; meter: boolean; other?: boolean }
   /** etf false：只比同一檔基金的前收、後收兩座塔（導覽在 ETF 那一章之前，還沒教 0050）；預設 true（三座） */
   | { kind: 'feeRace'; etf?: boolean }
   | { kind: 'accumulate' }

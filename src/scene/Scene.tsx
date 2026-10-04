@@ -12,7 +12,7 @@ import { THEMES } from './theme'
 import { useThemeStore } from '../store/theme'
 import { damageFromShocks } from './layout/stages'
 import { MAX_DISTANCE, MAX_POLAR, MIN_DISTANCE } from './camera'
-import { cityNamesOnPlaza, EXCHANGE_POSITION, PEDESTAL_HEIGHT } from './stage/plaza'
+import { cityNamesOnPlaza, EXCHANGE_POSITION, PEDESTAL_HEIGHT, showPedestal } from './stage/plaza'
 import { StageView } from './stage/StageView'
 import { StepCallouts } from './StepCallouts'
 import { ViewFraming } from './ViewFraming'
@@ -47,7 +47,7 @@ export function Scene({ quality }: { quality: Quality }) {
       </mesh>
       <ViewFraming />
       <City labels={labels} islandLabels={mode !== 'tour' || tourNames} shrink={shrink} />
-      <Pedestal />
+      {showPedestal(mode, productId) && <Pedestal />}
       <StageView quality={quality} />
       {productId && (
         <BasketView
