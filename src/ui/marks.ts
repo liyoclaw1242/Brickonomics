@@ -82,3 +82,27 @@ export function markPlacement(marks: readonly Mark[]): { title: Mark[]; afterLin
   const uniq = [...new Set(marks)]
   return { title: uniq.filter((m) => m !== 'unverified'), afterLine: uniq.filter((m) => m === 'unverified') }
 }
+
+/** 桌機面板內容寬（面板 312 − 左右 padding 16×2 − 邊框 2）；手機面板全寬，一定放得下 */
+const TITLE_ROW_PX = 278
+/** 標題字級：平常 26px；放不下時縮成 22px（＝手機的標題字級） */
+const TITLE_PX = { normal: 26, snug: 22 } as const
+const TITLE_SPACING = 1.02 // letter-spacing 0.02em
+const PILL_FONT = 14
+/** 小膠囊：邊框 2＋左右 padding 20＋圖示 1 字＋圖示與字的間距 4 */
+const PILL_CHROME = 2 + 20 + PILL_FONT + 4
+const TITLE_GAP = 8
+const PILL_GAP = 6
+
+/** 中日韓字與全形標點佔 1em，其他（數字、英文）約 0.6em */
+const ems = (s: string) => [...s].reduce((n, ch) => n + (/[⺀-￯]/.test(ch) ? 1 : 0.6), 0)
+
+/**
+ * 標題＋標題旁的標示小膠囊能不能排在同一行（桌機面板）。words＝各個小膠囊上的字。
+ * 平常字級放不下時，面板改用 snug（小一號的標題），不讓膠囊自己掉到下一行（Plan 6 walkthrough：f-6）。
+ */
+export function titleRowFits(title: string, words: readonly string[], size: keyof typeof TITLE_PX): boolean {
+  const titlePx = ems(title) * TITLE_PX[size] * TITLE_SPACING
+  const pillsPx = words.reduce((n, w, i) => n + (i > 0 ? PILL_GAP : 0) + PILL_CHROME + ems(w) * PILL_FONT, 0)
+  return titlePx + (words.length > 0 ? TITLE_GAP + pillsPx : 0) <= TITLE_ROW_PX
+}

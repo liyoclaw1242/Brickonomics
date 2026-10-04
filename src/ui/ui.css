@@ -82,6 +82,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 /* 標題＋標示：標題字不折行；標示小膠囊成一組，放不下就整組換到下一行 */
 .step-title { display: flex; flex-wrap: wrap; align-items: center; column-gap: 8px; row-gap: 6px; }
 .step-title__text { white-space: nowrap; }
+.step-title--snug { font-size: 22px; } /* 標題＋膠囊放不下時縮一號（titleRowFits），膠囊不掉到下一行 */
 .step-title__marks { display: inline-flex; flex-wrap: wrap; gap: 6px; }
 .more__text { line-height: 1.7; }
 .more .readout { color: var(--text); }

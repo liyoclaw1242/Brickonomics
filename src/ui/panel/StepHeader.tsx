@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { markPlacement, type Mark } from '../marks'
+import { markPlacement, titleRowFits, type Mark } from '../marks'
 import { MarkIcon } from '../MarkIcon'
 import { T } from '../strings'
 
@@ -17,6 +17,8 @@ export function StepHeader({ chapter, number, count, title, marks, revealed, chi
   children?: ReactNode
 }) {
   const placed = markPlacement(marks)
+  // 標題＋膠囊在平常字級放不下：標題縮一號，膠囊留在同一行
+  const snug = !titleRowFits(title, placed.title.map((k) => T.marks[k].word), 'normal')
   return (
     <header className="step-header">
       <p className="brand">{T.brand}</p>
@@ -29,7 +31,7 @@ export function StepHeader({ chapter, number, count, title, marks, revealed, chi
         {T.chapterCounter(number, count)}
       </p>
       <div className={revealed ? 'step-reveal is-revealed' : 'step-reveal'} aria-live="polite" aria-atomic="true">
-        <h1 className="step-title">
+        <h1 className={snug ? 'step-title step-title--snug' : 'step-title'}>
           <span className="step-title__text">{title}</span>
           {placed.title.length > 0 && (
             <span className="step-title__marks">
