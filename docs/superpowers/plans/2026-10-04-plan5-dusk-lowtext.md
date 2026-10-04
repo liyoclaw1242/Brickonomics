@@ -21,6 +21,8 @@
 - 方塊：城市與籃子預設低飽和（muted），焦點／選取／拆開時鮮豔（vivid）；方塊數嚴格依權重；一種材質一個 InstancedMesh。
 - 純 TypeScript 模組清單加上：`src/scene/theme.ts`、`src/scene/layout/tone.ts`、`src/ui/layoutModel.ts`、`src/ui/emphasis.ts`、`src/ui/chapters.ts`。
 - 新增 drei `<Html>` 等 `useAfterFirstTick()`；所有 3D 文字標籤改經 `Callout`／`NameLabel`。
+- 3b1b 教法（規格 §2.2）：關鍵詞與物體同色（`**詞|顏色鍵**`）；鏡頭停下後才淡入文字與轉換色調；大數字數上來；`prefers-reduced-motion` 時不做動畫。
+- 寫作規則（規格 §2.1，參考 ASD-STE100）：一詞一義、一句一事、操作句動作詞開頭、不用「被」。
 - TypeScript strict，不可以使用 `any`。
 - 共用工作規則：`.superpowers/sdd/p4-common.md`（dev server 只用 node PID 關閉、不碰 5173、截圖要 Read、commit 附 Co-Authored-By）。
 
@@ -423,6 +425,20 @@ export function toneColor(hex: string, tone: Tone, theme: Theme): string {
 - `BasketView`：從目前步驟取 `focus.holdings`（Task 5 才加；本任務先傳 `[]`）。
 - `City`：大樓顏色用 `toneColor(lookFor(asset).color, picked === id ? 'vivid' : 'muted', theme)`。
 
+- [ ] **Step 3b：色調漸變（3b1b：一次只變一件事）**
+
+- 在 `tone.ts` 加入純函式並測試：
+```ts
+export const TONE_FADE_SEC = 0.4
+/** 0→1 的漸變進度，smoothstep。 */
+export function toneProgress(elapsedSec: number): number {
+  const t = Math.min(1, Math.max(0, elapsedSec / TONE_FADE_SEC))
+  return t * t * (3 - 2 * t)
+}
+```
+測試：`toneProgress(0) === 0`、`toneProgress(0.2) === 0.5`、`toneProgress(1) === 1`。
+- `VoxelInstances`：目標顏色改變時，記下每個 instance 的起始色，用 `useContinuousRender` 在約 400ms 內 `lerpColors(from, to, toneProgress(t))`，結束後停止連續渲染。導覽模式下，色調轉換等到 `document.body.dataset.cameraSettled === 'true'` 才開始（在 useFrame 內檢查）。`matchMedia('(prefers-reduced-motion: reduce)').matches` 時直接套用目標色。
+
 - [ ] **Step 4：測試、截圖、Commit**
 
 `npx tsc --noEmit && npm test && npm run build`；截圖 `/?mode=sandbox&quality=high`（全部低飽和）、點一層後（scratch 腳本）被選的鮮豔、`&explode=1` 全部鮮豔；Read 描述。
@@ -590,13 +606,13 @@ git commit -m "feat(ui): callouts with leader lines, name labels and mark icons"
 ### Task 5：課程資料模型與少字改寫
 
 **Files:**
-- Create: `src/ui/emphasis.ts`, `src/ui/emphasis.test.ts`
+- Create: `src/ui/emphasis.ts`, `src/ui/emphasis.test.ts`, `src/tour/glossary.ts`, `src/tour/glossary.test.ts`
 - Modify: `src/tour/types.ts`, `src/tour/engine.ts`, `src/tour/engine.test.ts`, `src/tour/context.ts`, `src/tour/context.test.ts`, `src/tour/levels.ts`, `src/tour/levels.test.ts`, `src/ui/fallback.ts`, `src/ui/fallback.test.ts`, `src/ui/FallbackApp.tsx`, `src/ui/TourPanel.tsx`（暫時改讀 `moreOf`，完整面板在 Task 6）
 
 **Interfaces:**
 - Produces（`types.ts`）：
   - `type Mark = 'illustrative' | 'assumption' | 'unverified'`（re-export 自 `src/ui/marks.ts`）
-  - `type BigNumber = { value: string; label: string; fraction?: number; mark?: Mark }`
+  - `type BigNumber = { value: string; label: string; fraction?: number; mark?: Mark; colorKey?: string }`
   - `type CalloutSpec = { anchor: { kind: 'holding'; holdingId: string } | { kind: 'building'; id: string }; title: string | ((c: TextContext) => string); sub?: string | ((c: TextContext) => string) }`
   - `Step` 改為：`{ id; title: string; line: string | ((c) => string); more: string | ((c) => string); fallbackMore?: …; mark?: 'illustrative' | 'assumption'; bigNumber?: (c: TextContext) => BigNumber; focus?: { holdings?: string[] }; callouts?: CalloutSpec[]; scene; controls?; until? }`（`text` → `more`、`fallbackText` → `fallbackMore`）
   - `TextContext` 新增 `expenseRatio(productId): number | undefined`、`overlapShared(a, b): number`（0–1）
@@ -608,7 +624,7 @@ git commit -m "feat(ui): callouts with leader lines, name labels and mark icons"
 測試：
 ```ts
 import { describe, it, expect } from 'vitest'
-import { parseEmphasis, visibleLength } from './emphasis'
+import { parseEmphasis, stripMarkup, visibleLength } from './emphasis'
 
 describe('parseEmphasis', () => {
   it('splits **keywords** into emphasised segments', () => {
@@ -622,27 +638,116 @@ describe('parseEmphasis', () => {
   it('handles text without markers', () => {
     expect(parseEmphasis('拿起雷射刀')).toEqual([{ text: '拿起雷射刀', em: false }])
   })
+  it('reads a colour key after |', () => {
+    expect(parseEmphasis('**台積電|2330**佔了')).toEqual([
+      { text: '台積電', em: true, key: '2330' },
+      { text: '佔了', em: false },
+    ])
+  })
+})
+
+describe('stripMarkup', () => {
+  it('removes markers and colour keys', () => {
+    expect(stripMarkup('**台積電|2330**佔了約 **56%**')).toBe('台積電佔了約 56%')
+  })
 })
 
 describe('visibleLength', () => {
   it('ignores markers and counts characters', () => {
     expect(visibleLength('樓越**高**，公司越**大**')).toBe(9)
+    expect(visibleLength('**台積電|2330**佔了')).toBe(5)
     expect(visibleLength('把 **0050** 切開')).toBe(9)
   })
 })
 ```
 實作：
 ```ts
-export function parseEmphasis(line: string): { text: string; em: boolean }[] {
+export type Segment = { text: string; em: boolean; key?: string }
+
+/** `**詞**` 強調；`**詞|鍵**` 強調並用「鍵」對應的物體顏色（3b1b 顏色連結）。 */
+export function parseEmphasis(line: string): Segment[] {
   return line
     .split('**')
-    .map((text, i) => ({ text, em: i % 2 === 1 }))
+    .map((raw, i): Segment => {
+      if (i % 2 === 0) return { text: raw, em: false }
+      const bar = raw.indexOf('|')
+      return bar < 0 ? { text: raw, em: true } : { text: raw.slice(0, bar), em: true, key: raw.slice(bar + 1) }
+    })
     .filter((s) => s.text.length > 0)
 }
 
-export function visibleLength(line: string): number {
-  return Array.from(line.replaceAll('**', '')).length
+export function stripMarkup(line: string): string {
+  return parseEmphasis(line).map((s) => s.text).join('')
 }
+
+export function visibleLength(line: string): number {
+  return Array.from(stripMarkup(line)).length
+}
+```
+
+- [ ] **Step 1b：術語表與寫作規則（參考 ASD-STE100，TDD）**
+
+使用者指定參考 ASD-STE100（簡化技術英文）。規則見規格 §2.1：一詞一義、一句一事、操作句先寫動作、定義句用「A＝B」、主動語態（不用「被」）、多說一點也要短、警告先講結論。比喻保留，但一個比喻只對應一個概念。
+
+`src/tour/glossary.ts`（純）：
+```ts
+import { stripMarkup } from '../ui/emphasis'
+
+/** 一詞一義：每個概念只用 term；forbidden 是不可使用的同義詞。 */
+export const GLOSSARY = [
+  { term: '配息', means: '股票、基金、ETF 付給你的錢', forbidden: ['股息', '股利', '派息', '分紅'] },
+  { term: '利息', means: '債券付給你的錢', forbidden: [] },
+  { term: '內扣費用', means: '每年從基金或 ETF 資產扣掉的費用', forbidden: ['管理費', '費用率'] },
+  { term: '漲', means: '價格變高', forbidden: ['上升', '上揚', '走高'] },
+  { term: '跌', means: '價格變低', forbidden: ['下滑', '走低', '下挫'] },
+] as const
+
+/** 專有名稱，檢查禁用詞前先移除。 */
+export const PROPER_NAMES = ['高股息'] as const
+
+/** 有 until 的步驟，line 必須用這些動作詞開頭。 */
+export const ACTION_VERBS = ['拖', '點', '切', '按', '選', '看'] as const
+
+export const LINE_SENTENCES_MAX = 2
+export const LINE_SENTENCE_MAX = 16
+export const MORE_SENTENCES_MAX = 4
+export const MORE_SENTENCE_MAX = 25
+
+/** 用 。！？ 分句，去掉 ** 與空白句。 */
+export function sentences(text: string): string[] {
+  return stripMarkup(text)
+    .split(/[。！？]/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
+}
+
+export function forbiddenWordsIn(text: string): string[] {
+  let t = text
+  for (const n of PROPER_NAMES) t = t.replaceAll(n, '')
+  return GLOSSARY.flatMap((g) => g.forbidden.filter((w) => t.includes(w)))
+}
+```
+`src/tour/glossary.test.ts`：
+```ts
+import { describe, it, expect } from 'vitest'
+import { forbiddenWordsIn, sentences } from './glossary'
+
+describe('sentences', () => {
+  it('splits on full stops and drops emphasis markers', () => {
+    expect(sentences('拖**時間軸**。看**配息**那一刻')).toEqual(['拖時間軸', '看配息那一刻'])
+    expect(sentences('塔變矮！因為發的是本金。')).toEqual(['塔變矮', '因為發的是本金'])
+  })
+})
+
+describe('forbiddenWordsIn', () => {
+  it('finds synonyms that the glossary bans', () => {
+    expect(forbiddenWordsIn('看發股利那一刻')).toEqual(['股利'])
+    expect(forbiddenWordsIn('管理費每天磨掉一點')).toEqual(['管理費'])
+  })
+  it('allows proper names such as 高股息', () => {
+    expect(forbiddenWordsIn('高股息：專挑冒金幣的')).toEqual([])
+  })
+})
 ```
 
 - [ ] **Step 2：型別、引擎、context**
@@ -656,7 +761,7 @@ export function visibleLength(line: string): number {
 
 - [ ] **Step 3：改寫 `levels.ts`**
 
-每一步：原本的 `text` 改名為 `more`（內容保留），新增 `title`、`line`，依下表加 `mark`、`bigNumber`、`focus`、`callouts`。`line` 中的數字用函式即時計算（`pct0`、`signedPct`）。
+每一步：原本的 `text` 改名為 `more`，新增 `title`、`line`，依下表加 `mark`、`bigNumber`、`focus`、`callouts`。`line` 中的數字用函式即時計算（`pct0`、`signedPct`）。
 
 | id | title | line | mark | bigNumber | focus／callouts |
 |---|---|---|---|---|---|
@@ -667,36 +772,40 @@ export function visibleLength(line: string): number {
 | s-2 | 公司變值錢 | 樓長高，你的方塊**變大** | illustrative | | |
 | s-3 | 公司變不值錢 | 樓縮水，你的方塊**變小** | illustrative | | |
 | s-4 | 晃動＝波動 | 有些股票晃得**特別兇** | illustrative | | |
-| s-5 | 發金幣 | 拖時間軸，看**發股利**那一刻 | illustrative | | |
+| s-5 | 發金幣 | 拖**時間軸**。看**配息|coin**那一刻 | illustrative | | |
 | s-6 | 除息 | 方塊＋金幣＝**不變** | illustrative | `{ value: '100', label: '方塊 95 ＋ 金幣 5', mark: 'illustrative' }` | |
 | s-7 | 貼息 | 要看**方塊＋金幣**的總和 | illustrative | | |
-| b-1 | 借錢給大樓 | 債券＝**借據**，固定滴**金幣** | illustrative | | |
+| b-1 | 借錢給大樓 | 債券＝**借據**，固定滴**金幣|coin** | illustrative | | |
 | b-2 | 三種借據 | 越**穩**的，利息通常**越少** | illustrative | | |
 | b-3 | 經濟風暴 | 利息高的，比較**容易裂** | illustrative | | |
 | f-1 | 怪手幫你挑 | 基金＝**經理人**幫你挑方塊 | | | |
-| f-2 | 拆開看看 | 拖「拆開」看裡面**有什麼** | | | |
+| f-2 | 拆開看看 | 拖**拆開**。看裡面有什麼 | | | |
 | f-3 | 股票＋債券 | 兩種都有，叫**平衡型** | | | focus NVDA、US_TREASURY；callout holding NVDA「輝達」、US_TREASURY「美國公債」 |
-| f-4 | 同名不同料 | 也叫多重資產，裡面**不一樣** | | `可轉債 ${pct0(w('ALLIANZ_INCOME_GROWTH', 'CONVERTIBLE_US'))}%`，fraction = w/100 | focus CONVERTIBLE_US |
-| f-5 | 計費表在跑 | 管理費每天**磨掉一點** | | `${(er*100).toFixed(2)}%`，label「每年內扣費用」（er 來自 `c.expenseRatio('JH_BALANCED')`） | |
-| f-6 | 入口門、出口門 | 拖**持有年數**，比比費用 | assumption | | |
+| f-4 | 同名不同料 | 也叫多重資產，裡面**不一樣** | | `可轉債 ${pct0(w('ALLIANZ_INCOME_GROWTH', 'CONVERTIBLE_US'))}%`，fraction = w/100，colorKey CONVERTIBLE_US | focus CONVERTIBLE_US |
+| f-5 | 計費表在跑 | **內扣費用**每天磨掉一點 | | `${(er*100).toFixed(2)}%`，label「每年內扣費用」（er 來自 `c.expenseRatio('JH_BALANCED')`） | |
+| f-6 | 入口門、出口門 | 拖**持有年數**。比較費用 | assumption | | |
 | f-7 | 後收不是免費 | 越**早賣**，扣得越多 | | | |
-| f-8 | 配息或累積 | 金幣**再投資**，塔長更快 | illustrative | | |
-| f-9 | 配息陷阱 | 削**本金**發給你，塔變**矮** | illustrative | | |
+| f-8 | 配息或累積 | 拖滑桿。看**再投資**的塔 | illustrative | | |
+| f-9 | 配息陷阱 | 拖滑桿。配息削掉**本金|loss** | illustrative | | |
 | e-1 | 照藍圖組合 | ETF＝照**指數**自動挑 | | | |
-| e-2 | 拿起雷射刀 | 把 **0050** 切開 | | | |
-| e-3 | 台積電一大塊 | **台積電**佔了約 **${pct0(w('0050','2330'))}%** | | `${pct0(w)}%`，label「台積電在 0050」，fraction w/100 | focus 2330；callout holding 2330「台積電」／「最厚的一層」 |
+| e-2 | 拿起雷射刀 | 拖**雷射刀**。切開 0050 | | | |
+| e-3 | 台積電一大塊 | **台積電|2330**佔了約 **${pct0(w('0050','2330'))}%** | | `${pct0(w)}%`，label「台積電在 0050」，fraction w/100，colorKey 2330 | focus 2330；callout holding 2330「台積電」／「最厚的一層」 |
 | e-4 | 隨時有價格 | ETF 開盤**隨時能買賣** | illustrative | | |
-| e-5 | 費用比較低 | QQQ、SPY 費用**比較低** | | `${(er('QQQ')*100).toFixed(2)}%`，label「QQQ 每年內扣」 | |
+| e-5 | 內扣費用低 | QQQ、SPY **內扣費用**低 | | `${(er('QQQ')*100).toFixed(2)}%`，label「QQQ 每年內扣」 | |
 | c-1 | 假設台積電跌 | 假設台積電跌 **${pct0(30)}%** | | | |
 | c-2 | 誰受傷最重 | 0050 跟著跌約 **${signedPct(shock)}** | | `${signedPct(c.shock('0050'))}`，label「0050」，fraction = |shock| / 0.3 | |
 | c-3 | 重疊 | 買兩檔≠**分散兩倍** | | `至少 ${(overlapShared*100).toFixed(1)}%`，label「QQQ 與 SPY 重疊」 | |
 | c-4 | 往地底鑽 | 看看 ETF 還有**哪幾種** | | | |
 | u-1 | 地層＝產業 | 每一層是**一種產業** | | | |
-| u-2 | 垂直岩芯 | 0050 至少 **${pct0(sp)}%** 是半導體 | | `至少 ${pct0(sp)}%`，label「0050 的半導體」，fraction sp/100 | |
+| u-2 | 垂直岩芯 | 0050：**半導體|semiconductor**至少 **${pct0(sp)}%** | | `至少 ${pct0(sp)}%`，label「0050 的半導體」，fraction sp/100 | |
 | u-3 | 水平挖 | 只挖**一層**＝產業型 | illustrative | | |
 | u-4 | 金幣礦脈 | 高股息：專挑**冒金幣**的 | illustrative | | |
 | u-5 | 黃金礦脈 | 黃金**不配息**，看市場價 | illustrative | | |
 | u-6 | 完成！ | 沙盒**解鎖**了，自由玩 | | | |
+
+**顏色鍵**：`|` 後面可用持股或資產 id（顏色取 `lookFor(asset).color`）、`SECTOR_COLORS` 的產業 id、`coin`（金幣色 `#ffd54f`）、`loss`（損失紅 `#e53935`）。在 `palette.ts` 新增 `ACCENT_COLORS = { coin: '#ffd54f', loss: '#e53935' }`，`CoinDrip` 與 `VoxelInstances` 的 `DAMAGE_COLOR` 改用它；再新增純函式 `colorForKey(u: Universe, key: string): string | undefined` 並測試三種鍵與未知鍵。課程規則測試加上：每個顏色鍵都能被 `colorForKey` 解析。
+
+**多說一點（`more`）也要依寫作規則重寫**：保留原本的教學事實與即時計算的數字，但每句 ≤ 25 字、最多 4 句、只用「。！？」斷句（不要用逗號串成長句）、不用「被」、用術語表的詞；警告先講結果再講原因（例如 f-9：「塔變矮。因為配息削掉本金。」）；示意步驟的 `more` 要保留「示意」二字。`fallbackMore` 同樣規則。
 
 （`w(p, h)` = `c.weightPct(p, h)`；`sp` = `c.sectorPct('0050', 'semiconductor')`；`er(id)` = `c.expenseRatio(id)`，undefined 時不顯示大數字。）
 
@@ -721,6 +830,26 @@ export function visibleLength(line: string): number {
         (st?.kind === 'held' && st.items.some((i) => i.motion !== 'still')) ||
         (st?.kind === 'underground' && ['dig', 'veins', 'gold'].includes(st.show))
       if (needs) expect(s.mark, s.id).toBe('illustrative')
+    }
+  })
+```
+新增寫作規則測試（ASD-STE100 中文版）：
+```ts
+  it('follows the writing rules (ASD-STE100, adapted)', () => {
+    for (const s of steps) {
+      const line = lineOf(s, ctx)
+      const more = moreOf(s, ctx)
+      for (const text of [s.title, line, more]) {
+        expect(forbiddenWordsIn(text), s.id).toEqual([])
+        expect(text.includes('被'), s.id).toBe(false)
+      }
+      const ls = sentences(line)
+      expect(ls.length, s.id).toBeLessThanOrEqual(LINE_SENTENCES_MAX)
+      for (const x of ls) expect(Array.from(x).length, `${s.id}: ${x}`).toBeLessThanOrEqual(LINE_SENTENCE_MAX)
+      const ms = sentences(more)
+      expect(ms.length, s.id).toBeLessThanOrEqual(MORE_SENTENCES_MAX)
+      for (const x of ms) expect(Array.from(x).length, `${s.id}: ${x}`).toBeLessThanOrEqual(MORE_SENTENCE_MAX)
+      if (s.until) expect(ACTION_VERBS.some((v) => stripMarkup(line).startsWith(v)), s.id).toBe(true)
     }
   })
 ```
@@ -808,6 +937,11 @@ export function BigNumberCard({ n }: { n: BigNumber }) {
 `StepHeader.tsx`：品牌（`.brand`，字距加寬）、`T.chapters[level].icon` ＋ `T.chapterCounter(level, LEVELS.length)`、`<h1 className="step-title">{title}{mark && <MarkIcon kind={mark} />}</h1>`（`aria-live="polite"` 放在標題＋一句話的外層）。
 `MoreSection.tsx`：`<details className="more"><summary>{T.more}</summary><p>{more}</p>{readout table}</details>`（表格沿用現有 readout 表，`mark` 用 `MarkIcon`）。
 `StepNav.tsx`：上一步／下一步（主要按鈕 `--accent`），沿用 `aria-describedby` 指向提示。
+
+3b1b 動態（`prefers-reduced-motion` 時全部直接顯示最終狀態）：
+- `OneLine` 收 `colorOf: (key: string) => string | undefined`，有 `key` 的強調段落用該顏色（並保留粗體）；沒有 key 的用 `--em`。
+- **先看再命名**：`TourPanel` 讀 `document.body.dataset.cameraSettled`（用 `MutationObserver` 監聽 body 的 `data-camera-settled`／`data-camera-seq`），鏡頭停下前標題與一句話 `opacity: 0`；停下後加 class `is-revealed`，標題淡入，`OneLine` 每段 `style={{ animationDelay: `${i * 80}ms` }}` 依序淡入（CSS `@keyframes reveal { from { opacity: 0; transform: translateY(4px) } }`）。換步驟時重置。若 1.5 秒內沒有停下，仍然顯示（避免卡住）。
+- **數字長出來**：純函式 `countUp(value: string, t: number): string`（放 `src/ui/emphasis.ts` 旁的 `src/ui/countUp.ts` 並測試）：把字串中第一個數字依 `t`（0–1，ease-out）從 0 長到目標，保留小數位數與前後文字；例如 `countUp('56%', 0.5)` 的數字介於 0 和 56 之間且格式為整數，`countUp('至少 63%', 1) === '至少 63%'`、`countUp('-16.9%', 1) === '-16.9%'`、沒有數字時原樣回傳。`BigNumberCard` 在顯示後用 `requestAnimationFrame` 600ms 跑完；色條寬度同步長出，顏色用 `colorKey`。
 
 `TourPanel` 依 Produces 的順序組合；`SandboxPanel` 用同樣的玻璃樣式：品牌＋「自由探索」標題＋商品膠囊＋控制項＋圖例；重看導覽按鈕移到 Task 7 的工具列。
 
@@ -955,6 +1089,7 @@ git commit -m "feat(ui): chapter timeline, toolbar, legend and a single layout m
   - holding：`const spec = basketSpec(universe, productId, quality)`、`voxels = basketVoxels(...)`、`group = holdings.findIndex(h => h.id === holdingId)`、`c = layerCentroid(voxels, group, spec.w, spec.d, explode, holdings.length)`；錨點 = `[EXCHANGE_POSITION[0] + spec.w / 2 + 0.2, PEDESTAL_HEIGHT + c[1], EXCHANGE_POSITION[2] + c[2]]`（籃子右側面），`offset = [4, 1.5, 0]`。
   - building：從 `cityLayout([...universe.values()])` 找該 id，錨點 `[x, height + 0.2, z]`，`offset = [0, 3, 0]`。
   - 標題／副標用 `titleOf`／函式求值（`makeTextContext`）。
+  - 3b1b 顏色連結：`Callout` 新增可選 `color` prop（標題前的小色點與引線錨點用這個顏色）；holding 標註傳 `colorForKey(universe, holdingId)`，building 標註傳 `colorForKey(universe, id)`。
 - `PEDESTAL_HEIGHT`（目前是 `Scene.tsx` 內的區域常數 0.6）搬到 `src/scene/stage/plaza.ts` 並 export，Scene 與 StepCallouts 共用。
 - `Scene` 在導覽模式掛 `<StepCallouts />`。
 - 城市大樓若是某步驟 callout 的 building 錨點，該大樓 `NameLabel` 改 `active`，顏色鮮豔（`City` 讀目前步驟）。
