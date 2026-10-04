@@ -3,10 +3,11 @@ import type { Theme } from '../theme'
 
 export type Tone = 'vivid' | 'muted'
 
+/** 優先順序：選取 > 導覽焦點 > 拆開（全部鮮豔）> 低飽和 */
 export function groupTone(p: { group: number; focus: readonly number[]; picked: number | null; explode: number }): Tone {
-  if (p.explode > 0.3) return 'vivid'
   if (p.picked !== null) return p.group === p.picked ? 'vivid' : 'muted'
   if (p.focus.length > 0) return p.focus.includes(p.group) ? 'vivid' : 'muted'
+  if (p.explode > 0.3) return 'vivid'
   return 'muted'
 }
 

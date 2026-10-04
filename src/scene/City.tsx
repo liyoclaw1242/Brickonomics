@@ -27,7 +27,7 @@ export function City({ labels, islandLabels = true, shrink }: { labels: boolean;
   const theme = useThemeStore((s) => s.theme)
   const picked = useSandbox((s) => s.picked)
   const pickedId = picked?.productId ?? null
-  // 導覽步驟標註錨在某棟大樓：那棟鮮豔、名稱亮起（字串 key 讓 selector 穩定）
+  // 導覽步驟標註錨在某棟大樓：那棟鮮豔；名稱由標註顯示，NameLabel 隱藏以免重複（字串 key 讓 selector 穩定）
   const anchorKey = useTour((s) =>
     s.mode === 'tour' ? (currentStep(s).callouts ?? []).flatMap((c) => (c.anchor.kind === 'building' ? [c.anchor.id] : [])).join(',') : '',
   )
@@ -87,8 +87,8 @@ export function City({ labels, islandLabels = true, shrink }: { labels: boolean;
         <meshStandardMaterial roughness={0.8} />
       </instancedMesh>
       {/* NameLabel 自己在第一個 tick 後才掛 Html，並受「標註」開關控制 */}
-      {labels && placements.map((p) => (
-        <NameLabel key={p.id} position={[p.x, p.height + 0.8, p.z]} text={universe.get(p.id)!.name} active={isActive(p.id)} />
+      {labels && placements.filter((p) => !anchored.has(p.id)).map((p) => (
+        <NameLabel key={p.id} position={[p.x, p.height + 0.8, p.z]} text={universe.get(p.id)!.name} active={pickedId === p.id} />
       ))}
       {islandLabels && (['TW', 'US'] as const).map((region) => {
         const [x, z] = ISLAND_CENTERS[region]

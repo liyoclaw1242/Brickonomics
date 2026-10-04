@@ -18,6 +18,14 @@ describe('groupTone', () => {
     expect(groupTone({ ...base, group: 2, focus: [2] })).toBe('vivid')
     expect(groupTone({ ...base, group: 3, focus: [2] })).toBe('muted')
   })
+  it('keeps focus over explode: only focus groups are vivid when exploded', () => {
+    expect(groupTone({ ...base, group: 2, focus: [2], explode: 0.5 })).toBe('vivid')
+    expect(groupTone({ ...base, group: 3, focus: [2], explode: 0.5 })).toBe('muted')
+  })
+  it('keeps picked over explode', () => {
+    expect(groupTone({ ...base, group: 1, picked: 1, explode: 0.5 })).toBe('vivid')
+    expect(groupTone({ ...base, group: 0, picked: 1, explode: 0.5 })).toBe('muted')
+  })
 })
 
 describe('toneColor', () => {

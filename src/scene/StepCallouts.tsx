@@ -15,7 +15,8 @@ import { EXCHANGE_POSITION, PEDESTAL_HEIGHT } from './stage/plaza'
 
 const ctx = makeTextContext(universe)
 const HOLDING_OFFSET: Vec3 = [4, 1.5, 0]
-const BUILDING_OFFSET: Vec3 = [0, 3, 0]
+// 大樓上方留短引線：樓頂本來就在畫面上緣附近，太長會把框推出視窗
+const BUILDING_OFFSET: Vec3 = [0, 1.5, 0]
 
 const textOf = (v: CalloutSpec['title'] | undefined, c: TextContext): string | undefined => (typeof v === 'function' ? v(c) : v)
 
