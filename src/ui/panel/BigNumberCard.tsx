@@ -10,8 +10,8 @@ const DURATION_MS = 600
  * instant（prefers-reduced-motion）時直接顯示最終值。換步驟時由父層用 key 重新掛載以重跑。
  * 動畫中的數字對螢幕閱讀器隱藏，改讀最終值。
  */
-/** titleMarks：標題旁已經有的標示，卡片上不重複 */
-export function BigNumberCard({ n, color, run, instant, titleMarks = [] }: { n: BigNumber; color?: string; run: boolean; instant: boolean; titleMarks?: readonly Mark[] }) {
+/** titleMarks：標題旁已經有的標示，卡片上不重複；delayMs：run 之後再等多久才開始數 */
+export function BigNumberCard({ n, color, run, instant, titleMarks = [], delayMs = 0 }: { n: BigNumber; color?: string; run: boolean; instant: boolean; titleMarks?: readonly Mark[]; delayMs?: number }) {
   const [t, setT] = useState(instant ? 1 : 0)
   useEffect(() => {
     if (!run || instant) {
@@ -19,15 +19,16 @@ export function BigNumberCard({ n, color, run, instant, titleMarks = [] }: { n: 
       return
     }
     let raf = 0
-    const start = performance.now()
+    // delayMs：等場景裡的事件（例如閃電打中）才開始數
+    const start = performance.now() + delayMs
     const tick = (now: number) => {
-      const x = Math.min(1, (now - start) / DURATION_MS)
+      const x = Math.min(1, Math.max(0, (now - start) / DURATION_MS))
       setT(x)
       if (x < 1) raf = requestAnimationFrame(tick)
     }
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-  }, [run, instant])
+  }, [run, instant, delayMs])
 
   const fraction = n.fraction === undefined ? undefined : Math.max(0, Math.min(1, n.fraction)) * easeOut(t)
   return (

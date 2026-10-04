@@ -17,6 +17,10 @@ export type Theme = {
   rod: string
   unclassified: string
   calloutLine: string
+  /** b-3 經濟風暴的龍捲風：漏斗（灰藍）、捲起的塵、頂上的烏雲、雨絲 */
+  storm: { funnel: string; dust: string; cloud: string; streak: string }
+  /** c-2 閃電：白色芯、外圈光暈；flash＝打中那一刻全場補光的最大強度（只一次、很輕） */
+  bolt: { core: string; glow: string; flash: number }
   /** 低飽和方塊：飽和度乘數、亮度位移；鮮豔方塊：亮度乘數 */
   tone: { mutedSaturation: number; mutedLightness: number; vividBoost: number }
 }
@@ -37,6 +41,9 @@ export const THEMES: Record<ThemeId, Theme> = {
     rod: '#78909c',
     unclassified: '#8d8a93',
     calloutLine: '#e8e1d6',
+    // 暗底上要讀得出來：漏斗用偏亮的灰藍，烏雲比天空亮一階
+    storm: { funnel: '#9aabc4', dust: '#c3cedd', cloud: '#5a6378', streak: '#a9b8cc' },
+    bolt: { core: '#ffffff', glow: '#8fd3ff', flash: 0.45 },
     tone: { mutedSaturation: 0.55, mutedLightness: -0.09, vividBoost: 1.15 },
   },
   day: {
@@ -54,6 +61,10 @@ export const THEMES: Record<ThemeId, Theme> = {
     rod: '#78909c',
     unclassified: '#cfd8dc',
     calloutLine: '#1f2933',
+    // 亮底上：漏斗用深灰藍，烏雲接近石板色
+    storm: { funnel: '#56657d', dust: '#7b889b', cloud: '#3a4252', streak: '#6b7a90' },
+    // 亮底上白色會不見：芯用淡黃白，外圈用深一點的電紫藍勾邊
+    bolt: { core: '#fffbe0', glow: '#5b4bff', flash: 0.35 },
     tone: { mutedSaturation: 0.55, mutedLightness: 0.06, vividBoost: 1 },
   },
 }
