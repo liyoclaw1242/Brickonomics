@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { T } from './strings'
-import { feeRowMarks } from './marks'
+import { universe } from '../data'
+import { LEVELS } from '../tour/levels'
+import { isVerified } from '../data/verified'
+import { feeRowMarks, stepMarks } from './marks'
 
 describe('mark words (user test r2: 示意／假設／待查 were not understood)', () => {
   it('uses plain words on the pills', () => {
@@ -20,5 +23,16 @@ describe('mark words (user test r2: 示意／假設／待查 were not understood
   it('feeRowMarks: the front-load row is an assumption, unverified parts add ？', () => {
     expect(feeRowMarks('front', 0)).toEqual(['assumption'])
     expect(feeRowMarks('back', 2)).toEqual(['unverified'])
+  })
+})
+
+describe('stepMarks for the fee meter', () => {
+  it('adds ？ only when the meter fund\'s expense ratio is unverified', () => {
+    const f5 = LEVELS.flatMap((l) => l.steps).find((s) => s.id === 'f-5')!
+    const fund = universe.get(f5.scene.product!)!
+    expect(stepMarks(f5, universe).includes('unverified')).toBe(!isVerified(fund, 'fees.expenseRatio'))
+    const unverifiedCopy = new Map(universe)
+    unverifiedCopy.set(fund.id, { ...fund, verified: {} })
+    expect(stepMarks(f5, unverifiedCopy)).toContain('unverified')
   })
 })

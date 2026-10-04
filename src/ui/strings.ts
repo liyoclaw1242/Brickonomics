@@ -60,7 +60,7 @@ export const T = {
   more: '多說一點',
   marks: {
     illustrative: { icon: '≈', word: '舉例', label: '舉例：為了說明而設計（示意），不是真實數字' },
-    assumption: { icon: '✎', word: '假設的數字', label: '假設的數字：不是查到的資料，自由玩裡可以自己調整' },
+    assumption: { icon: '✎', word: '假設的數字', label: '假設的數字：不是查到的資料，是拿來算給你看的' },
     unverified: { icon: '？', word: '還沒查證', label: '還沒查證：這筆資料還沒核對過，可能不準' },
   },
   controls: {

@@ -1,4 +1,5 @@
 import type { Universe } from '../data/universe'
+import { isVerified } from '../data/verified'
 import { DEFAULT_VALUES } from '../tour/engine'
 import type { Step } from '../tour/types'
 import { feeRaceRows } from '../sim/feeRace'
@@ -20,6 +21,11 @@ export function stepMarks(step: Step, u: Universe): Mark[] {
   if (st?.kind === 'feeRace') {
     const v = { ...DEFAULT_VALUES, ...step.scene.values }
     if (feeRaceRows(u, v.years, v.frontLoad, st.etf ?? true).some((r) => r.unverified.length > 0)) out.push('unverified')
+  }
+  // 計費表用的是這檔基金的內扣費用
+  if (st?.kind === 'excavator' && st.meter && step.scene.product) {
+    const p = u.get(step.scene.product)
+    if (p?.fees?.expenseRatio !== undefined && !isVerified(p, 'fees.expenseRatio')) out.push('unverified')
   }
   return out
 }

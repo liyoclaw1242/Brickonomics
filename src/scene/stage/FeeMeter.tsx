@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Html } from '@react-three/drei'
-import { isVerified, universe } from '../../data'
+import { universe } from '../../data'
 import { useSandbox } from '../../store/sandbox'
 import { T } from '../../ui/strings'
-import { MarkIcon } from '../../ui/MarkIcon'
 import { EXCHANGE_POSITION } from './plaza'
 import { useAfterFirstTick } from '../useAfterFirstTick'
 
@@ -29,12 +28,13 @@ export function FeeMeter() {
   const [x, , z] = EXCHANGE_POSITION
   return (
     // 費率本身已是面板的大數字，這裡只留計費表在跑的結果（少字）；放在台座前緣，手機上不會壓到時間軸
-    <Html position={[x, 1.2, z + 7]} center className="callout callout--wrap">
+    <Html position={[x, 1.2, z + 9]} center className="callout callout--wrap">
       <span className="callout__title">
         {T.feeMeter.title}・{T.feeMeter.elapsed(Math.floor(years) + 1)}
       </span>
       <span>
-        {T.feeMeter.ground(ground)} {!isVerified(product, 'fees.expenseRatio') && <MarkIcon kind="unverified" />}
+        {/* 費率沒查證時的 ？ 標在面板標題旁（stepMarks），這裡不重複 */}
+        {T.feeMeter.ground(ground)}
       </span>
       <span className="callout__sub">{T.feeMeter.note}</span>
     </Html>

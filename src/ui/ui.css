@@ -213,6 +213,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .callout--dim { opacity: 0.45; }
 .callout--compact { padding: 1px 6px; line-height: 1.25; border-radius: 4px; }
 .callout--wrap { white-space: normal; width: max-content; max-width: min(340px, 80vw); text-align: center; line-height: 1.5; }
+.callout--wrap .callout__title { justify-content: center; }
 .callout__title { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
 .callout__dot { width: 8px; height: 8px; border-radius: 50%; flex: none; box-shadow: 0 0 0 1px var(--border); } /* 外框：近白色（如公債）的色點在白天也看得到 */
 .callout__sub { font-size: calc(11px * max(0.85, var(--label-scale, 1))); color: var(--soft-text); letter-spacing: 0.04em; } /* r2：副標太淡 */

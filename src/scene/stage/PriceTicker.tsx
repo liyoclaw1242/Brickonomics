@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Html } from '@react-three/drei'
 import { T } from '../../ui/strings'
-import { MarkIcon } from '../../ui/MarkIcon'
 import { illustrativeTicks } from '../layout/stages'
 import { EXCHANGE_POSITION } from './plaza'
 import { useAfterFirstTick } from '../useAfterFirstTick'
@@ -30,7 +29,6 @@ export function PriceTicker() {
     <Html position={[x, 13, z]} center className="callout callout--wrap">
       <span className="callout__title">
         {T.ticker.etf} <strong style={{ color }}>{p.toFixed(2)}</strong>
-        <MarkIcon kind="illustrative" />
       </span>
       <span className="callout__sub">{T.ticker.fund}</span>
     </Html>
