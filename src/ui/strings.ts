@@ -19,6 +19,22 @@ export const T = {
     { icon: '⚡', name: '情境' },
     { icon: '🪨', name: '地底' },
   ],
+  /** 簡單版裡地底章只剩最後的回顧，時間軸叫它「完成」 */
+  finishChapter: { icon: '🎉', name: '完成' },
+  /** 路線：第一次來的開始卡片、右上角切換 */
+  route: {
+    names: { simple: '簡單版', full: '完整版' },
+    startTitle: '要怎麼看？',
+    simple: (n: number) => `簡單版（約 ${n} 步）`,
+    full: (n: number) => `完整版（${n} 步）`,
+    simpleNote: '先懂大概',
+    fullNote: '看所有細節',
+    later: '右上角隨時可以換',
+    sep: '／',
+    switchLabel: '切換簡單版／完整版',
+    /** 無障礙名稱：先念看得到的目前路線，再說按下會換成哪一個 */
+    action: (current: string, to: string) => `${current}，切換到${to}`,
+  },
   chapterCounter: (i: number, n: number) => `${String(i).padStart(2, '0')} / ${String(n - 1).padStart(2, '0')}`,
   shock: { stock: '只買台積電', withLegend: (name: string) => `${name}・紅色＝假設跌掉的部分` },
   overlapLabel: (name: string) => `${name}：兩盒都有`,

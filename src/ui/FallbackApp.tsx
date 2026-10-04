@@ -1,6 +1,7 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { universe } from '../data'
-import { LEVELS } from '../tour/levels'
+import { LEVELS, ROUTES } from '../tour/levels'
+import type { Route } from '../tour/types'
 import { colorForKey } from '../scene/palette'
 import { parseEmphasis } from './emphasis'
 import { fallbackLevels } from './fallback'
@@ -27,17 +28,24 @@ function Line({ line }: { line: string }) {
   )
 }
 
+/** 文字版：預設完整版；上方兩顆按鈕可換成簡單版（只留簡單版的步驟） */
 export function FallbackApp() {
-  const levels = useMemo(() => fallbackLevels(LEVELS, universe), [])
+  const [route, setRoute] = useState<Route>('full')
+  const levels = useMemo(() => fallbackLevels(LEVELS, universe, ROUTES[route]), [route])
   return (
     <main className="fallback" data-levels={levels.length}>
       <h1>{T.appTitle}</h1>
       <p className="hint">{T.fallbackIntro}</p>
+      <div className="fallback__routes" role="group" aria-label={T.route.switchLabel}>
+        {(['simple', 'full'] as const).map((r) => (
+          <button key={r} className="pill" aria-pressed={route === r} onClick={() => setRoute(r)}>
+            {T.route.names[r]}
+          </button>
+        ))}
+      </div>
       {levels.map((l) => (
-        <section key={l.title} className="fallback__level">
-          <h2>
-            {l.label}・{l.title}
-          </h2>
+        <section key={l.label} className="fallback__level">
+          <h2>{l.title ? `${l.label}・${l.title}` : l.label}</h2>
           <ol>
             {l.steps.map((s) => (
               <li key={s.id}>

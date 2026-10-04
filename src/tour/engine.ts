@@ -208,3 +208,15 @@ export function initialRoute(progress: Progress, query: TourQuery): Route | null
   const returning = progress.pos !== undefined || progress.stepId !== undefined || progress.completed.length > 0 || progress.sandboxUnlocked
   return returning || query.pos || query.mode === 'sandbox' ? 'full' : null
 }
+
+/**
+ * 開網頁時停在哪：路線見 initialRoute；位置是網址的絕對位置，沒有就從存檔找回。
+ * 網址連到的步驟不在存檔的路線裡（又沒指定 ?route=）就改走完整版，照網址顯示那一步；
+ * 其他情況都停在路線裡「這一步或它之前」最近的一步。
+ */
+export function startOf(levels: readonly Level[], progress: Progress, query: TourQuery, routes: Readonly<Record<Route, RouteIds>>): { route: Route | null; pos: Position } {
+  let route = initialRoute(progress, query)
+  const pos = query.pos ?? resumePosition(levels, progress.pos, progress.stepId)
+  if (query.pos && !query.route && route && !inRoute(levels, query.pos, routes[route])) route = 'full'
+  return { route, pos: snapToRoute(levels, pos, routes[route ?? 'full']) }
+}

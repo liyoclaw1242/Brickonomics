@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { stepMarks } from './marks'
 import { universe } from '../data'
-import { LEVELS } from '../tour/levels'
+import { LEVELS, ROUTES } from '../tour/levels'
 import { makeTextContext } from '../tour/context'
 import { lineOf, moreOf } from '../tour/engine'
 import { fallbackLevels } from './fallback'
@@ -72,5 +72,19 @@ describe('fallbackLevels', () => {
     const gap = out.flatMap((l) => l.steps).find((s) => s.id === 's-6')!
     expect(gap.rows.map((r) => r.value)).toEqual(['92.0', '5.0', '97.0'])
     expect(exdiv.line).not.toMatch(/^拖/) // 文字版沒有拉桿
+  })
+})
+
+describe('fallbackLevels in the simple route', () => {
+  const simple = ROUTES.simple!
+  const out = fallbackLevels(LEVELS, universe, simple)
+  it('keeps only route steps, in order', () => {
+    expect(out.flatMap((l) => l.steps.map((s) => s.id))).toEqual(simple)
+  })
+  it('the recap-only underground chapter is labelled 完成 without the underground title', () => {
+    const last = out.at(-1)!
+    expect(last.label).toBe('完成')
+    expect(last.title).toBe('')
+    expect(out[0]!.label).toBe('序章')
   })
 })

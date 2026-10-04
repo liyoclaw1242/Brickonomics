@@ -206,6 +206,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .fallback h2 { font-size: 18px; margin: 28px 0 8px; }
 .fallback ol { padding-left: 20px; }
 .fallback li { margin-bottom: 14px; }
+.fallback__routes { display: flex; gap: 8px; margin: 12px 0; }
 
 /* 3D 標註（Callout / NameLabel）與標示圖示（MarkIcon）。--label-scale 由 ViewFraming 依鏡頭 zoom 設定：窄畫面字跟著縮小（設下限以保可讀） */
 .callout { pointer-events: none; display: grid; gap: 2px; padding: 6px 10px; border-radius: 8px; white-space: nowrap;
@@ -280,3 +281,19 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
   .info { bottom: calc(42vh + 64px); bottom: calc(42dvh + 64px); }
   .legend-bar ~ .info { top: auto; }
 }
+
+/* 第一次來：選簡單版或完整版（兩顆大按鈕，各一句白話） */
+.route-start { display: grid; gap: 12px; margin-top: 6px; }
+.route-start .step-title { margin: 4px 0 2px; }
+.route-start__choice {
+  display: grid; gap: 4px; text-align: left; padding: 14px 16px; border-radius: 14px;
+  border: 1px solid var(--border); background: var(--chip); color: var(--text); font: inherit; cursor: pointer;
+}
+.route-start__choice--simple { background: var(--accent); color: var(--accent-text); border-color: transparent; }
+.route-start__name { font-size: 19px; font-weight: 700; }
+.route-start__note { font-size: 16px; }
+.route-start .hint { font-size: 14px; }
+
+/* 右上路線切換：兩個名字都在，目前的那個亮 */
+.route-pill__on { font-weight: 700; color: var(--em); }
+.route-pill__off { color: var(--muted); }

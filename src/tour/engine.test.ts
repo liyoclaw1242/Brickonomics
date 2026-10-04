@@ -4,7 +4,7 @@ import { LEVELS as REAL } from './levels'
 import {
   DEFAULT_VALUES, stepAt, isValidPosition, nextPosition, prevPosition, positionOf, progressFraction,
   isSatisfied, sandboxPatchFor, lineOf, moreOf, titleOf, parseProgress, serializeProgress, parseTourQuery, controlRange, resumePosition,
-  snapToRoute, firstInLevel, firstPosition, inRoute, initialRoute,
+  snapToRoute, firstInLevel, firstPosition, inRoute, initialRoute, startOf,
 } from './engine'
 
 const L: Level[] = [
@@ -231,5 +231,24 @@ describe('routes (簡單版只走一部分步驟)', () => {
     expect(initialRoute(empty, { route: 'simple' })).toBe('simple') // 網址指定
     expect(initialRoute({ ...empty, route: 'simple' }, { route: 'full' })).toBe('full')
     expect(initialRoute(empty, { mode: 'tour', pos: { level: 0, step: 1 } })).toBe('full') // 直接連到某一步
+  })
+})
+
+describe('startOf (where the page opens)', () => {
+  const routes = { full: null, simple: ['a1', 'b1'] } as const
+  const empty = { completed: [], sandboxUnlocked: false }
+  it('first visit: no route yet, first step', () => {
+    expect(startOf(L, empty, {}, routes)).toEqual({ route: null, pos: { level: 0, step: 0 } })
+  })
+  it('resumes a saved simple route inside the route', () => {
+    expect(startOf(L, { ...empty, route: 'simple', stepId: 'b1', pos: { level: 1, step: 0 } }, {}, routes)).toEqual({ route: 'simple', pos: { level: 1, step: 0 } })
+    expect(startOf(L, { ...empty, route: 'simple', stepId: 'a2' }, {}, routes)).toEqual({ route: 'simple', pos: { level: 0, step: 0 } })
+  })
+  it('a deep link to a step outside the saved route opens the full route there', () => {
+    expect(startOf(L, { ...empty, route: 'simple' }, { mode: 'tour', pos: { level: 0, step: 1 } }, routes)).toEqual({ route: 'full', pos: { level: 0, step: 1 } })
+  })
+  it('an explicit ?route= wins and the deep-linked step snaps into it', () => {
+    expect(startOf(L, empty, { mode: 'tour', pos: { level: 0, step: 1 }, route: 'simple' }, routes)).toEqual({ route: 'simple', pos: { level: 0, step: 0 } })
+    expect(startOf(L, empty, { route: 'simple' }, routes)).toEqual({ route: 'simple', pos: { level: 0, step: 0 } })
   })
 })
