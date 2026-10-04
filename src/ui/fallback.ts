@@ -3,11 +3,11 @@ import { makeTextContext } from '../tour/context'
 import { DEFAULT_VALUES, sandboxPatchFor } from '../tour/engine'
 import type { LessonText, Level, RecapLine, TextContext } from '../tour/types'
 import { stageReadout, type ReadoutRow } from './readout'
-import type { Mark } from './marks'
+import { stepMarks, type Mark } from './marks'
 import { T } from './strings'
 
 /** line 保留 `**…**` 強調標記；more 是多說一點 */
-export type FallbackStep = { id: string; title: string; line: string; more: string; mark?: Mark; rows: ReadoutRow[]; recap?: RecapLine[] }
+export type FallbackStep = { id: string; title: string; line: string; more: string; marks: Mark[]; rows: ReadoutRow[]; recap?: RecapLine[] }
 export type FallbackLevel = { label: string; title: string; steps: FallbackStep[] }
 
 const resolve = (t: LessonText, ctx: TextContext): string => (typeof t === 'function' ? t(ctx) : t)
@@ -29,7 +29,7 @@ export function fallbackLevels(levels: readonly Level[], u: Universe): FallbackL
         title: step.title,
         line: resolve(step.fallbackLine ?? step.line, ctx),
         more: resolve(step.fallbackMore ?? step.more, ctx),
-        mark: step.mark,
+        marks: stepMarks(step, u),
         rows: stageReadout(step.scene.stage ?? { kind: 'none' }, values, u, productId),
         ...(step.recap ? { recap: step.recap } : {}),
       }

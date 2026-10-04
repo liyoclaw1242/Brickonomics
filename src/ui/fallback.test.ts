@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { stepMarks } from './marks'
 import { universe } from '../data'
 import { LEVELS } from '../tour/levels'
 import { makeTextContext } from '../tour/context'
@@ -25,7 +26,9 @@ describe('fallbackLevels', () => {
     const steps = LEVELS.flatMap((l) => l.steps).filter((s) => s.mark)
     expect(steps.length).toBeGreaterThan(0)
     const flat = out.flatMap((l) => l.steps)
-    for (const s of steps) expect(flat.find((f) => f.id === s.id)!.mark, s.id).toBe(s.mark)
+    for (const s of steps) expect(flat.find((f) => f.id === s.id)!.marks, s.id).toContain(s.mark)
+    // 標題旁的標示和 3D 版一致（含從資料推出來的「還沒查證」）
+    for (const s of LEVELS.flatMap((l) => l.steps)) expect(flat.find((f) => f.id === s.id)!.marks, s.id).toEqual(stepMarks(s, universe))
   })
 
   it('u-6 uses its own honest text: no 已經解鎖, no claim that the sandbox is here', () => {

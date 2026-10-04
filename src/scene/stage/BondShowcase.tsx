@@ -83,7 +83,6 @@ export function BondShowcase({ stressed, ranks = false, quality }: { stressed: b
               title={broken ? T.stage.bondHurt(T.stage.bonds.hy) : T.stage.bonds[s.key]}
               sub={rank}
               color={broken ? ACCENT_COLORS.loss : undefined}
-              marks={s.key !== 'stock' || stressed ? ['illustrative'] : undefined}
               persistent={s.key !== 'stock' || stressed}
             />
           </group>

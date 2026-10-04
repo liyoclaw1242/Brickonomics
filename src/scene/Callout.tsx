@@ -1,7 +1,5 @@
 import { Html, Line } from '@react-three/drei'
 import { useThemeStore } from '../store/theme'
-import { MarkIcon } from '../ui/MarkIcon'
-import type { Mark } from '../ui/marks'
 import type { Vec3 } from './camera'
 import { THEMES } from './theme'
 import { useAfterFirstTick } from './useAfterFirstTick'
@@ -11,21 +9,21 @@ type Props = {
   offset?: Vec3
   title: string
   sub?: string
-  marks?: Mark[]
   dim?: boolean
   wrap?: boolean
   /** 窄邊距的小字塊（地層名稱這類一層一個、上下很密的標註） */
   compact?: boolean
   /**
    * 「標註」開關只藏非 persistent 的標註（名稱類，連同引線）和 NameLabel。
-   * persistent 的標註（內容、提醒、圖例、帶標示圖示的數字）連同引線一律留著。
+   * persistent 的標註（內容、提醒、圖例、數字）連同引線一律留著。
+   * ≈／✎／？ 標示不放在 3D 標註上：每一步只在面板標題旁出現一次（使用者測試 r2）。
    */
   persistent?: boolean
   /** 3b1b 顏色連結：標題前的小色點與引線錨點用這個顏色（和物體、課文關鍵詞同色） */
   color?: string
 }
 
-export function Callout({ anchor, offset = [0, 2, 0], title, sub, marks, dim = false, wrap = false, compact = false, persistent = false, color }: Props) {
+export function Callout({ anchor, offset = [0, 2, 0], title, sub, dim = false, wrap = false, compact = false, persistent = false, color }: Props) {
   const ready = useAfterFirstTick()
   const labels = useThemeStore((s) => s.labels)
   const t = THEMES[useThemeStore((s) => s.theme)]
@@ -53,7 +51,6 @@ export function Callout({ anchor, offset = [0, 2, 0], title, sub, marks, dim = f
             <span className="callout__title">
               {color && <span className="callout__dot" style={{ background: color }} />}
               {title}
-              {marks?.map((k) => <MarkIcon key={k} kind={k} />)}
             </span>
             {sub && <span className="callout__sub">{sub}</span>}
           </div>

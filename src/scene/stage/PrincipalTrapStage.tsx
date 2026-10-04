@@ -12,7 +12,7 @@ export function PrincipalTrapStage({ quality }: { quality: Quality }) {
     <TowerRow
       quality={quality}
       base={T.towers.baseDemo}
-      towers={[{ key: 'trap', label: T.trapRow, value: st.value, lost: st.fromPrincipal, lostLabel: T.towers.lostPrincipal, coins: st.cashReceived, color: '#ff8a3d', marks: ['illustrative'] }]}
+      towers={[{ key: 'trap', label: T.trapRow, value: st.value, lost: st.fromPrincipal, lostLabel: T.towers.lostPrincipal, coins: st.cashReceived, color: '#ff8a3d' }]}
     />
   )
 }

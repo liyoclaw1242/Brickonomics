@@ -27,7 +27,7 @@ export function StageView({ quality }: { quality: Quality }) {
       {stage.kind === 'held' && <HeldBlocks items={stage.items} />}
       {stage.kind === 'bonds' && <BondShowcase stressed={stage.stressed} ranks={stage.ranks} quality={quality} />}
       {stage.kind === 'exdiv' && <ExDividendStage outcome={stage.outcome} quality={quality} />}
-      {stage.kind === 'feeRace' && <FeeRaceStage focus={stage.focus} quality={quality} />}
+      {stage.kind === 'feeRace' && <FeeRaceStage focus={stage.focus} etf={stage.etf} quality={quality} />}
       {stage.kind === 'accumulate' && <AccumulateStage quality={quality} />}
       {stage.kind === 'principalTrap' && <PrincipalTrapStage quality={quality} />}
       {stage.kind === 'shock' && <ShockStage active={stage.active} quality={quality} />}

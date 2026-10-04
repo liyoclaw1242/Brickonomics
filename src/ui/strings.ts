@@ -81,6 +81,7 @@ export const T = {
   },
   towers: { lost: '費用扣掉的', lostPrincipal: '削掉的本金', coins: (v: number) => `領到的金幣 ${v.toFixed(1)} 元`, exit: (v: number) => `出門費 ${v.toFixed(1)} 元`, held: '每年的費用', base: '只比費用', baseDemo: '以投入 100 元計（示意參數）', value: (v: number) => `${v.toFixed(1)} 元` },
   feeRaceCaveat: '三者投資內容與風險不同，費用低不代表比較好',
+  feeRaceCaveatFunds: '同一檔基金，只差收費方式；前收手續費是假設值',
   /** 費用比一比的塔名（短）；即時數字表用下面的 feeRows（完整） */
   feeTowers: { front: '前收：進門先付', back: '後收：出門才付', etf: '0050：門票便宜' },
   feeRows: {

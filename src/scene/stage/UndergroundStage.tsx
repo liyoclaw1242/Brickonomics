@@ -131,8 +131,8 @@ export function UndergroundStage({ show, cores, quality }: { show: Show; cores?:
           </group>
         ))}
       {/* 細桿的說明（快照只列前幾大持股）移到面板的「多說一點」：畫面上少一段兩行小字 */}
-      {show === 'dig' && <Callout anchor={[0, digY, 40]} offset={[0, 1.4, 1]} title={T.underground.dig} marks={['illustrative']} persistent />}
-      {show === 'veins' && <Callout anchor={[0, GROUND_TOP + 1.2, FRONT_Z + 1]} offset={[0, 0, 0]} title={T.underground.veins} marks={['illustrative']} persistent />}
+      {show === 'dig' && <Callout anchor={[0, digY, 40]} offset={[0, 1.4, 1]} title={T.underground.dig} persistent />}
+      {show === 'veins' && <Callout anchor={[0, GROUND_TOP + 1.2, FRONT_Z + 1]} offset={[0, 0, 0]} title={T.underground.veins} persistent />}
     </group>
   )
 }

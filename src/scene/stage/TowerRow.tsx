@@ -1,6 +1,5 @@
 import { useThree } from '@react-three/fiber'
 import { layoutModel } from '../../ui/layoutModel'
-import type { Mark } from '../../ui/marks'
 import { T } from '../../ui/strings'
 import { Callout } from '../Callout'
 import { CoinPile } from '../CoinPile'
@@ -15,7 +14,7 @@ import { VoxelColumn } from './VoxelColumn'
  * exit：出門費（金額，已含在 lost 裡）；有填就另外堆一小堆、寫上金額。
  * focus：這座是焦點（鮮豔）；同一排有焦點時，其他塔變暗、不畫紅色小堆。
  */
-export type TowerSpec = { key: string; label: string; value: number; lost?: number; lostLabel?: string; exit?: number; coins?: number; color: string; marks?: Mark[]; focus?: boolean }
+export type TowerSpec = { key: string; label: string; value: number; lost?: number; lostLabel?: string; exit?: number; coins?: number; color: string; focus?: boolean }
 
 const SPACING = 12
 /** VoxelColumn 預設 5×5 一層 */
@@ -79,9 +78,8 @@ export function TowerRow({ towers, quality, base, baseSub }: { towers: TowerSpec
               title={T.towers.value(t.value)}
               sub={t.label}
               color={t.color}
-              marks={t.marks}
               dim={dim}
-              persistent={!!t.marks?.length}
+              persistent
             />
           </group>
         )

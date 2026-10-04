@@ -42,7 +42,9 @@ export function FallbackApp() {
               <li key={s.id}>
                 <h3 className="fallback__title">
                   {s.title}
-                  {s.mark && <MarkIcon kind={s.mark} />}
+                  {s.marks.map((k) => (
+                    <MarkIcon key={k} kind={k} />
+                  ))}
                 </h3>
                 <Line line={s.line} />
                 {/* 回顧不用 li：e2e 以 li 數步驟 */}

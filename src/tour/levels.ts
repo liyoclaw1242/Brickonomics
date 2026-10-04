@@ -202,18 +202,16 @@ export const LEVELS: Level[] = [
       },
       {
         id: 'f-4',
-        title: '同名不同料',
-        line: '**另一檔**也叫平衡，裡面差很多',
+        title: '另一台怪手',
+        line: '也是股票＋借據，**怪手挑的不一樣**',
+        // 純看圖：換一台怪手，股票和借據的多少整個反過來；專有名詞（可轉債、高收益債）只在多說一點
         more: (c) =>
-          `這檔是安聯收益成長基金，也是多重資產。依目前快照，可轉債約 ${pct0(c.weightPct('ALLIANZ_INCOME_GROWTH', 'CONVERTIBLE_US'))}%，高收益債約 ${pct0(c.weightPct('ALLIANZ_INCOME_GROWTH', 'US_HIGH_YIELD'))}%。可轉債＝能換成股票的借據。名稱一樣，裡面不一定一樣。`,
-        bigNumber: (c) => {
-          const w = c.weightPct('ALLIANZ_INCOME_GROWTH', 'CONVERTIBLE_US')
-          return { value: `${pct0(w)}%`, label: '能換成股票的借據', fraction: w / 100, colorKey: 'CONVERTIBLE_US' }
-        },
+          `這是安聯收益成長基金，也是股票＋借據。前一座約 ${pct0(c.assetClassPct('JH_BALANCED', 'stock'))}% 是股票，這座只有約 ${pct0(c.assetClassPct('ALLIANZ_INCOME_GROWTH', 'stock'))}%。它的借據裡，可轉債約 ${pct0(c.weightPct('ALLIANZ_INCOME_GROWTH', 'CONVERTIBLE_US'))}%，高收益債約 ${pct0(c.weightPct('ALLIANZ_INCOME_GROWTH', 'US_HIGH_YIELD'))}%。可轉債＝能換成股票的借據；名稱像，裡面不一定一樣。`,
+        // 借據那幾層亮、股票那幾層暗：一眼看出這座塔大半是借據
         focus: { holdings: ['CONVERTIBLE_US', 'US_HIGH_YIELD'] },
         callouts: [
-          { anchor: { kind: 'holding', holdingId: 'CONVERTIBLE_US' }, title: '可轉債', sub: '能換成股票的借據' },
-          { anchor: { kind: 'holding', holdingId: 'US_HIGH_YIELD' }, title: '高收益債', sub: '利息高、不穩的借據' },
+          { anchor: { kind: 'holding', holdingId: 'OTHER_US_STOCK' }, title: '股票', sub: (c) => `約 ${pct0(c.assetClassPct('ALLIANZ_INCOME_GROWTH', 'stock'))}%` },
+          { anchor: { kind: 'holding', holdingId: 'CONVERTIBLE_US' }, title: '借據', sub: (c) => `約 ${pct0(c.assetClassPct('ALLIANZ_INCOME_GROWTH', 'bond'))}%` },
         ],
         scene: { camera: 'exchangeWide', product: 'ALLIANZ_INCOME_GROWTH', explode: 1, stage: { kind: 'excavator', meter: false }, cityLabels: false },
       },
@@ -229,9 +227,10 @@ export const LEVELS: Level[] = [
         id: 'f-6',
         title: '入口門、出口門',
         line: '拖**持有年數**。看誰**剩最多**',
-        more: '前收型＝買時先付手續費（假設值），像入口門。後收 U 級別＝賣時才付，像出口門。兩者都是施羅德環球收息債券，再和 0050 比一比。三者內容與風險不同，費用低不代表比較好。',
+        more: '前收型＝買時先付手續費（假設值），像入口門。後收 U 級別＝賣時才付，像出口門。兩座都是施羅德環球收息債券，只差收費方式。費用資料有些還沒查證，標在下面的數字表。',
         mark: 'assumption',
-        scene: { camera: 'plaza', product: null, stage: { kind: 'feeRace' }, values: { years: 0 } },
+        // 只放兩座基金塔：0050 等到 ETF 那一章才出場
+        scene: { camera: 'plaza', product: null, stage: { kind: 'feeRace', etf: false }, values: { years: 0 } },
         controls: ['years'],
         until: { control: 'years', min: 3 },
       },
@@ -248,7 +247,7 @@ export const LEVELS: Level[] = [
           const first = c.exitFee(BACKLOAD, 0)
           return { value: `${n0(fee * 100)}%`, label: '現在賣要付的出門費', fraction: first > 0 ? fee / first : 0, colorKey: 'loss' }
         },
-        scene: { camera: 'plaza', product: null, stage: { kind: 'feeRace', focus: 'back' }, values: { years: 0 } },
+        scene: { camera: 'plaza', product: null, stage: { kind: 'feeRace', focus: 'back', etf: false }, values: { years: 0 } },
         controls: ['years'],
         // 只拉到出門費歸零之後一年，拉到底的畫面和 f-6 不一樣
         ranges: { years: [0, 4] },

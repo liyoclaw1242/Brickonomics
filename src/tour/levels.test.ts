@@ -4,13 +4,14 @@ import { isBasket } from '../data/schema'
 import { overlap } from '../sim/overlap'
 import { EXDIV_AFTER_PHASE, LEVELS } from './levels'
 import { exDivTimeline } from '../scene/layout/stages'
-import { makeTextContext } from './context'
+import { makeTextContext, pct0 } from './context'
 import { controlRange, DEFAULT_VALUES, lineOf, moreOf } from './engine'
 import { ACTION_VERBS, forbiddenWordsIn, jargonIn, LINE_SENTENCE_MAX, LINE_SENTENCES_MAX, MORE_SENTENCE_MAX, MORE_SENTENCES_MAX, sentences } from './glossary'
 import { parseEmphasis, stripMarkup, visibleLength } from '../ui/emphasis'
 import { colorForKey } from '../scene/palette'
 import { isVerified } from '../data/verified'
 import { T } from '../ui/strings'
+import { stepMarks } from '../ui/marks'
 import type { VerifiedKey } from '../data/schema'
 import type { Stage, StageValues, Step } from './types'
 
@@ -299,8 +300,7 @@ describe('LEVELS', () => {
       expect(er('QQQ'), f.id).toBeLessThan(f.fees!.expenseRatio!)
       expect(er('SPY'), f.id).toBeLessThan(f.fees!.expenseRatio!)
     }
-    expect(moreOf(byId('f-4'), ctx)).toContain('32%')
-    expect(bigOf(byId('f-4'))!.value).toBe('32%') // pct0(31.98)
+    expect(moreOf(byId('f-4'), ctx)).toContain('32%') // 可轉債 pct0(31.98)，只在多說一點
     expect(moreOf(byId('e-3'), ctx)).toContain('7%') // 2454: pct0(6.71)
   })
 })
@@ -423,18 +423,48 @@ describe('jargon diet (user test r1)', () => {
     for (const c of byId('f-2').callouts!) expect(c.when, 'f-2 shows names once the tower is apart').toEqual(byId('f-2').until)
   })
 
-  it('f-4 needs no jargon: plain subs on its two unusual layers', () => {
+  it('f-4 is purely visual: another 怪手 picked a different tower (股票 vs 借據), no jargon on screen', () => {
     const f4 = byId('f-4')
-    expect(f4.focus?.holdings).toEqual(['CONVERTIBLE_US', 'US_HIGH_YIELD'])
-    expect(f4.callouts?.map((c) => resolve(c.sub))).toEqual(['能換成股票的借據', '利息高、不穩的借據'])
-    expect(stripMarkup(lineOf(f4, ctx))).not.toMatch(/可轉債|多重資產|安聯/)
-    expect(bigOf(f4)!.label).not.toMatch(/可轉債|多重資產|安聯/)
+    const onScreen = [f4.title, stripMarkup(lineOf(f4, ctx)), ...(f4.callouts ?? []).flatMap((c) => [resolve(c.title)!, resolve(c.sub) ?? ''])]
+    for (const t of onScreen) expect(t, t).not.toMatch(/可轉債|高收益債|多重資產|安聯|平衡|檔|同名/)
+    expect(stripMarkup(lineOf(f4, ctx))).toContain('股票＋借據') // 事實：股票＋借據（不說它是平衡型）
+    expect(stripMarkup(lineOf(f4, ctx))).toContain('怪手挑的不一樣')
+    expect(f4.bigNumber).toBeUndefined()
+    // 亮的＝借據（所有債券層），暗的＝股票
+    const bonds = universe.get('ALLIANZ_INCOME_GROWTH')!.holdings!.filter((h) => ['convertible', 'highYieldBond', 'govBond', 'corpBond', 'bondMixed'].includes(universe.get(h.id)!.type)).map((h) => h.id)
+    expect([...(f4.focus?.holdings ?? [])].sort()).toEqual(bonds.sort())
+    expect((f4.callouts ?? []).map((c) => resolve(c.title))).toEqual(['股票', '借據'])
+    // 副標的百分比從資料加總：股票約 32%、借據約 62%
+    expect((f4.callouts ?? []).map((c) => resolve(c.sub))).toEqual([
+      `約 ${pct0(ctx.assetClassPct('ALLIANZ_INCOME_GROWTH', 'stock'))}%`,
+      `約 ${pct0(ctx.assetClassPct('ALLIANZ_INCOME_GROWTH', 'bond'))}%`,
+    ])
+    expect((f4.callouts ?? []).map((c) => resolve(c.sub))).toEqual(['約 32%', '約 62%'])
+    // 細節留在多說一點
+    expect(moreOf(f4, ctx)).toContain('可轉債')
+    expect(moreOf(f4, ctx)).toContain('高收益債')
+  })
+
+  it('f-6 and f-7 show only the two fund towers: 0050 is not named before the ETF chapter', () => {
+    for (const id of ['f-6', 'f-7']) expect(byId(id).scene.stage, id).toMatchObject({ kind: 'feeRace', etf: false })
+    const firstEtf = steps.findIndex((s) => s.id === 'e-1')
+    for (const s of steps.slice(0, firstEtf)) {
+      const texts = [s.title, lineOf(s, ctx), moreOf(s, ctx), resolve(s.fallbackLine), resolve(s.fallbackMore), ...(s.callouts ?? []).flatMap((c) => [resolve(c.title), resolve(c.sub)])]
+      for (const t of texts) if (t !== undefined) expect(t.includes('0050'), `${s.id}: ${t}`).toBe(false)
+    }
+  })
+
+  it('f-6 and f-7 carry their marks once, next to the title: ✎ assumption and ？ unverified (from the data)', () => {
+    expect(stepMarks(byId('f-6'), universe)).toEqual(['assumption', 'unverified'])
+    expect(stepMarks(byId('f-7'), universe)).toEqual(['assumption', 'unverified'])
+    expect(stepMarks(byId('s-5'), universe)).toEqual(['illustrative'])
+    expect(stepMarks(byId('p-1'), universe)).toEqual([])
   })
 
   it('f-7 looks different from f-6: back-load only, from year 0, exit fee shrinking to 0', () => {
     const f6 = byId('f-6')
     const f7 = byId('f-7')
-    expect(f7.scene.stage).toEqual({ kind: 'feeRace', focus: 'back' })
+    expect(f7.scene.stage).toEqual({ kind: 'feeRace', focus: 'back', etf: false })
     expect(f7.scene.values?.years).toBe(0)
     expect(f7.controls).toEqual(['years'])
     expect(f7.until?.control).toBe('years')

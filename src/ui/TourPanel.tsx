@@ -13,6 +13,7 @@ import { OneLine } from './panel/OneLine'
 import { StepHeader } from './panel/StepHeader'
 import { StepNav } from './panel/StepNav'
 import { stageReadout } from './readout'
+import { stepMarks } from './marks'
 import { StageControls } from './StageControls'
 import { T } from './strings'
 import type { Control } from '../tour/types'
@@ -40,10 +41,11 @@ export function TourPanel() {
   const [instant] = useState(prefersReducedMotion)
   const revealed = useRevealAfterCamera(step.id, instant)
   const colorOf = useCallback((key: string) => colorForKey(universe, key), [])
+  const marks = useMemo(() => stepMarks(step, universe), [step])
 
   return (
     <aside className="panel tour">
-      <StepHeader level={pos.level} levelCount={LEVELS.length} title={titleOf(step)} mark={step.mark} revealed={revealed}>
+      <StepHeader level={pos.level} levelCount={LEVELS.length} title={titleOf(step)} marks={marks} revealed={revealed}>
         <OneLine line={line} colorOf={colorOf} />
       </StepHeader>
       {big && (

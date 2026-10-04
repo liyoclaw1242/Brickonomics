@@ -24,6 +24,16 @@ describe('stageReadout', () => {
     expect(rows.at(-1)!.note).toBe('三者投資內容與風險不同，費用低不代表比較好')
   })
 
+  it('fee race without the ETF (tour f-6/f-7: 0050 is not taught yet) lists only the two fund classes', () => {
+    const rows = stageReadout({ kind: 'feeRace', etf: false }, v({ years: 3, frontLoad: 0.015 }), universe, null)
+    expect(rows.map((r) => r.label).join('｜')).not.toContain('0050')
+    expect(rows).toHaveLength(3) // 前收、後收、費用最少
+    expect(rows[0]!.marks).toEqual(['assumption', 'unverified']) // 多說一點裡的數字表保留標示
+    expect(rows[1]!.marks).toEqual(['unverified'])
+    expect(['前收型（假設 1.50%）', '後收型（U 級別）']).toContain(rows.at(-1)!.value)
+    expect(rows.at(-1)!.note).not.toContain('三者')
+  })
+
   it('shows shock impacts only when active', () => {
     expect(stageReadout({ kind: 'shock', active: false }, v(), universe, null)).toEqual([])
     const rows = stageReadout({ kind: 'shock', active: true }, v(), universe, null)

@@ -58,6 +58,12 @@ export function feeRace(u: Universe, years: number, frontLoad: number): FeeRaceR
   ]
 }
 
+/** etf false：只留同一檔基金的前收、後收（導覽在教 ETF 之前用） */
+export function feeRaceRows(u: Universe, years: number, frontLoad: number, etf = true): FeeRaceRow[] {
+  const rows = feeRace(u, years, frontLoad)
+  return etf ? rows : rows.filter((r) => r.id !== 'etf')
+}
+
 export function feeRaceLeader(rows: FeeRaceRow[]): FeeRaceRow['id'] {
   return rows.reduce((best, r) => (r.value > best.value ? r : best)).id
 }

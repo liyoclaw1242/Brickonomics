@@ -4,11 +4,12 @@ import { MarkIcon } from '../MarkIcon'
 import { T } from '../strings'
 
 /** 品牌＋章節圖示與編號＋大標題；children（一句話）與標題一起放在 aria-live 外層 */
-export function StepHeader({ level, levelCount, title, mark, revealed, children }: {
+export function StepHeader({ level, levelCount, title, marks, revealed, children }: {
   level: number
   levelCount: number
   title: string
-  mark?: Mark
+  /** 這一步的標示（≈ 舉例／✎ 假設的數字／？ 還沒查證），每種在標題旁出現一次 */
+  marks: readonly Mark[]
   revealed: boolean
   children?: ReactNode
 }) {
@@ -27,7 +28,13 @@ export function StepHeader({ level, levelCount, title, mark, revealed, children 
       <div className={revealed ? 'step-reveal is-revealed' : 'step-reveal'} aria-live="polite" aria-atomic="true">
         <h1 className="step-title">
           {title}
-          {mark && <MarkIcon kind={mark} />}
+          {marks.length > 0 && (
+            <span className="step-title__marks">
+              {marks.map((k) => (
+                <MarkIcon key={k} kind={k} />
+              ))}
+            </span>
+          )}
         </h1>
         {children}
       </div>
