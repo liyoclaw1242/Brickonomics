@@ -9,7 +9,8 @@ export const CAMERA_PRESETS: Record<CameraPresetId, { position: Vec3; target: Ve
   tw: { position: [-12, 22, 34], target: [-16, 6, 0] },
   // 美國大樓高（18–19 層）：鏡頭拉遠、看高一點，樓頂才不會被畫面上緣切掉
   us: { position: [22, 26, 46], target: [16, 9, 0] },
-  exchange: { position: [6, 18, 40], target: [0, 6, 14] },
+  // 往下看多一點：後面美國大樓的樓頂不會被切一半、壓在工具列底下（使用者測試 r2，f-1）
+  exchange: { position: [2, 20, 50], target: [2, 8, 12] },
   exchangeWide: { position: [10, 30, 48], target: [0, 10, 14] },
   // 雷射刀（沿 x 切）：從斜前方看。正對 x 軸時切掉的是靠近鏡頭那一面，剩下的看起來一模一樣（使用者測試 r2）
   exchangeSide: { position: [26, 15, 38], target: [0, 6, 14] },

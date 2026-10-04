@@ -3,6 +3,7 @@ import type { Universe } from '../data/universe'
 import { isVerified } from '../data/verified'
 import { productLooks } from '../scene/palette'
 import type { Picked } from '../store/sandbox'
+import { displayName } from './names'
 import { T } from './strings'
 
 export function productGroups(u: Universe): { etfs: Asset[]; funds: Asset[] } {
@@ -18,7 +19,7 @@ export function legendRows(u: Universe, productId: string): LegendRow[] {
   const looks = productLooks(u, productId)
   return p.holdings.map((h, i) => {
     const a = u.get(h.id)!
-    return { id: h.id, name: a.name, weightPct: h.weightPct, color: looks[i]!.color, aggregate: a.aggregate ?? false }
+    return { id: h.id, name: displayName(u, h.id), weightPct: h.weightPct, color: looks[i]!.color, aggregate: a.aggregate ?? false }
   })
 }
 
@@ -49,7 +50,7 @@ export function pickInfo(u: Universe, picked: Picked): PickInfo | null {
     const h = product.holdings.find((x) => x.id === holding.id)
     if (!h) return null
     return {
-      title: holding.name,
+      title: displayName(u, holding.id),
       subtitle: T.partOf(product.name),
       weightPct: h.weightPct,
       asOf: product.asOf,

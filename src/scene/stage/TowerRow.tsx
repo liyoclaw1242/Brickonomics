@@ -19,6 +19,8 @@ export type TowerSpec = { key: string; label: string; value: number; lost?: numb
 const SPACING = 12
 /** VoxelColumn 預設 5×5 一層 */
 const TOWER_FLOOR = 25
+/** 超過這麼多層的塔，數值標註放在塔的旁邊 */
+const TALL_LAYERS = 4
 const looks = new Map<string, BlockLook>()
 /** 同一個顏色永遠回傳同一個 look 物件，避免子元件的 memo 每次 render 都失效 */
 const matteLook = (color: string): BlockLook => {
@@ -73,8 +75,8 @@ export function TowerRow({ towers, quality, base, baseSub }: { towers: TowerSpec
             {/* 標註放在塔頂上方，不和下方的紅色小堆／金幣堆標註搶位置。數值當標題、名稱當副標；色點＝塔的顏色（3b1b 顏色連結） */}
             <Callout
               anchor={atPlaza(x, Math.ceil(blocksFor(t.value) / TOWER_FLOOR) + 0.1, 0)}
-              // 引線短一點：高塔（例如累積型 20 年）的標註才不會飄進後面的城市
-              offset={[0, 2.4 + (i % 2) * stagger, 0]}
+              // 高塔（例如累積型 20 年）頂上的標註會疊到後面城市的大樓：改放塔的右邊（r2）
+              offset={Math.ceil(blocksFor(t.value) / TOWER_FLOOR) > TALL_LAYERS ? [3.6, -0.6, 0] : [0, 2.4 + (i % 2) * stagger, 0]}
               title={T.towers.value(t.value)}
               sub={t.label}
               color={t.color}

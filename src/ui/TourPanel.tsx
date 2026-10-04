@@ -50,7 +50,7 @@ export function TourPanel() {
       </StepHeader>
       {big && (
         <div className={revealed ? 'step-reveal is-revealed' : 'step-reveal'}>
-          <BigNumberCard key={step.id} n={big} color={big.colorKey ? colorOf(big.colorKey) : undefined} run={revealed} instant={instant} />
+          <BigNumberCard key={step.id} n={big} color={big.colorKey ? colorOf(big.colorKey) : undefined} run={revealed} instant={instant} titleMarks={marks} />
         </div>
       )}
       {step.controls && <StageControls controls={step.controls} />}

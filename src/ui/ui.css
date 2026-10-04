@@ -70,7 +70,8 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 :root[data-theme='day'] .oneline strong.em-key { color: color-mix(in oklab, var(--key) 62%, #1f2933); text-decoration: underline 3px var(--key); text-underline-offset: 4px; }
 .bignum { margin: 8px 0 12px; padding: 12px 14px; border-radius: 12px; background: var(--chip); border: 1px solid var(--border); }
 .bignum__value { font-size: 34px; font-weight: 700; display: flex; gap: 8px; align-items: center; font-variant-numeric: tabular-nums; }
-.bignum__label { font-size: 13px; color: var(--muted); }
+.bignum__label { font-size: 14px; color: var(--soft-text); }
+.bignum__note { font-size: 14px; color: var(--soft-text); margin-top: 2px; }
 .bignum__bar { margin-top: 8px; height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
 .bignum__bar span { display: block; height: 100%; background: var(--accent); }
 .more { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 8px; font-size: 14px; color: var(--muted); }

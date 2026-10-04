@@ -9,6 +9,11 @@ describe('displayName', () => {
     expect(displayName(universe, 'SPY')).toBe('SPY（美國500大）')
   })
 
+  it('shows a name he knows for companies whose data name is unfamiliar (r2: Alphabet → Google)', () => {
+    expect(displayName(universe, 'GOOGL')).toBe('Google')
+    expect(universe.get('GOOGL')!.name).toBe('Alphabet') // 資料名稱不動
+  })
+
   it('falls back to the data name, then the id', () => {
     expect(displayName(universe, '2330')).toBe('台積電')
     expect(displayName(universe, 'NOPE')).toBe('NOPE')

@@ -275,6 +275,20 @@ describe('LEVELS', () => {
     expect(new Set(steps.map((s) => s.scene)).size).toBe(steps.length)
   })
 
+  it('every 至少 big number explains in plain words why it is only a lower bound (r2)', () => {
+    let n = 0
+    for (const s of steps) {
+      const bn = bigOf(s)
+      if (!bn?.value.startsWith('至少')) continue
+      n++
+      expect(bn.note, s.id).toBeDefined()
+      expect(bn.note!, s.id).toContain('實際更多')
+      expect(Array.from(bn.note!).length, s.id).toBeLessThanOrEqual(14)
+      expect(jargonIn(bn.note!), s.id).toEqual([])
+    }
+    expect(n).toBe(2) // c-3、u-2
+  })
+
   it('u-2 says the semiconductor share is a lower bound', () => {
     expect(moreOf(byId('u-2'), ctx)).toContain('至少約')
     expect(lineOf(byId('u-2'), ctx)).toContain('至少')

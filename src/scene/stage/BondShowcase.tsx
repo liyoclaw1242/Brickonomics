@@ -3,6 +3,7 @@ import type { Asset } from '../../data/schema'
 import { T } from '../../ui/strings'
 import type { Vec3 } from '../camera'
 import { CoinDrip } from '../CoinDrip'
+import { CoinPile } from '../CoinPile'
 import { Callout } from '../Callout'
 import { BlockMaterial } from '../materials'
 import { ACCENT_COLORS, lookFor } from '../palette'
@@ -10,6 +11,10 @@ import type { Quality } from '../quality'
 import { atPlaza } from './plaza'
 
 const SIZE = 2.4
+/** 金幣放大（r2：遠景下 1 倍的金幣小到像一條線） */
+const COIN_SIZE = 2.2
+/** 每張借據旁邊先擺一小堆已經滴下來的金幣（數量跟著滴的快慢，示意），靜止畫面也看得到 */
+const pileCount = (rate: number) => Math.round(rate * 2)
 const CORP: Asset = { id: 'CORP_DEMO', name: '', type: 'corpBond', asOf: '2026-10-03', source: [] }
 
 type Slot = { key: 'stock' | 'gov' | 'corp' | 'hy'; asset: Asset; x: number; rate: number }
@@ -59,7 +64,7 @@ export function BondShowcase({ stressed, ranks = false, quality }: { stressed: b
         const scaleY = stressed && s.key === 'stock' ? 0.45 : 1
         const broken = stressed && s.key === 'hy'
         const top: Vec3 = atPlaza(s.x, SIZE * scaleY, 0)
-        const pile: Vec3 = atPlaza(s.x + 2.4, 0.1, 0)
+        const pile: Vec3 = atPlaza(s.x + 2.9, 0.1, 0)
         const dripping = s.rate > 0 && !broken
         const rank = ranks && s.key !== 'stock' ? T.stage.bondRanks[s.key] : undefined
         return (
@@ -76,7 +81,12 @@ export function BondShowcase({ stressed, ranks = false, quality }: { stressed: b
                 )}
               </mesh>
             )}
-            {dripping && <CoinDrip from={top} to={pile} rate={s.rate} />}
+            {dripping && <CoinDrip from={top} to={pile} rate={s.rate} size={COIN_SIZE} />}
+            {dripping && (
+              <group position={pile} scale={COIN_SIZE}>
+                <CoinPile count={pileCount(s.rate)} position={[0, 0, 0]} />
+              </group>
+            )}
             <Callout
               anchor={atPlaza(s.x, 0.1, SIZE / 2)}
               offset={[0, -0.3, 1.4]}

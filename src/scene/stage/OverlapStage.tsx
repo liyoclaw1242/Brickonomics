@@ -38,30 +38,34 @@ function centroidOf(b: Built, holdingId: string): Vec3 | null {
   return [base[0] + c[0], base[1] + c[1], base[2] + c[2]]
 }
 
-/** 標註只標重疊最多的前兩家，放在籃子外側（引線往外拉），不壓在發光線上 */
+/** 只畫、只標重疊最多的前兩家；標註放在籃子外側（引線往外拉），不壓在發光線上 */
 const MAX_LABELS = 2
 const NAME_Z = 6
 
 /** 兩檔 ETF 一起拆開，發光線連起同一家公司的地層；籃子下方用暱稱標名 */
 export function OverlapStage({ a, b }: { a: string; b: string; quality: Quality }) {
-  const links = useMemo(() => {
+  // 只畫重疊最多的兩條發光線，兩籃裡也只有這兩層是鮮豔的（r2：線、彩色條、盒子疊在一起太亂）
+  const { labeled, focusIds } = useMemo(() => {
     const ba = build(a, XA)
     const bb = build(b, XB)
-    return overlap(universe, a, b).rows.flatMap((r) => {
-      const pa = centroidOf(ba, r.id)
-      const pb = centroidOf(bb, r.id)
-      return pa && pb ? [{ id: r.id, pa, pb, shared: r.shared }] : []
-    })
+    const top = overlap(universe, a, b)
+      .rows.flatMap((r) => {
+        const pa = centroidOf(ba, r.id)
+        const pb = centroidOf(bb, r.id)
+        return pa && pb ? [{ id: r.id, pa, pb, shared: r.shared }] : []
+      })
+      .sort((x, y) => y.shared - x.shared)
+      .slice(0, MAX_LABELS)
+    return { labeled: top, focusIds: top.map((l) => l.id) }
   }, [a, b])
   const size = useThree((st) => st.size)
   // 手機畫面窄：標註離籃子近一點，才不會超出畫面左右邊
   const dx = layoutModel(size.width, size.height).mobile ? LABEL_DX_MOBILE : LABEL_DX
-  const labeled = [...links].sort((x, y) => y.shared - x.shared).slice(0, MAX_LABELS)
   return (
     <>
-      <Basket productId={a} quality={BASKET_QUALITY} position={atPlaza(XA, 0, 0)} slice={0} sliceAxis="x" explode={EXPLODE_T} />
-      <Basket productId={b} quality={BASKET_QUALITY} position={atPlaza(XB, 0, 0)} slice={0} sliceAxis="x" explode={EXPLODE_T} />
-      {links.map((l) => (
+      <Basket productId={a} quality={BASKET_QUALITY} position={atPlaza(XA, 0, 0)} slice={0} sliceAxis="x" explode={EXPLODE_T} focusIds={focusIds} />
+      <Basket productId={b} quality={BASKET_QUALITY} position={atPlaza(XB, 0, 0)} slice={0} sliceAxis="x" explode={EXPLODE_T} focusIds={focusIds} />
+      {labeled.map((l) => (
         <Line key={l.id} points={[l.pa, l.pb]} color={ACCENT_COLORS.coin} lineWidth={4} transparent opacity={0.9} depthTest={false} renderOrder={10} />
       ))}
       {labeled.map((l, i) => {
@@ -73,7 +77,7 @@ export function OverlapStage({ a, b }: { a: string; b: string; quality: Quality 
             key={l.id}
             anchor={anchor}
             offset={[left ? -dx : dx, 0, 0]}
-            title={T.overlapLabel(universe.get(l.id)!.name)}
+            title={T.overlapLabel(displayName(universe, l.id))}
             // 色點＝那一層在籃子裡的顏色（3b1b 顏色連結）
             color={holdingColor(universe, left ? a : b, l.id)}
             persistent

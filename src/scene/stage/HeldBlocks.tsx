@@ -8,6 +8,7 @@ import { approach, MAX_FRAME_DT } from '../layout/voxels'
 import { lookFor } from '../palette'
 import { acquire } from '../continuous'
 import { atPlaza } from './plaza'
+import { displayName } from '../../ui/names'
 
 const SIZE = 2.4
 const SPACING = 7
@@ -55,7 +56,7 @@ function HeldBlock({ item, x }: { item: HeldItem; x: number }) {
         <meshStandardMaterial color={look.color} emissive={item.motion === 'up' ? look.color : '#000000'} emissiveIntensity={item.motion === 'up' ? 0.25 : 0} />
       </mesh>
       {/* 標註放在方塊前方的地上（鏡頭從上往下看，放頭頂會蓋住方塊）；示意標示只在面板標題旁出現一次 */}
-      <Callout anchor={[0, 0.1, (SIZE * TARGET_SCALE[item.motion]) / 2]} offset={[0, -0.3, 1.6]} title={asset.name} persistent={item.motion !== 'still'} />
+      <Callout anchor={[0, 0.1, (SIZE * TARGET_SCALE[item.motion]) / 2]} offset={[0, -0.3, 1.6]} title={displayName(universe, item.assetId)} persistent={item.motion !== 'still'} />
     </group>
   )
 }

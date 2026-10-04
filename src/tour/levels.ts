@@ -363,7 +363,7 @@ export const LEVELS: Level[] = [
         more: '買兩檔不等於分散兩倍。QQQ 和 SPY 都有輝達、蘋果、微軟。發光的線連起同一家公司。只列前幾大持股，實際重疊更多。',
         bigNumber: (c) => {
           const o = c.overlapShared('QQQ', 'SPY')
-          return { value: `至少 ${(o * 100).toFixed(1)}%`, label: '兩盒一樣的部分', fraction: o }
+          return { value: `至少 ${(o * 100).toFixed(1)}%`, label: '兩盒一樣的部分', fraction: o, note: '只算前幾大公司，實際更多' }
         },
         scene: { camera: 'plaza', product: null, stage: { kind: 'overlap', a: 'QQQ', b: 'SPY' }, cityLabels: false },
       },
@@ -395,7 +395,7 @@ export const LEVELS: Level[] = [
           `市值型 ETF＝直直往下鑽的岩芯，粗細＝產業比例。左邊 0050：至少約 ${pct0(c.sectorPct('0050', 'semiconductor'))}% 在半導體層。地面上的灰色＝其他，快照沒有細分。細桿＝這層沒列到，不代表完全沒有。`,
         bigNumber: (c) => {
           const sp = c.sectorPct('0050', 'semiconductor')
-          return { value: `至少 ${pct0(sp)}%`, label: '0050 的半導體', fraction: sp / 100, colorKey: 'semiconductor' }
+          return { value: `至少 ${pct0(sp)}%`, label: '0050 的半導體', fraction: sp / 100, colorKey: 'semiconductor', note: '只算列出的公司，實際更多' }
         },
         scene: { camera: 'underground', product: null, stage: { kind: 'underground', show: 'cores', cores: ['0050', 'QQQ'] }, cityLabels: false },
       },

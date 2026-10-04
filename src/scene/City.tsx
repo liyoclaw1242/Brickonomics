@@ -7,6 +7,7 @@ import { currentStep, useTour } from '../store/tour'
 import { useThemeStore } from '../store/theme'
 import { T } from '../ui/strings'
 import { NameLabel } from './NameLabel'
+import { displayName } from '../ui/names'
 import { lookFor } from './palette'
 import { toneColor } from './layout/tone'
 import { VOXEL_SCALE } from './layout/voxels'
@@ -116,7 +117,7 @@ export function City({ labels, islandLabels = true, shrink }: { labels: boolean;
         <NameLabel
           key={p.id}
           position={[p.x, p.height + 0.8 + ((frontZ[p.region] - p.z) / BUILDING_SPACING) * LABEL_LIFT_PER_ROW, p.z]}
-          text={universe.get(p.id)!.name}
+          text={displayName(universe, p.id)}
           active={pickedId === p.id || pickedHolding === p.id}
           className="name-label--city"
         />

@@ -5,6 +5,8 @@ export const T = {
   sandboxTitle: '自由探索',
   /** 產品代號一律配一個白話暱稱（3D 標籤與一句話；完整商品名留在多說一點與即時數字表） */
   nick: { '0050': '0050（台灣50大）', QQQ: 'QQQ（美國科技100）', SPY: 'SPY（美國500大）' },
+  /** 資料名稱他不認得的公司，畫面上改用大家熟悉的名字（資料名稱不動） */
+  nameNick: { GOOGL: 'Google' },
   chapters: [
     { icon: '🏙', name: '序章' },
     { icon: '🧱', name: '股票' },

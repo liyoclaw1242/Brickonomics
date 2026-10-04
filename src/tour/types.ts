@@ -71,8 +71,8 @@ export type TextContext = {
   exitFee: (productId: string, years: number) => number
 }
 
-/** 大數字卡：value 已格式化；fraction（0–1）畫色條；colorKey 對應物體顏色 */
-export type BigNumber = { value: string; label: string; fraction?: number; mark?: Mark; colorKey?: string }
+/** 大數字卡：value 已格式化；fraction（0–1）畫色條；colorKey 對應物體顏色；note＝標籤下一行白話補充（例如為什麼是「至少」） */
+export type BigNumber = { value: string; label: string; fraction?: number; mark?: Mark; colorKey?: string; note?: string }
 
 /** 帶引線的標註：錨在籃子裡的某個持股，或城市裡的某棟大樓 */
 export type CalloutSpec = {
