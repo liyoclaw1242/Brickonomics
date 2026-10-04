@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { universe } from '../../data'
-import { applyShrink, buildingHeight, cityLayout, islandSize, buildingVoxels, ISLAND_CENTERS, HEIGHT, labeledBuildings } from './city'
+import { applyShrink, buildingHeight, cityLayout, islandSize, buildingVoxels, ISLAND_CENTERS, HEIGHT, labeledBuildings, declutterLabels, labelWidth, CITY_LABELS_PER_ISLAND } from './city'
 
 describe('buildingHeight', () => {
   it('is logarithmic in market cap (USD billions)', () => {
@@ -116,5 +116,32 @@ describe('labeledBuildings', () => {
 
   it('always names the extra ids (picked or anchored buildings)', () => {
     expect(labeledBuildings(placements, 5, ['6274']).has('6274')).toBe(true)
+  })
+})
+
+describe('city names at most 3 per island and never on top of each other (r3: 欣興／微軟／亞馬遜 crowded)', () => {
+  it('names at most three buildings per island', () => {
+    expect(CITY_LABELS_PER_ISLAND).toBeLessThanOrEqual(3)
+  })
+
+  const box = (id: string, x: number, y: number, w = 40, h = 20) => ({ id, x, y, w, h })
+
+  it('keeps labels in priority order and drops any that would overlap a kept one', () => {
+    const kept = declutterLabels([box('a', 100, 100), box('b', 110, 105), box('c', 200, 100), box('d', 100, 140)])
+    expect(kept).toEqual(['a', 'c', 'd']) // b 疊在 a 上
+  })
+
+  it('treats step callouts as obstacles and always keeps forced (picked) labels', () => {
+    const kept = declutterLabels([box('a', 100, 100), box('p', 300, 100)], [box('callout', 100, 95, 160, 50), box('callout2', 300, 100, 160, 50)], new Set(['p']))
+    expect(kept).toEqual(['p'])
+  })
+
+  it('drops labels whose anchor is behind the camera', () => {
+    expect(declutterLabels([{ ...box('a', 100, 100), behind: true }])).toEqual([])
+  })
+
+  it('estimates wider boxes for CJK than for Latin text', () => {
+    expect(labelWidth('亞馬遜')).toBeGreaterThan(labelWidth('Abc'))
+    expect(labelWidth('Google')).toBeGreaterThan(0)
   })
 })

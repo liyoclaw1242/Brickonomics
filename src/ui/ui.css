@@ -65,7 +65,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .step-counter { font-size: 15px; letter-spacing: 0.2em; color: var(--soft-text); font-weight: 600; } /* r2：「00 / 06」太小 */
 .step-title { margin: 4px 0 6px; font-size: 26px; font-weight: 600; letter-spacing: 0.02em; display: flex; gap: 8px; align-items: center; }
 .oneline { margin: 0 0 12px; font-size: 17px; line-height: 1.6; }
-.oneline strong { color: var(--em); font-weight: 700; }
+.oneline strong { color: var(--em); font-weight: 700; white-space: nowrap; } /* 強調的詞不從中間折行（r3：「早出/門」） */
 .oneline strong.em-key { color: var(--key); }
 :root[data-theme='day'] .oneline strong.em-key { color: color-mix(in oklab, var(--key) 62%, #1f2933); text-decoration: underline 3px var(--key); text-underline-offset: 4px; }
 .bignum { margin: 8px 0 12px; padding: 12px 14px; border-radius: 12px; background: var(--chip); border: 1px solid var(--border); }

@@ -87,3 +87,34 @@ export function labeledBuildings(placements: readonly Placement[], perIsland: nu
   }
   return out
 }
+
+/** 城市名稱每座島最多標幾棟（r3：5 棟還是擠成一團） */
+export const CITY_LABELS_PER_ISLAND = 3
+
+/** 螢幕上的標籤框（像素，x/y＝中心）；behind＝錨點在鏡頭後面 */
+export type LabelBox = { id: string; x: number; y: number; w: number; h: number; behind?: boolean }
+
+/** 名稱標籤的寬度估計（像素）：中文字約 15px、英數約 8.5px，加左右留白 */
+export function labelWidth(text: string): number {
+  return Array.from(text).reduce((w, ch) => w + (/[\u0000-ÿ]/.test(ch) ? 8.5 : 15), 12)
+}
+
+const overlaps = (a: LabelBox, b: LabelBox, pad: number) =>
+  Math.abs(a.x - b.x) * 2 < a.w + b.w + pad * 2 && Math.abs(a.y - b.y) * 2 < a.h + b.h + pad * 2
+
+/**
+ * 依優先順序放名稱：跟已放的名稱或步驟標註（obstacles）疊到就不放。
+ * forced（選到的大樓）一定放；回傳要顯示的 id（依原順序）。
+ */
+export function declutterLabels(candidates: readonly LabelBox[], obstacles: readonly LabelBox[] = [], forced: ReadonlySet<string> = new Set(), pad = 3): string[] {
+  const placed: LabelBox[] = candidates.filter((c) => forced.has(c.id) && !c.behind)
+  const blockers = [...obstacles.filter((o) => !o.behind), ...placed]
+  for (const c of candidates) {
+    if (c.behind || forced.has(c.id)) continue
+    if (blockers.some((b) => overlaps(c, b, pad))) continue
+    placed.push(c)
+    blockers.push(c)
+  }
+  const keep = new Set(placed.map((p) => p.id))
+  return candidates.filter((c) => keep.has(c.id)).map((c) => c.id)
+}

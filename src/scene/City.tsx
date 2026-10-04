@@ -1,6 +1,6 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { useThree, type ThreeEvent } from '@react-three/fiber'
-import { Color, type InstancedMesh, Object3D } from 'three'
+import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
+import { Color, type InstancedMesh, Object3D, Vector3 } from 'three'
 import { universe } from '../data'
 import { useSandbox } from '../store/sandbox'
 import { currentStep, useTour } from '../store/tour'
@@ -14,10 +14,51 @@ import { VOXEL_SCALE } from './layout/voxels'
 import { THEMES } from './theme'
 import { useLongPress } from './useLongPress'
 import { prefersReducedMotion, useRevealAfterCamera } from './useRevealAfterCamera'
-import { applyShrink, BUILDING_SPACING, buildingVoxels, cityLayout, islandSize, ISLAND_CENTERS, labeledBuildings, type Region } from './layout/city'
+import { applyShrink, BUILDING_SPACING, buildingVoxels, CITY_LABELS_PER_ISLAND, cityLayout, declutterLabels, islandSize, ISLAND_CENTERS, labeledBuildings, labelWidth, type LabelBox, type Region } from './layout/city'
+import type { Vec3 } from './camera'
 
-/** 每座島只標最高的幾棟（使用者測試：名字太多、太小、互相疊在一起） */
-const LABELS_PER_ISLAND = 5
+/** 名稱標籤的高度估計（像素） */
+const LABEL_H = 22
+/** 步驟標註（錨在大樓上）在螢幕上大約的框（像素）：名稱讓開它 */
+const CALLOUT_BOX = { w: 180, h: 54, lift: 1.5 }
+
+type NameItem = { id: string; text: string; position: Vec3; active: boolean }
+
+/**
+ * 城市名稱：每座島最多三棟（加上選到的），而且在螢幕上不互相疊、不壓到步驟標註（r3）。
+ * 每畫一幀把錨點投影到螢幕上，依高度順序放，疊到就不放；顯示的名單變了才重畫。
+ */
+function CityNames({ items, obstacles }: { items: NameItem[]; obstacles: Vec3[] }) {
+  const camera = useThree((s) => s.camera)
+  const size = useThree((s) => s.size)
+  const invalidate = useThree((s) => s.invalidate)
+  const [shown, setShown] = useState<ReadonlySet<string>>(() => new Set())
+  const key = useRef('')
+  const v = useMemo(() => new Vector3(), [])
+  useFrame(() => {
+    const project = (p: Vec3, id: string, w: number, h: number, dy = 0): LabelBox => {
+      v.set(p[0], p[1], p[2]).project(camera)
+      return { id, x: ((v.x + 1) / 2) * size.width, y: ((1 - v.y) / 2) * size.height + dy, w, h, behind: v.z > 1 }
+    }
+    const boxes = items.map((it) => project(it.position, it.id, labelWidth(it.text), LABEL_H))
+    const obs = obstacles.map((p, i) => project([p[0], p[1] + CALLOUT_BOX.lift, p[2]], `callout-${i}`, CALLOUT_BOX.w, CALLOUT_BOX.h))
+    const forced = new Set(items.filter((it) => it.active).map((it) => it.id))
+    const keep = declutterLabels(boxes, obs, forced)
+    const k = keep.join(',')
+    if (k !== key.current) {
+      key.current = k
+      setShown(new Set(keep))
+      invalidate() // 新掛上的名稱標籤要再畫一幀才會定位
+    }
+  })
+  return (
+    <>
+      {items.filter((it) => shown.has(it.id)).map((it) => (
+        <NameLabel key={it.id} position={it.position} text={it.text} active={it.active} className="name-label--city" />
+      ))}
+    </>
+  )
+}
 /** 後排的標籤抬高（每往後一排加這麼多）：俯視時前後排同一直行的名字才不會疊在一起 */
 const LABEL_LIFT_PER_ROW = 1.6
 
@@ -81,8 +122,9 @@ export function City({ labels, islandLabels = true, shrink }: { labels: boolean;
 
   const labeledPlacements = useMemo(() => {
     const extra = [pickedId, pickedHolding].filter((x): x is string => x !== null)
-    const ids = labeledBuildings(placements, LABELS_PER_ISLAND, extra)
-    return placements.filter((p) => ids.has(p.id) && !anchored.has(p.id))
+    const ids = labeledBuildings(placements, CITY_LABELS_PER_ISLAND, extra)
+    // 高的先放（名字疊到時留高的）
+    return placements.filter((p) => ids.has(p.id) && !anchored.has(p.id)).sort((a, b) => b.height - a.height)
   }, [placements, pickedId, pickedHolding, anchored])
 
   const frontZ = useMemo(() => {
@@ -91,6 +133,19 @@ export function City({ labels, islandLabels = true, shrink }: { labels: boolean;
     for (const p of labeledPlacements) z[p.region] = Math.max(z[p.region], p.z)
     return z
   }, [labeledPlacements])
+
+  const nameItems = useMemo<NameItem[]>(
+    () =>
+      labeledPlacements.map((p) => ({
+        id: p.id,
+        text: displayName(universe, p.id),
+        position: [p.x, p.height + 0.8 + ((frontZ[p.region] - p.z) / BUILDING_SPACING) * LABEL_LIFT_PER_ROW, p.z],
+        active: pickedId === p.id || pickedHolding === p.id,
+      })),
+    [labeledPlacements, frontZ, pickedId, pickedHolding],
+  )
+  // 步驟標註錨在這些大樓頂上：名稱要讓開
+  const anchorTops = useMemo<Vec3[]>(() => placements.filter((p) => anchored.has(p.id)).map((p) => [p.x, p.height + 0.2, p.z]), [placements, anchored])
 
   const sizeOf = (region: Region) => islandSize(placements.filter((p) => p.region === region).length)
 
@@ -113,15 +168,7 @@ export function City({ labels, islandLabels = true, shrink }: { labels: boolean;
         <meshStandardMaterial roughness={0.8} />
       </instancedMesh>
       {/* NameLabel 自己在第一個 tick 後才掛 Html，並受「標註」開關控制 */}
-      {labels && labeledPlacements.map((p) => (
-        <NameLabel
-          key={p.id}
-          position={[p.x, p.height + 0.8 + ((frontZ[p.region] - p.z) / BUILDING_SPACING) * LABEL_LIFT_PER_ROW, p.z]}
-          text={displayName(universe, p.id)}
-          active={pickedId === p.id || pickedHolding === p.id}
-          className="name-label--city"
-        />
-      ))}
+      {labels && <CityNames items={nameItems} obstacles={anchorTops} />}
       {islandLabels && (['TW', 'US'] as const).map((region) => {
         const [x, z] = ISLAND_CENTERS[region]
         return <NameLabel key={`island-${region}`} position={[x, 0.2, z + sizeOf(region) / 2 + 1]} text={T.islands[region]} className="name-label--island" />
