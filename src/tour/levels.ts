@@ -105,7 +105,7 @@ export const LEVELS: Level[] = [
       {
         id: 's-6',
         title: '除息',
-        line: '配息那刻：方塊＋金幣＝**不變**',
+        line: '**配息|coin**那刻：方塊＋金幣＝**不變**',
         more: '方塊縮小的部分，剛好等於你拿到的金幣。這叫除息：方塊價值＋金幣＝不變。之後方塊慢慢長回原本大小，叫填息。數字是示意。',
         mark: 'illustrative',
         bigNumber: (_c, v) => {

@@ -251,7 +251,7 @@ describe('LEVELS', () => {
       const [block, coins] = (bn.label.match(/\d+/g) ?? []).map(Number)
       expect(block! + coins!, `phase ${phase}: ${bn.label}`).toBe(100)
     }
-    expect(lineOf(byId('s-6'), ctx)).toBe('配息那刻：方塊＋金幣＝**不變**')
+    expect(lineOf(byId('s-6'), ctx)).toBe('**配息|coin**那刻：方塊＋金幣＝**不變**') // 配息用金幣色（3b1b 顏色連結）
   })
 
   it('says 配息來自本金 only on the illustrative principal-trap step', () => {
