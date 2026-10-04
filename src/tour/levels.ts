@@ -517,7 +517,7 @@ export const COURSE_STEPS: Step[] = [
     fallbackMore: '恭喜完成中階！在支援 3D 的瀏覽器上，還可以自由玩。自由玩裡能切開、拆開、比較。',
     recap: [
       { icon: '🧱', text: '股票看總報酬：方塊＋金幣' },
-      { icon: '📜', text: '越穩的借據，利息越少' },
+      { icon: '📜', text: '越穩的借據，利息通常越少' },
       { icon: '🚜', text: '基金費用：進門、出門、每年' },
       { icon: '🧩', text: 'ETF 拆開看：重疊、產業、配息型' },
     ],
