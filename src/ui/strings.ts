@@ -103,6 +103,8 @@ export const T = {
     bondWho: { gov: '借給政府', corp: '借給體質好的公司', hy: '借給體質弱的公司' },
     bondHurt: (name: string) => `${name}：出問題了`,
     rateNote: '利息快慢為示意',
+    /** b-3 龍捲風上的標籤 */
+    storm: '經濟風暴',
     exdiv: { block: '方塊', coins: '金幣', lost: (v: number) => `少了 ${v}` },
   },
   /** 基金那一章的錢：投入 100＝100 萬（和計費表同一個底），一位小數、去掉「.0」 */
