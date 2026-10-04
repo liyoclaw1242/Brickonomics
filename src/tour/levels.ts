@@ -410,7 +410,7 @@ export const LEVELS: Level[] = [
           `只買台積電：${signedPct(SHOCK_2330['2330']!)}。0050：約 ${signedPct(c.shock('0050'))}。因為台積電佔了一半以上。SPY 沒有台積電，沒有直接影響（${signedPct(c.shock('SPY'))}）。`,
         bigNumber: (c) => {
           const s = c.shock('0050')
-          return { value: movePct(s), label: '假設下的 0050', fraction: Math.abs(s) / SHOCK_PCT }
+          return { value: movePct(s), label: '假設下的 0050', fraction: Math.abs(s) / SHOCK_PCT, note: `整條＝只買台積電跌 ${pct0(SHOCK_PCT * 100)}%` }
         },
         scene: { camera: 'plaza', product: null, stage: { kind: 'shock' }, event: { kind: 'lightning', phase: 'strike' } },
       },

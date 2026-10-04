@@ -78,6 +78,8 @@ describe('LEVELS', () => {
     expect(moreOf(byId('c-1'), ctx)).toContain('跌 30%')
     expect(moreOf(byId('c-2'), ctx)).toContain('只買台積電：−30.0%')
     expect(bigOf(byId('c-2'))!.fraction).toBeCloseTo(0.5631, 4) // 0.16893 / 0.3
+    // 色條的滿格＝只買台積電的跌幅：要寫出來，不然「跌 16.9%」配一條 56% 的條會誤會
+    expect(bigOf(byId('c-2'))!.note).toBe('整條＝只買台積電跌 30%')
   })
 
   it('renders every text without errors, non-empty, and never mentions 稅', () => {
