@@ -144,7 +144,7 @@ export const T = {
     elapsed: (year: number) => `第 ${year} 年`,
     ground: (amount: number) => `已磨掉約 ${Math.round(amount).toLocaleString('zh-TW')} 元`,
     base: '假設投入 100 萬',
-    fastForward: '快轉：每 6 秒＝1 年',
+    fastForward: '6 秒＝1 年',
   },
   ticker: { etf: '0050：隨時有價錢', fund: '基金：一天一個價錢' },
   readout: {

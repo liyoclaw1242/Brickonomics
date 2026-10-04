@@ -34,12 +34,6 @@ const perMillion = (er: number): string => T.yuan(er * 1_000_000)
 /** 時間軸上「發金幣那一刻」的位置；s-5 拉到這裡為止（大數字只算到這一刻，合計永遠不變） */
 export const EXDIV_AFTER_PHASE = 0.5
 
-/** 內扣費用大數字；資料沒有時不顯示 */
-const expenseNumber = (c: TextContext, productId: string, label: string): BigNumber | undefined => {
-  const er = c.expenseRatio(productId)
-  return er === undefined ? undefined : { value: pctOf(er), label }
-}
-
 export const LEVELS: Level[] = [
   {
     id: 'prologue',
@@ -239,7 +233,11 @@ export const LEVELS: Level[] = [
         title: '計費表在跑',
         line: '**內扣費用**每天磨掉一點',
         more: '怪手不是免費的。塔上的計費表一直在跑。內扣費用每天從塔上磨掉一點點。',
-        bigNumber: (c) => expenseNumber(c, METER_FUND, '每年內扣費用'),
+        // r6：「已磨掉 37,856 元」才有感但它一直在跳；大數字改成穩定的「100 萬一年約扣多少元」（和 e-5 同一檔基金、同一個算法）
+        bigNumber: (c) => {
+          const er = c.expenseRatio(METER_FUND)
+          return er === undefined ? undefined : { value: perMillion(er), label: '100 萬放一年，約扣', note: `每年內扣費用 ${pctOf(er)}` }
+        },
         scene: { camera: 'exchange', product: METER_FUND, stage: { kind: 'excavator', meter: true }, cityLabels: false },
       },
       {
@@ -294,6 +292,8 @@ export const LEVELS: Level[] = [
         // 領到的錢裡，有多少是削下來的本金；色條＝佔領到的錢的比例
         bigNumber: (_c, v) => {
           const st = principalTrap(v.periods)
+          // r6：還沒拉時「0 萬，領的錢裡是你的本金」看不懂 → 拉了才出現（面板上的拉桿提示已經叫他拉）
+          if (st.fromPrincipal <= 0) return undefined
           return {
             value: wan(st.fromPrincipal),
             label: '領的錢裡是你的本金',

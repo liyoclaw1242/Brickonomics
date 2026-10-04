@@ -293,7 +293,8 @@ describe('LEVELS', () => {
     expect(lineOf(c2, ctx)).not.toContain('−')
     expect(moreOf(c2, ctx)).toContain('約 −16.9%')
     expect(bigOf(c2)!.value).toBe('跌 16.9%') // r3：大數字的負號太細，看成正的 → 用字說「跌」
-    expect(bigOf(byId('f-5'))!.value).toBe('1.88%') // JH_BALANCED expenseRatio 0.0188
+    expect(bigOf(byId('f-5'))!.value).toBe('18,800 元') // JH_BALANCED expenseRatio 0.0188 × 1,000,000（r6：穩定的元，不是會跳的累計）
+    expect(bigOf(byId('f-5'))!.note).toContain('1.88%')
     // e-5：100 萬放一年要扣的錢＝內扣費用 × 1,000,000（r5：只有 0.18% 沒感覺）
     expect(bigOf(byId('e-5'))!.value).toBe('1,400 元') // 0050 expenseRatio 0.0014 × 1,000,000 = 1,400
     expect(lineOf(byId('e-5'), ctx)).toContain('18,800 元') // JH_BALANCED expenseRatio 0.0188 × 1,000,000 = 18,800
@@ -593,7 +594,8 @@ describe('jargon diet (user test r1)', () => {
     expect(T.towers.coins(107.46)).toBe('領到的金幣 107.5 萬')
     expect(T.readout.remaining(88.24)).toBe('剩 88.2 萬')
     const fund = LEVELS.find((l) => l.id === 'fund')!
-    for (const s of fund.steps) {
+    // f-5 的大數字刻意用元（r6：「100 萬一年約扣 18,800 元」，和 e-5 同一檔基金同一算法）；其餘仍用萬
+    for (const s of fund.steps.filter((x) => x.id !== 'f-5')) {
       const texts = [lineOf(s, ctx), moreOf(s, ctx), resolve(s.fallbackLine), resolve(s.fallbackMore), bigOf(s)?.value, bigOf(s)?.label]
       for (const t of texts) if (t !== undefined) expect(t, s.id).not.toMatch(/\d\s*元/)
     }
@@ -668,6 +670,11 @@ describe('simple route user test r5', () => {
     expect(stripMarkup(lineOf(f9, ctx))).toContain('本金')
     // 不說成「賠錢」：示意基金每年真的產出 3%，總數本來就比 100 多（領到的錢裡，一部分是賺的、一部分是本金）
     for (const t of [lineOf(f9, ctx), moreOf(f9, ctx)]) for (const w of ['賠', '虧']) expect(t, w).not.toContain(w)
+  })
+
+  it('f-9 hides the big number until the slider moves (r6: 「0 萬，領的錢裡是你的本金」 is unreadable)', () => {
+    expect(bigOf(byId('f-9'), { periods: 0 })).toBeUndefined()
+    expect(bigOf(byId('f-9'), { periods: 20 })).toBeDefined()
   })
 
   it('f-9: the coin pile label says how much of it came from principal (3D)', () => {
