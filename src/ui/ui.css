@@ -90,7 +90,9 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
   .seg button { flex: 1; }
   .legend button { min-height: 36px; padding: 6px 2px; }
   .info { top: auto; bottom: calc(42vh + 8px); bottom: calc(42dvh + 8px); left: 12px; right: 12px; width: auto; }
-  @media (min-width: 721px) {
+}
+
+@media (min-width: 721px) {
   .panel.tour { bottom: auto; max-height: calc(100% - 24px); }
 }
 

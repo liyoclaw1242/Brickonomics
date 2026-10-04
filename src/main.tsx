@@ -18,7 +18,8 @@ const forceFallback = new URLSearchParams(window.location.search).get('fallback'
 const webgl = !forceFallback && hasWebGL(() => document.createElement('canvas'))
 
 // 主題：兩條路（WebGL 與 fallback）都要同步到 <html data-theme>
-useThemeStore.getState().setTheme(parseThemeParam(window.location.search) ?? loadTheme())
+// ?theme= 只是預覽，不寫入 localStorage
+useThemeStore.setState({ theme: parseThemeParam(window.location.search) ?? loadTheme() })
 document.documentElement.dataset.theme = useThemeStore.getState().theme
 useThemeStore.subscribe((s) => {
   document.documentElement.dataset.theme = s.theme
