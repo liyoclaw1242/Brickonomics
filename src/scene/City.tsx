@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useThree, type ThreeEvent } from '@react-three/fiber'
 import { Color, type InstancedMesh, Object3D } from 'three'
 import { universe } from '../data'
@@ -12,6 +12,7 @@ import { toneColor } from './layout/tone'
 import { VOXEL_SCALE } from './layout/voxels'
 import { THEMES } from './theme'
 import { useLongPress } from './useLongPress'
+import { prefersReducedMotion, useRevealAfterCamera } from './useRevealAfterCamera'
 import { applyShrink, buildingVoxels, cityLayout, islandSize, ISLAND_CENTERS, type Region } from './layout/city'
 
 const ISLAND_THICKNESS = 0.5
@@ -34,7 +35,11 @@ export function City({ labels, islandLabels = true, shrink }: { labels: boolean;
     s.mode === 'tour' ? (currentStep(s).callouts ?? []).flatMap((c) => (c.anchor.kind === 'building' ? [c.anchor.id] : [])).join(',') : '',
   )
   const anchored = useMemo(() => new Set(anchorKey === '' ? [] : anchorKey.split(',')), [anchorKey])
-  const isActive = (id: string) => pickedId === id || pickedHolding === id || anchored.has(id)
+  const stepId = useTour((s) => currentStep(s).id)
+  const [instant] = useState(prefersReducedMotion)
+  const revealed = useRevealAfterCamera(stepId, instant)
+  // 3b1b：鏡頭停下後，被標註的大樓才轉成鮮豔色
+  const isActive = (id: string) => pickedId === id || pickedHolding === id || (revealed && anchored.has(id))
 
   useLayoutEffect(() => {
     const mesh = ref.current
@@ -53,7 +58,7 @@ export function City({ labels, islandLabels = true, shrink }: { labels: boolean;
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
     mesh.computeBoundingSphere()
     invalidate()
-  }, [voxels, pickedId, pickedHolding, anchored, theme, invalidate])
+  }, [voxels, pickedId, pickedHolding, anchored, revealed, theme, invalidate])
 
   const onClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation()

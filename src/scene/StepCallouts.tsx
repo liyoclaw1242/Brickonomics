@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { universe } from '../data'
 import { effectiveExplode, useSandbox } from '../store/sandbox'
 import { currentStep, useTour } from '../store/tour'
@@ -11,6 +11,7 @@ import { cityLayout } from './layout/city'
 import { layerCentroid } from './layout/stages'
 import { colorForKey, holdingColor } from './palette'
 import type { Quality } from './quality'
+import { prefersReducedMotion, useRevealAfterCamera } from './useRevealAfterCamera'
 import { EXCHANGE_POSITION, PEDESTAL_HEIGHT } from './stage/plaza'
 
 const ctx = makeTextContext(universe)
@@ -25,6 +26,9 @@ type Resolved = { key: string; anchor: Vec3; offset: Vec3; color: string | undef
 /** 導覽步驟的標註：錨在交易所籃子的某層持股，或城市裡的某棟大樓 */
 export function StepCallouts({ quality }: { quality: Quality }) {
   const callouts = useTour((s) => currentStep(s).callouts)
+  const stepId = useTour((s) => currentStep(s).id)
+  const [instant] = useState(prefersReducedMotion)
+  const revealed = useRevealAfterCamera(stepId, instant)
   const productId = useSandbox((s) => s.productId)
   const explode = useSandbox(effectiveExplode)
   const placements = useMemo(() => cityLayout([...universe.values()]), [])
@@ -57,6 +61,7 @@ export function StepCallouts({ quality }: { quality: Quality }) {
     })
   }, [callouts, basket, explode, placements])
 
+  if (!revealed) return null
   return (
     <>
       {resolved.map((r) => (
