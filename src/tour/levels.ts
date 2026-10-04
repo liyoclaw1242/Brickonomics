@@ -192,7 +192,7 @@ export const LEVELS: Level[] = [
         // 拆開之後才標名字。兩個標註就要說完每一層（r3：只標兩層、底下紅綠紫三層沒名字，30%＋38% 不到一百）：
         // 錨在最大的兩層，寫的是整類的比例——股票（含最下面幾層大公司）、借據
         callouts: [
-          { anchor: { kind: 'holding', holdingId: 'OTHER_US_STOCK' }, title: '股票方塊', sub: (c) => `約 ${pct0(c.assetClassPct('JH_BALANCED', 'stock'))}%・含底下的輝達、微軟`, when: { control: 'explode', min: 0.6 } },
+          { anchor: { kind: 'holding', holdingId: 'OTHER_US_STOCK' }, title: '股票方塊', sub: (c) => `約 ${pct0(c.assetClassPct('JH_BALANCED', 'stock'))}%・含輝達等`, when: { control: 'explode', min: 0.6 } },
           { anchor: { kind: 'holding', holdingId: 'BOND_MIXED_US' }, title: '借據', sub: (c) => `約 ${pct0(c.assetClassPct('JH_BALANCED', 'bond'))}%`, when: { control: 'explode', min: 0.6 } },
         ],
         scene: { camera: 'exchangeWide', product: 'JH_BALANCED', stage: { kind: 'excavator', meter: false }, cityLabels: false },

@@ -38,7 +38,8 @@ export function TowerRow({ towers, quality, base, baseSub }: { towers: TowerSpec
   const doorDrop = stagger > 0 ? 2.4 : 0
   return (
     <>
-      {base && <Callout anchor={atPlaza(0, -0.2, 12)} offset={[0, 0, 0]} title={base} sub={baseSub} wrap persistent />}
+      {/* 手機上門費標註往前錯開了一排：前提說明再往前一點，免得疊在一起 */}
+      {base && <Callout anchor={atPlaza(0, -0.2, 12 + doorDrop)} offset={[0, 0, 0]} title={base} sub={baseSub} wrap persistent />}
       {towers.map((t, i) => {
         const x = start + i * SPACING
         const dim = anyFocus && !t.focus

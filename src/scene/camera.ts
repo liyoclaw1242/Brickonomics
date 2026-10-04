@@ -15,7 +15,8 @@ export const CAMERA_PRESETS: Record<CameraPresetId, { position: Vec3; target: Ve
   // 雷射刀（沿 x 切）：從斜前方看。正對 x 軸時切掉的是靠近鏡頭那一面，剩下的看起來一模一樣（使用者測試 r2）
   exchangeSide: { position: [26, 15, 38], target: [0, 6, 14] },
   // 往下看多一點：後面城市的樓頂不會被畫面上緣切一半、也不會壓在工具列底下（使用者測試 r2）
-  plazaNear: { position: [0, 20, 42], target: [0, 1.5, 30] },
+  // r3：再往下看一點，後面台灣島的一角不會卡在畫面上緣（像沒收乾淨的黑板子）
+  plazaNear: { position: [0, 24, 39], target: [0, 1.5, 30] },
   underground: { position: [0, -1, 98], target: [0, -9, 24] },
   plaza: { position: [0, 26, 66], target: [0, 4, 30] },
 }
