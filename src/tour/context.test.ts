@@ -10,9 +10,9 @@ describe('text context', () => {
     // 安聯收益成長：股票 2.81+2.44+2.53+1.49+1.1+0.97+20.57 = 31.91；借據 31.98+30.4 = 62.38；現金 5.71
     expect(c.assetClassPct('ALLIANZ_INCOME_GROWTH', 'stock')).toBeCloseTo(31.91, 6)
     expect(c.assetClassPct('ALLIANZ_INCOME_GROWTH', 'bond')).toBeCloseTo(62.38, 6)
-    // 駿利亨德森平衡：股票 5.86+4.46+4.11+3.01+2.98+2.19+1.69+1.46+38.39 = 64.15；借據 4.19+30.36 = 34.55
-    expect(c.assetClassPct('JH_BALANCED', 'stock')).toBeCloseTo(64.15, 6)
-    expect(c.assetClassPct('JH_BALANCED', 'bond')).toBeCloseTo(34.55, 6)
+    // 駿利亨德森平衡：股票 5.86+4.46+4.11+3.01+2.98+2.19+1.69+1.46+38.32 = 64.08；借據 7.00+26.86 = 33.86；現金 2.06
+    expect(c.assetClassPct('JH_BALANCED', 'stock')).toBeCloseTo(64.08, 6)
+    expect(c.assetClassPct('JH_BALANCED', 'bond')).toBeCloseTo(33.86, 6)
   })
 
   it('every 其他 bucket in the snapshot is a stock bucket (so it counts as 股票)', () => {

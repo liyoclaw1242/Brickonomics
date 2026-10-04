@@ -33,6 +33,8 @@ describe('isVerified', () => {
   it('matches the Schroder U-class flags in the snapshot', () => {
     const u = universe.get('SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD')!
     expect(isVerified(u, 'fees.cdsc')).toBe(true)
-    expect(isVerified(u, 'fees.expenseRatio')).toBe(false)
+    expect(isVerified(u, 'fees.expenseRatio')).toBe(true) // 2026-10 查證：TER 2.38% − 分銷費 1.00% = 1.38%
+    expect(isVerified(u, 'distribution')).toBe(true)
+    expect(isVerified(u, 'holdings')).toBe(true)
   })
 })

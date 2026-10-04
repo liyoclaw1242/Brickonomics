@@ -14,11 +14,19 @@ import { T } from '../ui/strings'
 import { CAMERA_PRESETS } from '../scene/camera'
 import { stepMarks } from '../ui/marks'
 import type { VerifiedKey } from '../data/schema'
+import type { Universe } from '../data'
 import type { Stage, StageValues, Step } from './types'
 
 const ctx = makeTextContext(universe)
 const steps = LEVELS.flatMap((l) => l.steps)
 const PRESETS = ['sky', 'overview', 'tw', 'us', 'exchange', 'exchangeWide', 'exchangeSide', 'plaza', 'plazaNear', 'underground']
+
+/** 測試用：把指定產品的查證旗標清空（模擬「資料尚待查證」），驗證 ？ 的判斷邏輯仍然有效 */
+const unverify = (ids: string[]): Universe => {
+  const m = new Map(universe)
+  for (const id of ids) m.set(id, { ...m.get(id)!, verified: {} })
+  return m
+}
 
 const byId = (id: string): Step => steps.find((s) => s.id === id)!
 /** 大數字跟著即時拉桿值；測試預設用進入該步驟時的值 */
@@ -140,6 +148,7 @@ describe('LEVELS', () => {
     const SOURCES: Record<string, [string, VerifiedKey][]> = {
       'f-4': [['ALLIANZ_INCOME_GROWTH', 'holdings']],
       'f-5': [['JH_BALANCED', 'fees.expenseRatio']],
+      'f-6': [['SCHRODER_GLOBAL_INCOME_BOND', 'fees.expenseRatio'], ['SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD', 'fees.expenseRatio'], ['SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD', 'fees.cdsc']],
       'e-3': [['0050', 'holdings']],
       'e-5': [['QQQ', 'fees.expenseRatio']],
       'c-2': [['0050', 'holdings']],
@@ -175,19 +184,24 @@ describe('LEVELS', () => {
       s.bigNumber?.(rec, values)
       return seen
     }
+    // 目前快照的持股都已查證；為了讓這道防線繼續有效，把宣告了 holdingsFrom 的產品（f-2、f-4 用到的）持股旗標清空再檢查一次
+    const stale = unverify(['JH_BALANCED', 'ALLIANZ_INCOME_GROWTH'])
     let checked = 0
     for (const s of steps) {
       for (const id of used(s)) {
-        const a = universe.get(id)
+        const a = stale.get(id)
         if (a && !isVerified(a, 'holdings')) {
           checked++
-          expect(stepMarks(s, universe), `${s.id}: shows numbers from ${id} holdings, which are unverified`).toContain('unverified')
+          expect(stepMarks(s, stale), `${s.id}: shows numbers from ${id} holdings, which are unverified`).toContain('unverified')
         }
       }
     }
     expect(checked).toBeGreaterThan(0)
-    expect(stepMarks(byId('f-2'), universe)).toContain('unverified')
-    expect(stepMarks(byId('f-4'), universe)).toContain('unverified')
+    expect(stepMarks(byId('f-2'), stale)).toContain('unverified')
+    expect(stepMarks(byId('f-4'), stale)).toContain('unverified')
+    // 2026-10 JH_BALANCED（f-2）與 ALLIANZ_INCOME_GROWTH（f-4）持股都已查證 → ？消失
+    expect(stepMarks(byId('f-2'), universe)).not.toContain('unverified')
+    expect(stepMarks(byId('f-4'), universe)).not.toContain('unverified')
   })
 
   it('exposes the assumed front-load fee only on steps marked ✎', () => {
@@ -493,9 +507,9 @@ describe('jargon diet (user test r1)', () => {
     const f2 = byId('f-2')
     expect((f2.callouts ?? []).map((c) => resolve(c.title))).toEqual(['股票方塊', '借據'])
     const subs = (f2.callouts ?? []).map((c) => resolve(c.sub)!)
-    expect(subs[0]).toContain(`約 ${pct0(ctx.assetClassPct('JH_BALANCED', 'stock'))}%`) // 64.15 → 64
+    expect(subs[0]).toContain(`約 ${pct0(ctx.assetClassPct('JH_BALANCED', 'stock'))}%`) // 64.08 → 64
     expect(subs[0]).toContain('輝達')
-    expect(subs[1]).toBe(`約 ${pct0(ctx.assetClassPct('JH_BALANCED', 'bond'))}%`) // 34.55 → 35
+    expect(subs[1]).toBe(`約 ${pct0(ctx.assetClassPct('JH_BALANCED', 'bond'))}%`) // 33.86 → 34
     for (const t of [...subs, stripMarkup(lineOf(f2, ctx))]) expect(t).not.toContain('美股')
   })
 
@@ -534,7 +548,9 @@ describe('jargon diet (user test r1)', () => {
   })
 
   it('f-6 carries ✎ assumption and ？ unverified (from the data), once each', () => {
-    expect(stepMarks(byId('f-6'), universe)).toEqual(['assumption', 'unverified'])
+    // 內扣費用已查證（2026-10）→ 只剩 ✎；旗標清空時 ？ 仍會出現
+    expect(stepMarks(byId('f-6'), universe)).toEqual(['assumption'])
+    expect(stepMarks(byId('f-6'), unverify(['SCHRODER_GLOBAL_INCOME_BOND', 'SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD']))).toEqual(['assumption', 'unverified'])
     expect(stepMarks(byId('s-5'), universe)).toEqual(['illustrative'])
     expect(stepMarks(byId('p-1'), universe)).toEqual([])
   })

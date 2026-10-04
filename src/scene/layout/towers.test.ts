@@ -41,7 +41,7 @@ describe('feeTowerSpecs (f-6 進門費、出門費, user test r3)', () => {
 
   it('shows values in 萬 on the 100-萬 base', () => {
     const [front, back] = specs(10)
-    expect(towerTexts(front!)).toContain('前收 88.2 萬') // 98.5 × 0.989^10
-    expect(towerTexts(back!)).toContain('後收 86.9 萬') // 0.989^10 × 0.99^3
+    expect(towerTexts(front!)).toContain('前收 85.7 萬') // 98.5 × 0.9862^10 = 98.5 × 0.870261 = 85.72
+    expect(towerTexts(back!)).toContain('後收 84.4 萬') // 100 × 0.9862^10 × 0.99^3 = 0.870261 × 0.970299 = 84.44
   })
 })

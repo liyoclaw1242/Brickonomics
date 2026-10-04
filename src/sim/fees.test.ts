@@ -133,29 +133,29 @@ describe('profileFromFees', () => {
 
 describe('Schroder U class (real snapshot fees)', () => {
   const u = profileFromFees(universe.get('SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD')!.fees)
-  // annual: 管理費 1.1% 永久 + 分銷費 1.0% 只收 3 年；CDSC [3%, 2%, 1%]，之後 0
+  // annual: 內扣費用 1.38%（TER 2.38% − 分銷費 1.00%）永久 + 分銷費 1.0% 只收 3 年；CDSC [3%, 2%, 1%]，之後 0
   it('maps to the documented schedule', () => {
-    expect(u.annual).toEqual([{ rate: 0.011 }, { rate: 0.01, years: 3 }])
+    expect(u.annual).toEqual([{ rate: 0.0138 }, { rate: 0.01, years: 3 }])
     expect(u.exitByYear).toHaveLength(3)
     ;[0.03, 0.02, 0.01].forEach((c, i) => expect(u.exitByYear[i]).toBeCloseTo(c, 12)) // combine() 浮點誤差
     expect(u.exitDefault).toBe(0)
   })
 
   it('exit is 1% at 2 years and 0% at 3 years', () => {
-    // 2 年：100 * 0.989^2 * 0.99^2 * (1 - 0.01)
-    //   0.989^2 = 0.978121 ; 0.99^2 = 0.9801 ; 0.978121 * 0.9801 = 0.958656392 ; * 0.99 = 0.949069828 -> 94.9070
-    expect(valueAfter(u, 2)).toBeCloseTo(94.907, 3)
-    // 3 年（滿 3 年，CDSC 0）：100 * 0.989^3 * 0.99^3 ; 0.989^3 = 0.967361669 ; 0.99^3 = 0.970299
-    //   0.967361669 * 0.970299 = 0.938629739 -> 93.8630
-    expect(valueAfter(u, 3)).toBeCloseTo(93.863, 3)
+    // 2 年：100 * 0.9862^2 * 0.99^2 * (1 - 0.01)
+    //   0.9862^2 = 0.97259044 ; 0.99^2 = 0.9801 ; 0.97259044 * 0.9801 = 0.953235890 ; * 0.99 = 0.943703531 -> 94.3704
+    expect(valueAfter(u, 2)).toBeCloseTo(94.3704, 3)
+    // 3 年（滿 3 年，CDSC 0）：100 * 0.9862^3 * 0.99^3 ; 0.9862^3 = 0.959168 ; 0.99^3 = 0.970299
+    //   0.959168 * 0.970299 = 0.930680 -> 93.0680
+    expect(valueAfter(u, 3)).toBeCloseTo(93.068, 3)
   })
 
-  it('the distribution fee stops after year 3 (only the 1.1% management fee remains)', () => {
-    // 第 4、5 年只剩管理費，且 CDSC 都是 0：value(5) / value(4) = 0.989
-    expect(valueAfter(u, 5) / valueAfter(u, 4)).toBeCloseTo(0.989, 9)
-    // 第 3→4 年同樣只扣管理費（分銷費只收 3 年）
-    expect(valueAfter(u, 4) / valueAfter(u, 3)).toBeCloseTo(0.989, 9)
+  it('the distribution fee stops after year 3 (only the 1.38% ongoing fee remains)', () => {
+    // 第 4、5 年只剩內扣費用，且 CDSC 都是 0：value(5) / value(4) = 1 − 0.0138 = 0.9862
+    expect(valueAfter(u, 5) / valueAfter(u, 4)).toBeCloseTo(0.9862, 9)
+    // 第 3→4 年同樣只扣內扣費用（分銷費只收 3 年）
+    expect(valueAfter(u, 4) / valueAfter(u, 3)).toBeCloseTo(0.9862, 9)
     // 第 2→3 年仍收分銷費：(0.989 * 0.99) 再乘上出口門變動 1/0.99
-    expect(valueAfter(u, 3) / valueAfter(u, 2)).toBeCloseTo((0.989 * 0.99) / 0.99, 9)
+    expect(valueAfter(u, 3) / valueAfter(u, 2)).toBeCloseTo((0.9862 * 0.99) / 0.99, 9)
   })
 })

@@ -40,7 +40,9 @@ describe('pickInfo', () => {
   })
 
   it('flags unverified holdings and aggregate buckets', () => {
-    expect(pickInfo(universe, { productId: 'JH_BALANCED', holdingId: 'NVDA' })?.verified).toBe(false)
+    expect(pickInfo(universe, { productId: 'JH_BALANCED', holdingId: 'NVDA' })?.verified).toBe(true) // 2026-10 已查證
+    const stale = new Map(universe).set('JH_BALANCED', { ...universe.get('JH_BALANCED')!, verified: {} })
+    expect(pickInfo(stale, { productId: 'JH_BALANCED', holdingId: 'NVDA' })?.verified).toBe(false)
     expect(pickInfo(universe, { productId: '0050', holdingId: 'OTHER_TW_STOCK' })?.aggregate).toBe(true)
   })
 
@@ -59,7 +61,9 @@ describe('pickInfo', () => {
 describe('legendMeta', () => {
   it('gives the basket data date and verification', () => {
     expect(legendMeta(universe, '0050')).toEqual({ asOf: '2026-10-02', verified: true })
-    expect(legendMeta(universe, 'JH_BALANCED')?.verified).toBe(false)
+    expect(legendMeta(universe, 'JH_BALANCED')?.verified).toBe(true) // 2026-10 已查證
+    const stale = new Map(universe).set('JH_BALANCED', { ...universe.get('JH_BALANCED')!, verified: {} })
+    expect(legendMeta(stale, 'JH_BALANCED')?.verified).toBe(false)
   })
   it('is null for non-baskets', () => {
     expect(legendMeta(universe, '2330')).toBeNull()

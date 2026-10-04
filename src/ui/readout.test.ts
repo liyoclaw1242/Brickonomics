@@ -1,8 +1,14 @@
 import { describe, it, expect } from 'vitest'
 import { universe } from '../data'
+import type { Universe } from '../data'
 import { DEFAULT_VALUES } from '../tour/engine'
 import { stageReadout } from './readout'
 
+const unverify = (ids: string[]): Universe => {
+  const m = new Map(universe)
+  for (const id of ids) m.set(id, { ...m.get(id)!, verified: {} })
+  return m
+}
 const v = (over: Partial<typeof DEFAULT_VALUES> = {}) => ({ ...DEFAULT_VALUES, slice: 0, explode: 0, ...over })
 
 describe('stageReadout', () => {
@@ -15,10 +21,18 @@ describe('stageReadout', () => {
   it('lists the fee race rows, unverified parts and the leader', () => {
     const rows = stageReadout({ kind: 'feeRace' }, v({ years: 3, frontLoad: 0.015 }), universe, null)
     expect(rows[0]!.label).toContain('假設 1.50%')
-    expect(rows[0]!.marks).toEqual(['assumption', 'unverified']) // 前收：假設值，且內扣費用待驗證
-    expect(rows[1]!.marks).toEqual(['unverified'])
-    expect(rows[2]!.marks).toEqual(['unverified']) // 0050 的內扣費用也待驗證
-    expect(rows[0]!.note).toBe('資料待更新：內扣費用')
+    // 2026-10：施羅德 A／U 與 0050 的內扣費用都已查證 → 前收只剩假設值 ✎，其餘沒有標示
+    expect(rows[0]!.marks).toEqual(['assumption'])
+    expect(rows[1]!.marks).toEqual([])
+    expect(rows[2]!.marks).toEqual([])
+    expect(rows[0]!.note).toBeUndefined()
+    // 旗標清空時 ？ 與「資料待更新」仍會出現
+    const stale = unverify(['SCHRODER_GLOBAL_INCOME_BOND', 'SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD', '0050'])
+    const sr = stageReadout({ kind: 'feeRace' }, v({ years: 3, frontLoad: 0.015 }), stale, null)
+    expect(sr[0]!.marks).toEqual(['assumption', 'unverified'])
+    expect(sr[1]!.marks).toEqual(['unverified'])
+    expect(sr[2]!.marks).toEqual(['unverified'])
+    expect(sr[0]!.note).toBe('資料待更新：內扣費用')
     expect(rows.at(-1)!.label).toBe('費用最少（只比費用）')
     expect(rows.at(-1)!.value).toBe('ETF（0050）')
     expect(rows.at(-1)!.note).toBe('三者投資內容與風險不同，費用低不代表比較好')
@@ -28,8 +42,12 @@ describe('stageReadout', () => {
     const rows = stageReadout({ kind: 'feeRace', etf: false }, v({ years: 3, frontLoad: 0.015 }), universe, null)
     expect(rows.map((r) => r.label).join('｜')).not.toContain('0050')
     expect(rows).toHaveLength(3) // 前收、後收、費用最少
-    expect(rows[0]!.marks).toEqual(['assumption', 'unverified']) // 多說一點裡的數字表保留標示
-    expect(rows[1]!.marks).toEqual(['unverified'])
+    expect(rows[0]!.marks).toEqual(['assumption']) // 多說一點裡的數字表保留 ✎；內扣費用已查證
+    expect(rows[1]!.marks).toEqual([])
+    const stale = unverify(['SCHRODER_GLOBAL_INCOME_BOND', 'SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD'])
+    const sr = stageReadout({ kind: 'feeRace', etf: false }, v({ years: 3, frontLoad: 0.015 }), stale, null)
+    expect(sr[0]!.marks).toEqual(['assumption', 'unverified'])
+    expect(sr[1]!.marks).toEqual(['unverified'])
     expect(['前收型（假設 1.50%）', '後收型（U 級別）']).toContain(rows.at(-1)!.value)
     expect(rows.at(-1)!.note).not.toContain('三者')
   })

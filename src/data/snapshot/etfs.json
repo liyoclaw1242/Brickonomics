@@ -11,9 +11,14 @@
     "fees": { "expenseRatio": 0.0014 },
     "distribution": { "frequency": "semiannual", "classes": ["distributing"] },
     "asOf": "2026-10-02",
-    "source": ["https://www.yuantaetfs.com/product/detail/0050/ratio"],
-    "verified": { "holdings": true, "fees": false, "distribution": true },
-    "notes": "費用為經理費約 0.11% + 保管費 0.03%（級距制，2025-01 起；未重新查證）。權重取自元大投信官網 0050 持股權重頁（交易日期 2026/10/02）；前四大個股為官網公告值，其餘為 100 減前四大合計"
+    "source": [
+      "https://www.yuantaetfs.com/product/detail/0050/ratio",
+      "https://www.yuantaetfs.com/product/detail/0050/Basic_information",
+      "https://www.yuantafunds.com/fund/download/1066台灣卓越50-簡式公開說明書.pdf",
+      "https://www.yuantafunds.com/fund/download/1066元大台灣卓越50基金月報.pdf"
+    ],
+    "verified": { "holdings": true, "fees": true, "distribution": true },
+    "notes": "expenseRatio 0.0014 為契約固定費用各項之和（簡式公開說明書，刊印 115 年 7 月 29 日；以 2026-08-31 基金規模 23,841.23 億元依級距換算，月報）：經理費約 0.069%（官網 2026-10-02 顯示約 0.0680%）＋ 保管費約 0.027% ＋ 指數授權費 0.04%（淨資產價值之 0.04%）≈ 0.136%，取 0.14%。總數為所載各項相加，並非文件直接寫出；規模越大費率越低。不含交易成本：公開說明書年度費用率 2025 年 0.22% 含交易直接成本，快照不採用。權重取自元大投信官網 0050 持股權重頁（交易日期 2026/10/02）；前四大個股為官網公告值，其餘為 100 減前四大合計"
   },
   {
     "id": "QQQ", "name": "Invesco QQQ", "nameEn": "Invesco QQQ Trust", "type": "etf", "region": "US",
@@ -28,9 +33,9 @@
     "fees": { "expenseRatio": 0.0018 },
     "distribution": { "frequency": "quarterly", "classes": ["distributing"] },
     "asOf": "2026-09-30",
-    "source": ["https://stockanalysis.com/etf/qqq/holdings/", "https://www.invesco.com/us/financial-products/etfs/product-detail?audienceType=Investor&ticker=QQQ"],
-    "verified": { "holdings": true, "fees": true, "distribution": false },
-    "notes": "費用率 0.18% 取自 Invesco 官網（資料日 2026-06-30）；配息頻率（季配）僅有第三方資料，Invesco 官網未載明，尚未驗證"
+    "source": ["https://stockanalysis.com/etf/qqq/holdings/", "https://www.invesco.com/us/financial-products/etfs/product-detail?audienceType=Investor&ticker=QQQ", "https://www.sec.gov/Archives/edgar/data/1067839/000110465925123273/tm2529177d1_485bpos.htm"],
+    "verified": { "holdings": true, "fees": true, "distribution": true },
+    "notes": "費用率 0.18% 取自 Invesco 官網（資料日 2026-06-30），SEC 公開說明書同為 0.18%；配息頻率季配，依 2025-12-22 公開說明書（Form 485BPOS）「dividends from net investment income, if any, are declared and paid quarterly」"
   },
   {
     "id": "SPY", "name": "SPDR 標普500", "nameEn": "SPDR S&P 500 ETF Trust", "type": "etf", "region": "US",
