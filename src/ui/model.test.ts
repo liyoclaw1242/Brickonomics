@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { universe } from '../data'
-import { productGroups, legendRows, formatPct, pickInfo, sourceLabel, legendMeta } from './model'
+import { productGroups, legendRows, formatPct, pickInfo, sourceLabel, legendMeta, nextButton } from './model'
 
 describe('productGroups', () => {
   it('splits baskets into ETFs and funds in data order', () => {
@@ -75,5 +75,19 @@ describe('sourceLabel', () => {
   })
   it('keeps non-url text', () => {
     expect(sourceLabel('公開說明書')).toEqual({ href: null, text: '公開說明書' })
+  })
+})
+
+describe('nextButton (r3: a greyed 下一步 looked broken)', () => {
+  it('says what to do while the step waits, and is 下一步 again once done', () => {
+    expect(nextButton(false, false)).toEqual({ text: '先拉上面的拉桿', name: '先拉上面的拉桿，再按下一步', waiting: true })
+    expect(nextButton(true, false)).toEqual({ text: '下一步', name: '下一步', waiting: false })
+    expect(nextButton(true, true)).toEqual({ text: '自由玩', name: '自由玩', waiting: false })
+  })
+
+  it('the accessible name starts with the visible text (WCAG 2.5.3) and still says 下一步', () => {
+    const b = nextButton(false, false)
+    expect(b.name.startsWith(b.text)).toBe(true)
+    expect(b.name).toMatch(/下一步/)
   })
 })

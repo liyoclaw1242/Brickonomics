@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { universe } from '../../data'
 import { shockImpact } from '../../sim/scenario'
-import { SHOCK_2330, signedPct } from '../../tour/context'
+import { movePct, SHOCK_2330 } from '../../tour/context'
 import { displayName } from '../../ui/names'
 import { T } from '../../ui/strings'
 import { Basket } from '../Basket'
@@ -32,13 +32,13 @@ export function ShockStage({ active, quality }: { active: boolean; quality: Qual
       <Basket productId="SPY" quality="low" position={atPlaza(SUBJECTS[2].x, 0, 0)} slice={0} sliceAxis="x" explode={0} />
       {SUBJECTS.map((s) => {
         const name = s.key === 'stock' ? T.shock.stock : displayName(universe, s.key)
-        const pct = active ? signedPct(s.key === 'stock' ? SHOCK_2330['2330']! : shockImpact(universe, s.key, { ...SHOCK_2330 })) : ''
+        const pct = active ? movePct(s.key === 'stock' ? SHOCK_2330['2330']! : shockImpact(universe, s.key, { ...SHOCK_2330 })) : ''
         return (
           <Callout
             key={s.key}
             anchor={atPlaza(s.x, 0.1, 4)}
             offset={[0, -0.3, 3]}
-            // 衝擊後：跌幅當標題、名稱當副標（字塊窄，手機上三個並排不會互撞或超出畫面）
+            // 衝擊後：跌幅當標題（用字說「跌 16.9%」，負號太細，r3）、名稱當副標（字塊窄，手機上三個並排不會互撞或超出畫面）
             title={active ? pct : name}
             // 圖例（紅色＝假設跌掉的部分）併進中間那籃的副標
             sub={active ? (s.key === '0050' ? T.shock.withLegend(name) : name) : undefined}

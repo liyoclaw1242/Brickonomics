@@ -159,6 +159,8 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 }
 .step-nav button.primary { flex: 2; background: var(--accent); color: var(--accent-text); border-color: transparent; font-weight: 600; }
 .step-nav button:disabled, .step-nav button[aria-disabled='true'] { opacity: 0.45; cursor: not-allowed; }
+/* 等拉桿：灰色、字清楚（不是暗掉的咖啡色），一看就知道在等你（r3） */
+.step-nav button.primary.is-waiting { opacity: 1; background: var(--chip); color: var(--soft-text); border: 1px dashed var(--border); font-weight: 600; font-size: 14px; }
 .link { border: 0; background: none; padding: 4px 0; color: var(--muted); font: inherit; font-size: 12px; text-decoration: underline; cursor: pointer; }
 .controls { display: grid; gap: 10px; margin: 8px 0; }
 .control { display: grid; gap: 4px; font-size: 13px; }

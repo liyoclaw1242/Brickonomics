@@ -45,6 +45,8 @@ export const T = {
   explodeAmount: '拆開程度',
   levelLabel: (i: number) => (i === 0 ? '序章' : `第 ${i} 關`),
   next: '下一步',
+  nextWaiting: '先拉上面的拉桿',
+  nextWaitingName: '先拉上面的拉桿，再按下一步',
   prev: '上一步',
   finish: '自由玩',
   skipToSandbox: '跳過導覽，直接自由玩',

@@ -80,3 +80,13 @@ export function sourceLabel(s: string): { href: string | null; text: string } {
     return { href: null, text: s }
   }
 }
+
+/**
+ * 「下一步」按鈕：等拉桿時按鈕自己說要做什麼（灰色、不是咖啡色），做完變回下一步（r3：暗掉的下一步像壞掉）。
+ * name＝無障礙名稱：以看得到的字開頭（WCAG 2.5.3），也說出「下一步」。
+ */
+export function nextButton(canNext: boolean, isLast: boolean): { text: string; name: string; waiting: boolean } {
+  if (!canNext) return { text: T.nextWaiting, name: T.nextWaitingName, waiting: true }
+  const text = isLast ? T.finish : T.next
+  return { text, name: text, waiting: false }
+}

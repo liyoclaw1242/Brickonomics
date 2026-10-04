@@ -241,7 +241,7 @@ describe('LEVELS', () => {
     expect(lineOf(c2, ctx)).toContain('跌約 **16.9%**') // |−0.3 × 56.31%| = 16.893%，句子已說「跌」所以用絕對值
     expect(lineOf(c2, ctx)).not.toContain('−')
     expect(moreOf(c2, ctx)).toContain('約 −16.9%')
-    expect(bigOf(c2)!.value).toBe('−16.9%')
+    expect(bigOf(c2)!.value).toBe('跌 16.9%') // r3：大數字的負號太細，看成正的 → 用字說「跌」
     expect(bigOf(byId('f-5'))!.value).toBe('1.88%') // JH_BALANCED expenseRatio 0.0188
     expect(bigOf(byId('e-5'))!.value).toBe('0.18%') // QQQ expenseRatio 0.0018
     expect(bigOf(byId('c-3'))!.value).toBe(`至少 ${(overlap(universe, 'QQQ', 'SPY').total * 100).toFixed(1)}%`)
