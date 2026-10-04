@@ -626,7 +626,7 @@ describe('jargon diet (user test r1)', () => {
   })
 })
 
-describe('simple route copy stands on its own (no reference to a dropped step)', () => {
+describe('初階 copy stands on its own (no reference to a step that is only in 中階)', () => {
   it('b-3 says what 高收益債 is (b-2 that explained the three kinds is dropped)', () => {
     expect(moreOf(byId('b-3'), ctx)).toContain('高收益債＝')
   })
@@ -640,7 +640,7 @@ describe('simple route copy stands on its own (no reference to a dropped step)',
   })
 })
 
-describe('simple route user test r5', () => {
+describe('初階 user test r5', () => {
   it('f-9 makes the trap visible: the big number is the part of the payout that was your own principal', () => {
     const f9 = byId('f-9')
     const at = (periods: number) => bigOf(f9, { periods })!

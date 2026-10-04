@@ -9,7 +9,7 @@ import { T } from './strings'
 
 /** line 保留 `**…**` 強調標記；more 是多說一點 */
 export type FallbackStep = { id: string; title: string; line: string; more: string; marks: Mark[]; rows: ReadoutRow[]; recap?: RecapLine[] }
-export type FallbackLevel = { label: string; title: string; steps: FallbackStep[] }
+export type FallbackLevel = { label: string; steps: FallbackStep[] }
 
 const resolve = (t: LessonText, ctx: TextContext): string => (typeof t === 'function' ? t(ctx) : t)
 
@@ -22,7 +22,6 @@ export function fallbackCourse(course: Course, u: Universe): FallbackLevel[] {
   const steps = new Map(courseSteps(course).map((s) => [s.id, s] as const))
   return course.chapters.map((ch, i) => ({
     label: T.chapterName(i, ch.name),
-    title: '',
     steps: ch.stepIds.map((id) => fallbackStep(steps.get(id)!, ctx, u)),
   }))
 }

@@ -13,7 +13,7 @@ export const STEP_POOL: ReadonlyMap<string, Step> = new Map(
 )
 
 type Label = { icon: string; name: string }
-const [PROLOGUE, STOCK, BOND, FUND, ETF] = T.chapters as readonly [Label, Label, Label, Label, Label, ...Label[]]
+const [PROLOGUE, STOCK, BOND, FUND, ETF] = T.chapters
 const chapter = (id: string, label: Label, stepIds: readonly string[]): CourseChapter => ({ id, icon: label.icon, name: label.name, stepIds })
 
 export const COURSES: readonly Course[] = [

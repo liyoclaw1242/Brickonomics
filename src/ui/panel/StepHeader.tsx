@@ -5,9 +5,9 @@ import { T } from '../strings'
 
 /** 品牌＋章節圖示與編號＋大標題；children（一句話）與標題一起放在 aria-live 外層 */
 export function StepHeader({ chapter, number, count, title, marks, revealed, children }: {
-  /** 目前這章的圖示與名稱（簡單版的地底章是「完成」） */
+  /** 目前這章的圖示與名稱（照課程資料） */
   chapter: { icon: string; name: string } | undefined
-  /** 這章在路線裡的編號與路線的章數（只數路線裡有的章） */
+  /** 這章在目前課程裡的編號與課程的章數 */
   number: number
   count: number
   title: string

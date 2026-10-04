@@ -47,7 +47,7 @@ export function FallbackApp() {
       </div>
       {levels.map((l) => (
         <section key={l.label} className="fallback__level">
-          <h2>{l.title ? `${l.label}・${l.title}` : l.label}</h2>
+          <h2>{l.label}</h2>
           <ol>
             {l.steps.map((s) => (
               <li key={s.id}>

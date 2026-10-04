@@ -264,7 +264,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 /* 圖例列打開時，選取資訊卡往下讓位；品質提示讓出底部時間軸 */
 .legend-bar ~ .info { top: 108px; }
 @media (min-width: 721px) { .notice { bottom: 88px; } }
-/* 窄桌機（≤1000px）放不下 7 個「編號 名稱」：只留圖示，名稱仍在按鈕的無障礙名稱與 title 裡 */
+/* 窄桌機（≤1000px）放不下 6 個「編號 名稱」：只留圖示，名稱仍在按鈕的無障礙名稱與 title 裡 */
 @media (max-width: 1000px) {
   .timeline__name { display: none; }
   .timeline__chapter { min-width: 32px; min-height: 32px; justify-content: center; }
@@ -274,7 +274,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
   .pill { padding: 6px 10px; font-size: 12px; }
   .timeline { left: 8px; right: 8px; bottom: calc(42vh + 8px); padding: 4px 8px; }
   .timeline { bottom: calc(42dvh + 8px); }
-  /* 手機只留 7 個圖示（觸控目標 32×32）；時間軸總高 4+32+4+3+4+2(框) = 49px，加上與抽屜的 8px 間距 = 57px，
+  /* 手機只留 6 個圖示（觸控目標 32×32）；時間軸總高 4+32+4+3+4+2(框) = 49px，加上與抽屜的 8px 間距 = 57px，
      layoutModel 的 bottom = 抽屜 + 60 涵蓋它 */
   .timeline__chapter { min-width: 32px; min-height: 32px; padding: 0 4px; justify-content: center; }
   .timeline__bar { margin-top: 4px; }

@@ -16,8 +16,6 @@ export const T = {
     { icon: '📜', name: '債券' },
     { icon: '🚜', name: '基金' },
     { icon: '🧩', name: 'ETF' },
-    { icon: '⚡', name: '情境' },
-    { icon: '🪨', name: '地底' },
   ],
   /** 課程的開頭章（中階以上：上一階口訣複習）與結尾章（口訣卡）；序章與四個內容章沿用 chapters */
   courseChapters: { review: { icon: '🔁', name: '複習' }, finish: { icon: '🎓', name: '完成' } },
@@ -62,7 +60,6 @@ export const T = {
   closeGlyph: '×',
   sliceAmount: '切割位置',
   explodeAmount: '拆開程度',
-  levelLabel: (i: number) => (i === 0 ? '序章' : `第 ${i} 關`),
   next: '下一步',
   nextWaiting: '先拉上面的拉桿',
   nextWaitingName: '先拉上面的拉桿，再按下一步',
@@ -102,7 +99,7 @@ export const T = {
     held: '你手上的方塊',
     bonds: { stock: '股票方塊', gov: '國家債', corp: '公司債', hy: '高收益債' },
     bondRanks: { gov: '最穩・利息少', corp: '中間', hy: '不穩・利息多' },
-    /** 借給誰（r5：簡單版沒有 b-2，三個名字一次出現卻沒說借給誰） */
+    /** 借給誰（r5：初階沒有 b-2，三個名字一次出現卻沒說借給誰） */
     bondWho: { gov: '借給政府', corp: '借給體質好的公司', hy: '借給體質弱的公司' },
     bondHurt: (name: string) => `${name}：出問題了`,
     rateNote: '利息快慢為示意',
