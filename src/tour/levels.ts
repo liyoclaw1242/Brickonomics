@@ -1,4 +1,4 @@
-import type { BigNumber, Level, TextContext } from './types'
+import type { BigNumber, Level, Route, RouteIds, TextContext } from './types'
 import { movePct, pct0, SHOCK_2330, signedPct, wan } from './context'
 import { DEFAULT_VALUES } from './engine'
 import { EXDIV, exDivTimeline } from '../scene/layout/stages'
@@ -453,3 +453,15 @@ export const LEVELS: Level[] = [
     ],
   },
 ]
+
+/**
+ * 路線（課程資料）：完整版走全部步驟；簡單版只留陳伯伯分數最高、最好懂的 17 步，
+ * 拿掉除息細節、進門費出門費、重疊、ETF 名稱一大堆、地底岩芯這些難的。照課程順序排。
+ */
+export const ROUTES: Record<Route, RouteIds> = {
+  full: null,
+  simple: ['p-1', 'p-2', 's-1', 's-2', 's-3', 'b-1', 'b-3', 'f-1', 'f-5', 'f-9', 'e-1', 'e-2', 'e-3', 'e-5', 'c-1', 'c-2', 'u-6'],
+}
+
+/** 每條路線的步數（開始卡片上的「約 17 步」「35 步」用） */
+export const routeLength = (r: Route): number => ROUTES[r]?.length ?? LEVELS.reduce((n, l) => n + l.steps.length, 0)

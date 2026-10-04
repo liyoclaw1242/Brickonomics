@@ -1,5 +1,5 @@
 import type { SandboxPatch } from '../store/sandbox'
-import type { Condition, Control, Level, Position, Progress, SceneDirective, StageValues, Step, TextContext, TourValues } from './types'
+import type { Condition, Control, Level, Position, Progress, Route, RouteIds, SceneDirective, StageValues, Step, TextContext, TourValues } from './types'
 
 export const DEFAULT_VALUES: StageValues = { years: 1, periods: 0, phase: 0, frontLoad: 0.015 }
 
@@ -49,17 +49,59 @@ export function stepAt(levels: readonly Level[], pos: Position): Step {
   return s
 }
 
-export function nextPosition(levels: readonly Level[], pos: Position): Position | null {
+/** 這一步在路線裡嗎；ids 為 null（完整版）時每一步都在 */
+export function inRoute(levels: readonly Level[], pos: Position, ids?: RouteIds): boolean {
+  const s = levels[pos.level]?.steps[pos.step]
+  return !!s && (!ids || ids.includes(s.id))
+}
+
+/** 不看路線的下一個位置 */
+function rawNext(levels: readonly Level[], pos: Position): Position | null {
   const level = levels[pos.level]
   if (level && pos.step + 1 < level.steps.length) return { level: pos.level, step: pos.step + 1 }
-  if (pos.level + 1 < levels.length) return { level: pos.level + 1, step: 0 }
+  for (let l = pos.level + 1; l < levels.length; l++) if (levels[l]!.steps.length > 0) return { level: l, step: 0 }
   return null
 }
 
-export function prevPosition(levels: readonly Level[], pos: Position): Position | null {
+/** 不看路線的上一個位置 */
+function rawPrev(levels: readonly Level[], pos: Position): Position | null {
   if (pos.step > 0) return { level: pos.level, step: pos.step - 1 }
-  const prev = levels[pos.level - 1]
-  return prev ? { level: pos.level - 1, step: prev.steps.length - 1 } : null
+  for (let l = pos.level - 1; l >= 0; l--) {
+    const n = levels[l]!.steps.length
+    if (n > 0) return { level: l, step: n - 1 }
+  }
+  return null
+}
+
+/** 下一步；只走路線裡的步驟（ids 為 null／未填＝全部） */
+export function nextPosition(levels: readonly Level[], pos: Position, ids?: RouteIds): Position | null {
+  let p = rawNext(levels, pos)
+  while (p && !inRoute(levels, p, ids)) p = rawNext(levels, p)
+  return p
+}
+
+export function prevPosition(levels: readonly Level[], pos: Position, ids?: RouteIds): Position | null {
+  let p = rawPrev(levels, pos)
+  while (p && !inRoute(levels, p, ids)) p = rawPrev(levels, p)
+  return p
+}
+
+/** 路線的第一步 */
+export function firstPosition(levels: readonly Level[], ids?: RouteIds): Position {
+  const start = { level: 0, step: 0 }
+  return inRoute(levels, start, ids) ? start : (nextPosition(levels, start, ids) ?? start)
+}
+
+/** 某一章在路線裡的第一步；這章沒有路線步驟時 null */
+export function firstInLevel(levels: readonly Level[], level: number, ids?: RouteIds): Position | null {
+  const i = levels[level]?.steps.findIndex((s) => !ids || ids.includes(s.id)) ?? -1
+  return i >= 0 ? { level, step: i } : null
+}
+
+/** 換路線（或存檔、網址的位置不在路線裡）：停在路線裡「這一步或它之前」最近的一步；前面都沒有就從路線第一步開始 */
+export function snapToRoute(levels: readonly Level[], pos: Position, ids?: RouteIds): Position {
+  if (inRoute(levels, pos, ids)) return pos
+  return prevPosition(levels, pos, ids) ?? firstPosition(levels, ids)
 }
 
 export function positionOf(levels: readonly Level[], stepId: string): Position {
@@ -70,10 +112,12 @@ export function positionOf(levels: readonly Level[], stepId: string): Position {
   throw new Error(`unknown step ${stepId}`)
 }
 
-export function progressFraction(levels: readonly Level[], pos: Position): number {
-  const total = levels.reduce((n, l) => n + l.steps.length, 0)
-  const before = levels.slice(0, pos.level).reduce((n, l) => n + l.steps.length, 0) + pos.step
-  return total === 0 ? 0 : before / total
+/** 走過的比例＝路線裡排在這一步之前的步數 ÷ 路線總步數 */
+export function progressFraction(levels: readonly Level[], pos: Position, ids?: RouteIds): number {
+  const all = levels.flatMap((l, level) => l.steps.map((s, step) => ({ id: s.id, level, step })))
+  const route = all.filter((x) => !ids || ids.includes(x.id))
+  const before = route.filter((x) => x.level < pos.level || (x.level === pos.level && x.step < pos.step)).length
+  return route.length === 0 ? 0 : before / route.length
 }
 
 export function isSatisfied(c: Condition | undefined, v: TourValues): boolean {
@@ -123,6 +167,7 @@ export function parseProgress(raw: string | null): Progress {
       }
     }
     if (typeof rec.stepId === 'string') p.stepId = rec.stepId
+    if (isRoute(rec.route)) p.route = rec.route
     return p
   } catch {
     return { ...EMPTY_PROGRESS }
@@ -133,15 +178,33 @@ export function serializeProgress(p: Progress): string {
   return JSON.stringify(p)
 }
 
+const isRoute = (x: unknown): x is Route => x === 'simple' || x === 'full'
+
 const SANDBOX_KEYS = ['product', 'slice', 'explode', 'axis']
 
-/** ?mode=sandbox、?level=1&step=2；帶沙盒參數（product/slice/explode/axis）視為沙盒模式 */
-export function parseTourQuery(search: string, levels: readonly Level[]): { mode?: 'tour' | 'sandbox'; pos?: Position } {
+export type TourQuery = { mode?: 'tour' | 'sandbox'; pos?: Position; route?: Route }
+
+/** ?mode=sandbox、?level=1&step=2（絕對位置，不管路線）、?route=simple|full；帶沙盒參數（product/slice/explode/axis）視為沙盒模式 */
+export function parseTourQuery(search: string, levels: readonly Level[]): TourQuery {
   const q = new URLSearchParams(search)
-  if (q.get('mode') === 'sandbox' || SANDBOX_KEYS.some((k) => q.has(k))) return { mode: 'sandbox' }
+  const r = q.get('route')
+  const route = isRoute(r) ? { route: r } : {}
+  if (q.get('mode') === 'sandbox' || SANDBOX_KEYS.some((k) => q.has(k))) return { mode: 'sandbox', ...route }
   if (q.has('level')) {
     const pos = { level: Number(q.get('level')), step: Number(q.get('step') ?? 0) }
-    if (isValidPosition(levels, pos)) return { mode: 'tour', pos }
+    if (isValidPosition(levels, pos)) return { mode: 'tour', pos, ...route }
   }
-  return {}
+  return route
+}
+
+/**
+ * 一開始用哪條路線：網址指定的優先，再來是存檔選過的；
+ * 舊存檔（有位置、完成過章節或解鎖過自由玩）或直接連到某一步的網址＝完整版；
+ * 都沒有＝第一次來，回傳 null（面板先問要走哪一條）。
+ */
+export function initialRoute(progress: Progress, query: TourQuery): Route | null {
+  if (query.route) return query.route
+  if (progress.route) return progress.route
+  const returning = progress.pos !== undefined || progress.stepId !== undefined || progress.completed.length > 0 || progress.sandboxUnlocked
+  return returning || query.pos || query.mode === 'sandbox' ? 'full' : null
 }

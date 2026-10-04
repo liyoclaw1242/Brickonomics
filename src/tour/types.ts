@@ -119,4 +119,16 @@ export type Step = {
 
 export type Level = { id: string; title: string; steps: Step[] }
 export type Position = { level: number; step: number }
-export type Progress = { completed: string[]; sandboxUnlocked: boolean; pos?: Position; /** 存檔時所在步驟的 id：課程改版後用它找回位置（比 pos 可靠） */ stepId?: string }
+/** 路線：簡單版只走一部分步驟（ROUTES.simple），完整版走全部 */
+export type Route = 'simple' | 'full'
+/** 路線裡的步驟 id（照課程順序）；null＝全部步驟 */
+export type RouteIds = readonly string[] | null
+export type Progress = {
+  completed: string[]
+  sandboxUnlocked: boolean
+  pos?: Position
+  /** 存檔時所在步驟的 id：課程改版後用它找回位置（比 pos 可靠） */
+  stepId?: string
+  /** 選過的路線；沒有＝還沒選（第一次來）或舊存檔 */
+  route?: Route
+}

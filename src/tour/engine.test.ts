@@ -4,6 +4,7 @@ import { LEVELS as REAL } from './levels'
 import {
   DEFAULT_VALUES, stepAt, isValidPosition, nextPosition, prevPosition, positionOf, progressFraction,
   isSatisfied, sandboxPatchFor, lineOf, moreOf, titleOf, parseProgress, serializeProgress, parseTourQuery, controlRange, resumePosition,
+  snapToRoute, firstInLevel, firstPosition, inRoute, initialRoute,
 } from './engine'
 
 const L: Level[] = [
@@ -168,5 +169,67 @@ describe('resumePosition (saved progress after the lesson changed)', () => {
   it('a chapter that no longer exists, or no saved position, starts from the beginning', () => {
     expect(resumePosition(L, { level: 9, step: 0 })).toEqual({ level: 0, step: 0 })
     expect(resumePosition(L, undefined)).toEqual({ level: 0, step: 0 })
+  })
+})
+
+describe('routes (簡單版只走一部分步驟)', () => {
+  // a1, a2 | b1 ；路線只有 a1、b1
+  const R = ['a1', 'b1']
+
+  it('next and prev skip steps outside the route', () => {
+    expect(nextPosition(L, { level: 0, step: 0 }, R)).toEqual({ level: 1, step: 0 })
+    expect(nextPosition(L, { level: 1, step: 0 }, R)).toBeNull()
+    expect(prevPosition(L, { level: 1, step: 0 }, R)).toEqual({ level: 0, step: 0 })
+    expect(prevPosition(L, { level: 0, step: 0 }, R)).toBeNull()
+    // null＝完整版：每一步都走
+    expect(nextPosition(L, { level: 0, step: 0 }, null)).toEqual({ level: 0, step: 1 })
+  })
+
+  it('reports progress over route steps only', () => {
+    expect(progressFraction(L, { level: 0, step: 0 }, R)).toBe(0)
+    expect(progressFraction(L, { level: 1, step: 0 }, R)).toBe(1 / 2)
+    expect(progressFraction(L, { level: 1, step: 0 }, null)).toBeCloseTo(2 / 3)
+  })
+
+  it('snaps to the nearest route step at or before the position (or the first one)', () => {
+    expect(snapToRoute(L, { level: 0, step: 1 }, R)).toEqual({ level: 0, step: 0 })
+    expect(snapToRoute(L, { level: 1, step: 0 }, R)).toEqual({ level: 1, step: 0 })
+    expect(snapToRoute(L, { level: 0, step: 0 }, ['b1'])).toEqual({ level: 1, step: 0 })
+    expect(snapToRoute(L, { level: 0, step: 1 }, null)).toEqual({ level: 0, step: 1 })
+  })
+
+  it('finds the first route step of a chapter and of the whole route', () => {
+    expect(firstInLevel(L, 0, ['a2', 'b1'])).toEqual({ level: 0, step: 1 })
+    expect(firstInLevel(L, 0, ['b1'])).toBeNull()
+    expect(firstPosition(L, ['a2', 'b1'])).toEqual({ level: 0, step: 1 })
+    expect(firstPosition(L, null)).toEqual({ level: 0, step: 0 })
+    expect(inRoute(L, { level: 0, step: 1 }, R)).toBe(false)
+    expect(inRoute(L, { level: 0, step: 1 }, null)).toBe(true)
+  })
+
+  it('resumes inside the route', () => {
+    expect(snapToRoute(L, resumePosition(L, undefined, 'a2'), R)).toEqual({ level: 0, step: 0 })
+  })
+
+  it('reads ?route= and keeps level/step absolute', () => {
+    expect(parseTourQuery('?route=simple', L)).toEqual({ route: 'simple' })
+    expect(parseTourQuery('?route=full&level=0&step=1', L)).toEqual({ mode: 'tour', pos: { level: 0, step: 1 }, route: 'full' })
+    expect(parseTourQuery('?route=weird', L)).toEqual({})
+  })
+
+  it('persists the chosen route with the progress', () => {
+    expect(parseProgress('{"completed":[],"sandboxUnlocked":false,"route":"simple"}').route).toBe('simple')
+    expect(parseProgress('{"completed":[],"sandboxUnlocked":false,"route":"x"}').route).toBeUndefined()
+  })
+
+  it('asks for a route only on a first visit', () => {
+    const empty = { completed: [], sandboxUnlocked: false }
+    expect(initialRoute(empty, {})).toBeNull() // 第一次來：問
+    expect(initialRoute({ ...empty, route: 'simple' }, {})).toBe('simple')
+    expect(initialRoute({ ...empty, stepId: 'a2', pos: { level: 0, step: 1 } }, {})).toBe('full') // 舊存檔：完整版
+    expect(initialRoute({ ...empty, sandboxUnlocked: true }, {})).toBe('full')
+    expect(initialRoute(empty, { route: 'simple' })).toBe('simple') // 網址指定
+    expect(initialRoute({ ...empty, route: 'simple' }, { route: 'full' })).toBe('full')
+    expect(initialRoute(empty, { mode: 'tour', pos: { level: 0, step: 1 } })).toBe('full') // 直接連到某一步
   })
 })

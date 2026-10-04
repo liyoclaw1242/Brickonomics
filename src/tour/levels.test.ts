@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { universe } from '../data'
 import { isBasket } from '../data/schema'
 import { overlap } from '../sim/overlap'
-import { EXDIV_AFTER_PHASE, LEVELS } from './levels'
+import { EXDIV_AFTER_PHASE, LEVELS, ROUTES } from './levels'
 import { exDivTimeline } from '../scene/layout/stages'
 import { makeTextContext, pct0, wan } from './context'
 import { controlRange, DEFAULT_VALUES, lineOf, moreOf } from './engine'
@@ -594,5 +594,24 @@ describe('jargon diet (user test r1)', () => {
     for (const s of steps) for (const t of [lineOf(s, ctx), moreOf(s, ctx), resolve(s.fallbackLine), resolve(s.fallbackMore)]) {
       if (t !== undefined) expect(t.includes('沙盒'), s.id).toBe(false)
     }
+  })
+})
+
+describe('ROUTES', () => {
+  const order = steps.map((s) => s.id)
+  it('full walks every step', () => {
+    expect(ROUTES.full).toBeNull()
+  })
+  it('simple is the 17 kept steps, each one exists, in course order', () => {
+    const simple = ROUTES.simple!
+    expect(simple).toEqual(['p-1', 'p-2', 's-1', 's-2', 's-3', 'b-1', 'b-3', 'f-1', 'f-5', 'f-9', 'e-1', 'e-2', 'e-3', 'e-5', 'c-1', 'c-2', 'u-6'])
+    for (const id of simple) expect(order, id).toContain(id)
+    const idx = simple.map((id) => order.indexOf(id))
+    expect([...idx].sort((a, b) => a - b)).toEqual(idx)
+    expect(new Set(simple).size).toBe(simple.length)
+  })
+  it('simple ends with the recap step, and every chapter keeps at least one step', () => {
+    expect(byId(ROUTES.simple!.at(-1)!).recap).toBeDefined()
+    for (const l of LEVELS) expect(l.steps.some((s) => ROUTES.simple!.includes(s.id)), l.id).toBe(true)
   })
 })
