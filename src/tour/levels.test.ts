@@ -8,6 +8,8 @@ import { lineOf, moreOf } from './engine'
 import { ACTION_VERBS, forbiddenWordsIn, LINE_SENTENCE_MAX, LINE_SENTENCES_MAX, MORE_SENTENCE_MAX, MORE_SENTENCES_MAX, sentences } from './glossary'
 import { parseEmphasis, stripMarkup, visibleLength } from '../ui/emphasis'
 import { colorForKey } from '../scene/palette'
+import { isVerified } from '../data/verified'
+import type { VerifiedKey } from '../data/schema'
 import type { Stage, Step } from './types'
 
 const ctx = makeTextContext(universe)
@@ -112,6 +114,46 @@ describe('LEVELS', () => {
     }
   })
 
+  it('level titles follow the glossary and avoid 被', () => {
+    for (const l of LEVELS) {
+      expect(forbiddenWordsIn(l.title), l.id).toEqual([])
+      expect(l.title.includes('被'), l.id).toBe(false)
+    }
+  })
+
+  it('keeps callout titles ≤ 8 characters and big-number labels ≤ 12', () => {
+    for (const s of steps) {
+      for (const c of s.callouts ?? []) expect(Array.from(resolve(c.title)!).length, `${s.id}: ${resolve(c.title)}`).toBeLessThanOrEqual(8)
+      const bn = s.bigNumber?.(ctx)
+      if (bn) expect(Array.from(bn.label).length, `${s.id}: ${bn.label}`).toBeLessThanOrEqual(12)
+    }
+  })
+
+  it('backs every big number with verified data, or marks it', () => {
+    // 每個大數字用到的資料來源；新增大數字時必須補上，或在 bigNumber 上加標示
+    const SOURCES: Record<string, [string, VerifiedKey][]> = {
+      'f-4': [['ALLIANZ_INCOME_GROWTH', 'holdings']],
+      'f-5': [['JH_BALANCED', 'fees.expenseRatio']],
+      'e-3': [['0050', 'holdings']],
+      'e-5': [['QQQ', 'fees.expenseRatio']],
+      'c-2': [['0050', 'holdings']],
+      'c-3': [['QQQ', 'holdings'], ['SPY', 'holdings']],
+      'u-2': [['0050', 'holdings']],
+    }
+    for (const s of steps) {
+      const bn = s.bigNumber?.(ctx)
+      if (!bn) continue
+      if (bn.mark) continue
+      const src = SOURCES[s.id]
+      expect(src, `${s.id}: list its data source or mark it`).toBeDefined()
+      for (const [id, key] of src!) expect(isVerified(universe.get(id)!, key), `${s.id}: ${id} ${key}`).toBe(true)
+    }
+  })
+
+  it('exposes the assumed front-load fee only on steps marked ✎', () => {
+    for (const s of steps) if (s.controls?.includes('frontLoad')) expect(s.mark, s.id).toBe('assumption')
+  })
+
   it('applies the same writing rules to the text-only versions and callouts', () => {
     for (const s of steps) {
       const fl = resolve(s.fallbackLine)
@@ -190,7 +232,9 @@ describe('LEVELS', () => {
     expect(lineOf(e3, ctx)).toContain('**56%**') // pct0(56.31)
     expect(e3.bigNumber!(ctx)).toEqual({ value: '56%', label: '台積電在 0050', fraction: 0.5631, colorKey: '2330' })
     const c2 = byId('c-2')
-    expect(lineOf(c2, ctx)).toContain('−16.9%') // -0.3 * 56.31% = -16.893%
+    expect(lineOf(c2, ctx)).toContain('跌約 **16.9%**') // |−0.3 × 56.31%| = 16.893%，句子已說「跌」所以用絕對值
+    expect(lineOf(c2, ctx)).not.toContain('−')
+    expect(moreOf(c2, ctx)).toContain('約 −16.9%')
     expect(c2.bigNumber!(ctx)!.value).toBe('−16.9%')
     expect(byId('f-5').bigNumber!(ctx)!.value).toBe('1.88%') // JH_BALANCED expenseRatio 0.0188
     expect(byId('e-5').bigNumber!(ctx)!.value).toBe('0.18%') // QQQ expenseRatio 0.0018

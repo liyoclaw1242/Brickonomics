@@ -5,6 +5,7 @@ export const GLOSSARY = [
   { term: '配息', means: '股票、基金、ETF 付給你的錢', forbidden: ['股息', '股利', '派息', '分紅'] },
   { term: '利息', means: '債券付給你的錢', forbidden: [] },
   { term: '內扣費用', means: '每年從基金或 ETF 資產扣掉的費用', forbidden: ['管理費', '費用率'] },
+  { term: '總報酬', means: '方塊價值＋金幣，合起來算', forbidden: ['總和'] },
   { term: '漲', means: '價格變高', forbidden: ['上升', '上揚', '走高'] },
   { term: '跌', means: '價格變低', forbidden: ['下滑', '走低', '下挫'] },
 ] as const

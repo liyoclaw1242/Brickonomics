@@ -9,6 +9,7 @@ import { Callout } from '../Callout'
 import { basketSpec, basketVoxels } from '../layout/basket'
 import { layerCentroid } from '../layout/stages'
 import type { Quality } from '../quality'
+import { ACCENT_COLORS } from '../palette'
 import { atPlaza } from './plaza'
 
 const XA = -7
@@ -49,7 +50,7 @@ export function OverlapStage({ a, b }: { a: string; b: string; quality: Quality 
       <Basket productId={a} quality={BASKET_QUALITY} position={atPlaza(XA, 0, 0)} slice={0} sliceAxis="x" explode={EXPLODE_T} />
       <Basket productId={b} quality={BASKET_QUALITY} position={atPlaza(XB, 0, 0)} slice={0} sliceAxis="x" explode={EXPLODE_T} />
       {links.map((l) => (
-        <Line key={l.id} points={[l.pa, l.pb]} color="#ffd54f" lineWidth={4} transparent opacity={0.9} depthTest={false} renderOrder={10} />
+        <Line key={l.id} points={[l.pa, l.pb]} color={ACCENT_COLORS.coin} lineWidth={4} transparent opacity={0.9} depthTest={false} renderOrder={10} />
       ))}
       {links.map((l, i) => (
         <Callout

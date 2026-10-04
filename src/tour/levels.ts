@@ -13,6 +13,12 @@ const SHOCK_PCT = -SHOCK_2330['2330']! // 0.3
 const pctOf = (er: number): string => `${(er * 100).toFixed(2)}%`
 const n0 = (v: number): string => v.toFixed(0)
 
+/**
+ * s-6 停在「剛配發」的時間軸位置；scene.values.phase 與大數字共用。
+ * Task 6：若 bigNumber 能拿到即時拉桿值，改讀即時 phase。
+ */
+export const EXDIV_AFTER_PHASE = 0.5
+
 /** 內扣費用大數字；資料沒有時不顯示 */
 const expenseNumber = (c: TextContext, productId: string, label: string): BigNumber | undefined => {
   const er = c.expenseRatio(productId)
@@ -106,16 +112,16 @@ export const LEVELS: Level[] = [
         more: '方塊縮小的部分，剛好等於你拿到的金幣。這叫除息：方塊價值＋金幣＝不變。之後方塊慢慢長回原本大小，叫填息。數字是示意。',
         mark: 'illustrative',
         bigNumber: () => {
-          const e = exDivTimeline(0.5, 'fill')
+          const e = exDivTimeline(EXDIV_AFTER_PHASE, 'fill')
           return { value: n0(e.blockValue + e.cash), label: `方塊 ${n0(e.blockValue)} ＋ 金幣 ${n0(e.cash)}`, mark: 'illustrative' }
         },
-        scene: { camera: 'plazaNear', product: null, stage: { kind: 'exdiv', outcome: 'fill' }, values: { phase: 0.5 } },
+        scene: { camera: 'plazaNear', product: null, stage: { kind: 'exdiv', outcome: 'fill' }, values: { phase: EXDIV_AFTER_PHASE } },
         controls: ['phase'],
       },
       {
         id: 's-7',
         title: '貼息',
-        line: '要看**方塊＋金幣**的總和',
+        line: '要看**方塊＋金幣**的總報酬',
         more: '配息不是白送的錢。方塊可能長不回去，甚至更小，這叫貼息。所以要看方塊＋金幣的總報酬。這是示意。',
         mark: 'illustrative',
         scene: { camera: 'plazaNear', product: null, stage: { kind: 'exdiv', outcome: 'gap' }, values: { phase: 1 } },
@@ -219,15 +225,16 @@ export const LEVELS: Level[] = [
       {
         id: 'f-7',
         title: '後收不是免費',
-        line: '越**早賣**，扣得越多',
+        line: '越**早賣**，手續費越貴',
         more: '後收型不是免費。買時免手續費，前幾年每年多收分銷費。越早賣，遞延手續費越貴。划不划算，要看你持有多久。',
+        mark: 'assumption',
         scene: { camera: 'plaza', product: null, stage: { kind: 'feeRace' }, values: { years: 3 } },
         controls: ['years', 'frontLoad'],
       },
       {
         id: 'f-8',
         title: '配息或累積',
-        line: '拖滑桿。看**再投資**的塔',
+        line: '拖**經過年數**。看**再投資**的塔',
         more: '同一檔基金常有兩種級別。配息型把金幣放進你的口袋。累積型把金幣熔回方塊，繼續投資。拖經過年數，看差距怎麼長出來（示意參數）。',
         mark: 'illustrative',
         scene: { camera: 'plaza', product: null, stage: { kind: 'accumulate' }, values: { periods: 0 } },
@@ -237,7 +244,7 @@ export const LEVELS: Level[] = [
       {
         id: 'f-9',
         title: '配息陷阱',
-        line: '拖滑桿。配息削掉**本金|loss**',
+        line: '拖**經過年數**。配太多會削**本金|loss**',
         more: '塔越來越矮。因為金幣不夠配，怪手削下方塊熔成金幣。這叫配息來自本金。這是示意基金，不代表任何真實商品。',
         mark: 'illustrative',
         scene: { camera: 'plaza', product: null, stage: { kind: 'principalTrap' }, values: { periods: 0 } },
@@ -291,7 +298,7 @@ export const LEVELS: Level[] = [
       {
         id: 'e-5',
         title: '內扣費用低',
-        line: 'QQQ、SPY **內扣費用**低',
+        line: 'QQQ **內扣費用**低，不代表較好',
         more: 'QQQ 和 SPY（標普500）是美國的 ETF。它們照藍圖自動配置，不用怪手挑股。目前快照裡，它們的內扣費用比本課的基金低。費用低不代表比較好，策略也不同。',
         bigNumber: (c) => expenseNumber(c, 'QQQ', 'QQQ 每年內扣'),
         scene: { camera: 'exchange', product: 'QQQ', cityLabels: false },
@@ -312,9 +319,9 @@ export const LEVELS: Level[] = [
       {
         id: 'c-2',
         title: '誰受傷最重',
-        line: (c) => `0050 跟著跌約 **${signedPct(c.shock('0050'))}**`,
+        line: (c) => `0050 跟著跌約 **${(Math.abs(c.shock('0050')) * 100).toFixed(1)}%**`,
         more: (c) =>
-          `只買台積電：${signedPct(SHOCK_2330['2330']!)}。0050：約 ${signedPct(c.shock('0050'))}，台積電佔了一半以上。SPY 沒有台積電，沒有直接影響（${signedPct(c.shock('SPY'))}）。分散也有程度之分。`,
+          `只買台積電：${signedPct(SHOCK_2330['2330']!)}。0050：約 ${signedPct(c.shock('0050'))}。因為台積電佔了一半以上。SPY 沒有台積電，沒有直接影響（${signedPct(c.shock('SPY'))}）。`,
         bigNumber: (c) => {
           const s = c.shock('0050')
           return { value: signedPct(s), label: '0050', fraction: Math.abs(s) / SHOCK_PCT }
@@ -357,7 +364,7 @@ export const LEVELS: Level[] = [
         title: '垂直岩芯',
         line: (c) => `0050：**半導體|semiconductor**至少 **${pct0(c.sectorPct('0050', 'semiconductor'))}%**`,
         more: (c) =>
-          `市值型 ETF＝垂直岩芯，粗細＝產業比例。左邊 0050：至少約 ${pct0(c.sectorPct('0050', 'semiconductor'))}% 在半導體層。右邊 QQQ 分散在半導體、電子、軟體、汽車。地面上的灰色＝快照沒有細分的部分。`,
+          `市值型 ETF＝垂直岩芯，粗細＝產業比例。左邊 0050：至少約 ${pct0(c.sectorPct('0050', 'semiconductor'))}% 在半導體層。右邊 QQQ 的前幾大持股分屬好幾種產業。地面上的灰色＝快照沒有細分的部分。`,
         bigNumber: (c) => {
           const sp = c.sectorPct('0050', 'semiconductor')
           return { value: `至少 ${pct0(sp)}%`, label: '0050 的半導體', fraction: sp / 100, colorKey: 'semiconductor' }

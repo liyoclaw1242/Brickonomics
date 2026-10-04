@@ -3,12 +3,13 @@ import { T } from '../../ui/strings'
 import { Callout } from '../Callout'
 import { CoinPile } from '../CoinPile'
 import { blocksFor } from '../layout/stages'
-import type { BlockLook } from '../palette'
+import { ACCENT_COLORS, type BlockLook } from '../palette'
 import type { Quality } from '../quality'
 import { atPlaza } from './plaza'
 import { VoxelColumn } from './VoxelColumn'
 
-export type TowerSpec = { key: string; label: string; value: number; lost?: number; coins?: number; color: string; marks?: Mark[] }
+/** lostLabel：紅色小堆的標註，未填則為「費用扣掉的」 */
+export type TowerSpec = { key: string; label: string; value: number; lost?: number; lostLabel?: string; coins?: number; color: string; marks?: Mark[] }
 
 const SPACING = 12
 const looks = new Map<string, BlockLook>()
@@ -18,9 +19,9 @@ const matteLook = (color: string): BlockLook => {
   if (!l) looks.set(color, (l = { color, kind: 'matte' }))
   return l
 }
-const LOST = { color: '#e53935', kind: 'matte' as const }
+const LOST = { color: ACCENT_COLORS.loss, kind: 'matte' as const }
 
-/** 一排方塊塔：塔＝剩下的價值；紅色小堆＝被費用吃掉；金幣堆＝領到的錢（皆 2 元一顆） */
+/** 一排方塊塔：塔＝剩下的價值；紅色小堆＝費用扣掉的（或削掉的本金）；金幣堆＝領到的錢（皆 2 元一顆） */
 export function TowerRow({ towers, quality }: { towers: TowerSpec[]; quality: Quality }) {
   const start = -((towers.length - 1) * SPACING) / 2
   return (
@@ -34,7 +35,7 @@ export function TowerRow({ towers, quality }: { towers: TowerSpec[]; quality: Qu
             {t.lost !== undefined && blocksFor(t.lost) > 0 && (
               <>
                 <VoxelColumn count={blocksFor(t.lost)} look={LOST} position={atPlaza(x + 3, 0, 5.5)} w={3} d={3} quality={quality} />
-                <Callout anchor={atPlaza(x + 3, -0.2, 7.2)} offset={[0, 0, 0]} title={T.towers.lost} />
+                <Callout anchor={atPlaza(x + 3, -0.2, 7.2)} offset={[0, 0, 0]} title={t.lostLabel ?? T.towers.lost} />
               </>
             )}
             {t.coins !== undefined && (

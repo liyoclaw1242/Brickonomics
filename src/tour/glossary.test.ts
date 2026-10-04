@@ -12,6 +12,7 @@ describe('forbiddenWordsIn', () => {
   it('finds synonyms that the glossary bans', () => {
     expect(forbiddenWordsIn('看發股利那一刻')).toEqual(['股利'])
     expect(forbiddenWordsIn('管理費每天磨掉一點')).toEqual(['管理費'])
+    expect(forbiddenWordsIn('要看方塊＋金幣的總和')).toEqual(['總和'])
   })
   it('allows proper names such as 高股息', () => {
     expect(forbiddenWordsIn('高股息：專挑冒金幣的')).toEqual([])

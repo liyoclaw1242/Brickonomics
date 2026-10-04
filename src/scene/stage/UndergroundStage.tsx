@@ -6,7 +6,7 @@ import { T } from '../../ui/strings'
 import { CoinPile } from '../CoinPile'
 import { Callout } from '../Callout'
 import { BlockMaterial } from '../materials'
-import { SECTOR_COLORS } from '../palette'
+import { ACCENT_COLORS, SECTOR_COLORS } from '../palette'
 import type { Quality } from '../quality'
 import { THEMES } from '../theme'
 import { CORE_R_MIN, coreDiscs, goldVein, GROUND_TOP, sectorBreakdown, strataLayout, STUB_MAX_HEIGHT, unclassifiedStub, type Sector } from '../layout/underground'
@@ -91,7 +91,7 @@ export function UndergroundStage({ show, cores, quality }: { show: Show; cores?:
       {show === 'dig' && (
         <mesh position={[0, digY, 40]}>
           <boxGeometry args={[40, 1.2, 2]} />
-          <meshBasicMaterial color="#ffd54f" transparent opacity={0.85} />
+          <meshBasicMaterial color={ACCENT_COLORS.coin} transparent opacity={0.85} />
         </mesh>
       )}
 
