@@ -1,16 +1,14 @@
-import { useMemo, type CSSProperties } from 'react'
-import { Html } from '@react-three/drei'
+import { useMemo } from 'react'
 import { Color } from 'three'
 import { universe } from '../../data'
 import { useThemeStore } from '../../store/theme'
 import { T } from '../../ui/strings'
 import { CoinPile } from '../CoinPile'
-import { labelStyle } from '../labelStyle'
+import { Callout } from '../Callout'
 import { BlockMaterial } from '../materials'
 import { SECTOR_COLORS } from '../palette'
 import type { Quality } from '../quality'
 import { THEMES } from '../theme'
-import { useAfterFirstTick } from '../useAfterFirstTick'
 import { CORE_R_MIN, coreDiscs, goldVein, GROUND_TOP, sectorBreakdown, strataLayout, STUB_MAX_HEIGHT, unclassifiedStub, type Sector } from '../layout/underground'
 
 type Show = 'strata' | 'cores' | 'dig' | 'veins' | 'gold'
@@ -30,13 +28,11 @@ const COIN_SCALE = 2.5
 const LEDGE_DEPTH = 2.4
 const LEDGE_HEIGHT = 0.2
 
-const dimLabelStyle: CSSProperties = { ...labelStyle, opacity: FADE }
 const colorOf = (s: Sector, unclassified: string): string => (s === 'unclassified' ? unclassified : SECTOR_COLORS[s] ?? unclassified)
 const soilTint = (hex: string, soil: string): string => `#${new Color(hex).lerp(new Color(soil), 0.25).getHexString()}`
 
 /** 第 6 關：城市底下的產業地層、岩芯、水平挖、礦脈與黃金礦脈（靜態，不需要連續繪製） */
 export function UndergroundStage({ show, cores, quality }: { show: Show; cores?: [string, string]; quality: Quality }) {
-  const ready = useAfterFirstTick()
   const t = THEMES[useThemeStore((s) => s.theme)]
   const UNCLASSIFIED = t.unclassified
   const layers = useMemo(() => strataLayout().map((l) => ({ ...l, color: soilTint(colorOf(l.sector, t.unclassified), t.soil) })), [t.unclassified, t.soil])
@@ -114,46 +110,23 @@ export function UndergroundStage({ show, cores, quality }: { show: Show; cores?:
           )),
         )}
 
-      {ready && (
-        <>
-          {layers.map((l) => (
-            <Html key={l.sector} position={[LABEL_X, (l.top + l.bottom) / 2, FRONT_Z + 0.5]} center style={labelStyle}>
-              {T.sectors[l.sector]}
-            </Html>
-          ))}
-          <Html position={[-17, (vein.top + vein.bottom) / 2, FRONT_Z + 0.5]} center style={veinDim ? dimLabelStyle : labelStyle}>
-            {T.underground.goldVein}
-          </Html>
-          {show === 'cores' &&
-            coreData.map((c) => (
-              <group key={c.id}>
-                <Html position={[c.x, GROUND_TOP + STUB_MAX_HEIGHT + 1.6, CORE_Z]} center style={labelStyle}>
-                  {c.name}
-                </Html>
-                {c.stub.height > 0 && (
-                  <Html position={[c.x, GROUND_TOP + c.stub.height + 0.9, CORE_Z]} center style={labelStyle}>
-                    {T.underground.unclassifiedStub(c.stub.weightPct)}
-                  </Html>
-                )}
-              </group>
-            ))}
-          {show === 'cores' && (
-            <Html position={[0, GROUND_TOP - 17, CORE_Z]} center style={labelStyle}>
-              {T.underground.rodLegend}
-            </Html>
-          )}
-          {show === 'dig' && (
-            <Html position={[0, digY + 1.4, 41]} center style={labelStyle}>
-              {T.underground.dig}
-            </Html>
-          )}
-          {show === 'veins' && (
-            <Html position={[0, GROUND_TOP + 1.2, FRONT_Z + 1]} center style={labelStyle}>
-              {T.underground.veins}
-            </Html>
-          )}
-        </>
-      )}
+      {/* 地層名稱貼在地層正面：純說明，不畫引線 */}
+      {layers.map((l) => (
+        <Callout key={l.sector} anchor={[LABEL_X, (l.top + l.bottom) / 2, FRONT_Z + 0.5]} offset={[0, 0, 0]} title={T.sectors[l.sector]} />
+      ))}
+      <Callout anchor={[-17, (vein.top + vein.bottom) / 2, FRONT_Z + 0.5]} offset={[0, 0, 0]} title={T.underground.goldVein} dim={veinDim} />
+      {show === 'cores' &&
+        coreData.map((c) => (
+          <group key={c.id}>
+            <Callout anchor={[c.x, GROUND_TOP + c.stub.height, CORE_Z]} offset={[0, STUB_MAX_HEIGHT + 1.6 - c.stub.height, 0]} title={c.name} />
+            {c.stub.height > 0 && (
+              <Callout anchor={[c.x + STUB_RADIUS, GROUND_TOP + c.stub.height / 2, CORE_Z]} offset={[2.5, 0, 0]} title={T.underground.unclassifiedStub(c.stub.weightPct)} />
+            )}
+          </group>
+        ))}
+      {show === 'cores' && <Callout anchor={[0, GROUND_TOP - 17, CORE_Z]} offset={[0, 0, 0]} title={T.underground.rodLegend} wrap />}
+      {show === 'dig' && <Callout anchor={[0, digY, 40]} offset={[0, 1.4, 1]} title={T.underground.dig} mark="illustrative" />}
+      {show === 'veins' && <Callout anchor={[0, GROUND_TOP + 1.2, FRONT_Z + 1]} offset={[0, 0, 0]} title={T.underground.veins} mark="illustrative" />}
     </group>
   )
 }

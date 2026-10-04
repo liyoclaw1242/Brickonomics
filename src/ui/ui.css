@@ -147,3 +147,19 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .fallback h2 { font-size: 18px; margin: 28px 0 8px; }
 .fallback ol { padding-left: 20px; }
 .fallback li { margin-bottom: 14px; }
+
+/* 3D 標註（Callout / NameLabel）與標示圖示（MarkIcon） */
+.callout { pointer-events: none; display: grid; gap: 2px; padding: 6px 10px; border-radius: 8px; white-space: nowrap;
+  background: var(--surface-strong); border: 1px solid var(--border); color: var(--text); font-size: 13px; transform: translate(8px, -50%); }
+.callout--dim { opacity: 0.45; }
+.callout--wrap { white-space: normal; width: max-content; max-width: 240px; text-align: center; line-height: 1.5; }
+.callout__title { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
+.callout__sub { font-size: 11px; color: var(--muted); letter-spacing: 0.04em; }
+.name-label { pointer-events: none; font-size: 11px; color: var(--muted); opacity: 0.7; white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+.name-label--active { opacity: 1; color: var(--text); font-weight: 600; }
+.name-label--island { font-size: 16px; font-weight: 600; }
+.mark { position: relative; display: inline-flex; }
+.mark__icon { pointer-events: auto; border: 1px solid var(--border); background: var(--chip); color: var(--badge);
+  width: 18px; height: 18px; border-radius: 50%; font-size: 11px; line-height: 1; padding: 0; cursor: pointer; }
+.mark__tip { position: absolute; top: 120%; left: 50%; transform: translateX(-50%); z-index: 10; width: max-content; max-width: 220px;
+  padding: 6px 8px; border-radius: 8px; background: var(--surface-strong); border: 1px solid var(--border); font-size: 12px; white-space: normal; }

@@ -1,17 +1,14 @@
 import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Html } from '@react-three/drei'
 import type { Group } from 'three'
 import { T } from '../../ui/strings'
-import { labelStyle } from '../labelStyle'
+import { Callout } from '../Callout'
 import { EXCHANGE_POSITION } from './plaza'
 import { useContinuousRender } from '../useContinuousRender'
-import { useAfterFirstTick } from '../useAfterFirstTick'
 
 /** 方塊組成的小怪手（經理人），手臂來回擺動 */
 export function Excavator() {
   const arm = useRef<Group>(null)
-  const ready = useAfterFirstTick()
   useContinuousRender()
   useFrame(({ clock }) => {
     if (arm.current) arm.current.rotation.z = -0.5 + Math.sin(clock.elapsedTime * 1.4) * 0.35
@@ -37,11 +34,7 @@ export function Excavator() {
           <meshStandardMaterial color="#455a64" />
         </mesh>
       </group>
-      {ready && (
-        <Html position={[0, 4.2, 0]} center style={labelStyle}>
-          {T.excavator}
-        </Html>
-      )}
+      <Callout anchor={[0, 2.7, 0]} offset={[0, 1.5, 0]} title={T.excavator} />
     </group>
   )
 }

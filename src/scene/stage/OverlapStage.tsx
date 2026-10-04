@@ -1,21 +1,20 @@
 import { useMemo } from 'react'
-import { Html, Line } from '@react-three/drei'
+import { Line } from '@react-three/drei'
 import { universe } from '../../data'
 import { overlap } from '../../sim/overlap'
 import { T } from '../../ui/strings'
 import { Basket } from '../Basket'
 import type { Vec3 } from '../camera'
-import { labelStyle } from '../labelStyle'
+import { Callout } from '../Callout'
 import { basketSpec, basketVoxels } from '../layout/basket'
 import { layerCentroid } from '../layout/stages'
 import type { Quality } from '../quality'
-import { useAfterFirstTick } from '../useAfterFirstTick'
 import { atPlaza } from './plaza'
 
 const XA = -7
 const XB = 7
 const EXPLODE_T = 1
-const LABEL_DX = 2.2
+const LABEL_DX = 6
 const BASKET_QUALITY: Quality = 'low'
 
 type Built = { productId: string; baseX: number; spec: ReturnType<typeof basketSpec>; voxels: ReturnType<typeof basketVoxels> }
@@ -36,7 +35,6 @@ function centroidOf(b: Built, holdingId: string): Vec3 | null {
 
 /** 兩檔 ETF 一起拆開，發光線連起同一家公司的地層 */
 export function OverlapStage({ a, b }: { a: string; b: string; quality: Quality }) {
-  const ready = useAfterFirstTick()
   const links = useMemo(() => {
     const ba = build(a, XA)
     const bb = build(b, XB)
@@ -53,12 +51,14 @@ export function OverlapStage({ a, b }: { a: string; b: string; quality: Quality 
       {links.map((l) => (
         <Line key={l.id} points={[l.pa, l.pb]} color="#ffd54f" lineWidth={4} transparent opacity={0.9} depthTest={false} renderOrder={10} />
       ))}
-      {ready &&
-        links.map((l, i) => (
-          <Html key={l.id} position={[(l.pa[0] + l.pb[0]) / 2 + (i % 2 === 0 ? -LABEL_DX : LABEL_DX), (l.pa[1] + l.pb[1]) / 2 + 0.5, (l.pa[2] + l.pb[2]) / 2 + 1]} center style={labelStyle}>
-            {T.overlapLabel(universe.get(l.id)!.name, `${(l.shared * 100).toFixed(1)}%`)}
-          </Html>
-        ))}
+      {links.map((l, i) => (
+        <Callout
+          key={l.id}
+          anchor={[(l.pa[0] + l.pb[0]) / 2, (l.pa[1] + l.pb[1]) / 2, (l.pa[2] + l.pb[2]) / 2]}
+          offset={[i % 2 === 0 ? -LABEL_DX : LABEL_DX, 0.5, 1]}
+          title={T.overlapLabel(universe.get(l.id)!.name, `${(l.shared * 100).toFixed(1)}%`)}
+        />
+      ))}
     </>
   )
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Html } from '@react-three/drei'
 import { T } from '../../ui/strings'
-import { labelStyle } from '../labelStyle'
+import { MarkIcon } from '../../ui/MarkIcon'
 import { illustrativeTicks } from '../layout/stages'
 import { EXCHANGE_POSITION } from './plaza'
 import { useAfterFirstTick } from '../useAfterFirstTick'
@@ -24,13 +24,15 @@ export function PriceTicker() {
   }
   const p = TICKS[at(step)]!
   const prev = step > 0 ? TICKS[at(step - 1)]! : p
-  const color = p > prev ? '#c62828' : p < prev ? '#2e7d32' : 'inherit'
+  const color = p > prev ? '#e5484d' : p < prev ? '#2fa866' : 'inherit'
   const [x, , z] = EXCHANGE_POSITION
   return (
-    <Html position={[x, 13, z]} center style={{ ...labelStyle, fontSize: 14, maxWidth: 'none', lineHeight: 1.6 }}>
-      {T.ticker.etf} <strong style={{ color }}>{p.toFixed(2)}</strong>
-      <br />
-      <small>{T.ticker.fund}</small>
+    <Html position={[x, 13, z]} center className="callout callout--wrap">
+      <span className="callout__title">
+        {T.ticker.etf} <strong style={{ color }}>{p.toFixed(2)}</strong>
+        <MarkIcon kind="illustrative" />
+      </span>
+      <span className="callout__sub">{T.ticker.fund}</span>
     </Html>
   )
 }

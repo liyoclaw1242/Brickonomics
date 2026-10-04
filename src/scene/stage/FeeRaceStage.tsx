@@ -3,9 +3,7 @@ import { useTour } from '../../store/tour'
 import { feeRace } from '../../sim/feeRace'
 import { T } from '../../ui/strings'
 import type { Quality } from '../quality'
-import { Html } from '@react-three/drei'
-import { labelStyle } from '../labelStyle'
-import { useAfterFirstTick } from '../useAfterFirstTick'
+import { Callout } from '../Callout'
 import { atPlaza } from './plaza'
 import { TowerRow, type TowerSpec } from './TowerRow'
 
@@ -20,17 +18,12 @@ export function FeeRaceStage({ quality }: { quality: Quality }) {
     value: r.value,
     lost: r.lost,
     color: COLORS[r.id],
-    unverified: r.unverified.length > 0,
+    mark: r.id === 'front' ? 'assumption' : r.unverified.length > 0 ? 'unverified' : undefined,
   }))
-  const ready = useAfterFirstTick()
   return (
     <>
       <TowerRow towers={towers} quality={quality} />
-      {ready && (
-        <Html position={atPlaza(0, -0.2, 16)} center style={labelStyle}>
-          {T.feeRaceCaveat}
-        </Html>
-      )}
+      <Callout anchor={atPlaza(0, -0.2, 16)} offset={[0, 0, 0]} title={T.feeRaceCaveat} />
     </>
   )
 }

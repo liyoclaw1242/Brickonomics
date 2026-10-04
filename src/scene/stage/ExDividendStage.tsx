@@ -1,14 +1,12 @@
-import { Html } from '@react-three/drei'
 import { universe } from '../../data'
 import { useTour } from '../../store/tour'
 import { T } from '../../ui/strings'
 import { CoinDrip } from '../CoinDrip'
 import { CoinPile } from '../CoinPile'
-import { labelStyle } from '../labelStyle'
+import { Callout } from '../Callout'
 import { exDivTimeline, type ExDivOutcome } from '../layout/stages'
 import { lookFor } from '../palette'
 import type { Quality } from '../quality'
-import { useAfterFirstTick } from '../useAfterFirstTick'
 import { atPlaza } from './plaza'
 
 const BASE_EDGE = 4
@@ -18,7 +16,6 @@ const COIN_SCALE = 2
 /** 除息：方塊體積 ∝ 價值；金幣一枚 = 1（示意價格 100、股利 5） */
 export function ExDividendStage({ outcome }: { outcome: ExDivOutcome; quality?: Quality }) {
   const phase = useTour((s) => s.values.phase)
-  const ready = useAfterFirstTick()
   const st = exDivTimeline(phase, outcome)
   const edge = BASE_EDGE * Math.cbrt(st.blockValue / 100)
   const look = lookFor(universe.get('2330')!)
@@ -34,17 +31,8 @@ export function ExDividendStage({ outcome }: { outcome: ExDivOutcome; quality?: 
         <CoinPile count={Math.round(st.cash)} position={[0, 0, 0]} />
       </group>
       {paying && <CoinDrip from={atPlaza(-4, edge, 0)} to={atPlaza(3, 0.3, 0)} rate={6} fallTime={0.8} size={COIN_SCALE} limit={Math.round(st.cash)} />}
-      {ready && (
-        <>
-          <Html position={atPlaza(-4, -0.2, 3)} center style={labelStyle}>
-            {T.stage.exdiv.block} {st.blockValue.toFixed(1)}
-            {T.stage.illustrativeTag}
-          </Html>
-          <Html position={atPlaza(3.5, -0.2, 3)} center style={labelStyle}>
-            {T.stage.exdiv.coins} {st.cash.toFixed(1)}
-          </Html>
-        </>
-      )}
+      <Callout anchor={atPlaza(-4, 0.1, edge / 2)} offset={[0, -0.3, 3 - edge / 2]} title={`${T.stage.exdiv.block} ${st.blockValue.toFixed(1)}`} mark="illustrative" />
+      <Callout anchor={atPlaza(3.5, 0.1, 1.5)} offset={[0, -0.3, 1.5]} title={`${T.stage.exdiv.coins} ${st.cash.toFixed(1)}`} />
     </>
   )
 }

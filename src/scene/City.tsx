@@ -1,17 +1,15 @@
 import { useLayoutEffect, useMemo, useRef } from 'react'
 import { useThree, type ThreeEvent } from '@react-three/fiber'
-import { Html } from '@react-three/drei'
 import { Color, type InstancedMesh, Object3D } from 'three'
 import { universe } from '../data'
 import { useSandbox } from '../store/sandbox'
 import { useThemeStore } from '../store/theme'
 import { T } from '../ui/strings'
-import { labelStyle } from './labelStyle'
+import { NameLabel } from './NameLabel'
 import { lookFor } from './palette'
 import { toneColor } from './layout/tone'
 import { VOXEL_SCALE } from './layout/voxels'
 import { THEMES } from './theme'
-import { useAfterFirstTick } from './useAfterFirstTick'
 import { useLongPress } from './useLongPress'
 import { applyShrink, buildingVoxels, cityLayout, islandSize, ISLAND_CENTERS, type Region } from './layout/city'
 
@@ -25,7 +23,6 @@ export function City({ labels, islandLabels = true, shrink }: { labels: boolean;
   const ref = useRef<InstancedMesh>(null)
   const invalidate = useThree((s) => s.invalidate)
   const pick = useSandbox((s) => s.pick)
-  const labelsReady = useAfterFirstTick()
   const theme = useThemeStore((s) => s.theme)
   const picked = useSandbox((s) => s.picked)
   const pickedId = picked?.productId ?? null
@@ -82,19 +79,13 @@ export function City({ labels, islandLabels = true, shrink }: { labels: boolean;
         <boxGeometry />
         <meshStandardMaterial roughness={0.8} />
       </instancedMesh>
-      {labels && labelsReady && placements.map((p) => (
-        <Html key={p.id} position={[p.x, p.height + 0.8, p.z]} center distanceFactor={38} style={labelStyle}>
-          {universe.get(p.id)!.name}
-        </Html>
+      {/* NameLabel 自己在第一個 tick 後才掛 Html，並受「標註」開關控制 */}
+      {labels && placements.map((p) => (
+        <NameLabel key={p.id} position={[p.x, p.height + 0.8, p.z]} text={universe.get(p.id)!.name} active={pickedId === p.id} />
       ))}
-      {/* 島名標籤與大樓標籤都在 labelsReady 後才掛載 */}
-      {islandLabels && labelsReady && (['TW', 'US'] as const).map((region) => {
+      {islandLabels && (['TW', 'US'] as const).map((region) => {
         const [x, z] = ISLAND_CENTERS[region]
-        return (
-          <Html key={`island-${region}`} position={[x, 0.2, z + sizeOf(region) / 2 + 1]} center distanceFactor={40} style={{ ...labelStyle, fontSize: 16, fontWeight: 600 }}>
-            {T.islands[region]}
-          </Html>
-        )
+        return <NameLabel key={`island-${region}`} position={[x, 0.2, z + sizeOf(region) / 2 + 1]} text={T.islands[region]} className="name-label--island" />
       })}
     </group>
   )

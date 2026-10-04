@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { universe } from '../data'
 import { LEVELS } from '../tour/levels'
 import { fallbackLevels } from './fallback'
+import { MarkIcon } from './MarkIcon'
 import { T } from './strings'
 import './ui.css'
 
@@ -27,7 +28,7 @@ export function FallbackApp() {
                         <tr key={`${r.label}-${i}`}>
                           <th scope="row">
                             {r.label}
-                            {r.unverified && <span className="badge">{T.unverified}</span>}
+                            {r.mark && <MarkIcon kind={r.mark} />}
                             {r.note && <small className="readout__note">{r.note}</small>}
                           </th>
                           <td>{r.value}</td>

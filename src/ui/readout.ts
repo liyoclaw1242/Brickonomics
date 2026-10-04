@@ -7,9 +7,10 @@ import { overlap } from '../sim/overlap'
 import { shockImpact } from '../sim/scenario'
 import { SHOCK_2330, signedPct } from '../tour/context'
 import type { Stage, TourValues } from '../tour/types'
+import type { Mark } from './marks'
 import { T } from './strings'
 
-export type ReadoutRow = { label: string; value: string; unverified?: boolean; note?: string }
+export type ReadoutRow = { label: string; value: string; mark?: Mark; note?: string }
 
 const n1 = (x: number) => x.toFixed(1)
 
@@ -19,7 +20,7 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
     case 'exdiv': {
       const s = exDivTimeline(v.phase, stage.outcome)
       return [
-        { label: T.readout.block, value: n1(s.blockValue) },
+        { label: T.readout.block, value: n1(s.blockValue), mark: 'illustrative' },
         { label: T.readout.coins, value: n1(s.cash) },
         { label: T.readout.total, value: n1(s.blockValue + s.cash) },
       ]
@@ -31,7 +32,8 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
         ...rows.map((r) => ({
           label: label(r.id),
           value: T.readout.remaining(r.value),
-          unverified: r.unverified.length > 0,
+          // 前收手續費是假設值（✎）；其餘有待驗證的費用拆項才標 ？（待驗證的細項仍寫在 note）
+          mark: r.id === 'front' ? ('assumption' as const) : r.unverified.length > 0 ? ('unverified' as const) : undefined,
           note: r.unverified.length ? T.readout.unverifiedParts(r.unverified.map((k) => T.feeParts[k]).join('、')) : undefined,
         })),
         { label: T.readout.leader, value: label(feeRaceLeader(rows)), note: T.feeRaceCaveat },
@@ -40,7 +42,7 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
     case 'accumulate': {
       const r = accumulateVsPayout(v.periods)
       return [
-        { label: T.readout.accumulate, value: n1(r.accumulate.value) },
+        { label: T.readout.accumulate, value: n1(r.accumulate.value), mark: 'illustrative' },
         { label: T.readout.payoutTower, value: n1(r.payout.value) },
         { label: T.readout.payoutCash, value: n1(r.payout.cashReceived) },
         { label: T.readout.payoutTotal, value: n1(r.payout.total) },
@@ -49,7 +51,7 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
     case 'principalTrap': {
       const s = principalTrap(v.periods)
       return [
-        { label: T.readout.trapValue, value: n1(s.value) },
+        { label: T.readout.trapValue, value: n1(s.value), mark: 'illustrative' },
         { label: T.readout.trapCash, value: n1(s.cashReceived) },
         { label: T.readout.trapPrincipal, value: n1(s.fromPrincipal) },
       ]
@@ -72,7 +74,7 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
       const p = productId ? u.get(productId) : undefined
       const er = p?.fees?.expenseRatio
       if (!stage.meter || !p || er === undefined) return []
-      return [{ label: T.readout.expenseRatio, value: `${(er * 100).toFixed(2)}%`, unverified: !isVerified(p, 'fees.expenseRatio') }]
+      return [{ label: T.readout.expenseRatio, value: `${(er * 100).toFixed(2)}%`, mark: isVerified(p, 'fees.expenseRatio') ? undefined : 'unverified' }]
     }
     case 'underground': {
       if (stage.show !== 'cores' || !stage.cores) return []

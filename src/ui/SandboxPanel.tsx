@@ -3,6 +3,7 @@ import { universe } from '../data'
 import { useSandbox } from '../store/sandbox'
 import { useTour } from '../store/tour'
 import { formatPct, legendMeta, legendRows, productGroups } from './model'
+import { MarkIcon } from './MarkIcon'
 import { T } from './strings'
 
 export function SandboxPanel() {
@@ -59,7 +60,7 @@ export function SandboxPanel() {
           <h2>{T.legend}</h2>
           {meta && (
             <p className="hint">
-              {T.asOf}：{meta.asOf} {!meta.verified && <span className="badge">{T.unverified}</span>}
+              {T.asOf}：{meta.asOf} {!meta.verified && <MarkIcon kind="unverified" />}
             </p>
           )}
           <ul className="legend">

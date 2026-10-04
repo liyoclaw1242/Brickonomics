@@ -1,14 +1,12 @@
-import { Html } from '@react-three/drei'
 import { universe } from '../../data'
 import type { Asset } from '../../data/schema'
 import { T } from '../../ui/strings'
 import type { Vec3 } from '../camera'
 import { CoinDrip } from '../CoinDrip'
-import { labelStyle } from '../labelStyle'
+import { Callout } from '../Callout'
 import { BlockMaterial } from '../materials'
 import { lookFor } from '../palette'
 import type { Quality } from '../quality'
-import { useAfterFirstTick } from '../useAfterFirstTick'
 import { atPlaza } from './plaza'
 
 const SIZE = 2.4
@@ -27,7 +25,6 @@ const BOND_COLOR: Partial<Record<Slot['key'], string>> = { gov: '#5fd4ee', corp:
 
 /** 股票方塊 vs 三種借據：材質表示信用品質，金幣快慢表示利息（示意） */
 export function BondShowcase({ stressed, quality }: { stressed: boolean; quality: Quality }) {
-  const ready = useAfterFirstTick()
   return (
     <>
       {SLOTS.map((s) => {
@@ -53,12 +50,12 @@ export function BondShowcase({ stressed, quality }: { stressed: boolean; quality
               )}
             </mesh>
             {dripping && <CoinDrip from={top} to={pile} rate={s.rate} />}
-            {ready && (
-              <Html position={atPlaza(s.x, -0.2, 2.6)} center style={labelStyle}>
-                {T.stage.bonds[s.key]}
-                {(s.key !== 'stock' || stressed) && T.stage.illustrativeTag}
-              </Html>
-            )}
+            <Callout
+              anchor={atPlaza(s.x, 0.1, SIZE / 2)}
+              offset={[0, -0.3, 1.4]}
+              title={T.stage.bonds[s.key]}
+              mark={s.key !== 'stock' || stressed ? 'illustrative' : undefined}
+            />
           </group>
         )
       })}

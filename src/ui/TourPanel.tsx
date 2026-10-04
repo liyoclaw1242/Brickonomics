@@ -7,6 +7,7 @@ import { isSatisfied, nextPosition, progressFraction, textOf } from '../tour/eng
 import { LEVELS } from '../tour/levels'
 import { stageReadout } from './readout'
 import { StageControls } from './StageControls'
+import { MarkIcon } from './MarkIcon'
 import { T } from './strings'
 
 const ctx = makeTextContext(universe)
@@ -43,7 +44,7 @@ export function TourPanel() {
               <tr key={r.label}>
                 <th scope="row">
                   {r.label}
-                  {r.unverified && <span className="badge">{T.unverified}</span>}
+                  {r.mark && <MarkIcon kind={r.mark} />}
                   {r.note && <small className="readout__note">{r.note}</small>}
                 </th>
                 <td>{r.value}</td>

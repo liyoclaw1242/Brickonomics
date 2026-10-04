@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { universe } from '../data'
 import { useSandbox } from '../store/sandbox'
 import { formatPct, pickInfo, sourceLabel } from './model'
+import { MarkIcon } from './MarkIcon'
 import { T } from './strings'
 
 export function PickInfoPanel() {
@@ -28,7 +29,7 @@ export function PickInfoPanel() {
         </p>
       )}
       <p>
-        {T.asOf}：{info.asOf} {!info.verified && <span className="badge">{T.unverified}</span>}
+        {T.asOf}：{info.asOf} {!info.verified && <MarkIcon kind="unverified" />}
       </p>
       {info.aggregate && <p className="hint">{T.aggregateNote}</p>}
       {info.sources.length > 0 && (
