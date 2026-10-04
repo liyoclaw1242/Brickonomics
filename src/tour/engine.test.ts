@@ -2,12 +2,31 @@ import { describe, it, expect } from 'vitest'
 import type { Level } from './types'
 import {
   DEFAULT_VALUES, stepAt, isValidPosition, nextPosition, prevPosition, positionOf, progressFraction,
-  isSatisfied, sandboxPatchFor, textOf, parseProgress, serializeProgress, parseTourQuery,
+  isSatisfied, sandboxPatchFor, lineOf, moreOf, titleOf, parseProgress, serializeProgress, parseTourQuery,
 } from './engine'
 
 const L: Level[] = [
-  { id: 'a', title: 'A', steps: [{ id: 'a1', text: 'x', scene: { camera: 'overview' } }, { id: 'a2', text: 'y', scene: { camera: 'tw' } }] },
-  { id: 'b', title: 'B', steps: [{ id: 'b1', text: (c) => `w=${c.weightPct('P', 'H')}`, scene: { camera: 'us', product: 'QQQ', explode: 1 } }] },
+  {
+    id: 'a',
+    title: 'A',
+    steps: [
+      { id: 'a1', title: 'T1', line: 'x', more: 'mx', scene: { camera: 'overview' } },
+      { id: 'a2', title: 'T2', line: 'y', more: 'my', scene: { camera: 'tw' } },
+    ],
+  },
+  {
+    id: 'b',
+    title: 'B',
+    steps: [
+      {
+        id: 'b1',
+        title: 'T3',
+        line: (c) => `w=${c.weightPct('P', 'H')}`,
+        more: (c) => `er=${c.expenseRatio('P')}`,
+        scene: { camera: 'us', product: 'QQQ', explode: 1 },
+      },
+    ],
+  },
 ]
 const values = { ...DEFAULT_VALUES, slice: 0, explode: 0 }
 
@@ -60,11 +79,14 @@ describe('sandboxPatchFor', () => {
   })
 })
 
-describe('textOf', () => {
+describe('titleOf / lineOf / moreOf', () => {
   it('returns static text or calls the template with the context', () => {
-    const ctx = { weightPct: () => 57.35, shock: () => -0.17, sectorPct: () => 0 }
-    expect(textOf(L[0]!.steps[0]!, ctx)).toBe('x')
-    expect(textOf(L[1]!.steps[0]!, ctx)).toBe('w=57.35')
+    const ctx = { weightPct: () => 57.35, shock: () => -0.17, sectorPct: () => 0, expenseRatio: () => 0.002, overlapShared: () => 0.3 }
+    expect(titleOf(L[0]!.steps[0]!)).toBe('T1')
+    expect(lineOf(L[0]!.steps[0]!, ctx)).toBe('x')
+    expect(moreOf(L[0]!.steps[0]!, ctx)).toBe('mx')
+    expect(lineOf(L[1]!.steps[0]!, ctx)).toBe('w=57.35')
+    expect(moreOf(L[1]!.steps[0]!, ctx)).toBe('er=0.002')
   })
 })
 

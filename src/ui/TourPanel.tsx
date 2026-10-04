@@ -1,16 +1,23 @@
-import { useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { universe } from '../data'
+import { colorForKey } from '../scene/palette'
+import { prefersReducedMotion, useRevealAfterCamera } from '../scene/useRevealAfterCamera'
 import { effectiveExplode, useSandbox } from '../store/sandbox'
 import { currentStep, useTour } from '../store/tour'
 import { makeTextContext } from '../tour/context'
-import { isSatisfied, nextPosition, progressFraction, textOf } from '../tour/engine'
+import { isSatisfied, lineOf, moreOf, nextPosition, titleOf } from '../tour/engine'
 import { LEVELS } from '../tour/levels'
+import { BigNumberCard } from './panel/BigNumberCard'
+import { MoreSection } from './panel/MoreSection'
+import { OneLine } from './panel/OneLine'
+import { StepHeader } from './panel/StepHeader'
+import { StepNav } from './panel/StepNav'
 import { stageReadout } from './readout'
 import { StageControls } from './StageControls'
 import { T } from './strings'
 
 const ctx = makeTextContext(universe)
-
+const HINT_ID = 'tour-hint'
 export function TourPanel() {
   const pos = useTour((s) => s.pos)
   const values = useTour((s) => s.values)
@@ -20,48 +27,34 @@ export function TourPanel() {
   const explode = useSandbox(effectiveExplode)
   const productId = useSandbox((s) => s.productId)
   const step = currentStep({ pos })
-  const level = LEVELS[pos.level]!
-  const text = useMemo(() => textOf(step, ctx), [step])
+  const line = useMemo(() => lineOf(step, ctx), [step])
+  const more = useMemo(() => moreOf(step, ctx), [step])
+  const big = step.bigNumber?.(ctx, values)
   const ok = isSatisfied(step.until, { ...values, slice, explode })
   const rows = stageReadout(step.scene.stage ?? { kind: 'none' }, { ...values, slice, explode }, universe, productId)
   const isLast = nextPosition(LEVELS, pos) === null
+  const [instant] = useState(prefersReducedMotion)
+  const revealed = useRevealAfterCamera(step.id, instant)
+  const colorOf = useCallback((key: string) => colorForKey(universe, key), [])
 
   return (
     <aside className="panel tour">
-      <div aria-live="polite">
-        <p className="tour__level">
-          {T.levelLabel(pos.level)}・{level.title}
-        </p>
-        <p className="tour__text">{text}</p>
-      </div>
-      <progress className="tour__progress" value={progressFraction(LEVELS, pos)} max={1} aria-label={T.progressLabel} />
-      {rows.length > 0 && (
-        <table className="readout" aria-live="off">
-          <caption>{T.readout.title}</caption>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.label}>
-                <th scope="row">
-                  {r.label}
-                  {r.unverified && <span className="badge">{T.unverified}</span>}
-                  {r.note && <small className="readout__note">{r.note}</small>}
-                </th>
-                <td>{r.value}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <StepHeader level={pos.level} levelCount={LEVELS.length} title={titleOf(step)} mark={step.mark} revealed={revealed}>
+        <OneLine line={line} colorOf={colorOf} />
+      </StepHeader>
+      {big && (
+        <div className={revealed ? 'step-reveal is-revealed' : 'step-reveal'}>
+          <BigNumberCard key={step.id} n={big} color={big.colorKey ? colorOf(big.colorKey) : undefined} run={revealed} instant={instant} />
+        </div>
       )}
       {step.controls && <StageControls controls={step.controls} />}
-      {!ok && <p className="hint" id="tour-hint">{T.tryIt}</p>}
-      <div className="tour__nav">
-        <button onClick={prev} disabled={pos.level === 0 && pos.step === 0}>
-          {T.prev}
-        </button>
-        <button className="primary" onClick={next} disabled={!ok} aria-describedby={ok ? undefined : 'tour-hint'}>
-          {isLast ? T.finish : T.next}
-        </button>
-      </div>
+      {!ok && (
+        <p className="hint" id={HINT_ID}>
+          {T.tryIt}
+        </p>
+      )}
+      <StepNav onPrev={prev} onNext={next} canPrev={!(pos.level === 0 && pos.step === 0)} canNext={ok} isLast={isLast} hintId={HINT_ID} />
+      <MoreSection key={step.id} more={more} rows={rows} />
       {unlocked && (
         <button className="link" onClick={enterSandbox}>
           {T.skipToSandbox}

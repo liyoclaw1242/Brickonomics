@@ -1,5 +1,6 @@
 import type { Universe } from '../data/universe'
 import { shockImpact } from '../sim/scenario'
+import { overlap } from '../sim/overlap'
 import type { TextContext } from './types'
 import { sectorBreakdown } from '../scene/layout/underground'
 
@@ -15,6 +16,8 @@ export function makeTextContext(u: Universe): TextContext {
     },
     shock: (productId) => shockImpact(u, productId, { ...SHOCK_2330 }),
     sectorPct: (productId, sector) => sectorBreakdown(u, productId).find((r) => r.sector === sector)?.weightPct ?? 0,
+    expenseRatio: (productId) => u.get(productId)?.fees?.expenseRatio,
+    overlapShared: (a, b) => overlap(u, a, b).total,
   }
 }
 

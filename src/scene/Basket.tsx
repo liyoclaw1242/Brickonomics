@@ -19,14 +19,17 @@ export type BasketProps = {
   slice: number
   sliceAxis: SliceAxis
   explode: number
+  /** 被選取的持股（優先鮮豔） */
   highlightId?: string | null
+  /** 導覽焦點持股：鮮豔，其餘低飽和 */
+  focusIds?: string[]
   /** 持股 id → 受損比例（情境衝擊）：該組最上方的方塊染紅、不可點選；呼叫端請 memo */
   damage?: Readonly<Record<string, number>>
   onPick?: (holdingId: string) => void
 }
 
 /** 純 props 的籃子：ETF 是立方體，基金是小塔；可同時出現多個 */
-export function Basket({ productId, quality, position, slice, sliceAxis, explode, highlightId = null, damage, onPick }: BasketProps) {
+export function Basket({ productId, quality, position, slice, sliceAxis, explode, highlightId = null, focusIds, damage, onPick }: BasketProps) {
   const product = universe.get(productId)
   if (!product?.holdings) throw new Error(`not a basket: ${productId}`)
   const holdings = product.holdings
@@ -39,6 +42,10 @@ export function Basket({ productId, quality, position, slice, sliceAxis, explode
   const cut = useMemo<CutSpec | null>(
     () => (slice > 0 ? { axis: sliceAxis, threshold: cutThreshold(sizeAlong(sliceAxis, spec.w, spec.d, layers), slice) } : null),
     [slice, sliceAxis, spec, layers],
+  )
+  const focusGroups = useMemo(
+    () => (focusIds ?? []).map((id) => holdings.findIndex((h) => h.id === id)).filter((i) => i >= 0),
+    [focusIds, holdings],
   )
   const idx = highlightId ? holdings.findIndex((h) => h.id === highlightId) : -1
 
@@ -53,7 +60,8 @@ export function Basket({ productId, quality, position, slice, sliceAxis, explode
         cut={cut}
         damaged={damaged}
         quality={quality}
-        highlightGroup={idx >= 0 ? idx : null}
+        focusGroups={focusGroups}
+        picked={idx >= 0 ? idx : null}
         onPick={onPick ? (g) => onPick(holdings[g]!.id) : undefined}
       />
       {cut && !(cut.axis === 'y' && explode > 0) && (

@@ -1,3 +1,4 @@
+import type { Stage } from '../../tour/types'
 import type { Vec3 } from '../camera'
 
 /** 前方廣場：教學舞台都擺在這裡 */
@@ -8,3 +9,17 @@ export const atPlaza = (dx: number, dy = 0, dz = 0): Vec3 => [PLAZA[0] + dx, PLA
 
 /** 交易所櫃台的位置（從 Scene.tsx 移過來，避免舞台元件與 Scene 互相 import） */
 export const EXCHANGE_POSITION: Vec3 = [0, 0, 14]
+
+/** 交易所櫃台台座的高度：籃子放在台座上面 */
+export const PEDESTAL_HEIGHT = 0.6
+
+/** 擺在廣場上的舞台 */
+export const ON_PLAZA: ReadonlySet<Stage['kind']> = new Set<Stage['kind']>(['held', 'exdiv', 'bonds', 'feeRace', 'accumulate', 'principalTrap', 'shock', 'overlap'])
+
+/**
+ * 廣場舞台時城市只是背景：大樓與島的名稱小字一律收起（少字；也避免遠處名稱擠到工具列底下、和舞台標註互撞）。
+ * shock 也一樣：主角是廣場上的三組，跌幅寫在它們的標註上。
+ */
+export function cityNamesOnPlaza(kind: Stage['kind']): boolean {
+  return !ON_PLAZA.has(kind)
+}

@@ -1,15 +1,12 @@
 import { useEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
-import { Html } from '@react-three/drei'
+import { Callout } from '../Callout'
 import type { Mesh } from 'three'
 import { universe } from '../../data'
 import type { HeldItem } from '../../tour/types'
-import { T } from '../../ui/strings'
 import { approach, MAX_FRAME_DT } from '../layout/voxels'
-import { labelStyle } from '../labelStyle'
 import { lookFor } from '../palette'
 import { acquire } from '../continuous'
-import { useAfterFirstTick } from '../useAfterFirstTick'
 import { atPlaza } from './plaza'
 
 const SIZE = 2.4
@@ -18,7 +15,6 @@ const TARGET_SCALE = { still: 1, up: 1.3, down: 0.7, shake: 1 } as const
 
 function HeldBlock({ item, x }: { item: HeldItem; x: number }) {
   const ref = useRef<Mesh>(null)
-  const ready = useAfterFirstTick()
   const asset = universe.get(item.assetId)!
   const look = lookFor(asset)
   const invalidate = useThree((st) => st.invalidate)
@@ -58,12 +54,7 @@ function HeldBlock({ item, x }: { item: HeldItem; x: number }) {
         <boxGeometry args={[SIZE, SIZE, SIZE]} />
         <meshStandardMaterial color={look.color} emissive={item.motion === 'up' ? look.color : '#000000'} emissiveIntensity={item.motion === 'up' ? 0.25 : 0} />
       </mesh>
-      {ready && (
-        <Html position={[0, SIZE * 2, 0]} center style={labelStyle}>
-          {asset.name}
-          {item.motion !== 'still' && T.stage.illustrativeTag}
-        </Html>
-      )}
+      <Callout anchor={[0, SIZE * 1.3, 0]} offset={[0, SIZE * 0.7, 0]} title={asset.name} marks={item.motion !== 'still' ? ['illustrative'] : undefined} persistent={item.motion !== 'still'} />
     </group>
   )
 }

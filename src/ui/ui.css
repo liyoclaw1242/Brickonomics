@@ -1,30 +1,40 @@
-/* 面板寬度；須與 src/ui/layout.ts 的 PANEL_WIDTH 一致（ViewFraming 用它推算可視區） */
+/* 面板寬度；須與 src/ui/layoutModel.ts 的 PANEL_WIDTH 一致（ViewFraming 用它推算可視區）。手機斷點 720px 須與 MOBILE_MAX 一致 */
 :root {
   --panel-w: 312px;
+  font-family: 'Noto Sans TC', system-ui, -apple-system, 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+  color: var(--text);
+}
+:root[data-theme='dusk'] {
+  --bg: #1b1726;
+  --surface: rgba(28, 24, 36, 0.78);
+  --surface-strong: rgba(20, 17, 28, 0.9);
+  --text: #f3ebe0;
+  --muted: #a99e93;
+  --accent: #e9b97a;
+  --accent-text: #241c18;
+  --chip: rgba(255, 255, 255, 0.06);
+  --chip-on: #e9b97a;
+  --chip-on-text: #241c18;
+  --border: rgba(255, 255, 255, 0.12);
+  --badge: #8fb8c8;
+  --em: #e9b97a;
+  --label-shadow: rgba(0, 0, 0, 0.45);
+}
+:root[data-theme='day'] {
   --bg: #cfe8ff;
   --surface: rgba(255, 255, 255, 0.92);
+  --surface-strong: rgba(255, 255, 255, 0.95);
   --text: #1f2933;
   --muted: #52606d;
-  --accent: #ff2d6f;
+  --accent: #d6125c; /* 白字對比 5.1:1（AA） */
+  --accent-text: #ffffff;
   --chip: #eef2f7;
   --chip-on: #1f2933;
   --chip-on-text: #ffffff;
   --border: rgba(31, 41, 51, 0.12);
   --badge: #b45309;
-  font-family: 'Noto Sans TC', system-ui, -apple-system, 'PingFang TC', 'Microsoft JhengHei', sans-serif;
-  color: var(--text);
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --surface: rgba(24, 28, 36, 0.92);
-    --text: #e4e7eb;
-    --muted: #9aa5b1;
-    --chip: #2a313c;
-    --chip-on: #e4e7eb;
-    --chip-on-text: #11151c;
-    --border: rgba(228, 231, 235, 0.14);
-    --badge: #fbbf24;
-  }
+  --em: #c2410c;
+  --label-shadow: rgba(255, 255, 255, 0.8); /* 白天：亮色光暈，不要黑影（看起來髒） */
 }
 html, body { margin: 0; height: 100%; background: var(--bg); }
 * { box-sizing: border-box; }
@@ -32,15 +42,45 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .app { position: fixed; inset: 0; }
 /* Canvas（含 drei Html 標籤）自成層疊情境，永遠在 UI 面板下方 */
 .app > div:first-child { z-index: 0; }
-.panel, .info, .disclaimer { z-index: 10; }
+.panel, .info { z-index: 10; }
 
 .panel {
   position: fixed; top: 12px; left: 12px; bottom: 12px; width: var(--panel-w);
   overflow-y: auto; padding: 14px 16px; border-radius: 14px;
-  background: var(--surface); border: 1px solid var(--border);
-  backdrop-filter: blur(8px);
 }
-.panel__title { margin: 0 0 8px; font-size: 20px; }
+.panel { background: var(--surface); border: 1px solid var(--border); backdrop-filter: blur(14px); color: var(--text); }
+.brand { margin: 0 0 14px; font-size: 12px; letter-spacing: 0.6em; color: var(--muted); }
+.step-counter { font-size: 12px; letter-spacing: 0.25em; color: var(--muted); }
+.step-title { margin: 4px 0 6px; font-size: 26px; font-weight: 600; letter-spacing: 0.02em; display: flex; gap: 8px; align-items: center; }
+.oneline { margin: 0 0 12px; font-size: 17px; line-height: 1.6; }
+.oneline strong { color: var(--em); font-weight: 700; }
+.oneline strong.em-key { color: var(--key); }
+:root[data-theme='day'] .oneline strong.em-key { color: color-mix(in oklab, var(--key) 62%, #1f2933); text-decoration: underline 3px var(--key); text-underline-offset: 4px; }
+.bignum { margin: 8px 0 12px; padding: 12px 14px; border-radius: 12px; background: var(--chip); border: 1px solid var(--border); }
+.bignum__value { font-size: 34px; font-weight: 700; display: flex; gap: 8px; align-items: center; font-variant-numeric: tabular-nums; }
+.bignum__label { font-size: 13px; color: var(--muted); }
+.bignum__bar { margin-top: 8px; height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
+.bignum__bar span { display: block; height: 100%; background: var(--accent); }
+.more { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 8px; font-size: 14px; color: var(--muted); }
+.more summary { cursor: pointer; color: var(--text); }
+
+.step-counter { margin: 0; display: flex; align-items: center; gap: 8px; }
+.step-counter__icon { font-size: 16px; letter-spacing: 0; }
+.more__text { line-height: 1.7; }
+.more .readout { color: var(--text); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; border: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* 3b1b「先看再命名」：鏡頭停下前文字隱藏，停下後標題淡入、一句話逐段淡入（每段 80ms，由 OneLine 設 animation-delay） */
+@keyframes reveal { from { opacity: 0; transform: translateY(4px) } }
+.step-reveal:not(.is-revealed) .step-title,
+.step-reveal:not(.is-revealed) .oneline > *,
+.step-reveal:not(.is-revealed) .bignum { opacity: 0; }
+.step-reveal.is-revealed .step-title,
+.step-reveal.is-revealed .oneline > *,
+.step-reveal.is-revealed .bignum { animation: reveal 320ms ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .step-reveal .step-title, .step-reveal .oneline > *, .step-reveal .bignum { opacity: 1 !important; animation: none !important; }
+}
 .panel h2 { margin: 14px 0 6px; font-size: 14px; }
 .panel h3 { margin: 8px 0 4px; font-size: 12px; color: var(--muted); font-weight: 500; }
 .panel input[type='range'] { width: 100%; accent-color: var(--accent); }
@@ -76,35 +116,26 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .info__src a, .info__src span { margin-right: 6px; color: var(--text); word-break: break-all; }
 .badge { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 6px; font-size: 11px; color: var(--badge); border: 1px solid currentColor; }
 
-.disclaimer {
-  position: fixed; top: 12px; left: calc(var(--panel-w) + 24px);
-  max-width: calc(100% - var(--panel-w) - 36px); padding: 6px 12px; border-radius: 999px; font-size: 12px;
-  background: var(--surface); border: 1px solid var(--border); color: var(--muted); text-align: center;
-}
-
 @media (max-width: 720px) {
-  .panel { top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 42vh; max-height: 42dvh; overscroll-behavior: contain; border-radius: 14px 14px 0 0; }
+  /* 抽屜固定 42dvh 高（不是最大高）：時間軸浮在抽屜上方 8px，內容短時兩者之間也不會留一大段空隙 */
+  .panel { top: auto; left: 0; right: 0; bottom: 0; width: auto; height: 42vh; height: 42dvh; max-height: none; overscroll-behavior: contain; border-radius: 14px 14px 0 0; }
   .chip, .seg button { min-height: 36px; padding: 8px 12px; }
   .seg button { flex: 1; }
   .legend button { min-height: 36px; padding: 6px 2px; }
   .info { top: auto; bottom: calc(42vh + 8px); bottom: calc(42dvh + 8px); left: 12px; right: 12px; width: auto; }
-  .disclaimer { top: 8px; left: 8px; right: 8px; max-width: none; border-radius: 10px; }
 }
 
 @media (min-width: 721px) {
   .panel.tour { bottom: auto; max-height: calc(100% - 24px); }
 }
 
-.tour__level { margin: 0 0 6px; font-size: 13px; color: var(--muted); font-weight: 600; }
-.tour__progress { width: 100%; height: 6px; accent-color: var(--accent); }
-.tour__text { margin: 12px 0; font-size: 15px; line-height: 1.75; }
-.tour__nav { display: flex; gap: 8px; margin-top: 12px; }
-.tour__nav button {
-  flex: 1; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border);
+.step-nav { display: flex; gap: 8px; margin-top: 12px; }
+.step-nav button {
+  flex: 1; padding: 9px 10px; border-radius: 10px; border: 1px solid var(--border);
   background: var(--chip); color: var(--text); font: inherit; cursor: pointer;
 }
-.tour__nav button.primary { background: var(--chip-on); color: var(--chip-on-text); border-color: transparent; }
-.tour__nav button:disabled { opacity: 0.45; cursor: not-allowed; }
+.step-nav button.primary { flex: 2; background: var(--accent); color: var(--accent-text); border-color: transparent; font-weight: 600; }
+.step-nav button:disabled, .step-nav button[aria-disabled='true'] { opacity: 0.45; cursor: not-allowed; }
 .link { border: 0; background: none; padding: 4px 0; color: var(--muted); font: inherit; font-size: 12px; text-decoration: underline; cursor: pointer; }
 .controls { display: grid; gap: 10px; margin: 8px 0; }
 .control { display: grid; gap: 4px; font-size: 13px; }
@@ -130,20 +161,84 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 
 @media (max-width: 720px) {
   .notice { bottom: auto; top: 56px; left: 16px; right: 16px; transform: none; max-width: none; justify-content: space-between; }
-  .tour__text { margin: 8px 0; font-size: 14px; line-height: 1.65; }
   .readout { margin: 4px 0; }
-  /* 手機抽屜：控制項放在即時數字之前，拉桿不必捲動就能碰到 */
+  .brand { display: none; } /* 手機省空間：品牌只在桌機顯示 */
+  .step-title { font-size: 22px; margin: 2px 0 4px; }
+  .oneline { font-size: 16px; margin-bottom: 8px; }
+  .bignum { margin: 4px 0 8px; padding: 8px 12px; }
+  .bignum__value { font-size: 28px; }
+  /* 手機抽屜：多說一點排在上一步／下一步之前，上一步／下一步固定（sticky）在抽屜底部 */
   .panel.tour { display: flex; flex-direction: column; }
   .panel.tour > * { flex-shrink: 0; }
-  .panel.tour > .readout { order: 2; }
-  .panel.tour > .tour__nav { order: 3; }
+  .panel.tour > .step-nav { order: 3; margin-top: auto; } /* 抽屜固定高：內容短時上一步／下一步仍貼底 */
+  .panel.tour > .more { order: 2; }
   .panel.tour > .link { order: 4; }
   .readout th, .readout td { padding: 2px 0; }
-  .tour__nav { position: sticky; bottom: -14px; margin: 8px -16px -14px; padding: 8px 16px 14px; background: var(--surface); }
+  .step-nav { position: sticky; bottom: -14px; margin: 8px -16px -14px; padding: 8px 16px 14px; background: var(--surface-strong); }
 }
 
 .fallback { max-width: 720px; margin: 0 auto; padding: 72px 16px 40px; color: var(--text); background: var(--bg); line-height: 1.75; }
-.fallback .disclaimer { position: static; transform: none; max-width: none; margin: 0 auto 16px; }
 .fallback h2 { font-size: 18px; margin: 28px 0 8px; }
 .fallback ol { padding-left: 20px; }
 .fallback li { margin-bottom: 14px; }
+
+/* 3D 標註（Callout / NameLabel）與標示圖示（MarkIcon）。--label-scale 由 ViewFraming 依鏡頭 zoom 設定：窄畫面字跟著縮小（設下限以保可讀） */
+.callout { pointer-events: none; display: grid; gap: 2px; padding: 6px 10px; border-radius: 8px; white-space: nowrap;
+  background: var(--surface-strong); border: 1px solid var(--border); color: var(--text); font-size: calc(13px * max(0.8, var(--label-scale, 1))); width: max-content; }
+.callout--right { transform: translate(8px, -50%); }
+.callout--left { transform: translate(calc(-100% - 8px), -50%); }
+.callout--dim { opacity: 0.45; }
+.callout--compact { padding: 1px 6px; line-height: 1.25; border-radius: 4px; }
+.callout--wrap { white-space: normal; width: max-content; max-width: min(340px, 80vw); text-align: center; line-height: 1.5; }
+.callout__title { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
+.callout__dot { width: 8px; height: 8px; border-radius: 50%; flex: none; box-shadow: 0 0 0 1px var(--border); } /* 外框：近白色（如公債）的色點在白天也看得到 */
+.callout__sub { font-size: calc(11px * max(0.85, var(--label-scale, 1))); color: var(--muted); letter-spacing: 0.04em; }
+.name-label { pointer-events: none; font-size: calc(11px * max(0.75, var(--label-scale, 1))); color: var(--muted); opacity: 0.7; white-space: nowrap; text-shadow: 0 1px 2px var(--label-shadow); }
+.name-label--active { opacity: 1; color: var(--text); font-weight: 600; }
+.name-label--island { font-size: calc(16px * max(0.75, var(--label-scale, 1))); font-weight: 600; }
+.mark { position: relative; display: inline-flex; }
+.mark__icon { pointer-events: auto; border: 1px solid var(--border); background: var(--chip); color: var(--badge);
+  width: 18px; height: 18px; border-radius: 50%; font-size: 11px; line-height: 1; padding: 0; cursor: pointer; }
+.mark__tip { position: absolute; top: 120%; left: 50%; transform: translateX(-50%); z-index: 10; width: max-content; max-width: 220px;
+  padding: 6px 8px; border-radius: 8px; background: var(--surface-strong); border: 1px solid var(--border); font-size: 12px; white-space: normal; }
+
+@media (max-width: 720px) { .mark__icon { width: 24px; height: 24px; } }
+
+/* 右上工具列、圖例色票列、底部章節時間軸（版面 insets 見 src/ui/layoutModel.ts） */
+.toolbar { position: fixed; top: 12px; right: 12px; display: flex; gap: 8px; z-index: 6; }
+.pill { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 999px; padding: 8px 14px; font: inherit; font-size: 14px; cursor: pointer; backdrop-filter: blur(10px); }
+.pill[aria-pressed='true'] { border-color: var(--accent); }
+.legend-bar { position: fixed; top: 60px; right: 12px; display: flex; gap: 12px; padding: 8px 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); font-size: 13px; z-index: 6; }
+.legend-bar i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: middle; }
+.timeline { position: fixed; left: calc(var(--panel-w) + 24px); right: 12px; bottom: 12px; padding: 10px 16px 12px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); z-index: 5; }
+.timeline__chapters { display: flex; justify-content: space-between; gap: 4px; }
+.timeline__chapter { border: 0; background: none; color: var(--muted); font: inherit; font-size: 13px; letter-spacing: 0.12em; cursor: pointer; }
+.timeline__chapter[aria-current='step'] { color: var(--text); font-weight: 600; }
+.timeline__chapter:disabled { opacity: 0.35; cursor: default; }
+.timeline__bar { margin-top: 8px; height: 3px; border-radius: 2px; background: var(--border); overflow: hidden; }
+.timeline__bar span { display: block; height: 100%; background: var(--accent); }
+.timeline__chapter { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; padding: 4px 2px; }
+.timeline__icon { letter-spacing: 0; }
+.legend-bar { list-style: none; margin: 0; }
+.legend-bar li { white-space: nowrap; }
+/* 圖例列打開時，選取資訊卡往下讓位；品質提示讓出底部時間軸 */
+.legend-bar ~ .info { top: 108px; }
+@media (min-width: 721px) { .notice { bottom: 88px; } }
+/* 窄桌機（≤1000px）放不下 7 個「編號 名稱」：只留圖示，名稱仍在按鈕的無障礙名稱與 title 裡 */
+@media (max-width: 1000px) {
+  .timeline__name { display: none; }
+  .timeline__chapter { min-width: 32px; min-height: 32px; justify-content: center; }
+}
+@media (max-width: 720px) {
+  .toolbar { top: 8px; right: 8px; gap: 4px; }
+  .pill { padding: 6px 10px; font-size: 12px; }
+  .timeline { left: 8px; right: 8px; bottom: calc(42vh + 8px); padding: 4px 8px; }
+  .timeline { bottom: calc(42dvh + 8px); }
+  /* 手機只留 7 個圖示（觸控目標 32×32）；時間軸總高 4+32+4+3+4+2(框) = 49px，加上與抽屜的 8px 間距 = 57px，
+     layoutModel 的 bottom = 抽屜 + 60 涵蓋它 */
+  .timeline__chapter { min-width: 32px; min-height: 32px; padding: 0 4px; justify-content: center; }
+  .timeline__bar { margin-top: 4px; }
+  .legend-bar { top: 48px; left: 8px; right: 8px; flex-wrap: wrap; gap: 6px 10px; font-size: 12px; }
+  .info { bottom: calc(42vh + 64px); bottom: calc(42dvh + 64px); }
+  .legend-bar ~ .info { top: auto; }
+}

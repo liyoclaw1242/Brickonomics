@@ -1,17 +1,21 @@
-import { Html } from '@react-three/drei'
+import { useThree } from '@react-three/fiber'
+import { layoutModel } from '../../ui/layoutModel'
+import type { Mark } from '../../ui/marks'
 import { T } from '../../ui/strings'
+import { Callout } from '../Callout'
 import { CoinPile } from '../CoinPile'
-import { labelStyle } from '../labelStyle'
 import { blocksFor } from '../layout/stages'
-import type { BlockLook } from '../palette'
+import { ACCENT_COLORS, type BlockLook } from '../palette'
 import type { Quality } from '../quality'
-import { useAfterFirstTick } from '../useAfterFirstTick'
 import { atPlaza } from './plaza'
 import { VoxelColumn } from './VoxelColumn'
 
-export type TowerSpec = { key: string; label: string; value: number; lost?: number; coins?: number; color: string; unverified?: boolean }
+/** lostLabel：紅色小堆的標註，未填則為「費用扣掉的」 */
+export type TowerSpec = { key: string; label: string; value: number; lost?: number; lostLabel?: string; coins?: number; color: string; marks?: Mark[] }
 
 const SPACING = 12
+/** VoxelColumn 預設 5×5 一層 */
+const TOWER_FLOOR = 25
 const looks = new Map<string, BlockLook>()
 /** 同一個顏色永遠回傳同一個 look 物件，避免子元件的 memo 每次 render 都失效 */
 const matteLook = (color: string): BlockLook => {
@@ -19,19 +23,20 @@ const matteLook = (color: string): BlockLook => {
   if (!l) looks.set(color, (l = { color, kind: 'matte' }))
   return l
 }
-const LOST = { color: '#e53935', kind: 'matte' as const }
+const LOST = { color: ACCENT_COLORS.loss, kind: 'matte' as const }
 
-/** 一排方塊塔：塔＝剩下的價值；紅色小堆＝被費用吃掉；金幣堆＝領到的錢（皆 2 元一顆） */
-export function TowerRow({ towers, quality }: { towers: TowerSpec[]; quality: Quality }) {
-  const ready = useAfterFirstTick()
+/**
+ * 一排方塊塔：塔＝剩下的價值；紅色小堆＝費用扣掉的（或削掉的本金）；金幣堆＝領到的錢（皆 2 元一顆）。
+ * base／baseSub：塔前方的計算前提說明與補充（每個舞台的前提不同，由舞台自己給；不給就不顯示）
+ */
+export function TowerRow({ towers, quality, base, baseSub }: { towers: TowerSpec[]; quality: Quality; base?: string; baseSub?: string }) {
   const start = -((towers.length - 1) * SPACING) / 2
+  const size = useThree((s) => s.size)
+  // 手機畫面窄：相鄰塔的數值標註會撞在一起，奇數塔的標註再往上錯開一排
+  const stagger = layoutModel(size.width, size.height).mobile ? 2.5 : 0
   return (
     <>
-      {ready && (
-        <Html position={atPlaza(0, -0.2, 14)} center style={labelStyle}>
-          {T.towers.base}
-        </Html>
-      )}
+      {base && <Callout anchor={atPlaza(0, -0.2, 12)} offset={[0, 0, 0]} title={base} sub={baseSub} wrap persistent />}
       {towers.map((t, i) => {
         const x = start + i * SPACING
         return (
@@ -40,28 +45,25 @@ export function TowerRow({ towers, quality }: { towers: TowerSpec[]; quality: Qu
             {t.lost !== undefined && blocksFor(t.lost) > 0 && (
               <>
                 <VoxelColumn count={blocksFor(t.lost)} look={LOST} position={atPlaza(x + 3, 0, 5.5)} w={3} d={3} quality={quality} />
-                {ready && (
-                  <Html position={atPlaza(x + 3, -0.2, 7.2)} center style={labelStyle}>
-                    {T.towers.lost}
-                  </Html>
-                )}
+                <Callout anchor={atPlaza(x + 3, -0.2, 7.2)} offset={[0, 0, 0]} title={t.lostLabel ?? T.towers.lost} persistent={t.lostLabel !== undefined} />
               </>
             )}
             {t.coins !== undefined && (
               <>
                 <CoinPile count={blocksFor(t.coins)} position={atPlaza(x - 3, 0, 5.5)} />
-                {ready && blocksFor(t.coins) > 0 && (
-                  <Html position={atPlaza(x - 3, -0.2, 7.2)} center style={labelStyle}>
-                    {T.towers.coins}
-                  </Html>
-                )}
+                {blocksFor(t.coins) > 0 && <Callout anchor={atPlaza(x - 3, -0.2, 7.2)} offset={[0, 0, 0]} title={T.towers.coins} />}
               </>
             )}
-            {ready && (
-              <Html position={atPlaza(x, -0.2, 11)} center style={labelStyle}>
-                {t.label}：{T.towers.value(t.value)} {t.unverified && <span className="badge">{T.unverified}</span>}
-              </Html>
-            )}
+            {/* 標註放在塔頂上方，不和下方的紅色小堆／金幣堆標註搶位置。數值當標題、名稱當副標；色點＝塔的顏色（3b1b 顏色連結） */}
+            <Callout
+              anchor={atPlaza(x, Math.ceil(blocksFor(t.value) / TOWER_FLOOR) + 0.1, 0)}
+              offset={[0, 4 + (i % 2) * stagger, 0]}
+              title={T.towers.value(t.value)}
+              sub={t.label}
+              color={t.color}
+              marks={t.marks}
+              persistent={!!t.marks?.length}
+            />
           </group>
         )
       })}

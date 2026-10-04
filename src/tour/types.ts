@@ -1,6 +1,9 @@
 import type { SliceAxis } from '../scene/layout/voxels'
 import type { Picked } from '../store/sandbox'
 import type { Sector } from '../scene/layout/underground'
+import type { Mark } from '../ui/marks'
+
+export type { Mark }
 
 export type CameraPresetId = 'sky' | 'overview' | 'tw' | 'us' | 'exchange' | 'exchangeWide' | 'exchangeSide' | 'plaza' | 'plazaNear' | 'underground'
 
@@ -53,13 +56,41 @@ export type TextContext = {
   weightPct: (productId: string, holdingId: string) => number
   shock: (productId: string) => number
   sectorPct: (productId: string, sector: Sector) => number
+  /** 每年內扣費用（小數，例如 0.002）；資料沒有時為 undefined */
+  expenseRatio: (productId: string) => number | undefined
+  /** 兩檔籃子前幾大持股的重疊比例（0–1） */
+  overlapShared: (a: string, b: string) => number
 }
+
+/** 大數字卡：value 已格式化；fraction（0–1）畫色條；colorKey 對應物體顏色 */
+export type BigNumber = { value: string; label: string; fraction?: number; mark?: Mark; colorKey?: string }
+
+/** 帶引線的標註：錨在籃子裡的某個持股，或城市裡的某棟大樓 */
+export type CalloutSpec = {
+  anchor: { kind: 'holding'; holdingId: string } | { kind: 'building'; id: string }
+  title: string | ((c: TextContext) => string)
+  sub?: string | ((c: TextContext) => string)
+}
+
+export type LessonText = string | ((c: TextContext) => string)
 
 export type Step = {
   id: string
-  text: string | ((c: TextContext) => string)
-  /** 文字版（沒有 3D）專用的課文；未填則沿用 text */
-  fallbackText?: string | ((c: TextContext) => string)
+  /** 短標題（≤ 8 字） */
+  title: string
+  /** 一句話（≤ 20 字，不含 **）；`**詞**` 強調，`**詞|鍵**` 加顏色連結 */
+  line: LessonText
+  /** 多說一點（預設收起） */
+  more: LessonText
+  /** 文字版（沒有 3D）專用的一句話；未填則沿用 line */
+  fallbackLine?: LessonText
+  /** 文字版（沒有 3D）專用的多說一點；未填則沿用 more */
+  fallbackMore?: LessonText
+  mark?: 'illustrative' | 'assumption'
+  /** 回傳 undefined 時不顯示大數字（例如資料沒有內扣費用）；values＝導覽目前的拉桿值（跟著拉桿即時變） */
+  bigNumber?: (c: TextContext, values: Readonly<StageValues>) => BigNumber | undefined
+  focus?: { holdings?: string[] }
+  callouts?: CalloutSpec[]
   scene: SceneDirective
   controls?: Control[]
   until?: Condition

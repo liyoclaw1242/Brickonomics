@@ -3,7 +3,7 @@ import { Html } from '@react-three/drei'
 import { isVerified, universe } from '../../data'
 import { useSandbox } from '../../store/sandbox'
 import { T } from '../../ui/strings'
-import { labelStyle } from '../labelStyle'
+import { MarkIcon } from '../../ui/MarkIcon'
 import { EXCHANGE_POSITION } from './plaza'
 import { useAfterFirstTick } from '../useAfterFirstTick'
 
@@ -28,14 +28,15 @@ export function FeeMeter() {
   const ground = PRINCIPAL * (1 - Math.pow(1 - er, years))
   const [x, , z] = EXCHANGE_POSITION
   return (
-    <Html position={[x, 1.2, z + 9.5]} center style={{ ...labelStyle, whiteSpace: 'normal', width: 220, maxWidth: 'none', textAlign: 'center', lineHeight: 1.5 }}>
-      <strong>{T.feeMeter.title}</strong>・{T.feeMeter.elapsed(Math.floor(years) + 1)}
-      <br />
-      {T.feeMeter.rate(er)} {!isVerified(product, 'fees.expenseRatio') && <span className="badge">{T.unverified}</span>}
-      <br />
-      {T.feeMeter.ground(ground)}
-      <br />
-      <small>{T.feeMeter.note}</small>
+    // 費率本身已是面板的大數字，這裡只留計費表在跑的結果（少字）；放在台座前緣，手機上不會壓到時間軸
+    <Html position={[x, 1.2, z + 7]} center className="callout callout--wrap">
+      <span className="callout__title">
+        {T.feeMeter.title}・{T.feeMeter.elapsed(Math.floor(years) + 1)}
+      </span>
+      <span>
+        {T.feeMeter.ground(ground)} {!isVerified(product, 'fees.expenseRatio') && <MarkIcon kind="unverified" />}
+      </span>
+      <span className="callout__sub">{T.feeMeter.note}</span>
     </Html>
   )
 }

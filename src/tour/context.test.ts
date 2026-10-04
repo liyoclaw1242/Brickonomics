@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { universe } from '../data'
+import { overlap } from '../sim/overlap'
 import { makeTextContext, pct0, signedPct } from './context'
 
 describe('text context', () => {
@@ -18,6 +19,20 @@ describe('text context', () => {
   it('reports sector weights for a product', () => {
     expect(c.sectorPct('QQQ', 'semiconductor')).toBeCloseTo(13.35, 6)
     expect(c.sectorPct('QQQ', 'finance')).toBe(0)
+  })
+
+  it('reads expense ratios and returns undefined when there is none', () => {
+    expect(c.expenseRatio('QQQ')).toBe(universe.get('QQQ')!.fees!.expenseRatio)
+    expect(c.expenseRatio('2330')).toBeUndefined()
+    expect(c.expenseRatio('NOPE')).toBeUndefined()
+  })
+
+  it('reports the shared overlap of two baskets as a fraction', () => {
+    const v = c.overlapShared('QQQ', 'SPY')
+    expect(v).toBe(overlap(universe, 'QQQ', 'SPY').total)
+    expect(v).toBeGreaterThan(0)
+    expect(v).toBeLessThanOrEqual(1)
+    expect(c.overlapShared('0050', 'SPY')).toBe(0)
   })
 })
 

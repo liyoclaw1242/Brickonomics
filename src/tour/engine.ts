@@ -55,8 +55,18 @@ export function sandboxPatchFor(d: SceneDirective): SandboxPatch {
   return patch
 }
 
-export function textOf(step: Step, ctx: TextContext): string {
-  return typeof step.text === 'function' ? step.text(ctx) : step.text
+const resolveText = (t: Step['line'], ctx: TextContext): string => (typeof t === 'function' ? t(ctx) : t)
+
+export function titleOf(step: Step): string {
+  return step.title
+}
+
+export function lineOf(step: Step, ctx: TextContext): string {
+  return resolveText(step.line, ctx)
+}
+
+export function moreOf(step: Step, ctx: TextContext): string {
+  return resolveText(step.more, ctx)
 }
 
 const EMPTY_PROGRESS: Progress = { completed: [], sandboxUnlocked: false }

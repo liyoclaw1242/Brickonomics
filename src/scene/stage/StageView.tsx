@@ -9,6 +9,7 @@ import { FeeMeter } from './FeeMeter'
 import { FeeRaceStage } from './FeeRaceStage'
 import { HeldBlocks } from './HeldBlocks'
 import { Plaza } from './Plaza'
+import { ON_PLAZA } from './plaza'
 import { PriceTicker } from './PriceTicker'
 import { OverlapStage } from './OverlapStage'
 import { PrincipalTrapStage } from './PrincipalTrapStage'
@@ -16,7 +17,6 @@ import { ShockStage } from './ShockStage'
 import { UndergroundStage } from './UndergroundStage'
 
 const NONE: Stage = { kind: 'none' }
-const ON_PLAZA = new Set<Stage['kind']>(['held', 'exdiv', 'bonds', 'feeRace', 'accumulate', 'principalTrap', 'shock', 'overlap'])
 
 /** 依目前步驟顯示教學視覺；沙盒模式不顯示 */
 export function StageView({ quality }: { quality: Quality }) {

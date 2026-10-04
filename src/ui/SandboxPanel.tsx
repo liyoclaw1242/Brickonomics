@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
 import { universe } from '../data'
 import { useSandbox } from '../store/sandbox'
-import { useTour } from '../store/tour'
 import { formatPct, legendMeta, legendRows, productGroups } from './model'
+import { MarkIcon } from './MarkIcon'
 import { T } from './strings'
 
 export function SandboxPanel() {
@@ -22,11 +22,11 @@ export function SandboxPanel() {
   )
 
   return (
-    <aside className="panel">
-      <h1 className="panel__title">{T.appTitle}</h1>
-      <button className="link" onClick={() => useTour.getState().restartTour()}>
-        {T.replayTour}
-      </button>
+    <aside className="panel sandbox">
+      <header className="step-header">
+        <p className="brand">{T.brand}</p>
+        <h1 className="step-title">{T.sandboxTitle}</h1>
+      </header>
 
       <section>
         <h2>{T.products}</h2>
@@ -59,7 +59,7 @@ export function SandboxPanel() {
           <h2>{T.legend}</h2>
           {meta && (
             <p className="hint">
-              {T.asOf}：{meta.asOf} {!meta.verified && <span className="badge">{T.unverified}</span>}
+              {T.asOf}：{meta.asOf} {!meta.verified && <MarkIcon kind="unverified" />}
             </p>
           )}
           <ul className="legend">

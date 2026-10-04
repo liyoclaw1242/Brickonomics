@@ -1,14 +1,14 @@
-import { useMemo, type CSSProperties } from 'react'
-import { Html } from '@react-three/drei'
+import { useMemo } from 'react'
 import { Color } from 'three'
 import { universe } from '../../data'
+import { useThemeStore } from '../../store/theme'
 import { T } from '../../ui/strings'
 import { CoinPile } from '../CoinPile'
-import { labelStyle } from '../labelStyle'
+import { Callout } from '../Callout'
 import { BlockMaterial } from '../materials'
-import { SECTOR_COLORS } from '../palette'
+import { ACCENT_COLORS, SECTOR_COLORS } from '../palette'
 import type { Quality } from '../quality'
-import { useAfterFirstTick } from '../useAfterFirstTick'
+import { THEMES } from '../theme'
 import { CORE_R_MIN, coreDiscs, goldVein, GROUND_TOP, sectorBreakdown, strataLayout, STUB_MAX_HEIGHT, unclassifiedStub, type Sector } from '../layout/underground'
 
 type Show = 'strata' | 'cores' | 'dig' | 'veins' | 'gold'
@@ -16,13 +16,11 @@ const CENTER_Z = 24
 const WIDTH = 44
 const DEPTH = 30
 const FRONT_Z = CENTER_Z + DEPTH / 2
-const SOIL = new Color('#5d4037')
-const UNCLASSIFIED = '#cfd8dc'
-const ROD = '#78909c'
 const ROD_OPACITY = 0.35
 const STUB_RADIUS = 1.3
 const CORE_Z = FRONT_Z + 2
-const LABEL_X = -24
+// 地層名稱貼在地層正面左側（地層寬 44，左緣 −22）：手機窄畫面也不會被左邊界切掉
+const LABEL_X = -18
 const FADE = 0.35
 const VEIN_SECTORS: Sector[] = ['semiconductor', 'finance', 'electronics']
 const VEIN_XS = [-12, 0, 12]
@@ -31,14 +29,14 @@ const COIN_SCALE = 2.5
 const LEDGE_DEPTH = 2.4
 const LEDGE_HEIGHT = 0.2
 
-const dimLabelStyle: CSSProperties = { ...labelStyle, opacity: FADE }
-const colorOf = (s: Sector): string => (s === 'unclassified' ? UNCLASSIFIED : SECTOR_COLORS[s] ?? UNCLASSIFIED)
-const soilTint = (hex: string): string => `#${new Color(hex).lerp(SOIL, 0.25).getHexString()}`
+const colorOf = (s: Sector, unclassified: string): string => (s === 'unclassified' ? unclassified : SECTOR_COLORS[s] ?? unclassified)
+const soilTint = (hex: string, soil: string): string => `#${new Color(hex).lerp(new Color(soil), 0.25).getHexString()}`
 
 /** 第 6 關：城市底下的產業地層、岩芯、水平挖、礦脈與黃金礦脈（靜態，不需要連續繪製） */
 export function UndergroundStage({ show, cores, quality }: { show: Show; cores?: [string, string]; quality: Quality }) {
-  const ready = useAfterFirstTick()
-  const layers = useMemo(() => strataLayout().map((l) => ({ ...l, color: soilTint(colorOf(l.sector)) })), [])
+  const t = THEMES[useThemeStore((s) => s.theme)]
+  const UNCLASSIFIED = t.unclassified
+  const layers = useMemo(() => strataLayout().map((l) => ({ ...l, color: soilTint(colorOf(l.sector, t.unclassified), t.soil) })), [t.unclassified, t.soil])
   const vein = goldVein()
   const faded = show === 'gold'
   const veinDim = show !== 'gold'
@@ -76,9 +74,9 @@ export function UndergroundStage({ show, cores, quality }: { show: Show; cores?:
                 <cylinderGeometry args={[d.radius, d.radius, d.top - d.bottom, 32]} />
                 {/* 該產業 0%：細桿用中性深色，避免被讀成「有一點點」 */}
                 {d.radius <= CORE_R_MIN ? (
-                  <meshStandardMaterial color={ROD} roughness={0.8} metalness={0} transparent opacity={ROD_OPACITY} depthWrite={false} />
+                  <meshStandardMaterial color={t.rod} roughness={0.8} metalness={0} transparent opacity={ROD_OPACITY} depthWrite={false} />
                 ) : (
-                  <BlockMaterial kind="matte" quality={quality} color={colorOf(d.sector)} />
+                  <BlockMaterial kind="matte" quality={quality} color={colorOf(d.sector, UNCLASSIFIED)} />
                 )}
               </mesh>
             ))}
@@ -92,9 +90,10 @@ export function UndergroundStage({ show, cores, quality }: { show: Show; cores?:
         )}
 
       {show === 'dig' && (
-        <mesh position={[0, digY, 40]}>
-          <boxGeometry args={[40, 1.2, 2]} />
-          <meshBasicMaterial color="#ffd54f" transparent opacity={0.85} />
+        // 挖掘帶從地層名稱右邊開始（名稱貼在 x≈−18），不和「半導體」字塊疊在一起
+        <mesh position={[2.5, digY, 40]}>
+          <boxGeometry args={[35, 1.2, 2]} />
+          <meshBasicMaterial color={ACCENT_COLORS.coin} transparent opacity={0.85} />
         </mesh>
       )}
 
@@ -113,46 +112,26 @@ export function UndergroundStage({ show, cores, quality }: { show: Show; cores?:
           )),
         )}
 
-      {ready && (
-        <>
-          {layers.map((l) => (
-            <Html key={l.sector} position={[LABEL_X, (l.top + l.bottom) / 2, FRONT_Z + 0.5]} center style={labelStyle}>
-              {T.sectors[l.sector]}
-            </Html>
-          ))}
-          <Html position={[-17, (vein.top + vein.bottom) / 2, FRONT_Z + 0.5]} center style={veinDim ? dimLabelStyle : labelStyle}>
-            {T.underground.goldVein}
-          </Html>
-          {show === 'cores' &&
-            coreData.map((c) => (
-              <group key={c.id}>
-                <Html position={[c.x, GROUND_TOP + STUB_MAX_HEIGHT + 1.6, CORE_Z]} center style={labelStyle}>
-                  {c.name}
-                </Html>
-                {c.stub.height > 0 && (
-                  <Html position={[c.x, GROUND_TOP + c.stub.height + 0.9, CORE_Z]} center style={labelStyle}>
-                    {T.underground.unclassifiedStub(c.stub.weightPct)}
-                  </Html>
-                )}
-              </group>
-            ))}
-          {show === 'cores' && (
-            <Html position={[0, GROUND_TOP - 17, CORE_Z]} center style={labelStyle}>
-              {T.underground.rodLegend}
-            </Html>
-          )}
-          {show === 'dig' && (
-            <Html position={[0, digY + 1.4, 41]} center style={labelStyle}>
-              {T.underground.dig}
-            </Html>
-          )}
-          {show === 'veins' && (
-            <Html position={[0, GROUND_TOP + 1.2, FRONT_Z + 1]} center style={labelStyle}>
-              {T.underground.veins}
-            </Html>
-          )}
-        </>
+      {/* 地層名稱貼在地層正面：純說明，不畫引線 */}
+      {layers.map((l) => (
+        <Callout key={l.sector} anchor={[LABEL_X, (l.top + l.bottom) / 2, FRONT_Z + 0.5]} offset={[0, 0, 0]} title={T.sectors[l.sector]} compact />
+      ))}
+      {/* 黃金礦脈只在介紹地層與黃金時標名；其他步驟它只是背景，少一個字塊 */}
+      {(show === 'strata' || show === 'gold') && (
+        <Callout anchor={[-17, (vein.top + vein.bottom) / 2, FRONT_Z + 0.5]} offset={[0, 0, 0]} title={T.underground.goldVein} dim={veinDim} compact />
       )}
+      {show === 'cores' &&
+        coreData.map((c) => (
+          <group key={c.id}>
+            <Callout anchor={[c.x, GROUND_TOP + c.stub.height, CORE_Z]} offset={[0, STUB_MAX_HEIGHT + 1.6 - c.stub.height, 0]} title={c.name} />
+            {c.stub.height > 0 && (
+              <Callout anchor={[c.x + STUB_RADIUS, GROUND_TOP + c.stub.height / 2, CORE_Z]} offset={[2.5, 0, 0]} title={T.underground.unclassifiedStub(c.stub.weightPct)} />
+            )}
+          </group>
+        ))}
+      {show === 'cores' && <Callout anchor={[0, GROUND_TOP - 19.5, CORE_Z]} offset={[0, 0, 0]} title={T.underground.rodLegend} wrap persistent />}
+      {show === 'dig' && <Callout anchor={[0, digY, 40]} offset={[0, 1.4, 1]} title={T.underground.dig} marks={['illustrative']} persistent />}
+      {show === 'veins' && <Callout anchor={[0, GROUND_TOP + 1.2, FRONT_Z + 1]} offset={[0, 0, 0]} title={T.underground.veins} marks={['illustrative']} persistent />}
     </group>
   )
 }

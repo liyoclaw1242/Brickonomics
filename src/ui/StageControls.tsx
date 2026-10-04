@@ -1,6 +1,7 @@
 import { useSandbox } from '../store/sandbox'
 import { useTour, VALUE_RANGES } from '../store/tour'
 import type { Control, ValueKey } from '../tour/types'
+import { MarkIcon } from './MarkIcon'
 import { T } from './strings'
 
 const STEP: Record<ValueKey, number> = { years: 0.5, periods: 1, phase: 0.01, frontLoad: 0.0025 }
@@ -14,7 +15,7 @@ function ValueSlider({ k }: { k: ValueKey }) {
     <label className="control">
       <span className="control__label">
         {T.controls[k]}
-        {k === 'frontLoad' && <span className="badge">{T.assumption}</span>}
+        {k === 'frontLoad' && <MarkIcon kind="assumption" />}
         <span className="control__value">{fmt(v)}</span>
       </span>
       <input type="range" min={lo} max={hi} step={STEP[k]} value={v} onChange={(e) => setValue(k, Number(e.target.value))} />

@@ -12,7 +12,7 @@ export function VoxelColumn({ count, look, position, w = 5, d = 5, quality }: { 
   if (count === 0) return null
   return (
     <group position={position}>
-      <VoxelInstances voxels={voxels} looks={looks} w={w} d={d} explode={0} cut={null} highlightGroup={null} quality={quality} />
+      <VoxelInstances voxels={voxels} looks={looks} w={w} d={d} explode={0} cut={null} picked={null} quality={quality} />
     </group>
   )
 }
