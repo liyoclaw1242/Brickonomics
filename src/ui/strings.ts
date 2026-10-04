@@ -3,7 +3,6 @@ export const T = {
   appTitle: '積木城市',
   shock: { stock: '只買台積電', legend: '紅色＝假設跌掉的部分', label: (name: string, pct: string) => `${name}：${pct}` },
   overlapLabel: (name: string, pct: string) => `${name} 重疊 ${pct}`,
-  disclaimer: (date: string) => `資料為 ${date} 快照，僅供教學，不構成投資建議。`,
   heightNote: '大樓高度為市值的對數比例；籃子裡的方塊數量嚴格依照權重。',
   islands: { TW: '台灣島', US: '美國大陸' },
   regions: { TW: '台灣', US: '美國', GLOBAL: '全球' },

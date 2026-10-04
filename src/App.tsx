@@ -8,7 +8,6 @@ import { useTour } from './store/tour'
 import { TourPanel } from './ui/TourPanel'
 import { SandboxPanel } from './ui/SandboxPanel'
 import { PickInfoPanel } from './ui/PickInfoPanel'
-import { Disclaimer } from './ui/Disclaimer'
 import { QualityNotice } from './ui/QualityNotice'
 import { useExplodeKey } from './ui/useExplodeKey'
 import './ui/ui.css'
@@ -28,7 +27,6 @@ export default function App() {
       </Canvas>
       {mode === 'tour' ? <TourPanel /> : <SandboxPanel />}
       <PickInfoPanel />
-      <Disclaimer />
       <QualityNotice />
     </div>
   )

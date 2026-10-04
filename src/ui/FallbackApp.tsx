@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 import { universe } from '../data'
 import { LEVELS } from '../tour/levels'
-import { Disclaimer } from './Disclaimer'
 import { fallbackLevels } from './fallback'
 import { T } from './strings'
 import './ui.css'
@@ -10,7 +9,6 @@ export function FallbackApp() {
   const levels = useMemo(() => fallbackLevels(LEVELS, universe), [])
   return (
     <main className="fallback" data-levels={levels.length}>
-      <Disclaimer />
       <h1>{T.appTitle}</h1>
       <p className="hint">{T.fallbackIntro}</p>
       {levels.map((l) => (

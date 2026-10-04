@@ -9,12 +9,20 @@ import { isBasket } from './data/schema'
 import { detectQuality, parseQualityParam, readEnv } from './scene/quality'
 import { parseSandboxQuery, useSandbox } from './store/sandbox'
 import { useQuality } from './store/quality'
+import { useThemeStore, parseThemeParam, loadTheme } from './store/theme'
 import { LEVELS } from './tour/levels'
 import { parseTourQuery, isValidPosition } from './tour/engine'
 import { loadProgress, useTour } from './store/tour'
 
 const forceFallback = new URLSearchParams(window.location.search).get('fallback') === '1'
 const webgl = !forceFallback && hasWebGL(() => document.createElement('canvas'))
+
+// 主題：兩條路（WebGL 與 fallback）都要同步到 <html data-theme>
+useThemeStore.getState().setTheme(parseThemeParam(window.location.search) ?? loadTheme())
+document.documentElement.dataset.theme = useThemeStore.getState().theme
+useThemeStore.subscribe((s) => {
+  document.documentElement.dataset.theme = s.theme
+})
 
 const baskets = new Set([...universe.values()].filter(isBasket).map((a) => a.id))
 
