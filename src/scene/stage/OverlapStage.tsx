@@ -1,4 +1,6 @@
 import { useMemo } from 'react'
+import { useThree } from '@react-three/fiber'
+import { layoutModel } from '../../ui/layoutModel'
 import { Line } from '@react-three/drei'
 import { universe } from '../../data'
 import { overlap } from '../../sim/overlap'
@@ -10,13 +12,14 @@ import { Callout } from '../Callout'
 import { basketSpec, basketVoxels } from '../layout/basket'
 import { layerCentroid } from '../layout/stages'
 import type { Quality } from '../quality'
-import { ACCENT_COLORS, colorForKey } from '../palette'
+import { ACCENT_COLORS, holdingColor } from '../palette'
 import { atPlaza } from './plaza'
 
 const XA = -7
 const XB = 7
 const EXPLODE_T = 1
 const LABEL_DX = 6
+const LABEL_DX_MOBILE = 1.5
 const BASKET_QUALITY: Quality = 'low'
 
 type Built = { productId: string; baseX: number; spec: ReturnType<typeof basketSpec>; voxels: ReturnType<typeof basketVoxels> }
@@ -50,6 +53,9 @@ export function OverlapStage({ a, b }: { a: string; b: string; quality: Quality 
       return pa && pb ? [{ id: r.id, pa, pb, shared: r.shared }] : []
     })
   }, [a, b])
+  const size = useThree((st) => st.size)
+  // 手機畫面窄：標註離籃子近一點，才不會超出畫面左右邊
+  const dx = layoutModel(size.width, size.height).mobile ? LABEL_DX_MOBILE : LABEL_DX
   const labeled = [...links].sort((x, y) => y.shared - x.shared).slice(0, MAX_LABELS)
   return (
     <>
@@ -66,9 +72,10 @@ export function OverlapStage({ a, b }: { a: string; b: string; quality: Quality 
           <Callout
             key={l.id}
             anchor={anchor}
-            offset={[left ? -LABEL_DX : LABEL_DX, 0, 0]}
+            offset={[left ? -dx : dx, 0, 0]}
             title={T.overlapLabel(universe.get(l.id)!.name)}
-            color={colorForKey(universe, l.id)}
+            // 色點＝那一層在籃子裡的顏色（3b1b 顏色連結）
+            color={holdingColor(universe, left ? a : b, l.id)}
             persistent
           />
         )

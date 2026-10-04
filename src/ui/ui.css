@@ -104,6 +104,12 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .legend__name--aggregate { color: var(--muted); font-style: italic; }
 .legend__pct { font-variant-numeric: tabular-nums; color: var(--muted); }
 .hint { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+/* 「先拉一下」提示：使用者測試時差點沒看到為什麼下一步按不下去 → 大一點、用強調色 */
+.hint--try { font-size: 15px; font-weight: 600; color: var(--em); margin: 8px 0 0; }
+/* 最後一步的回顧清單 */
+.recap { list-style: none; margin: 8px 0 4px; padding: 10px 12px; display: grid; gap: 6px; border-radius: 12px; background: var(--chip); border: 1px solid var(--border); font-size: 15px; line-height: 1.5; }
+.recap li, .recap p { margin: 0; display: flex; gap: 8px; align-items: baseline; }
+.recap__icon { flex: none; width: 1.4em; text-align: center; }
 
 .info {
   position: fixed; top: 56px; right: 12px; width: 280px; padding: 14px 16px; border-radius: 14px;
@@ -193,16 +199,23 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .callout__title { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
 .callout__dot { width: 8px; height: 8px; border-radius: 50%; flex: none; box-shadow: 0 0 0 1px var(--border); } /* 外框：近白色（如公債）的色點在白天也看得到 */
 .callout__sub { font-size: calc(11px * max(0.85, var(--label-scale, 1))); color: var(--muted); letter-spacing: 0.04em; }
+/* 老花眼（使用者測試 r1）：桌機上標註與副標至少 13px。手機畫面窄，維持隨鏡頭縮放，避免標註互相疊住 */
+@media (min-width: 721px) {
+  .callout { font-size: max(13px, calc(13px * var(--label-scale, 1))); }
+  .callout__sub { font-size: max(13px, calc(13px * var(--label-scale, 1))); }
+}
 .name-label { pointer-events: none; font-size: calc(11px * max(0.75, var(--label-scale, 1))); color: var(--muted); opacity: 0.7; white-space: nowrap; text-shadow: 0 1px 2px var(--label-shadow); }
+/* 城市大樓名稱：只標最高的幾棟，所以可以大一點、清楚一點（但不搶標註的戲） */
+.name-label--city { font-size: max(12px, calc(14px * var(--label-scale, 1))); color: var(--text); opacity: 0.85; font-weight: 500; text-shadow: 0 1px 3px var(--label-shadow), 0 0 2px var(--label-shadow); }
 .name-label--active { opacity: 1; color: var(--text); font-weight: 600; }
 .name-label--island { font-size: calc(16px * max(0.75, var(--label-scale, 1))); font-weight: 600; }
 .mark { position: relative; display: inline-flex; }
 .mark__icon { pointer-events: auto; border: 1px solid var(--border); background: var(--chip); color: var(--badge);
-  width: 18px; height: 18px; border-radius: 50%; font-size: 11px; line-height: 1; padding: 0; cursor: pointer; }
+  display: inline-flex; align-items: center; gap: 3px; height: 20px; padding: 0 7px; border-radius: 999px; font: inherit; font-size: 12px; font-weight: 500; line-height: 1; letter-spacing: 0; white-space: nowrap; cursor: pointer; }
 .mark__tip { position: absolute; top: 120%; left: 50%; transform: translateX(-50%); z-index: 10; width: max-content; max-width: 220px;
   padding: 6px 8px; border-radius: 8px; background: var(--surface-strong); border: 1px solid var(--border); font-size: 12px; white-space: normal; }
 
-@media (max-width: 720px) { .mark__icon { width: 24px; height: 24px; } }
+@media (max-width: 720px) { .mark__icon { height: 24px; } }
 
 /* 右上工具列、圖例色票列、底部章節時間軸（版面 insets 見 src/ui/layoutModel.ts） */
 .toolbar { position: fixed; top: 12px; right: 12px; display: flex; gap: 8px; z-index: 6; }
@@ -212,9 +225,9 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .legend-bar i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: middle; }
 .timeline { position: fixed; left: calc(var(--panel-w) + 24px); right: 12px; bottom: 12px; padding: 10px 16px 12px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); z-index: 5; }
 .timeline__chapters { display: flex; justify-content: space-between; gap: 4px; }
-.timeline__chapter { border: 0; background: none; color: var(--muted); font: inherit; font-size: 13px; letter-spacing: 0.12em; cursor: pointer; }
+.timeline__chapter { border: 0; background: none; color: color-mix(in oklab, var(--text) 78%, var(--muted)); font: inherit; font-size: 13px; letter-spacing: 0.12em; cursor: pointer; } /* 沒選到的章節也要看得清楚 */
 .timeline__chapter[aria-current='step'] { color: var(--text); font-weight: 600; }
-.timeline__chapter:disabled { opacity: 0.35; cursor: default; }
+.timeline__chapter:disabled { opacity: 0.55; cursor: default; }
 .timeline__bar { margin-top: 8px; height: 3px; border-radius: 2px; background: var(--border); overflow: hidden; }
 .timeline__bar span { display: block; height: 100%; background: var(--accent); }
 .timeline__chapter { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; padding: 4px 2px; }

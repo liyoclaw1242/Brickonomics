@@ -76,3 +76,14 @@ export function applyShrink(
     return { ...p, height: Math.max(1, height) }
   })
 }
+
+/** 每座島最高的 perIsland 棟（同高依 cityLayout 的順序）＋ extra（選到、被標註的大樓）才顯示名稱 */
+export function labeledBuildings(placements: readonly Placement[], perIsland: number, extra: Iterable<string> = []): Set<string> {
+  const out = new Set<string>(extra)
+  for (const region of ['TW', 'US'] as const) {
+    // cityLayout 已依高度排序；stable sort 再保險一次
+    const list = placements.filter((p) => p.region === region).sort((a, b) => b.height - a.height)
+    for (const p of list.slice(0, perIsland)) out.add(p.id)
+  }
+  return out
+}

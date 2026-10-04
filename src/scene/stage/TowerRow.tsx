@@ -39,13 +39,16 @@ export function TowerRow({ towers, quality, base, baseSub }: { towers: TowerSpec
   // 手機畫面窄：相鄰塔的數值標註會撞在一起，奇數塔的標註再往上錯開一排
   const stagger = layoutModel(size.width, size.height).mobile ? 2.5 : 0
   const anyFocus = towers.some((t) => t.focus)
+  // 手機上出門費和每年費用兩個標註會撞在一起：出門費的往前（往下）錯開一排
+  const exitDrop = stagger > 0 ? 2.4 : 0
   return (
     <>
       {base && <Callout anchor={atPlaza(0, -0.2, 12)} offset={[0, 0, 0]} title={base} sub={baseSub} wrap persistent />}
       {towers.map((t, i) => {
         const x = start + i * SPACING
         const dim = anyFocus && !t.focus
-        const held = t.lost !== undefined && t.exit !== undefined ? t.lost - t.exit : t.lost
+        // 拆出出門費後剩下的費用；浮點誤差可能讓它變成 −0.000…，夾到 0
+        const held = t.lost !== undefined && t.exit !== undefined ? Math.max(0, t.lost - t.exit) : t.lost
         return (
           <group key={t.key}>
             <VoxelColumn count={blocksFor(t.value)} look={matteLook(t.color)} position={atPlaza(x, 0, 0)} quality={quality} vivid={!!t.focus} />
@@ -59,7 +62,7 @@ export function TowerRow({ towers, quality, base, baseSub }: { towers: TowerSpec
             {!dim && t.exit !== undefined && (
               <>
                 <VoxelColumn count={blocksFor(t.exit)} look={LOST} position={atPlaza(x - 3.5, 0, 5.5)} w={2} d={2} quality={quality} vivid />
-                <Callout anchor={atPlaza(x - 3.5, -0.2, 7.2)} offset={[0, 0, 0]} title={T.towers.exit(t.exit)} color={ACCENT_COLORS.loss} persistent />
+                <Callout anchor={atPlaza(x - 3.5, -0.2, 7.2 + exitDrop)} offset={[0, 0, 0]} title={T.towers.exit(t.exit)} color={ACCENT_COLORS.loss} persistent />
               </>
             )}
             {t.coins !== undefined && (
@@ -72,7 +75,7 @@ export function TowerRow({ towers, quality, base, baseSub }: { towers: TowerSpec
             <Callout
               anchor={atPlaza(x, Math.ceil(blocksFor(t.value) / TOWER_FLOOR) + 0.1, 0)}
               // 引線短一點：高塔（例如累積型 20 年）的標註才不會飄進後面的城市
-              offset={[0, 1.6 + (i % 2) * stagger, 0]}
+              offset={[0, 2.4 + (i % 2) * stagger, 0]}
               title={T.towers.value(t.value)}
               sub={t.label}
               color={t.color}

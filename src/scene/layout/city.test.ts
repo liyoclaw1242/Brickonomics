@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { universe } from '../../data'
-import { applyShrink, buildingHeight, cityLayout, islandSize, buildingVoxels, ISLAND_CENTERS, HEIGHT } from './city'
+import { applyShrink, buildingHeight, cityLayout, islandSize, buildingVoxels, ISLAND_CENTERS, HEIGHT, labeledBuildings } from './city'
 
 describe('buildingHeight', () => {
   it('is logarithmic in market cap (USD billions)', () => {
@@ -94,5 +94,27 @@ describe('applyShrink', () => {
     expect(applyShrink(ps, { NVDA: 0.5 }, capOf)[1]!.height).toBe(16)
     // 跌 100% 不丟錯，保留 1 層
     expect(applyShrink(ps, { '2330': 1 }, capOf)[0]!.height).toBe(1)
+  })
+})
+
+describe('labeledBuildings', () => {
+  const placements = cityLayout([...universe.values()])
+  it('names only the tallest few per island (user test: names were too many and too small)', () => {
+    const ids = labeledBuildings(placements, 5)
+    expect(ids.size).toBe(10)
+    for (const region of ['TW', 'US'] as const) {
+      const inRegion = placements.filter((p) => p.region === region)
+      const named = inRegion.filter((p) => ids.has(p.id))
+      expect(named).toHaveLength(5)
+      const shortestNamed = Math.min(...named.map((p) => p.height))
+      for (const p of inRegion) if (!ids.has(p.id)) expect(p.height, p.id).toBeLessThanOrEqual(shortestNamed)
+    }
+    expect(ids.has('2330')).toBe(true)
+    expect(ids.has('NVDA')).toBe(true)
+    expect(ids.has('6274')).toBe(false) // 台燿：小樓不標
+  })
+
+  it('always names the extra ids (picked or anchored buildings)', () => {
+    expect(labeledBuildings(placements, 5, ['6274']).has('6274')).toBe(true)
   })
 })

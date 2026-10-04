@@ -124,7 +124,7 @@ export const LEVELS: Level[] = [
       {
         id: 's-7',
         title: '方塊沒長回來',
-        line: '拖**時間軸**。方塊沒長回來，**合起來變少|loss**',
+        line: '拖**時間軸**。合起來**變少了|loss**',
         more: '方塊沒長回去，方塊＋金幣合起來變少了。這叫貼息；長回去則叫填息。配息不是白送的錢，要看總報酬。這是示意。',
         mark: 'illustrative',
         // 從配發那一刻開始，拉到底看貼息：95 ＋ 5 → 92 ＋ 5
@@ -442,7 +442,7 @@ export const LEVELS: Level[] = [
           { icon: '🧱', text: '股票＝拿一顆方塊' },
           { icon: '📜', text: '債券＝借據滴金幣' },
           { icon: '🚜', text: '基金＝怪手幫你挑（要收費）' },
-          { icon: '🧩', text: 'ETF＝照藍圖自動挑（通常較便宜）' },
+          { icon: '🧩', text: 'ETF＝照藍圖挑（通常較便宜）' },
         ],
         scene: { camera: 'overview', product: '0050' },
       },

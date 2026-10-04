@@ -7,7 +7,8 @@ export const CAMERA_PRESETS: Record<CameraPresetId, { position: Vec3; target: Ve
   sky: { position: [0, 140, 160], target: [0, 0, 0] },
   overview: { position: [10, 36, 58], target: [0, 5, 12] },
   tw: { position: [-12, 22, 34], target: [-16, 6, 0] },
-  us: { position: [20, 22, 34], target: [16, 6, 0] },
+  // 美國大樓高（18–19 層）：鏡頭拉遠、看高一點，樓頂才不會被畫面上緣切掉
+  us: { position: [22, 26, 46], target: [16, 9, 0] },
   exchange: { position: [6, 18, 40], target: [0, 6, 14] },
   exchangeWide: { position: [10, 30, 48], target: [0, 10, 14] },
   exchangeSide: { position: [34, 14, 20], target: [0, 7, 14] },

@@ -13,7 +13,12 @@ import { VOXEL_SCALE } from './layout/voxels'
 import { THEMES } from './theme'
 import { useLongPress } from './useLongPress'
 import { prefersReducedMotion, useRevealAfterCamera } from './useRevealAfterCamera'
-import { applyShrink, buildingVoxels, cityLayout, islandSize, ISLAND_CENTERS, type Region } from './layout/city'
+import { applyShrink, BUILDING_SPACING, buildingVoxels, cityLayout, islandSize, ISLAND_CENTERS, labeledBuildings, type Region } from './layout/city'
+
+/** 每座島只標最高的幾棟（使用者測試：名字太多、太小、互相疊在一起） */
+const LABELS_PER_ISLAND = 5
+/** 後排的標籤抬高（每往後一排加這麼多）：俯視時前後排同一直行的名字才不會疊在一起 */
+const LABEL_LIFT_PER_ROW = 1.6
 
 const ISLAND_THICKNESS = 0.5
 
@@ -73,6 +78,19 @@ export function City({ labels, islandLabels = true, shrink }: { labels: boolean;
     if (v) pick({ productId: v.id, holdingId: v.id })
   })
 
+  const labeledPlacements = useMemo(() => {
+    const extra = [pickedId, pickedHolding].filter((x): x is string => x !== null)
+    const ids = labeledBuildings(placements, LABELS_PER_ISLAND, extra)
+    return placements.filter((p) => ids.has(p.id) && !anchored.has(p.id))
+  }, [placements, pickedId, pickedHolding, anchored])
+
+  const frontZ = useMemo(() => {
+    const z = { TW: -Infinity, US: -Infinity }
+    // 只看有標名的大樓：最前面那排不抬高，往後每排抬一點
+    for (const p of labeledPlacements) z[p.region] = Math.max(z[p.region], p.z)
+    return z
+  }, [labeledPlacements])
+
   const sizeOf = (region: Region) => islandSize(placements.filter((p) => p.region === region).length)
 
   return (
@@ -94,8 +112,14 @@ export function City({ labels, islandLabels = true, shrink }: { labels: boolean;
         <meshStandardMaterial roughness={0.8} />
       </instancedMesh>
       {/* NameLabel 自己在第一個 tick 後才掛 Html，並受「標註」開關控制 */}
-      {labels && placements.filter((p) => !anchored.has(p.id)).map((p) => (
-        <NameLabel key={p.id} position={[p.x, p.height + 0.8, p.z]} text={universe.get(p.id)!.name} active={pickedId === p.id || pickedHolding === p.id} />
+      {labels && labeledPlacements.map((p) => (
+        <NameLabel
+          key={p.id}
+          position={[p.x, p.height + 0.8 + ((frontZ[p.region] - p.z) / BUILDING_SPACING) * LABEL_LIFT_PER_ROW, p.z]}
+          text={universe.get(p.id)!.name}
+          active={pickedId === p.id || pickedHolding === p.id}
+          className="name-label--city"
+        />
       ))}
       {islandLabels && (['TW', 'US'] as const).map((region) => {
         const [x, z] = ISLAND_CENTERS[region]
