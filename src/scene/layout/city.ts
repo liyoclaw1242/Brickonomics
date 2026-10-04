@@ -76,3 +76,59 @@ export function applyShrink(
     return { ...p, height: Math.max(1, height) }
   })
 }
+
+/** 每座島最高的 perIsland 棟（同高依 cityLayout 的順序）＋ extra（選到、被標註的大樓）才顯示名稱 */
+export function labeledBuildings(placements: readonly Placement[], perIsland: number, extra: Iterable<string> = []): Set<string> {
+  const out = new Set<string>(extra)
+  for (const region of ['TW', 'US'] as const) {
+    // cityLayout 已依高度排序；stable sort 再保險一次
+    const list = placements.filter((p) => p.region === region).sort((a, b) => b.height - a.height)
+    for (const p of list.slice(0, perIsland)) out.add(p.id)
+  }
+  return out
+}
+
+/** 城市名稱每座島最多標幾棟（r3：5 棟還是擠成一團） */
+export const CITY_LABELS_PER_ISLAND = 3
+
+/** 螢幕上的標籤框（像素，x/y＝中心）；behind＝錨點在鏡頭後面 */
+export type LabelBox = { id: string; x: number; y: number; w: number; h: number; behind?: boolean }
+
+/** 名稱標籤的寬度估計（像素）：中文字約 15px、英數約 8.5px，加左右留白 */
+export function labelWidth(text: string): number {
+  return Array.from(text).reduce((w, ch) => w + (/[\u0000-ÿ]/.test(ch) ? 8.5 : 15), 12)
+}
+
+const overlaps = (a: LabelBox, b: LabelBox, pad: number) =>
+  Math.abs(a.x - b.x) * 2 < a.w + b.w + pad * 2 && Math.abs(a.y - b.y) * 2 < a.h + b.h + pad * 2
+
+/**
+ * 依優先順序放名稱：跟已放的名稱或步驟標註（obstacles）疊到就不放。
+ * forced（選到的大樓）一定放；priority（這一步提到名字的大樓）優先放，但不疊才放；回傳要顯示的 id（依原順序）。
+ */
+export function declutterLabels(
+  candidates: readonly LabelBox[],
+  obstacles: readonly LabelBox[] = [],
+  forced: ReadonlySet<string> = new Set(),
+  pad = 3,
+  priority: ReadonlySet<string> = new Set(),
+): string[] {
+  const placed: LabelBox[] = candidates.filter((c) => forced.has(c.id) && !c.behind)
+  const blockers = [...obstacles.filter((o) => !o.behind), ...placed]
+  // 這一步的一句話或標註提到的大樓先放（還是不能疊到別人）；其餘照原順序
+  const ordered = [...candidates.filter((c) => priority.has(c.id)), ...candidates.filter((c) => !priority.has(c.id))]
+  for (const c of ordered) {
+    if (c.behind || forced.has(c.id)) continue
+    if (blockers.some((b) => overlaps(c, b, pad))) continue
+    placed.push(c)
+    blockers.push(c)
+  }
+  const keep = new Set(placed.map((p) => p.id))
+  return candidates.filter((c) => keep.has(c.id)).map((c) => c.id)
+}
+
+/** 這一步的文字（一句話、標註）提到名字的大樓 id：它們一定要有名稱標籤（不受每島三棟限制，疊到才不標） */
+export function mentionedBuildings(placements: readonly Placement[], texts: readonly string[], nameOf: (id: string) => string): Set<string> {
+  const all = texts.join('\n').replace(/\*\*|\|\w+/g, '')
+  return new Set(placements.filter((p) => all.includes(nameOf(p.id))).map((p) => p.id))
+}

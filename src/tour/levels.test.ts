@@ -2,19 +2,32 @@ import { describe, it, expect } from 'vitest'
 import { universe } from '../data'
 import { isBasket } from '../data/schema'
 import { overlap } from '../sim/overlap'
-import { LEVELS } from './levels'
-import { makeTextContext } from './context'
-import { DEFAULT_VALUES, lineOf, moreOf } from './engine'
-import { ACTION_VERBS, forbiddenWordsIn, LINE_SENTENCE_MAX, LINE_SENTENCES_MAX, MORE_SENTENCE_MAX, MORE_SENTENCES_MAX, sentences } from './glossary'
+import { EXDIV_AFTER_PHASE, LEVELS, ROUTES } from './levels'
+import { exDivTimeline, principalTrap } from '../scene/layout/stages'
+import { towerTexts, trapTowerSpec } from '../scene/layout/towers'
+import { makeTextContext, pct0, wan } from './context'
+import { controlRange, DEFAULT_VALUES, lineOf, moreOf } from './engine'
+import { ACTION_VERBS, forbiddenWordsIn, jargonIn, LINE_SENTENCE_MAX, LINE_SENTENCES_MAX, MORE_SENTENCE_MAX, MORE_SENTENCES_MAX, sentences } from './glossary'
 import { parseEmphasis, stripMarkup, visibleLength } from '../ui/emphasis'
 import { colorForKey } from '../scene/palette'
 import { isVerified } from '../data/verified'
+import { T } from '../ui/strings'
+import { CAMERA_PRESETS } from '../scene/camera'
+import { stepMarks } from '../ui/marks'
 import type { VerifiedKey } from '../data/schema'
+import type { Universe } from '../data'
 import type { Stage, StageValues, Step } from './types'
 
 const ctx = makeTextContext(universe)
 const steps = LEVELS.flatMap((l) => l.steps)
 const PRESETS = ['sky', 'overview', 'tw', 'us', 'exchange', 'exchangeWide', 'exchangeSide', 'plaza', 'plazaNear', 'underground']
+
+/** 測試用：把指定產品的查證旗標清空（模擬「資料尚待查證」），驗證 ？ 的判斷邏輯仍然有效 */
+const unverify = (ids: string[]): Universe => {
+  const m = new Map(universe)
+  for (const id of ids) m.set(id, { ...m.get(id)!, verified: {} })
+  return m
+}
 
 const byId = (id: string): Step => steps.find((s) => s.id === id)!
 /** 大數字跟著即時拉桿值；測試預設用進入該步驟時的值 */
@@ -136,8 +149,9 @@ describe('LEVELS', () => {
     const SOURCES: Record<string, [string, VerifiedKey][]> = {
       'f-4': [['ALLIANZ_INCOME_GROWTH', 'holdings']],
       'f-5': [['JH_BALANCED', 'fees.expenseRatio']],
+      'f-6': [['SCHRODER_GLOBAL_INCOME_BOND', 'fees.expenseRatio'], ['SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD', 'fees.expenseRatio'], ['SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD', 'fees.cdsc']],
       'e-3': [['0050', 'holdings']],
-      'e-5': [['QQQ', 'fees.expenseRatio']],
+      'e-5': [['0050', 'fees.expenseRatio'], ['JH_BALANCED', 'fees.expenseRatio']],
       'c-2': [['0050', 'holdings']],
       'c-3': [['QQQ', 'holdings'], ['SPY', 'holdings']],
       'u-2': [['0050', 'holdings']],
@@ -150,6 +164,47 @@ describe('LEVELS', () => {
       expect(src, `${s.id}: list its data source or mark it`).toBeDefined()
       for (const [id, key] of src!) expect(isVerified(universe.get(id)!, key), `${s.id}: ${id} ${key}`).toBe(true)
     }
+  })
+
+  it('marks ？ on every step whose numbers come from unverified holdings (user test: f-2 had no mark)', () => {
+    // 獨立的記錄器（不用 marks.ts 的 holdingsSources，免得自己驗自己）：記下每一步的文字用了哪些產品的持股
+    const used = (s: Step): Set<string> => {
+      const seen = new Set<string>()
+      const rec = new Proxy(ctx, {
+        get: (t, k: keyof typeof ctx) => {
+          const f = t[k] as (...a: never[]) => unknown
+          return (...a: never[]) => {
+            if (k === 'weightPct' || k === 'assetClassPct' || k === 'sectorPct' || k === 'shock') seen.add(String(a[0]))
+            if (k === 'overlapShared') { seen.add(String(a[0])); seen.add(String(a[1])) }
+            return f(...a)
+          }
+        },
+      })
+      const values = { ...DEFAULT_VALUES, ...s.scene.values }
+      const texts = [s.line, s.more, s.fallbackLine, s.fallbackMore, ...(s.callouts ?? []).flatMap((c) => [c.title, c.sub])]
+      for (const t of texts) if (typeof t === 'function') t(rec)
+      s.bigNumber?.(rec, values)
+      return seen
+    }
+    // 目前快照的持股都已查證；為了讓這道防線繼續有效，把基金（f-2、f-4）和 0050（e-3、c-2、u-2）的持股旗標清空再檢查一次。
+    // 不用手動宣告：stepMarks 從步驟文字實際用到的資料自己推出來（r5 之前只有 f-2、f-4 宣告了 holdingsFrom）
+    const stale = unverify(['JH_BALANCED', 'ALLIANZ_INCOME_GROWTH', '0050'])
+    let checked = 0
+    for (const s of steps) {
+      for (const id of used(s)) {
+        const a = stale.get(id)
+        if (a && !isVerified(a, 'holdings')) {
+          checked++
+          expect(stepMarks(s, stale), `${s.id}: shows numbers from ${id} holdings, which are unverified`).toContain('unverified')
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(0)
+    for (const id of ['f-2', 'f-4', 'e-3', 'c-2', 'u-2']) expect(stepMarks(byId(id), stale), id).toContain('unverified')
+    // 沒用到持股的步驟不會多出 ？
+    expect(stepMarks(byId('e-1'), stale)).not.toContain('unverified')
+    // 真實快照：持股都已查證 → 沒有 ？
+    for (const id of ['f-2', 'f-4', 'e-3', 'c-2', 'u-2']) expect(stepMarks(byId(id), universe), id).not.toContain('unverified')
   })
 
   it('exposes the assumed front-load fee only on steps marked ✎', () => {
@@ -237,21 +292,26 @@ describe('LEVELS', () => {
     expect(lineOf(c2, ctx)).toContain('跌約 **16.9%**') // |−0.3 × 56.31%| = 16.893%，句子已說「跌」所以用絕對值
     expect(lineOf(c2, ctx)).not.toContain('−')
     expect(moreOf(c2, ctx)).toContain('約 −16.9%')
-    expect(bigOf(c2)!.value).toBe('−16.9%')
-    expect(bigOf(byId('f-5'))!.value).toBe('1.88%') // JH_BALANCED expenseRatio 0.0188
-    expect(bigOf(byId('e-5'))!.value).toBe('0.18%') // QQQ expenseRatio 0.0018
+    expect(bigOf(c2)!.value).toBe('跌 16.9%') // r3：大數字的負號太細，看成正的 → 用字說「跌」
+    expect(bigOf(byId('f-5'))!.value).toBe('18,800 元') // JH_BALANCED expenseRatio 0.0188 × 1,000,000（r6：穩定的元，不是會跳的累計）
+    expect(bigOf(byId('f-5'))!.note).toContain('1.88%')
+    // e-5：100 萬放一年要扣的錢＝內扣費用 × 1,000,000（r5：只有 0.18% 沒感覺）
+    expect(bigOf(byId('e-5'))!.value).toBe('1,400 元') // 0050 expenseRatio 0.0014 × 1,000,000 = 1,400
+    expect(lineOf(byId('e-5'), ctx)).toContain('18,800 元') // JH_BALANCED expenseRatio 0.0188 × 1,000,000 = 18,800
     expect(bigOf(byId('c-3'))!.value).toBe(`至少 ${(overlap(universe, 'QQQ', 'SPY').total * 100).toFixed(1)}%`)
-    expect(bigOf(byId('s-6'))!).toEqual({ value: '100', label: '方塊 95 ＋ 金幣 5', mark: 'illustrative' }) // EXDIV 100 − 5 + 5
-    // 跟著即時時間軸，但只到配發那一刻（之後的填息不算）：配發前 100 ＋ 0，配發後 95 ＋ 5，合計永遠 100
-    expect(bigOf(byId('s-6'), { phase: 0 })).toEqual({ value: '100', label: '方塊 100 ＋ 金幣 0', mark: 'illustrative' })
+    // s-5 跟著即時時間軸，但只到配發那一刻（之後的填息不算）：配發前 100 ＋ 0，配發那一刻 95 ＋ 5，合計永遠 100
+    expect(bigOf(byId('s-5'))).toEqual({ value: '100', label: '方塊 100＋金幣 0', mark: 'illustrative' })
+    expect(bigOf(byId('s-5'), { phase: EXDIV_AFTER_PHASE })).toEqual({ value: '100', label: '方塊 95＋金幣 5', mark: 'illustrative' }) // EXDIV 100 − 5 + 5
     for (let i = 0; i <= 20; i++) {
       const phase = i * 0.05
-      const bn = bigOf(byId('s-6'), { phase })!
+      const bn = bigOf(byId('s-5'), { phase })!
       expect(bn.value, `phase ${phase}`).toBe('100')
       const [block, coins] = (bn.label.match(/\d+/g) ?? []).map(Number)
       expect(block! + coins!, `phase ${phase}: ${bn.label}`).toBe(100)
+      expect(bn.label, `never 100 ＋ 5 (phase ${phase})`).not.toBe('方塊 100＋金幣 5')
     }
-    expect(lineOf(byId('s-6'), ctx)).toBe('**配息|coin**那刻：方塊＋金幣＝**不變**') // 配息用金幣色（3b1b 顏色連結）
+    expect(lineOf(byId('s-5'), ctx)).toContain('**金幣|coin**') // 金幣用金幣色（3b1b 顏色連結）
+    expect(lineOf(byId('s-5'), ctx)).toContain('**不變**')
   })
 
   it('says 配息來自本金 only on the illustrative principal-trap step', () => {
@@ -266,6 +326,20 @@ describe('LEVELS', () => {
 
   it('gives every step its own scene object so the camera sequence always bumps', () => {
     expect(new Set(steps.map((s) => s.scene)).size).toBe(steps.length)
+  })
+
+  it('every 至少 big number explains in plain words why it is only a lower bound (r2)', () => {
+    let n = 0
+    for (const s of steps) {
+      const bn = bigOf(s)
+      if (!bn?.value.startsWith('至少')) continue
+      n++
+      expect(bn.note, s.id).toBeDefined()
+      expect(bn.note!, s.id).toContain('實際更多')
+      expect(Array.from(bn.note!).length, s.id).toBeLessThanOrEqual(14)
+      expect(jargonIn(bn.note!), s.id).toEqual([])
+    }
+    expect(n).toBe(2) // c-3、u-2
   })
 
   it('u-2 says the semiconductor share is a lower bound', () => {
@@ -294,8 +368,340 @@ describe('LEVELS', () => {
       expect(er('QQQ'), f.id).toBeLessThan(f.fees!.expenseRatio!)
       expect(er('SPY'), f.id).toBeLessThan(f.fees!.expenseRatio!)
     }
-    expect(moreOf(byId('f-4'), ctx)).toContain('32%')
-    expect(bigOf(byId('f-4'))!.value).toBe('可轉債 32%') // pct0(31.98)
+    expect(moreOf(byId('f-4'), ctx)).toContain('32%') // 可轉債 pct0(31.98)，只在多說一點
     expect(moreOf(byId('e-3'), ctx)).toContain('7%') // 2454: pct0(6.71)
+  })
+})
+
+describe('control ranges and the dividend steps (user test r1)', () => {
+  const ranged = (s: Step) => (s.controls ?? []).map((c) => [c, controlRange(s, c)] as const)
+
+  it('keeps every entry value and gate inside the step control range, and gates need a drag', () => {
+    for (const s of steps) {
+      for (const [c, [lo, hi]] of ranged(s)) {
+        expect(lo, `${s.id}:${c}`).toBeLessThan(hi)
+        if (c === 'slice' || c === 'explode') {
+          const start = (c === 'slice' ? s.scene.slice : s.scene.explode) ?? 0
+          expect(start, `${s.id}:${c}`).toBeGreaterThanOrEqual(lo)
+          expect(start, `${s.id}:${c}`).toBeLessThanOrEqual(hi)
+        } else {
+          const start = { ...DEFAULT_VALUES, ...s.scene.values }[c]
+          expect(start, `${s.id}:${c}`).toBeGreaterThanOrEqual(lo)
+          expect(start, `${s.id}:${c}`).toBeLessThanOrEqual(hi)
+        }
+      }
+      if (s.until) {
+        const [lo, hi] = controlRange(s, s.until.control)
+        expect(s.until.min, s.id).toBeGreaterThan(lo)
+        expect(s.until.min, s.id).toBeLessThanOrEqual(hi)
+      }
+    }
+  })
+
+  it('s-5 is the one drag step: the timeline stops at the payout moment and the card and the 3D tags always agree', () => {
+    const s5 = byId('s-5')
+    expect(s5.title).toBe('發金幣那一刻')
+    expect(controlRange(s5, 'phase')).toEqual([0, EXDIV_AFTER_PHASE])
+    expect(s5.scene.values?.phase).toBe(0)
+    expect(s5.until).toEqual({ control: 'phase', min: EXDIV_AFTER_PHASE }) // 要拉到發金幣那一刻
+    for (let i = 0; i <= 10; i++) {
+      const phase = (i / 10) * EXDIV_AFTER_PHASE
+      const e = exDivTimeline(phase, 'fill') // 3D 舞台用同一條時間軸
+      const bn = bigOf(s5, { phase })!
+      expect(bn.label, `phase ${phase}`).toBe(`方塊 ${e.blockValue.toFixed(0)}＋金幣 ${e.cash.toFixed(0)}`)
+    }
+  })
+
+  it('has only two coin steps in a row (s-5, s-6), then the bond chapter', () => {
+    const ids = steps.map((s) => s.id)
+    const coin = steps.filter((s) => s.scene.stage?.kind === 'exdiv').map((s) => s.id)
+    expect(coin).toEqual(['s-5', 's-6'])
+    expect(ids.slice(ids.indexOf('s-5'), ids.indexOf('s-5') + 3)).toEqual(['s-5', 's-6', 'b-1'])
+  })
+
+  it('s-6 shows the result without another drag: set-up in the line, one number on the card (r3)', () => {
+    const s6 = byId('s-6')
+    expect(s6.title).toBe('方塊沒長回來')
+    expect(s6.controls).toBeUndefined()
+    expect(s6.until).toBeUndefined()
+    const line = stripMarkup(lineOf(s6, ctx))
+    expect(line).toContain('有時會長回來') // 先說「會長回來」是可能的（不說「通常」：那不是事實保證）
+    expect(line).toContain('這次沒有') // 結果
+    // 95 ＋ 5 之後貼息到 92：合起來 97，比 100 少 3。卡片只放一個數字
+    const bn = bigOf(s6)!
+    expect(bn).toMatchObject({ value: '少 3', colorKey: 'loss', mark: 'illustrative' })
+    expect(bn.label.match(/\d/g)).toBeNull() // 標籤裡沒有別的數字
+    expect(bn.fraction).toBeUndefined()
+    // 唯一的算式放在多說一點
+    expect(moreOf(s6, ctx)).toContain('方塊 92＋金幣 5＝97')
+  })
+
+  it('keeps 除息／填息／貼息 out of titles and lines (多說一點 only)', () => {
+    for (const s of steps) for (const w of ['除息', '填息', '貼息']) {
+      expect(s.title.includes(w), `${s.id}: ${w}`).toBe(false)
+      expect(lineOf(s, ctx).includes(w), `${s.id}: ${w}`).toBe(false)
+    }
+  })
+
+  it('the laser steps look at the cut from an angle, not straight along the cut axis (r2: only a pink frame)', () => {
+    // 鏡頭若正對切割軸，切掉的是靠近鏡頭那一面：剩下的方塊看起來一模一樣，只多一個粉紅框
+    const AXIS = { x: [1, 0, 0], z: [0, 0, 1], y: [0, 1, 0] } as const
+    for (const s of steps) {
+      if (!(s.controls?.includes('slice') || (s.scene.slice ?? 0) > 0)) continue
+      const p = CAMERA_PRESETS[s.scene.camera]
+      const d = p.position.map((v, i) => v - p.target[i]!)
+      const len = Math.hypot(...d)
+      const axis = AXIS[(s.scene.sliceAxis ?? 'x') as keyof typeof AXIS]
+      const along = Math.abs(d.reduce((sum, v, i) => sum + v * axis[i]!, 0)) / len
+      expect(along, s.id).toBeLessThanOrEqual(0.85)
+      expect(along, s.id).toBeGreaterThanOrEqual(0.3) // 也要看得到切面
+    }
+  })
+
+  it('e-2 caps the laser so part of 0050 always remains', () => {
+    const [, hi] = controlRange(byId('e-2'), 'slice')
+    expect(hi).toBeLessThanOrEqual(0.6)
+  })
+})
+
+
+describe('jargon diet (user test r1)', () => {
+  const NICK = T.nick as Record<string, string>
+  const labelsOf = (s: Step): string[] => {
+    const out = [s.title, stripMarkup(lineOf(s, ctx))]
+    const bn = bigOf(s)
+    if (bn) out.push(bn.label)
+    for (const c of s.callouts ?? []) out.push(resolve(c.title)!)
+    return out
+  }
+
+  it('keeps jargon out of titles, lines, big-number labels and callout titles', () => {
+    for (const s of steps) for (const t of labelsOf(s)) expect(jargonIn(t), `${s.id}: ${t}`).toEqual([])
+  })
+
+  it('introduces 0050, QQQ and SPY by nickname the first time a line names them', () => {
+    for (const code of Object.keys(NICK)) {
+      const first = steps.find((s) => stripMarkup(lineOf(s, ctx)).includes(code))
+      if (!first) continue // 一句話從沒提到（例如 SPY 只出現在 3D 標籤，標籤一律用暱稱）
+      expect(stripMarkup(lineOf(first!, ctx)), `${first!.id}: ${code}`).toContain(NICK[code])
+    }
+  })
+
+  it('renames s-4 and drops the frontLoad slider from f-6', () => {
+    expect(byId('s-4').title).toBe('有的晃很兇')
+    expect(byId('f-6').controls).toEqual(['years'])
+    expect(byId('f-6').mark).toBe('assumption') // 預設的前收手續費仍是假設值
+  })
+
+  it('b-2 ranks the three bonds on the stage; b-3 stresses them', () => {
+    expect(byId('b-2').scene.stage).toEqual({ kind: 'bonds', stressed: false, ranks: true })
+    expect(byId('b-3').scene.stage).toMatchObject({ kind: 'bonds', stressed: true })
+  })
+
+  it('names the two biggest layers on f-2 (after the explode) and e-1', () => {
+    const top2 = (productId: string) =>
+      [...universe.get(productId)!.holdings!].sort((a, b) => b.weightPct - a.weightPct).slice(0, 2).map((h) => h.id)
+    for (const id of ['f-2', 'e-1']) {
+      const s = byId(id)
+      const anchors = (s.callouts ?? []).map((c) => (c.anchor.kind === 'holding' ? c.anchor.holdingId : ''))
+      expect(anchors.sort(), id).toEqual(top2(s.scene.product!).sort())
+    }
+    for (const c of byId('f-2').callouts!) expect(c.when, 'f-2 shows names once the tower is apart').toEqual(byId('f-2').until)
+  })
+
+  it('f-2 names every layer through its two labels: 股票方塊 (incl. the big companies below) and 借據 (r3: 30% + 38% = 68%, the rest?)', () => {
+    const f2 = byId('f-2')
+    expect((f2.callouts ?? []).map((c) => resolve(c.title))).toEqual(['股票方塊', '借據'])
+    const subs = (f2.callouts ?? []).map((c) => resolve(c.sub)!)
+    expect(subs[0]).toContain(`約 ${pct0(ctx.assetClassPct('JH_BALANCED', 'stock'))}%`) // 64.08 → 64
+    expect(subs[0]).toContain('輝達')
+    expect(subs[1]).toBe(`約 ${pct0(ctx.assetClassPct('JH_BALANCED', 'bond'))}%`) // 33.86 → 34
+    for (const t of [...subs, stripMarkup(lineOf(f2, ctx))]) expect(t).not.toContain('美股')
+  })
+
+  it('f-4 is purely visual: another 怪手 picked a different tower (股票 vs 借據), no jargon on screen', () => {
+    const f4 = byId('f-4')
+    const onScreen = [f4.title, stripMarkup(lineOf(f4, ctx)), ...(f4.callouts ?? []).flatMap((c) => [resolve(c.title)!, resolve(c.sub) ?? ''])]
+    for (const t of onScreen) expect(t, t).not.toMatch(/可轉債|高收益債|多重資產|安聯|平衡|檔|同名/)
+    expect(stripMarkup(lineOf(f4, ctx))).toContain('股票＋借據') // 事實：股票＋借據（不說它是平衡型）
+    expect(stripMarkup(lineOf(f4, ctx))).toContain('比例差很多')
+    // 另一位經理人：怪手換顏色、標註寫「另一位經理人」（r3：怪手一模一樣，不信是另一台）
+    expect(f4.scene.stage).toEqual({ kind: 'excavator', meter: false, other: true })
+    expect(T.excavatorOther).toContain('另一位經理人')
+    expect(f4.bigNumber).toBeUndefined()
+    // 亮的＝借據（所有債券層），暗的＝股票
+    const bonds = universe.get('ALLIANZ_INCOME_GROWTH')!.holdings!.filter((h) => ['convertible', 'highYieldBond', 'govBond', 'corpBond', 'bondMixed'].includes(universe.get(h.id)!.type)).map((h) => h.id)
+    expect([...(f4.focus?.holdings ?? [])].sort()).toEqual(bonds.sort())
+    expect((f4.callouts ?? []).map((c) => resolve(c.title))).toEqual(['股票', '借據'])
+    // 副標的百分比從資料加總：股票約 32%、借據約 62%
+    expect((f4.callouts ?? []).map((c) => resolve(c.sub))).toEqual([
+      `約 ${pct0(ctx.assetClassPct('ALLIANZ_INCOME_GROWTH', 'stock'))}%`,
+      `約 ${pct0(ctx.assetClassPct('ALLIANZ_INCOME_GROWTH', 'bond'))}%`,
+    ])
+    expect((f4.callouts ?? []).map((c) => resolve(c.sub))).toEqual(['約 32%', '約 62%'])
+    // 細節留在多說一點
+    expect(moreOf(f4, ctx)).toContain('可轉債')
+    expect(moreOf(f4, ctx)).toContain('高收益債')
+  })
+
+  it('f-6 shows only the two fund towers: 0050 is not named before the ETF chapter', () => {
+    expect(byId('f-6').scene.stage).toMatchObject({ kind: 'feeRace', etf: false })
+    const firstEtf = steps.findIndex((s) => s.id === 'e-1')
+    for (const s of steps.slice(0, firstEtf)) {
+      const texts = [s.title, lineOf(s, ctx), moreOf(s, ctx), resolve(s.fallbackLine), resolve(s.fallbackMore), ...(s.callouts ?? []).flatMap((c) => [resolve(c.title), resolve(c.sub)])]
+      for (const t of texts) if (t !== undefined) expect(t.includes('0050'), `${s.id}: ${t}`).toBe(false)
+    }
+  })
+
+  it('f-6 carries ✎ assumption and ？ unverified (from the data), once each', () => {
+    // 內扣費用已查證（2026-10）→ 只剩 ✎；旗標清空時 ？ 仍會出現
+    expect(stepMarks(byId('f-6'), universe)).toEqual(['assumption'])
+    expect(stepMarks(byId('f-6'), unverify(['SCHRODER_GLOBAL_INCOME_BOND', 'SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD']))).toEqual(['assumption', 'unverified'])
+    expect(stepMarks(byId('s-5'), universe)).toEqual(['illustrative'])
+    expect(stepMarks(byId('p-1'), universe)).toEqual([])
+  })
+
+  it('f-6 tells the whole fee-door story in one step (r3: f-6/f-7 looked the same and both asked for the same drag)', () => {
+    const f6 = byId('f-6')
+    expect(steps.some((s) => s.id === 'f-7')).toBe(false)
+    expect(LEVELS.find((l) => l.id === 'fund')!.steps.map((s) => s.id)).toEqual(['f-1', 'f-2', 'f-3', 'f-4', 'f-5', 'f-6', 'f-8', 'f-9'])
+    expect(f6.title).toBe('進門費、出門費')
+    expect(f6.controls).toEqual(['years'])
+    expect(f6.scene.stage).toEqual({ kind: 'feeRace', etf: false })
+    expect(f6.scene.values?.years).toBe(0)
+    expect(f6.until).toEqual({ control: 'years', min: 3 }) // 出門費滿 3 年歸零
+    const line = stripMarkup(lineOf(f6, ctx))
+    for (const w of ['前收', '進門', '後收', '出門']) expect(line, w).toContain(w)
+    expect(stripMarkup(resolve(f6.fallbackLine)!)).not.toMatch(/^拖/) // 文字版沒有拉桿
+    // 大數字＝後收「現在賣」要付的出門費，100 萬為底、單位萬（跟 3D 的出門費標籤同一個數字）
+    expect(bigOf(f6, { years: 0 })).toMatchObject({ value: '3 萬', colorKey: 'loss', fraction: 1 }) // 100 × 3%
+    expect(bigOf(f6, { years: 1 })!.value).toBe('2 萬') // 賣前 97.911 × 2% = 1.958
+    expect(bigOf(f6, { years: 2 })!.value).toBe('1 萬') // 賣前 95.866 × 1% = 0.959
+    expect(bigOf(f6, { years: 3 })).toMatchObject({ value: '0 萬', fraction: 0 })
+    for (let y = 0; y <= 10; y += 0.5) expect(bigOf(f6, { years: y })!.value, `year ${y}`).toBe(wan(ctx.fundFeeRows(y, DEFAULT_VALUES.frontLoad)[1]!.exit))
+    expect(bigOf(f6)!.label).not.toMatch(/0%|免費/)
+    // 多說一點的數字從資料算：出門費 cdsc[0] = 3%、滿 3 年歸零；前收手續費是預設的假設值 1.5%
+    expect(moreOf(f6, ctx)).toContain('出門費 3%')
+    expect(moreOf(f6, ctx)).toContain('滿 3 年不收')
+    expect(moreOf(f6, ctx)).toContain('假設 1.5%')
+  })
+
+  it('the fund chapter talks in 萬 on a 100-萬 base, like the fee meter (r3: 100 萬 then 100 元)', () => {
+    expect(T.feeMeter.base).toContain('100 萬')
+    expect(T.towers.base).toBe(T.feeMeter.base)
+    expect(T.towers.baseDemo).toContain('100 萬')
+    expect(T.towers.value(98.5)).toBe('98.5 萬')
+    expect(T.towers.coins(107.46)).toBe('領到的金幣 107.5 萬')
+    expect(T.readout.remaining(88.24)).toBe('剩 88.2 萬')
+    const fund = LEVELS.find((l) => l.id === 'fund')!
+    // f-5 的大數字刻意用元（r6：「100 萬一年約扣 18,800 元」，和 e-5 同一檔基金同一算法）；其餘仍用萬
+    for (const s of fund.steps.filter((x) => x.id !== 'f-5')) {
+      const texts = [lineOf(s, ctx), moreOf(s, ctx), resolve(s.fallbackLine), resolve(s.fallbackMore), bigOf(s)?.value, bigOf(s)?.label]
+      for (const t of texts) if (t !== undefined) expect(t, s.id).not.toMatch(/\d\s*元/)
+    }
+  })
+
+  it('c-3 says plainly that both boxes hold the same companies', () => {
+    expect(stripMarkup(lineOf(byId('c-3'), ctx))).toContain('一樣的公司')
+  })
+
+  it('u-6 ends with a four-line recap and calls the sandbox 自由玩', () => {
+    const u6 = byId('u-6')
+    expect(u6.recap).toHaveLength(4)
+    for (const r of u6.recap!) {
+      expect(r.icon.length).toBeGreaterThan(0)
+      expect(Array.from(r.text).length, r.text).toBeLessThanOrEqual(18)
+      expect(forbiddenWordsIn(r.text)).toEqual([])
+    }
+    expect(T.finish).toBe('自由玩')
+    for (const s of steps) for (const t of [lineOf(s, ctx), moreOf(s, ctx), resolve(s.fallbackLine), resolve(s.fallbackMore)]) {
+      if (t !== undefined) expect(t.includes('沙盒'), s.id).toBe(false)
+    }
+  })
+})
+
+describe('ROUTES', () => {
+  const order = steps.map((s) => s.id)
+  it('full walks every step', () => {
+    expect(ROUTES.full).toBeNull()
+  })
+  it('simple is the 17 kept steps, each one exists, in course order', () => {
+    const simple = ROUTES.simple!
+    expect(simple).toEqual(['p-1', 'p-2', 's-1', 's-2', 's-3', 'b-1', 'b-3', 'f-1', 'f-5', 'f-9', 'e-1', 'e-2', 'e-3', 'e-5', 'c-1', 'c-2', 'u-6'])
+    for (const id of simple) expect(order, id).toContain(id)
+    const idx = simple.map((id) => order.indexOf(id))
+    expect([...idx].sort((a, b) => a - b)).toEqual(idx)
+    expect(new Set(simple).size).toBe(simple.length)
+  })
+  it('simple ends with the recap step, and every chapter keeps at least one step', () => {
+    expect(byId(ROUTES.simple!.at(-1)!).recap).toBeDefined()
+    for (const l of LEVELS) expect(l.steps.some((s) => ROUTES.simple!.includes(s.id)), l.id).toBe(true)
+  })
+})
+
+describe('simple route copy stands on its own (no reference to a dropped step)', () => {
+  it('b-3 says what 高收益債 is (b-2 that explained the three kinds is dropped)', () => {
+    expect(moreOf(byId('b-3'), ctx)).toContain('高收益債＝')
+  })
+  it('f-9 says what 配息 is (s-5 and f-8 are dropped) and its line names 配息', () => {
+    expect(moreOf(byId('f-9'), ctx)).toContain('配息＝')
+    expect(lineOf(byId('f-9'), ctx)).toContain('配息')
+  })
+  it('u-6 does not claim the whole course was finished', () => {
+    expect(moreOf(byId('u-6'), ctx)).not.toContain('全部')
+    expect(resolve(byId('u-6').fallbackMore)).not.toContain('全部')
+  })
+})
+
+describe('simple route user test r5', () => {
+  it('f-9 makes the trap visible: the big number is the part of the payout that was your own principal', () => {
+    const f9 = byId('f-9')
+    const at = (periods: number) => bigOf(f9, { periods })!
+    // TRAP_DEMO：產出 3%、配 6%，20 年後塔剩 100 × 0.97^20 = 54.38；配出超過產出的部分＝100 − 54.38 = 45.62
+    const st = principalTrap(20)
+    expect(st.fromPrincipal).toBeCloseTo(100 - st.value, 9)
+    expect(at(20).value).toBe(wan(st.fromPrincipal))
+    expect(at(20).value).toBe('45.6 萬')
+    expect(at(20).colorKey).toBe('loss')
+    expect(at(20).mark).toBe('illustrative')
+    expect(at(10).value).toBe(wan(principalTrap(10).fromPrincipal)) // 跟著拉桿
+    expect(at(20).label).toContain('本金')
+    // 一句話：拖拉桿的動作詞開頭，意思是「領的錢有一部分是你的本金」
+    expect(stripMarkup(lineOf(f9, ctx))).toContain('本金')
+    // 不說成「賠錢」：示意基金每年真的產出 3%，總數本來就比 100 多（領到的錢裡，一部分是賺的、一部分是本金）
+    for (const t of [lineOf(f9, ctx), moreOf(f9, ctx)]) for (const w of ['賠', '虧']) expect(t, w).not.toContain(w)
+  })
+
+  it('f-9 hides the big number until the slider moves (r6: 「0 萬，領的錢裡是你的本金」 is unreadable)', () => {
+    expect(bigOf(byId('f-9'), { periods: 0 })).toBeUndefined()
+    expect(bigOf(byId('f-9'), { periods: 20 })).toBeDefined()
+  })
+
+  it('f-9: the coin pile label says how much of it came from principal (3D)', () => {
+    const st = principalTrap(20)
+    const t = trapTowerSpec(st)
+    expect(t.coins).toBe(st.cashReceived)
+    expect(t.coinsSub).toBe(`其中 ${wan(st.fromPrincipal)}是本金`)
+    expect(towerTexts(t)).toContain(t.coinsSub)
+    expect(trapTowerSpec(principalTrap(0)).coinsSub).toBeUndefined() // 還沒領，不寫
+  })
+
+  it('e-5 compares 0050 with the fund from f-5 in yuan per 100 萬 per year, and keeps the caveat', () => {
+    const e5 = byId('e-5')
+    const yuan = (id: string) => `${Math.round(ctx.expenseRatio(id)! * 1_000_000).toLocaleString('zh-TW')} 元`
+    expect(bigOf(e5)!.value).toBe(yuan('0050'))
+    expect(lineOf(e5, ctx)).toContain(yuan(byId('f-5').scene.product!))
+    expect(stripMarkup(lineOf(e5, ctx))).toContain('100 萬')
+    expect(bigOf(e5)!.note).toContain('不代表比較好')
+    expect(e5.scene.product).toBe('0050')
+    for (const t of [e5.title, stripMarkup(lineOf(e5, ctx)), bigOf(e5)!.label]) for (const code of ['QQQ', 'SPY']) expect(t).not.toContain(code)
+    expect(moreOf(e5, ctx)).toContain('QQQ')
+  })
+
+  it('b-1 says 固定給 instead of 滴, everywhere a learner reads it', () => {
+    expect(stripMarkup(lineOf(byId('b-1'), ctx))).toContain('固定給')
+    for (const s of steps) for (const t of [s.title, lineOf(s, ctx), moreOf(s, ctx), resolve(s.fallbackLine), resolve(s.fallbackMore), ...(s.recap ?? []).map((r) => r.text)]) {
+      if (t !== undefined) expect(t.includes('滴'), `${s.id}: ${t}`).toBe(false)
+    }
   })
 })

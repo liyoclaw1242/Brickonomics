@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  blocksFor, towerVoxels, exDivTimeline, accumulateVsPayout, principalTrap,
+  blocksFor, towerVoxels, exDivTimeline, exDivBands, exDivLabels, HELD_SCALE, accumulateVsPayout, principalTrap,
   illustrativeTicks, layerCentroid, damageFromShocks,
 } from './stages'
 import { stackVoxels } from './voxels'
@@ -90,5 +90,42 @@ describe('damageFromShocks', () => {
   it('turns negative shocks into knock-out fractions and ignores gains', () => {
     expect(damageFromShocks({ '2330': -0.3, NVDA: 0.2 })).toEqual({ '2330': 0.3 })
     expect(damageFromShocks({ X: -1.5 })).toEqual({ X: 1 })
+  })
+})
+
+describe('exDivBands (what the block lost, drawn above it)', () => {
+  it('before the payout nothing is missing', () => {
+    expect(exDivBands(100, 0)).toEqual({ gold: null, red: null })
+  })
+  it('at the payout the gold band is exactly the coins: 95 → 100', () => {
+    expect(exDivBands(95, 5)).toEqual({ gold: [95, 100], red: null })
+  })
+  it('when the block does not grow back, the red band is the extra loss: 92 → 95', () => {
+    expect(exDivBands(92, 5)).toEqual({ gold: [95, 100], red: [92, 95] })
+  })
+  it('when the block grows back the gold band shrinks', () => {
+    expect(exDivBands(97.5, 5)).toEqual({ gold: [97.5, 100], red: null })
+    expect(exDivBands(100, 5)).toEqual({ gold: null, red: null })
+  })
+})
+
+describe('exDivLabels (r3: s-6 had 97, 92, 5 and 3 in three places)', () => {
+  it('s-5 (fill, up to the payout) names the parts with their numbers', () => {
+    expect(exDivLabels('fill', 0)).toEqual({ block: '方塊 100', coins: '金幣 0' })
+    expect(exDivLabels('fill', 0.5)).toEqual({ block: '方塊 95', coins: '金幣 5' })
+  })
+
+  it('s-6 (gap) shows one number only: the red tag 少了 3; the parts are just named', () => {
+    expect(exDivLabels('gap', 1)).toEqual({ block: '方塊', coins: '金幣', lost: '少了 3' }) // 95 − 92
+    expect(exDivLabels('gap', 0.75)).toEqual({ block: '方塊', coins: '金幣', lost: '少了 2' }) // 95 − 93.5 = 1.5 → 2
+  })
+})
+
+describe('HELD_SCALE (r3: 公司變值錢 — the block only grew a little)', () => {
+  it('grows and shrinks the held block clearly (edge ×1.7 ≈ 5× the volume)', () => {
+    expect(HELD_SCALE.up).toBeGreaterThanOrEqual(1.6)
+    expect(HELD_SCALE.down).toBeLessThanOrEqual(0.6)
+    expect(HELD_SCALE.still).toBe(1)
+    expect(HELD_SCALE.shake).toBe(1)
   })
 })

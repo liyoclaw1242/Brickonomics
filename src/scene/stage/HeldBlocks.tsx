@@ -5,13 +5,18 @@ import type { Mesh } from 'three'
 import { universe } from '../../data'
 import type { HeldItem } from '../../tour/types'
 import { approach, MAX_FRAME_DT } from '../layout/voxels'
+import { HELD_SCALE } from '../layout/stages'
+import { Edges } from '@react-three/drei'
+import { useThemeStore } from '../../store/theme'
+import { THEMES } from '../theme'
 import { lookFor } from '../palette'
 import { acquire } from '../continuous'
 import { atPlaza } from './plaza'
+import { displayName } from '../../ui/names'
 
 const SIZE = 2.4
 const SPACING = 7
-const TARGET_SCALE = { still: 1, up: 1.3, down: 0.7, shake: 1 } as const
+const TARGET_SCALE = HELD_SCALE
 
 function HeldBlock({ item, x }: { item: HeldItem; x: number }) {
   const ref = useRef<Mesh>(null)
@@ -19,6 +24,7 @@ function HeldBlock({ item, x }: { item: HeldItem; x: number }) {
   const look = lookFor(asset)
   const invalidate = useThree((st) => st.invalidate)
   const release = useRef<(() => void) | null>(null)
+  const line = THEMES[useThemeStore((st) => st.theme)].calloutLine
   // 動作改變（或剛掛載）時要重新開始畫；卸載時歸還持續繪製登記
   useEffect(() => {
     invalidate()
@@ -54,7 +60,16 @@ function HeldBlock({ item, x }: { item: HeldItem; x: number }) {
         <boxGeometry args={[SIZE, SIZE, SIZE]} />
         <meshStandardMaterial color={look.color} emissive={item.motion === 'up' ? look.color : '#000000'} emissiveIntensity={item.motion === 'up' ? 0.25 : 0} />
       </mesh>
-      <Callout anchor={[0, SIZE * 1.3, 0]} offset={[0, SIZE * 0.7, 0]} title={asset.name} marks={item.motion !== 'still' ? ['illustrative'] : undefined} persistent={item.motion !== 'still'} />
+      {/* 原來大小的虛線框：變大、變小有個比較的基準（r3：只大一點點看不出來）；不被方塊擋住 */}
+      {(item.motion === 'up' || item.motion === 'down') && (
+        <mesh position={[0, SIZE / 2, 0]}>
+          <boxGeometry args={[SIZE, SIZE, SIZE]} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+          <Edges color={line} depthTest={false} renderOrder={5} lineWidth={1.5} dashed dashSize={0.25} gapSize={0.18} />
+        </mesh>
+      )}
+      {/* 標註放在方塊前方的地上（鏡頭從上往下看，放頭頂會蓋住方塊）；示意標示只在面板標題旁出現一次 */}
+      <Callout anchor={[0, 0.1, (SIZE * TARGET_SCALE[item.motion]) / 2]} offset={[0, -0.3, 1.6]} title={displayName(universe, item.assetId)} persistent={item.motion !== 'still'} />
     </group>
   )
 }

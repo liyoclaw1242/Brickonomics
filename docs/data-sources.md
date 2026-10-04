@@ -7,24 +7,25 @@
 | 資產 | 欄位 | 數值 | 狀態 | 來源（資料日） | 查證日 |
 |---|---|---|---|---|---|
 | QQQ | expenseRatio | 0.18%（原 0.20%，已更正） | 已驗證 | https://www.invesco.com/us/financial-products/etfs/product-detail?audienceType=Investor&ticker=QQQ （Invesco 官網，2026-06-30）；https://www.invesco.com/qqq-etf/en/performance.html | 2026-10-03 |
-| QQQ | distribution.frequency | 季配 | 查無（官方） | Invesco 官網產品頁與績效頁皆未載明配息頻率；僅第三方（stockanalysis 等）顯示為季配，不採為已驗證 | 2026-10-03 |
+| QQQ | distribution.frequency | 季配 | 已驗證 | SEC Form 485BPOS 公開說明書（2025-12-22）https://www.sec.gov/Archives/edgar/data/1067839/000110465925123273/tm2529177d1_485bpos.htm 「declared and paid quarterly」；後續兩份補充（2026-04-30、2026-06-10）未改配息政策 | 2026-10-04 |
 | SPY | expenseRatio | 0.0945% | 已驗證 | https://www.ssga.com/us/en/intermediary/etfs/spdr-sp-500-etf-trust-spy （SSGA 官網） | 2026-10-03 |
 | SPY | distribution.frequency | 季配 | 已驗證 | 同上（Distribution Frequency: Quarterly） | 2026-10-03 |
 | 0050 | holdings / asOf | 2330 56.31、2454 6.71、2308 3.35、2317 2.82、其餘 30.81；asOf 2026-10-02 | 已驗證（元大官方） | https://www.yuantaetfs.com/product/detail/0050/ratio （元大投信官網，頁面交易日期 2026/10/02）；其餘 = 100 − 前四大合計 | 2026-10-03 |
-| 0050 | expenseRatio 0.14% | 0.14% | 本次未重新查證（verified: false） | 元大官網頁面未顯示費率；沿用原標記 | 2026-10-03 |
-| ALLIANZ_TAIWAN | expenseRatio | 1.75%（經理費 1.60% + 保管費 0.15%） | 未驗證（依 2018 公開說明書） | 簡式公開說明書 https://www.fundrich.com.tw/rpt/SmartManual/ALI005_S.pdf （刊印 2018-07-30）；2026-08 月報 https://tw.allianzgi.com/documents/mDDO01 （經理費 1.60%）。含交易稅的實際費用率 106 年度為 2.76%，最新年度總費用率查無 | 2026-10-03 |
-| ALLIANZ_TAIWAN | frontLoad | 4%（上限） | 未驗證（依 2018 公開說明書） | 同簡式公開說明書：申購手續費最高不得超過發行價格 4%；現行實收較低、確切數字查無 | 2026-10-03 |
-| ALLIANZ_TAIWAN | distribution | 無配息，僅累積 | 未驗證（依 2018 公開說明書） | 說明書「收益分配：無」；2026-08 月報只列 A 新臺幣類股 | 2026-10-03 |
+| 0050 | expenseRatio | 0.14%（≈0.136%，各項相加） | 已驗證（所載各項之和） | 簡式公開說明書（刊印 115 年 7 月 29 日）https://www.yuantafunds.com/fund/download/1066台灣卓越50-簡式公開說明書.pdf ：經理費級距（1,000 億以下 0.15%、1,000–5,000 億 0.10%、5,000 億–1 兆 0.08%）約 0.069%、保管費約 0.027%、指數授權費 0.04%；以月報（2026-08-31）規模 23,841.23 億元換算 https://www.yuantafunds.com/fund/download/1066元大台灣卓越50基金月報.pdf ；官網經理費約 0.0680%（2026-10-02）https://www.yuantaetfs.com/product/detail/0050/Basic_information 。不含交易成本（年度費用率 2025 為 0.22%，含交易成本，不採用）。規模越大費率越低 | 2026-10-04 |
+| ALLIANZ_TAIWAN | expenseRatio | 1.75%（A 類型經理費 1.6% + 保管費 0.15%） | 已驗證 | 安聯投信公開說明書（刊印 2026 年 7 月，V20260731）https://tw.allianzgi.com/documents/DDO01 ；2026-08 月報 https://tw.allianzgi.com/documents/mDDO01 （經理費 1.60%）。僅契約固定費用，不含交易成本（說明書「最近五年度費用率」114 年 2.63% 含交易成本，不採用） | 2026-10-04 |
+| ALLIANZ_TAIWAN | frontLoad | 4%（上限） | 已驗證（上限） | 同公開說明書：申購手續費最高不得超過發行價格 4%，現行實收由經理公司訂、較低 | 2026-10-04 |
+| ALLIANZ_TAIWAN | distribution | 無配息，僅累積 | 已驗證 | 同公開說明書：「收益全部併入本基金資產，不予分配」 | 2026-10-04 |
 | JH_BALANCED | expenseRatio | 1.88% | 已驗證 | https://www.janushenderson.com/en-hk/investor/product/janus-henderson-balanced-fund/ （A2 USD，2025-12-31） | 2026-10-03 |
-| JH_BALANCED | 股債比例 | 股 64.15／債 34.55／現金 1.30（美國版 JANBX） | 查無 | 境外版（Janus Henderson Capital Funds plc）官網只載明股票 35–70%／債券 30–65% 的區間，無實際月報比例；前十大 NVDA 5.86、MSFT 4.46、GOOGL 4.11 與官網 2026-08-31 一致。搜尋：官網 en-hk／en-sg／en-us offshore／zh-hk、Yahoo 持股頁（數值異常不可用） | 2026-10-03 |
+| JH_BALANCED | holdings | OTHER_US_STOCK 38.32、US_TREASURY 7.00、BOND_MIXED_US 26.86、CASH 2.06，加前八大個股 25.76 | 已驗證 | https://www.janushenderson.com/en-hk/investor/product/janus-henderson-balanced-fund/ （境外 IIC 版，Sector Allocation 與 Top Holdings，2026-08-31）：股票 64.08、債券 33.86、現金與其他 2.06；OTHER_US_STOCK = 64.08 − 25.76；US_TREASURY = 官網 Treasuries 全部 7.00；BOND_MIXED_US = 33.86 − 7.00。股票假設皆為美股（未核對 Region 分頁）。取代原本的美國版 JANBX 代用 | 2026-10-04 |
 | JH_BALANCED | frontLoad（台灣） | — | 查無 | 官網新加坡版 5%、美國離岸版 2%，皆非台灣通路；台灣總代理野村投信投資人須知未找到 | 2026-10-03 |
 | JH_BALANCED_BACKLOAD（T2） | distributionFee | — | 查無 | Yahoo 顯示 T2 分銷費 0.01% 但疑為格式錯誤，無法與公開說明書核對。永豐銀行約定條款（2026.05）：駿利亨德森 T 股遞延手續費 3%／2%／1%／0%，但因分銷費查無，不新增資產 | 2026-10-03 |
 | SCHRODER_GLOBAL_INCOME_BOND | nameEn | Schroder International Selection Fund Global Credit Income | 已驗證 | https://www.schroders.com/zh-tw/tw/individual/funds-and-strategies/global-credit-income/ （台灣官網「施羅德(環)環球收息債券」對應此英文名稱） | 2026-10-03 |
-| SCHRODER_GLOBAL_INCOME_BOND | 公債／公司債、投資等級／非投資等級比例 | — | 查無 | 台灣官網僅文字描述（政府債／公司債／證券化、投資等級與非投資等級兼具）；香港月報（2026-08-31）https://api.schroders.com/document-store/SISF-Global-Credit-Income-A-Acc-FMR-HKEN.pdf 的圖表文字抽取後無法可靠對應基金與比較指數欄位，故不拆分 `GLOBAL_BOND_MIXED`，也未新增 buckets | 2026-10-03 |
-| SCHRODER_GLOBAL_INCOME_BOND | expenseRatio | 1.10%（僅管理費） | 部分／總費用率查無 | 同香港月報：管理費 1.10%；台灣總費用率未找到 | 2026-10-03 |
+| SCHRODER_GLOBAL_INCOME_BOND | holdings | GLOBAL_BOND_MIXED 97.3 + CASH 2.7 | 已驗證 | 台灣中文月報 https://api.schroders.com/document-store/SISF-Global-Credit-Income-A-Acc-FMR-TWZH.pdf 與香港月報 https://api.schroders.com/document-store/SISF-Global-Credit-Income-A-Acc-FMR-HKEN.pdf （2026-08-31）：現金與衍生工具 2.7（名目基礎），其餘為債券。公債／公司債、投資等級／非投資等級是兩個獨立維度、無交叉表，不拆 GLOBAL_BOND_MIXED | 2026-10-04 |
+| SCHRODER_GLOBAL_INCOME_BOND | expenseRatio | 1.38%（原 1.10%，僅管理費） | 已驗證 | SISF 半年報 TER 表（截至 2026-06-30）https://api.schroders.com/document-store/SISF-SAR-LUEN.pdf ：Class A Acc／A Dis 1.38%；年報 FY2025 同為 1.38%。管理費 1.10% 為其中一部分 | 2026-10-04 |
 | SCHRODER_GLOBAL_INCOME_BOND | frontLoad（台灣） | — | 查無 | 台灣官網僅說明 A 級別為前收，未載明費率；香港月報的 3% 為香港通路，不採用 | 2026-10-03 |
-| SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD（U） | asOf | 2026-10-02 | 對齊主級別 | 持股與主級別（SCHRODER_GLOBAL_INCOME_BOND）相同；級別費用資料：2026-06-30 投資人通知 | 2026-10-03 |
-| SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD（U） | distribution.frequency | 月配 | 未驗證 | 月配推論自級別名稱『U 月配固定』，級別費用資料：2026-06-30 投資人通知 | 2026-10-03 |
+| SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD（U） | asOf / holdings | 2026-08-31；與 A 級別相同（GLOBAL_BOND_MIXED 97.3 + CASH 2.7） | 已驗證 | 台灣中文月報（U 月配固定）https://api.schroders.com/document-store/SISF-Global-Credit-Income-U-Dis-FMR-TWZH.pdf ，資產配置與 A 級別一致 | 2026-10-04 |
+| SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD（U） | distribution.frequency | 月配 | 已驗證 | 同 U 級別台灣月報：配息政策「固定」、配息頻率「每月」 | 2026-10-04 |
+| SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD（U） | expenseRatio | 1.38%（原 1.10%） | 已驗證（所載數字之差） | 同半年報 https://api.schroders.com/document-store/SISF-SAR-LUEN.pdf ：Class U Dis TER 2.38%（FY2025 2.39%），台灣月報分銷費 1.00%。2.38% − 1.00% = 1.38%，兩者皆為文件所載；分銷費另放 distributionFee，所以 expenseRatio 不含分銷費；結果與 A 級別 TER 1.38% 吻合 | 2026-10-04 |
 | SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD（U） | distributionFee、cdsc | 1.00%／年；3%、2%、1%（第 1、2、3 年），滿 3 年 0%；滿 3 年後自動轉 A 級別，分銷費停止（distributionFeeYears: 3） | 已驗證（新增資產） | 施羅德環球基金系列投資人須知【第二部分】 https://api.schroders.com/document-store/SISF-FS-TWZH.pdf （2026-06-30 更新，系列通則）；永豐銀行後收型基金約定條款（2026.05）同為 3/2/1/0，施羅德 U 股；台灣有「環球收息債券(美元) U-月配固定」級別 | 2026-10-03 |
 | ALLIANZ_INCOME_GROWTH | 三大類對應 | 可轉債 32.0%、高收益債 30.4%、股票 31.9%、現金 5.7% | 已驗證 | 安聯 GI 新加坡 https://sg.allianzgi.com/documents/sg-allianz-income-and-growth-leaflet-en （2026-06-30），與快照 CONVERTIBLE_US 31.98／US_HIGH_YIELD 30.4／股票 31.91／CASH 5.71 一致 | 2026-10-03 |
 | ALLIANZ_INCOME_GROWTH | expenseRatio | 1.56% | 已驗證 | 同上（TER 1.56%，2026-06-30） | 2026-10-03 |
@@ -54,3 +55,15 @@
 | JPM | marketCapUsdB | 883.5 | 已驗證 | https://companiesmarketcap.com/（市值資料日 2026-10 初（companiesmarketcap.com 即時頁面，查證日 2026-10-03；頁面未標示確切時間）） | 2026-10-03 |
 | TW_TRADING | brokerFee（券商手續費） | 0.1425%（買、賣各收一次；實務常有折扣） | 已驗證（費率數字） | 財政部 台財證(二)字第10426號函（80-06-28）「按成交值千分之一．四二五計收」，登載於證交所法規知識庫 https://twse-regulation.twse.com.tw/TW/int/DAT01_print.aspx?FLCODE=FE064320 。註：該函釋已於 110-10-01 起不再作為裁罰依據，且為公告費率；是否為現行「法定上限」未能從官方條文確認，教學上僅稱公告費率 | 2026-10-03 |
 | TW_TRADING | etfSellCost（ETF 賣出交易成本） | 0.1%（僅賣出時） | 已驗證 | 證交所 ETF 專區「ETF 賣方課徵 0.1%」 https://www.twse.com.tw/zh/products/securities/etf/overview/rules.html ；證券交易稅條例第 2 條（其他經政府核准之有價證券千分之一）。債券型 ETF 依條例第 2-1 條目前停徵，本模擬的 0050 為股票型，不受影響 | 2026-10-03 |
+
+## 規則：所載各項的和或差
+
+總數若沒有任何文件直接寫出，但每一個組成項目都有官方出處，則可以用「所載各項的和或差」得到數值並標記已驗證，條件是：
+- 每個運算元都有官方出處與資料日，並寫在該資產的 notes（含算式）；
+- 只加總（或扣除）契約固定費用；交易成本、交易稅不計入；
+- 費用不可重複計算：分銷費放 `distributionFee`，`expenseRatio` 不含分銷費。
+
+目前用到的地方：
+- 0050 expenseRatio：經理費約 0.069% + 保管費約 0.027% + 指數授權費 0.04% ≈ 0.136%，取 0.14%（和）。
+- ALLIANZ_TAIWAN expenseRatio：經理費 1.6% + 保管費 0.15% = 1.75%（和）。
+- SCHRODER U 級別 expenseRatio：TER 2.38% − 分銷費 1.00% = 1.38%（差）。

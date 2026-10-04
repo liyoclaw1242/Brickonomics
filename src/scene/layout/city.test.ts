@@ -1,6 +1,8 @@
+import { LEVELS } from '../../tour/levels'
+import { displayName } from '../../ui/names'
 import { describe, it, expect } from 'vitest'
 import { universe } from '../../data'
-import { applyShrink, buildingHeight, cityLayout, islandSize, buildingVoxels, ISLAND_CENTERS, HEIGHT } from './city'
+import { applyShrink, buildingHeight, cityLayout, islandSize, buildingVoxels, ISLAND_CENTERS, HEIGHT, labeledBuildings, declutterLabels, labelWidth, CITY_LABELS_PER_ISLAND, mentionedBuildings } from './city'
 
 describe('buildingHeight', () => {
   it('is logarithmic in market cap (USD billions)', () => {
@@ -94,5 +96,70 @@ describe('applyShrink', () => {
     expect(applyShrink(ps, { NVDA: 0.5 }, capOf)[1]!.height).toBe(16)
     // 跌 100% 不丟錯，保留 1 層
     expect(applyShrink(ps, { '2330': 1 }, capOf)[0]!.height).toBe(1)
+  })
+})
+
+describe('labeledBuildings', () => {
+  const placements = cityLayout([...universe.values()])
+  it('names only the tallest few per island (user test: names were too many and too small)', () => {
+    const ids = labeledBuildings(placements, 5)
+    expect(ids.size).toBe(10)
+    for (const region of ['TW', 'US'] as const) {
+      const inRegion = placements.filter((p) => p.region === region)
+      const named = inRegion.filter((p) => ids.has(p.id))
+      expect(named).toHaveLength(5)
+      const shortestNamed = Math.min(...named.map((p) => p.height))
+      for (const p of inRegion) if (!ids.has(p.id)) expect(p.height, p.id).toBeLessThanOrEqual(shortestNamed)
+    }
+    expect(ids.has('2330')).toBe(true)
+    expect(ids.has('NVDA')).toBe(true)
+    expect(ids.has('6274')).toBe(false) // 台燿：小樓不標
+  })
+
+  it('always names the extra ids (picked or anchored buildings)', () => {
+    expect(labeledBuildings(placements, 5, ['6274']).has('6274')).toBe(true)
+  })
+})
+
+describe('city names at most 3 per island and never on top of each other (r3: 欣興／微軟／亞馬遜 crowded)', () => {
+  it('names at most three buildings per island', () => {
+    expect(CITY_LABELS_PER_ISLAND).toBeLessThanOrEqual(3)
+  })
+
+  const box = (id: string, x: number, y: number, w = 40, h = 20) => ({ id, x, y, w, h })
+
+  it('keeps labels in priority order and drops any that would overlap a kept one', () => {
+    const kept = declutterLabels([box('a', 100, 100), box('b', 110, 105), box('c', 200, 100), box('d', 100, 140)])
+    expect(kept).toEqual(['a', 'c', 'd']) // b 疊在 a 上
+  })
+
+  it('treats step callouts as obstacles and always keeps forced (picked) labels', () => {
+    const kept = declutterLabels([box('a', 100, 100), box('p', 300, 100)], [box('callout', 100, 95, 160, 50), box('callout2', 300, 100, 160, 50)], new Set(['p']))
+    expect(kept).toEqual(['p'])
+  })
+
+  it('places a mentioned building before taller ones, but still not on top of a kept label (user test: p-3 hid 蘋果)', () => {
+    const cands = [box('tall', 100, 100), box('apple', 110, 105), box('far', 300, 100)]
+    expect(declutterLabels(cands, [], new Set(), 3, new Set(['apple']))).toEqual(['apple', 'far'])
+    // 疊到步驟標註就不標
+    expect(declutterLabels(cands, [box('callout', 110, 105, 160, 50)], new Set(), 3, new Set(['apple']))).toEqual(['far'])
+  })
+
+  it('finds the buildings named in a step line or callouts, even beyond the per-island limit', () => {
+    const placements = cityLayout([...universe.values()])
+    const p3 = LEVELS.flatMap((l) => l.steps).find((st) => st.id === 'p-3')!
+    const ids = mentionedBuildings(placements, [p3.line as string], (id) => displayName(universe, id))
+    expect([...ids].sort()).toEqual(expect.arrayContaining(['AAPL', 'MSFT', 'NVDA']))
+    const named = labeledBuildings(placements, CITY_LABELS_PER_ISLAND, ids)
+    for (const id of ids) expect(named.has(id), id).toBe(true)
+  })
+
+  it('drops labels whose anchor is behind the camera', () => {
+    expect(declutterLabels([{ ...box('a', 100, 100), behind: true }])).toEqual([])
+  })
+
+  it('estimates wider boxes for CJK than for Latin text', () => {
+    expect(labelWidth('亞馬遜')).toBeGreaterThan(labelWidth('Abc'))
+    expect(labelWidth('Google')).toBeGreaterThan(0)
   })
 })

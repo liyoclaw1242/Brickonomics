@@ -1,6 +1,7 @@
 import { exDividend, simulateDistribution, type PeriodState } from '../../sim/dividend'
 import type { Vec3 } from '../camera'
 import { explodeOffsetY, stackVoxels, voxelPosition, type Voxel } from './voxels'
+import { T } from '../../ui/strings'
 
 export const VALUE_PER_BLOCK = 2
 
@@ -13,8 +14,11 @@ export function towerVoxels(count: number, w = 5, d = 5): Voxel[] {
   return stackVoxels([{ id: 'tower', count }], w, d)
 }
 
+/** 手上那顆方塊的邊長倍數（示意）：變值錢 ×1.7（體積約 5 倍）、變不值錢 ×0.6（r3：只大一點點看不出來） */
+export const HELD_SCALE = { still: 1, up: 1.7, down: 0.6, shake: 1 } as const
+
 export type ExDivOutcome = 'fill' | 'gap'
-const EXDIV = { price: 100, dividend: 5, gapTo: 92 } // 示意
+export const EXDIV = { price: 100, dividend: 5, gapTo: 92 } // 示意
 
 /** 時間軸 0～1：0.5 配發（除息），之後線性填息到 100 或貼息到 92 */
 export function exDivTimeline(phase: number, outcome: ExDivOutcome): { blockValue: number; cash: number } {
@@ -24,6 +28,35 @@ export function exDivTimeline(phase: number, outcome: ExDivOutcome): { blockValu
   const end = outcome === 'fill' ? EXDIV.price : EXDIV.gapTo
   const s = (t - 0.5) / 0.5
   return { blockValue: after.price + (end - after.price) * s, cash: after.cash }
+}
+
+export type Band = [number, number] | null
+
+/**
+ * 方塊少掉的部分（畫在方塊上方，單位＝價值）：
+ * gold＝變成金幣的那一段（配發後、方塊還沒長回去的部分）；red＝金幣以外、真的少掉的部分（沒長回來）。
+ */
+export function exDivBands(blockValue: number, cash: number): { gold: Band; red: Band } {
+  if (cash <= 0) return { gold: null, red: null }
+  const after = EXDIV.price - cash
+  const goldLo = Math.max(blockValue, after)
+  return {
+    gold: goldLo < EXDIV.price ? [goldLo, EXDIV.price] : null,
+    red: blockValue < after ? [blockValue, after] : null,
+  }
+}
+
+/**
+ * 除息舞台的 3D 標籤。fill（s-5）：方塊、金幣各帶數字（100＋0 → 95＋5）。
+ * gap（s-6）：只有一個數字——紅色那段「少了 3」；方塊、金幣只寫名字（r3：97、92、5、3 四個數字要他自己算）。
+ */
+export function exDivLabels(outcome: ExDivOutcome, phase: number): { block: string; coins: string; lost?: string } {
+  const st = exDivTimeline(phase, outcome)
+  const { block, coins, lost } = T.stage.exdiv
+  if (outcome === 'fill') return { block: `${block} ${st.blockValue.toFixed(0)}`, coins: `${coins} ${st.cash.toFixed(0)}` }
+  const red = exDivBands(st.blockValue, st.cash).red
+  const gone = red ? Math.round(red[1] - red[0]) : 0
+  return { block, coins, ...(gone > 0 ? { lost: lost(gone) } : {}) }
 }
 
 /** 示意：本金 100、每年產出 4%、價格每年 +3%、配息型每年配 4% */

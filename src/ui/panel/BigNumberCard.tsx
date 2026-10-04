@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { BigNumber } from '../../tour/types'
+import type { BigNumber, Mark } from '../../tour/types'
 import { countUp, easeOut } from '../countUp'
 import { MarkIcon } from '../MarkIcon'
 
@@ -10,7 +10,8 @@ const DURATION_MS = 600
  * instant（prefers-reduced-motion）時直接顯示最終值。換步驟時由父層用 key 重新掛載以重跑。
  * 動畫中的數字對螢幕閱讀器隱藏，改讀最終值。
  */
-export function BigNumberCard({ n, color, run, instant }: { n: BigNumber; color?: string; run: boolean; instant: boolean }) {
+/** titleMarks：標題旁已經有的標示，卡片上不重複 */
+export function BigNumberCard({ n, color, run, instant, titleMarks = [] }: { n: BigNumber; color?: string; run: boolean; instant: boolean; titleMarks?: readonly Mark[] }) {
   const [t, setT] = useState(instant ? 1 : 0)
   useEffect(() => {
     if (!run || instant) {
@@ -34,9 +35,10 @@ export function BigNumberCard({ n, color, run, instant }: { n: BigNumber; color?
       <div className="bignum__value">
         <span aria-hidden="true">{countUp(n.value, t)}</span>
         <span className="sr-only">{n.value}</span>
-        {n.mark && <MarkIcon kind={n.mark} />}
+        {n.mark && !titleMarks.includes(n.mark) && <MarkIcon kind={n.mark} />}
       </div>
       <div className="bignum__label">{n.label}</div>
+      {n.note && <div className="bignum__note">{n.note}</div>}
       {fraction !== undefined && (
         <div className="bignum__bar" aria-hidden="true">
           <span style={{ width: `${fraction * 100}%`, background: color }} />

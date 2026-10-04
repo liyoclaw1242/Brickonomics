@@ -24,7 +24,11 @@ export function MarkIcon({ kind }: { kind: Mark }) {
   return (
     <span ref={ref} className={`mark mark--${kind}`}>
       <button type="button" className="mark__icon" aria-label={m.label} title={m.label} aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-        {m.icon}
+        {/* 圖示＋短字的小膠囊（使用者測試：只有「≈」看不懂、不敢按） */}
+        <span aria-hidden="true">{m.icon}</span>
+        <span className="mark__word" aria-hidden="true">
+          {m.word}
+        </span>
       </button>
       {open && <span className="mark__tip" role="tooltip">{m.label}</span>}
     </span>

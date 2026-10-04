@@ -64,6 +64,7 @@ function KindMesh({ kind, voxels, looks, w, d, explode, cut, focusGroups = NO_FO
 
   const theme = useThemeStore((s) => s.theme)
   const exploded = explode > 0.3
+  const sliced = cut !== null
   const explodeRef = useRef(explode)
   explodeRef.current = explode
   const focusKey = focusGroups.join(',')
@@ -87,7 +88,7 @@ function KindMesh({ kind, voxels, looks, w, d, explode, cut, focusGroups = NO_FO
     const th = THEMES[theme]
     const focus = focusKey === '' ? NO_FOCUS : focusKey.split(',').map(Number)
     const to = voxels.map((v) => {
-      const c = new Color(toneColor(looks[v.group]!.color, groupTone({ group: v.group, focus, picked, explode: explodeRef.current }), th))
+      const c = new Color(toneColor(looks[v.group]!.color, groupTone({ group: v.group, focus, picked, explode: explodeRef.current, cut: sliced }), th))
       if (damaged?.has(v)) c.lerp(DAMAGE_COLOR, DAMAGE_MIX)
       return c
     })
@@ -110,7 +111,7 @@ function KindMesh({ kind, voxels, looks, w, d, explode, cut, focusGroups = NO_FO
       setFading(true)
     }
     invalidate()
-  }, [voxels, looks, theme, focusKey, picked, exploded, damaged, invalidate])
+  }, [voxels, looks, theme, focusKey, picked, exploded, sliced, damaged, invalidate])
 
   useLayoutEffect(() => {
     anim.current.dirty = true

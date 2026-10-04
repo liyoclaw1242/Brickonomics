@@ -19,6 +19,13 @@
   --badge: #8fb8c8;
   --em: #e9b97a;
   --label-shadow: rgba(0, 0, 0, 0.45);
+  /* 3D 標註的底：不透明，後面的大樓不會從字底下透出來（r2：「高收益債旁邊糊糊的」） */
+  --callout-bg: #17131f;
+  /* 標示小膠囊（≈ 舉例／✎ 假設的數字／？ 資料待更新）：老花眼也看得清楚 */
+  --mark-bg: rgba(143, 184, 200, 0.2);
+  --mark-border: rgba(143, 184, 200, 0.7);
+  --mark-text: #e3f3f9;
+  --soft-text: #ddd3c7;
 }
 :root[data-theme='day'] {
   --bg: #cfe8ff;
@@ -35,6 +42,11 @@
   --badge: #b45309;
   --em: #c2410c;
   --label-shadow: rgba(255, 255, 255, 0.8); /* 白天：亮色光暈，不要黑影（看起來髒） */
+  --callout-bg: #ffffff;
+  --mark-bg: #fff3e0;
+  --mark-border: #b45309;
+  --mark-text: #7a3300; /* 對 #fff3e0 約 8:1 */
+  --soft-text: #323f4b;
 }
 html, body { margin: 0; height: 100%; background: var(--bg); }
 * { box-sizing: border-box; }
@@ -50,22 +62,27 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 }
 .panel { background: var(--surface); border: 1px solid var(--border); backdrop-filter: blur(14px); color: var(--text); }
 .brand { margin: 0 0 14px; font-size: 12px; letter-spacing: 0.6em; color: var(--muted); }
-.step-counter { font-size: 12px; letter-spacing: 0.25em; color: var(--muted); }
+.step-counter { font-size: 15px; letter-spacing: 0.2em; color: var(--soft-text); font-weight: 600; } /* r2：「00 / 06」太小 */
 .step-title { margin: 4px 0 6px; font-size: 26px; font-weight: 600; letter-spacing: 0.02em; display: flex; gap: 8px; align-items: center; }
 .oneline { margin: 0 0 12px; font-size: 17px; line-height: 1.6; }
-.oneline strong { color: var(--em); font-weight: 700; }
+.oneline strong { color: var(--em); font-weight: 700; white-space: nowrap; } /* 強調的詞不從中間折行（r3：「早出/門」） */
 .oneline strong.em-key { color: var(--key); }
 :root[data-theme='day'] .oneline strong.em-key { color: color-mix(in oklab, var(--key) 62%, #1f2933); text-decoration: underline 3px var(--key); text-underline-offset: 4px; }
 .bignum { margin: 8px 0 12px; padding: 12px 14px; border-radius: 12px; background: var(--chip); border: 1px solid var(--border); }
 .bignum__value { font-size: 34px; font-weight: 700; display: flex; gap: 8px; align-items: center; font-variant-numeric: tabular-nums; }
-.bignum__label { font-size: 13px; color: var(--muted); }
+.bignum__label { font-size: 14px; color: var(--soft-text); }
+.bignum__note { font-size: 14px; color: var(--soft-text); margin-top: 2px; }
 .bignum__bar { margin-top: 8px; height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
 .bignum__bar span { display: block; height: 100%; background: var(--accent); }
 .more { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 8px; font-size: 14px; color: var(--muted); }
 .more summary { cursor: pointer; color: var(--text); }
 
 .step-counter { margin: 0; display: flex; align-items: center; gap: 8px; }
-.step-counter__icon { font-size: 16px; letter-spacing: 0; }
+.step-counter__icon { font-size: 18px; letter-spacing: 0; }
+/* 標題＋標示：標題字不折行；標示小膠囊成一組，放不下就整組換到下一行 */
+.step-title { display: flex; flex-wrap: wrap; align-items: center; column-gap: 8px; row-gap: 6px; }
+.step-title__text { white-space: nowrap; }
+.step-title__marks { display: inline-flex; flex-wrap: wrap; gap: 6px; }
 .more__text { line-height: 1.7; }
 .more .readout { color: var(--text); }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; border: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -104,6 +121,12 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .legend__name--aggregate { color: var(--muted); font-style: italic; }
 .legend__pct { font-variant-numeric: tabular-nums; color: var(--muted); }
 .hint { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+/* 「先拉一下」提示：使用者測試時差點沒看到為什麼下一步按不下去 → 大一點、用強調色 */
+.hint--try { font-size: 15px; font-weight: 600; color: var(--em); margin: 8px 0 0; }
+/* 最後一步的回顧清單 */
+.recap { list-style: none; margin: 8px 0 4px; padding: 10px 12px; display: grid; gap: 6px; border-radius: 12px; background: var(--chip); border: 1px solid var(--border); font-size: 15px; line-height: 1.5; }
+.recap li, .recap p { margin: 0; display: flex; gap: 8px; align-items: baseline; }
+.recap__icon { flex: none; width: 1.4em; text-align: center; }
 
 .info {
   position: fixed; top: 56px; right: 12px; width: 280px; padding: 14px 16px; border-radius: 14px;
@@ -136,11 +159,13 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 }
 .step-nav button.primary { flex: 2; background: var(--accent); color: var(--accent-text); border-color: transparent; font-weight: 600; }
 .step-nav button:disabled, .step-nav button[aria-disabled='true'] { opacity: 0.45; cursor: not-allowed; }
+/* 等拉桿：灰色、字清楚（不是暗掉的咖啡色），一看就知道在等你（r3） */
+.step-nav button.primary.is-waiting { opacity: 1; background: var(--chip); color: var(--soft-text); border: 1px dashed var(--border); font-weight: 600; font-size: 14px; }
 .link { border: 0; background: none; padding: 4px 0; color: var(--muted); font: inherit; font-size: 12px; text-decoration: underline; cursor: pointer; }
 .controls { display: grid; gap: 10px; margin: 8px 0; }
 .control { display: grid; gap: 4px; font-size: 13px; }
 .control__label { display: flex; align-items: center; gap: 6px; }
-.control__value { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; }
+.control__value { margin-left: auto; color: var(--soft-text); font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .control input[type='range'] { width: 100%; accent-color: var(--accent); }
 
 .readout { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 13px; }
@@ -181,28 +206,43 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .fallback h2 { font-size: 18px; margin: 28px 0 8px; }
 .fallback ol { padding-left: 20px; }
 .fallback li { margin-bottom: 14px; }
+.fallback__routes { display: flex; gap: 8px; margin: 12px 0; }
 
 /* 3D 標註（Callout / NameLabel）與標示圖示（MarkIcon）。--label-scale 由 ViewFraming 依鏡頭 zoom 設定：窄畫面字跟著縮小（設下限以保可讀） */
 .callout { pointer-events: none; display: grid; gap: 2px; padding: 6px 10px; border-radius: 8px; white-space: nowrap;
-  background: var(--surface-strong); border: 1px solid var(--border); color: var(--text); font-size: calc(13px * max(0.8, var(--label-scale, 1))); width: max-content; }
+  background: var(--callout-bg); border: 1px solid var(--border); color: var(--text); font-size: calc(13px * max(0.8, var(--label-scale, 1))); width: max-content; }
 .callout--right { transform: translate(8px, -50%); }
 .callout--left { transform: translate(calc(-100% - 8px), -50%); }
 .callout--dim { opacity: 0.45; }
 .callout--compact { padding: 1px 6px; line-height: 1.25; border-radius: 4px; }
 .callout--wrap { white-space: normal; width: max-content; max-width: min(340px, 80vw); text-align: center; line-height: 1.5; }
+.callout--wrap .callout__title { justify-content: center; }
 .callout__title { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
 .callout__dot { width: 8px; height: 8px; border-radius: 50%; flex: none; box-shadow: 0 0 0 1px var(--border); } /* 外框：近白色（如公債）的色點在白天也看得到 */
-.callout__sub { font-size: calc(11px * max(0.85, var(--label-scale, 1))); color: var(--muted); letter-spacing: 0.04em; }
+.callout__sub { font-size: calc(11px * max(0.85, var(--label-scale, 1))); color: var(--soft-text); letter-spacing: 0.04em; } /* r2：副標太淡 */
+/* 老花眼（使用者測試 r1）：桌機上標註與副標至少 13px。手機畫面窄，維持隨鏡頭縮放，避免標註互相疊住 */
+@media (min-width: 721px) {
+  .callout { font-size: max(13px, calc(13px * var(--label-scale, 1))); }
+  .callout__sub { font-size: max(14px, calc(14px * var(--label-scale, 1))); }
+}
+.callout__sub--strong { font-weight: 700; }
+.callout__sub--min13 { font-size: max(13px, calc(14px * var(--label-scale, 1))); }
 .name-label { pointer-events: none; font-size: calc(11px * max(0.75, var(--label-scale, 1))); color: var(--muted); opacity: 0.7; white-space: nowrap; text-shadow: 0 1px 2px var(--label-shadow); }
+/* 城市大樓名稱：只標最高的幾棟，所以可以大一點、清楚一點（但不搶標註的戲） */
+.name-label--city { font-size: max(12px, calc(14px * var(--label-scale, 1))); color: var(--text); opacity: 0.85; font-weight: 500; text-shadow: 0 1px 3px var(--label-shadow), 0 0 2px var(--label-shadow); }
 .name-label--active { opacity: 1; color: var(--text); font-weight: 600; }
-.name-label--island { font-size: calc(16px * max(0.75, var(--label-scale, 1))); font-weight: 600; }
+.name-label--island { font-size: calc(19px * max(0.8, var(--label-scale, 1))); font-weight: 700; color: var(--text); opacity: 1; letter-spacing: 0.08em; text-shadow: 0 1px 3px var(--label-shadow), 0 0 6px var(--label-shadow); }
 .mark { position: relative; display: inline-flex; }
-.mark__icon { pointer-events: auto; border: 1px solid var(--border); background: var(--chip); color: var(--badge);
-  width: 18px; height: 18px; border-radius: 50%; font-size: 11px; line-height: 1; padding: 0; cursor: pointer; }
+.mark__icon { pointer-events: auto; border: 1px solid var(--mark-border); background: var(--mark-bg); color: var(--mark-text);
+  display: inline-flex; align-items: center; gap: 4px; height: 26px; padding: 0 10px; border-radius: 999px; font: inherit; font-size: 14px; font-weight: 600; line-height: 1; letter-spacing: 0; white-space: nowrap; cursor: pointer; }
 .mark__tip { position: absolute; top: 120%; left: 50%; transform: translateX(-50%); z-index: 10; width: max-content; max-width: 220px;
-  padding: 6px 8px; border-radius: 8px; background: var(--surface-strong); border: 1px solid var(--border); font-size: 12px; white-space: normal; }
+  padding: 8px 10px; border-radius: 8px; background: var(--callout-bg); border: 1px solid var(--border); font-size: 14px; font-weight: 400; line-height: 1.5; white-space: normal; }
 
-@media (max-width: 720px) { .mark__icon { width: 24px; height: 24px; } }
+/* ？ 資料待更新：放在一句話後面，小一號但看得清楚（r3） */
+.step-marks-after { margin: -6px 0 10px; display: flex; gap: 6px; }
+.step-marks-after .mark__icon { height: 24px; font-size: 13px; font-weight: 500; padding: 0 8px; }
+.step-reveal:not(.is-revealed) .step-marks-after { opacity: 0; }
+@media (max-width: 720px) { .mark__icon { height: 26px; font-size: 13px; padding: 0 8px; } }
 
 /* 右上工具列、圖例色票列、底部章節時間軸（版面 insets 見 src/ui/layoutModel.ts） */
 .toolbar { position: fixed; top: 12px; right: 12px; display: flex; gap: 8px; z-index: 6; }
@@ -212,9 +252,9 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .legend-bar i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: middle; }
 .timeline { position: fixed; left: calc(var(--panel-w) + 24px); right: 12px; bottom: 12px; padding: 10px 16px 12px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); z-index: 5; }
 .timeline__chapters { display: flex; justify-content: space-between; gap: 4px; }
-.timeline__chapter { border: 0; background: none; color: var(--muted); font: inherit; font-size: 13px; letter-spacing: 0.12em; cursor: pointer; }
+.timeline__chapter { border: 0; background: none; color: color-mix(in oklab, var(--text) 90%, var(--muted)); font: inherit; font-size: 15px; letter-spacing: 0.08em; cursor: pointer; } /* 沒選到的章節也要看得清楚（r2：再大、再亮一點） */
 .timeline__chapter[aria-current='step'] { color: var(--text); font-weight: 600; }
-.timeline__chapter:disabled { opacity: 0.35; cursor: default; }
+.timeline__chapter:disabled { opacity: 0.7; cursor: default; }
 .timeline__bar { margin-top: 8px; height: 3px; border-radius: 2px; background: var(--border); overflow: hidden; }
 .timeline__bar span { display: block; height: 100%; background: var(--accent); }
 .timeline__chapter { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; padding: 4px 2px; }
@@ -242,3 +282,19 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
   .info { bottom: calc(42vh + 64px); bottom: calc(42dvh + 64px); }
   .legend-bar ~ .info { top: auto; }
 }
+
+/* 第一次來：選簡單版或完整版（兩顆大按鈕，各一句白話） */
+.route-start { display: grid; gap: 12px; margin-top: 6px; }
+.route-start .step-title { margin: 4px 0 2px; }
+.route-start__choice {
+  display: grid; gap: 4px; text-align: left; padding: 14px 16px; border-radius: 14px;
+  border: 1px solid var(--border); background: var(--chip); color: var(--text); font: inherit; cursor: pointer;
+}
+.route-start__choice--simple { background: var(--accent); color: var(--accent-text); border-color: transparent; }
+.route-start__name { font-size: 19px; font-weight: 700; }
+.route-start__note { font-size: 16px; }
+.route-start .hint { font-size: 14px; }
+
+/* 右上路線切換：兩個名字都在，目前的那個亮 */
+.route-pill__on { font-weight: 700; color: var(--em); }
+.route-pill__off { color: var(--muted); }

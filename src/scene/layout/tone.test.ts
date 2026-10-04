@@ -22,6 +22,11 @@ describe('groupTone', () => {
     expect(groupTone({ ...base, group: 2, focus: [2], explode: 0.5 })).toBe('vivid')
     expect(groupTone({ ...base, group: 3, focus: [2], explode: 0.5 })).toBe('muted')
   })
+  it('is vivid while sliced, so the cut face shows the real layer colours (e-2 laser)', () => {
+    expect(groupTone({ ...base, group: 0, cut: true })).toBe('vivid')
+    expect(groupTone({ ...base, group: 0, cut: false })).toBe('muted')
+    expect(groupTone({ ...base, group: 3, focus: [2], cut: true })).toBe('muted') // 焦點仍優先
+  })
   it('keeps picked over explode', () => {
     expect(groupTone({ ...base, group: 1, picked: 1, explode: 0.5 })).toBe('vivid')
     expect(groupTone({ ...base, group: 0, picked: 1, explode: 0.5 })).toBe('muted')

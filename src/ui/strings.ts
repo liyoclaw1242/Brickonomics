@@ -1,8 +1,15 @@
 /** 所有介面文字（繁體中文）。新增文字一律加在這裡。 */
+/** 基金那一章的錢：投入 100＝100 萬（和計費表同一個底），所以 1＝1 萬。一位小數、去掉「.0」：98.5 → '98.5 萬'、1.958 → '2 萬' */
+const wan = (v: number): string => `${Number(Math.max(0, v).toFixed(1))} 萬`
+
 export const T = {
   appTitle: '積木城市',
   brand: '積 木 城 市',
   sandboxTitle: '自由探索',
+  /** 產品代號一律配一個白話暱稱（3D 標籤與一句話；完整商品名留在多說一點與即時數字表） */
+  nick: { '0050': '0050（台灣50大）', QQQ: 'QQQ（那斯達克100）', SPY: 'SPY（美國500大）' },
+  /** 資料名稱他不認得的公司，畫面上改用大家熟悉的名字（資料名稱不動） */
+  nameNick: { GOOGL: 'Google' },
   chapters: [
     { icon: '🏙', name: '序章' },
     { icon: '🧱', name: '股票' },
@@ -12,9 +19,25 @@ export const T = {
     { icon: '⚡', name: '情境' },
     { icon: '🪨', name: '地底' },
   ],
+  /** 簡單版裡地底章只剩最後的回顧，時間軸叫它「完成」 */
+  finishChapter: { icon: '🎉', name: '完成' },
+  /** 路線：第一次來的開始卡片、右上角切換 */
+  route: {
+    names: { simple: '簡單版', full: '完整版' },
+    startTitle: '要怎麼看？',
+    simple: (n: number) => `簡單版（約 ${n} 步）`,
+    full: (n: number) => `完整版（${n} 步）`,
+    simpleNote: '先懂大概',
+    fullNote: '看所有細節',
+    later: '右上角隨時可以換',
+    sep: '／',
+    switchLabel: '切換簡單版／完整版',
+    /** 無障礙名稱：先念看得到的目前路線，再說按下會換成哪一個 */
+    action: (current: string, to: string) => `簡單版／完整版：目前${current}，切換到${to}`,
+  },
   chapterCounter: (i: number, n: number) => `${String(i).padStart(2, '0')} / ${String(n - 1).padStart(2, '0')}`,
   shock: { stock: '只買台積電', withLegend: (name: string) => `${name}・紅色＝假設跌掉的部分` },
-  overlapLabel: (name: string, pct: string) => `${name} 重疊 ${pct}`,
+  overlapLabel: (name: string) => `${name}：兩盒都有`,
   heightNote: '大樓高度為市值的對數比例；籃子裡的方塊數量嚴格依照權重。',
   islands: { TW: '台灣島', US: '美國大陸' },
   regions: { TW: '台灣', US: '美國', GLOBAL: '全球' },
@@ -38,9 +61,11 @@ export const T = {
   explodeAmount: '拆開程度',
   levelLabel: (i: number) => (i === 0 ? '序章' : `第 ${i} 關`),
   next: '下一步',
+  nextWaiting: '先拉上面的拉桿',
+  nextWaitingName: '先拉上面的拉桿，再按下一步',
   prev: '上一步',
-  finish: '進入沙盒',
-  skipToSandbox: '跳過導覽，直接進沙盒',
+  finish: '自由玩',
+  skipToSandbox: '跳過導覽，直接自由玩',
   toolbar: { dusk: '☾ 黃昏', day: '☀ 白天', labels: '🏷 標註', legend: '🎨 圖例', replay: '↺ 重看導覽' },
   toolbarLabel: '畫面設定',
   themeNames: { dusk: '黃昏', day: '白天' },
@@ -50,13 +75,15 @@ export const T = {
   chaptersLabel: '章節',
   chapterName: (i: number, name: string) => `${String(i).padStart(2, '0')} ${name}`,
   legendLabel: '產業顏色',
-  tryIt: '先試著操作上面的控制項',
+  tryIt: (control: string) => `👉 先拉一下上面的「${control}」`,
   progressLabel: '課程進度',
+  recapLabel: '這堂課學到的',
   more: '多說一點',
   marks: {
-    illustrative: { icon: '≈', label: '示意：為了說明而設計，不是真實數字' },
-    assumption: { icon: '✎', label: '假設值：可以自己調整' },
-    unverified: { icon: '？', label: '待驗證：這筆資料還沒查證' },
+    illustrative: { icon: '≈', word: '舉例', label: '舉例：為了說明而設計（示意），不是真實數字' },
+    assumption: { icon: '✎', word: '假設的數字', label: '假設的數字：不是查到的資料，是拿來算給你看的' },
+    /** r3：「還沒查證」讓他不信任整堂課；記號照樣標（誠實），用詞改成資料在等更新，放在一句話後面 */
+    unverified: { icon: '？', word: '資料待更新', label: '資料待更新：這個數字還沒有和官方最新資料核對過' },
   },
   controls: {
     years: '持有年數',
@@ -64,18 +91,45 @@ export const T = {
     periods: '經過年數',
     periodsValue: (v: number) => `${v} 年`,
     phase: '時間軸',
-    phaseValue: (v: number) => (v < 0.5 ? '配發前' : '配發後'),
+    phaseValue: (v: number) => (v < 0.5 ? '發金幣前' : v < 0.55 ? '發金幣那一刻' : '過了一陣子'),
     frontLoad: '假設的前收手續費',
     frontLoadValue: (v: number) => `${(v * 100).toFixed(2)}%`,
   },
   stage: {
     held: '你手上的方塊',
     bonds: { stock: '股票方塊', gov: '國家債', corp: '公司債', hy: '高收益債' },
+    bondRanks: { gov: '最穩・利息少', corp: '中間', hy: '不穩・利息多' },
+    /** 借給誰（r5：簡單版沒有 b-2，三個名字一次出現卻沒說借給誰） */
+    bondWho: { gov: '借給政府', corp: '借給體質好的公司', hy: '借給體質弱的公司' },
+    bondHurt: (name: string) => `${name}：出問題了`,
     rateNote: '利息快慢為示意',
-    exdiv: { block: '方塊', coins: '金幣' },
+    exdiv: { block: '方塊', coins: '金幣', lost: (v: number) => `少了 ${v}` },
   },
-  towers: { lost: '費用扣掉的', lostPrincipal: '削掉的本金', coins: '領到的金幣', base: '以投入 100 元、假設報酬為 0 計（只比費用）', baseDemo: '以投入 100 元計（示意參數）', value: (v: number) => `${v.toFixed(1)} 元` },
+  /** 基金那一章的錢：投入 100＝100 萬（和計費表同一個底），一位小數、去掉「.0」 */
+  wan,
+  /** 元（四捨五入、千分位）：18800 → '18,800 元'（r5：有感的錢，像計費表的「已磨掉約 39,073 元」） */
+  yuan: (v: number): string => `${Math.round(v).toLocaleString('zh-TW')} 元`,
+  /** 大數字、3D 跌幅標籤用字說漲跌（負號太細，r3 看成正的） */
+  move: { down: '跌', up: '漲' },
+  towers: {
+    lost: '費用扣掉的',
+    lostPrincipal: '削掉的本金',
+    coins: (v: number) => `領到的金幣 ${wan(v)}`,
+    /** 配息陷阱：領到的金幣裡，有多少其實是削下來的本金（r5：91.2 ＋ 54.4 > 100，看起來像賺） */
+    coinsFromPrincipal: (v: number) => `其中 ${wan(v)}是本金`,
+    entry: (v: number) => `進門費 ${wan(v)}`,
+    exit: (v: number) => `出門費 ${wan(v)}`,
+    /** 一直在扣：出門費歸零時，後收那座才不會看起來「免費」 */
+    held: '每年費用（一直在扣）',
+    base: '假設投入 100 萬',
+    baseDemo: '假設投入 100 萬（舉例的數字）',
+    value: (v: number) => wan(v),
+  },
   feeRaceCaveat: '三者投資內容與風險不同，費用低不代表比較好',
+  feeRaceCaveatFunds: '同一檔基金，只差收費方式；前收手續費是假設值',
+  /** 費用比一比的塔名（短）；即時數字表用下面的 feeRows（完整） */
+  feeTowers: { front: '進門先付', back: '出門才付', etf: '門票便宜' },
+  feeTowerNames: { front: '前收', back: '後收', etf: '0050' },
   feeRows: {
     front: (fl: number) => `前收型（假設 ${(fl * 100).toFixed(2)}%）`,
     back: '後收型（U 級別）',
@@ -84,20 +138,22 @@ export const T = {
   accumulateRows: { accumulate: '累積型', payout: '配息型' },
   trapRow: '高配息基金',
   excavator: '經理人（怪手）',
+  excavatorOther: '另一位經理人（怪手）',
   feeMeter: {
     title: '計費表',
     elapsed: (year: number) => `第 ${year} 年`,
     ground: (amount: number) => `已磨掉約 ${Math.round(amount).toLocaleString('zh-TW')} 元`,
-    note: '假設投入 100 萬元、時間快轉（6 秒 = 1 年）',
+    base: '假設投入 100 萬',
+    fastForward: '6 秒＝1 年',
   },
-  ticker: { etf: '成交價', fund: '基金淨值：每天收盤後才公布一次' },
+  ticker: { etf: '0050：隨時有價錢', fund: '基金：一天一個價錢' },
   readout: {
     title: '即時數字',
-    invested: '投入 100 元',
+    invested: '投入 100 萬',
     block: '方塊價值',
     coins: '手上的金幣',
     total: '合計',
-    remaining: (v: number) => `剩 ${v.toFixed(1)} 元`,
+    remaining: (v: number) => `剩 ${wan(v)}`,
     leader: '費用最少（只比費用）',
     accumulate: '累積型的塔',
     payoutTower: '配息型的塔',
@@ -109,8 +165,8 @@ export const T = {
     expenseRatio: '每年內扣費用',
     overlapTotal: '前幾大持股重疊（至少）',
     atLeast: '（至少）',
-    overlapNote: '其餘持股未細分，實際重疊更多',
-    unverifiedParts: (parts: string) => `待驗證：${parts}`,
+    overlapNote: '其餘持股沒有列出，實際重疊更多',
+    unverifiedParts: (parts: string) => `資料待更新：${parts}`,
   },
   feeParts: { expenseRatio: '內扣費用', distributionFee: '分銷費', cdsc: '遞延手續費', trading: '交易成本' },
   qualityNotice: '畫面有點卡，已自動切換成省電畫質。',
@@ -118,8 +174,7 @@ export const T = {
   fallbackIntro: '你的瀏覽器無法顯示 3D 畫面，以下是文字版課程。課文中提到的 3D 畫面與互動（拖曳、切開、拉桿）在文字版中省略，只保留文字與當下的數字。',
   underground: {
     goldVein: '黃金礦脈',
-    rodLegend: '細桿：快照只列出前幾大持股，這一層沒有列到，不代表完全沒有',
-    unclassifiedStub: (pct: number) => `未細分 ${pct.toFixed(0)}%`,
+    unclassifiedStub: (pct: number) => `其他 ${pct.toFixed(0)}%`,
     dig: '產業型 ETF',
     veins: '高股息型 ETF',
   },
@@ -130,6 +185,6 @@ export const T = {
     internet: '網路',
     auto: '汽車',
     finance: '金融',
-    unclassified: '未細分',
+    unclassified: '其他',
   },
 } as const

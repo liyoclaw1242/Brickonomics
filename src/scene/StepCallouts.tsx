@@ -3,6 +3,7 @@ import { universe } from '../data'
 import { effectiveExplode, useSandbox } from '../store/sandbox'
 import { currentStep, useTour } from '../store/tour'
 import { makeTextContext } from '../tour/context'
+import { isSatisfied } from '../tour/engine'
 import type { CalloutSpec, TextContext } from '../tour/types'
 import type { Vec3 } from './camera'
 import { Callout } from './Callout'
@@ -31,6 +32,8 @@ export function StepCallouts({ quality }: { quality: Quality }) {
   const revealed = useRevealAfterCamera(stepId, instant)
   const productId = useSandbox((s) => s.productId)
   const explode = useSandbox(effectiveExplode)
+  const slice = useSandbox((s) => s.slice)
+  const values = useTour((s) => s.values)
   const placements = useMemo(() => cityLayout([...universe.values()]), [])
   const basket = useMemo(() => {
     const holdings = productId ? universe.get(productId)?.holdings : undefined
@@ -41,6 +44,8 @@ export function StepCallouts({ quality }: { quality: Quality }) {
 
   const resolved = useMemo<Resolved[]>(() => {
     return (callouts ?? []).flatMap((c, i): Resolved[] => {
+      // 有 when 的標註等拉桿到位才出現（例如拆開之後才標出每一層）
+      if (!isSatisfied(c.when, { ...values, slice, explode })) return []
       const title = textOf(c.title, ctx) ?? ''
       const sub = textOf(c.sub, ctx)
       if (c.anchor.kind === 'holding') {
@@ -59,7 +64,7 @@ export function StepCallouts({ quality }: { quality: Quality }) {
       if (!b) return []
       return [{ key: `${i}-${id}`, anchor: [b.x, b.height + 0.2, b.z], offset: BUILDING_OFFSET, color: colorForKey(universe, id), title, sub }]
     })
-  }, [callouts, basket, explode, placements])
+  }, [callouts, basket, explode, slice, values, placements])
 
   if (!revealed) return null
   return (

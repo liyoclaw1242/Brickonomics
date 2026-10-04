@@ -6,8 +6,12 @@ import { Callout } from '../Callout'
 import { EXCHANGE_POSITION } from './plaza'
 import { useContinuousRender } from '../useContinuousRender'
 
-/** 方塊組成的小怪手（經理人），手臂來回擺動 */
-export function Excavator() {
+/** 車身顏色：第一位經理人黃色；另一位經理人青綠色（一眼看得出換了人） */
+const BODY = { first: '#f9a825', other: '#26a69a' } as const
+
+/** 方塊組成的小怪手（經理人），手臂來回擺動；other＝另一位經理人 */
+export function Excavator({ other = false }: { other?: boolean }) {
+  const body = other ? BODY.other : BODY.first
   const arm = useRef<Group>(null)
   useContinuousRender()
   useFrame(({ clock }) => {
@@ -22,19 +26,19 @@ export function Excavator() {
       </mesh>
       <mesh position={[-0.3, 1.8, 0]} castShadow>
         <boxGeometry args={[1.8, 1.6, 1.8]} />
-        <meshStandardMaterial color="#f9a825" />
+        <meshStandardMaterial color={body} />
       </mesh>
       <group ref={arm} position={[0.6, 2.4, 0]}>
         <mesh position={[1.8, 0, 0]} castShadow>
           <boxGeometry args={[3.6, 0.5, 0.6]} />
-          <meshStandardMaterial color="#f9a825" />
+          <meshStandardMaterial color={body} />
         </mesh>
         <mesh position={[3.7, -0.6, 0]} castShadow>
           <boxGeometry args={[0.9, 0.9, 1]} />
           <meshStandardMaterial color="#455a64" />
         </mesh>
       </group>
-      <Callout anchor={[0, 2.7, 0]} offset={[0, 1.5, 0]} title={T.excavator} />
+      <Callout anchor={[0, 2.7, 0]} offset={[0, 1.5, 0]} title={other ? T.excavatorOther : T.excavator} color={other ? body : undefined} persistent={other} />
     </group>
   )
 }

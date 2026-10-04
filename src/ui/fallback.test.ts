@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
+import { stepMarks } from './marks'
 import { universe } from '../data'
-import { LEVELS } from '../tour/levels'
+import { LEVELS, ROUTES } from '../tour/levels'
 import { makeTextContext } from '../tour/context'
 import { lineOf, moreOf } from '../tour/engine'
 import { fallbackLevels } from './fallback'
@@ -25,7 +26,9 @@ describe('fallbackLevels', () => {
     const steps = LEVELS.flatMap((l) => l.steps).filter((s) => s.mark)
     expect(steps.length).toBeGreaterThan(0)
     const flat = out.flatMap((l) => l.steps)
-    for (const s of steps) expect(flat.find((f) => f.id === s.id)!.mark, s.id).toBe(s.mark)
+    for (const s of steps) expect(flat.find((f) => f.id === s.id)!.marks, s.id).toContain(s.mark)
+    // 標題旁的標示和 3D 版一致（含從資料推出來的「還沒查證」）
+    for (const s of LEVELS.flatMap((l) => l.steps)) expect(flat.find((f) => f.id === s.id)!.marks, s.id).toEqual(stepMarks(s, universe))
   })
 
   it('u-6 uses its own honest text: no 已經解鎖, no claim that the sandbox is here', () => {
@@ -37,6 +40,13 @@ describe('fallbackLevels', () => {
     expect(u6.more).not.toContain('解鎖')
     expect(u6.line).not.toContain('解鎖')
     expect(u6.more).toContain('在支援 3D 的瀏覽器上')
+  })
+
+  it('shows the closing recap in the text-only version too', () => {
+    const u6 = out.flatMap((l) => l.steps).find((s) => s.id === 'u-6')!
+    const step = LEVELS.flatMap((l) => l.steps).find((s) => s.id === 'u-6')!
+    expect(u6.recap).toEqual(step.recap)
+    expect(u6.recap!.length).toBe(4)
   })
 
   it('uses the 3D line and more when a step has no text-only version', () => {
@@ -56,7 +66,25 @@ describe('fallbackLevels', () => {
   it('includes the live numbers each step would show', () => {
     const shock = out.flatMap((l) => l.steps).find((s) => s.id === 'c-2')!
     expect(shock.rows).toHaveLength(3)
-    const exdiv = out.flatMap((l) => l.steps).find((s) => s.id === 's-6')!
+    // 文字版不能拖：有門檻的步驟顯示「做完那個動作」之後的數字（s-5：拉到發金幣那一刻）
+    const exdiv = out.flatMap((l) => l.steps).find((s) => s.id === 's-5')!
     expect(exdiv.rows.map((r) => r.value)).toEqual(['95.0', '5.0', '100.0'])
+    const gap = out.flatMap((l) => l.steps).find((s) => s.id === 's-6')!
+    expect(gap.rows.map((r) => r.value)).toEqual(['92.0', '5.0', '97.0'])
+    expect(exdiv.line).not.toMatch(/^拖/) // 文字版沒有拉桿
+  })
+})
+
+describe('fallbackLevels in the simple route', () => {
+  const simple = ROUTES.simple!
+  const out = fallbackLevels(LEVELS, universe, simple)
+  it('keeps only route steps, in order', () => {
+    expect(out.flatMap((l) => l.steps.map((s) => s.id))).toEqual(simple)
+  })
+  it('the recap-only underground chapter is labelled 完成 without the underground title', () => {
+    const last = out.at(-1)!
+    expect(last.label).toBe('完成')
+    expect(last.title).toBe('')
+    expect(out[0]!.label).toBe('序章')
   })
 })

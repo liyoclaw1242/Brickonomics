@@ -1,10 +1,12 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { universe } from '../data'
-import { LEVELS } from '../tour/levels'
+import { LEVELS, ROUTES } from '../tour/levels'
+import type { Route } from '../tour/types'
 import { colorForKey } from '../scene/palette'
 import { parseEmphasis } from './emphasis'
 import { fallbackLevels } from './fallback'
 import { MarkIcon } from './MarkIcon'
+import { markPlacement } from './marks'
 import { T } from './strings'
 import './ui.css'
 
@@ -26,25 +28,55 @@ function Line({ line }: { line: string }) {
   )
 }
 
+/** 文字版：預設完整版；上方兩顆按鈕可換成簡單版（只留簡單版的步驟） */
 export function FallbackApp() {
-  const levels = useMemo(() => fallbackLevels(LEVELS, universe), [])
+  const [route, setRoute] = useState<Route>('full')
+  const levels = useMemo(() => fallbackLevels(LEVELS, universe, ROUTES[route]), [route])
   return (
     <main className="fallback" data-levels={levels.length}>
       <h1>{T.appTitle}</h1>
       <p className="hint">{T.fallbackIntro}</p>
+      <div className="fallback__routes" role="group" aria-label={T.route.switchLabel}>
+        {(['simple', 'full'] as const).map((r) => (
+          <button key={r} className="pill" aria-pressed={route === r} onClick={() => setRoute(r)}>
+            {T.route.names[r]}
+          </button>
+        ))}
+      </div>
       {levels.map((l) => (
-        <section key={l.title} className="fallback__level">
-          <h2>
-            {l.label}・{l.title}
-          </h2>
+        <section key={l.label} className="fallback__level">
+          <h2>{l.title ? `${l.label}・${l.title}` : l.label}</h2>
           <ol>
             {l.steps.map((s) => (
               <li key={s.id}>
                 <h3 className="fallback__title">
                   {s.title}
-                  {s.mark && <MarkIcon kind={s.mark} />}
+                  {markPlacement(s.marks).title.map((k) => (
+                    <MarkIcon key={k} kind={k} />
+                  ))}
                 </h3>
                 <Line line={s.line} />
+                {/* ？ 資料待更新：放在一句話後面（和 3D 版一致） */}
+                {markPlacement(s.marks).afterLine.length > 0 && (
+                  <p className="step-marks-after">
+                    {markPlacement(s.marks).afterLine.map((k) => (
+                      <MarkIcon key={k} kind={k} />
+                    ))}
+                  </p>
+                )}
+                {/* 回顧不用 li：e2e 以 li 數步驟 */}
+                {s.recap && (
+                  <div className="recap" role="list" aria-label={T.recapLabel}>
+                    {s.recap.map((r) => (
+                      <p key={r.text} role="listitem">
+                        <span className="recap__icon" aria-hidden="true">
+                          {r.icon}
+                        </span>
+                        {r.text}
+                      </p>
+                    ))}
+                  </div>
+                )}
                 <details className="fallback__more">
                   <summary>{T.more}</summary>
                   <p>{s.more}</p>

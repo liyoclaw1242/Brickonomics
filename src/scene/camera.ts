@@ -7,11 +7,16 @@ export const CAMERA_PRESETS: Record<CameraPresetId, { position: Vec3; target: Ve
   sky: { position: [0, 140, 160], target: [0, 0, 0] },
   overview: { position: [10, 36, 58], target: [0, 5, 12] },
   tw: { position: [-12, 22, 34], target: [-16, 6, 0] },
-  us: { position: [20, 22, 34], target: [16, 6, 0] },
-  exchange: { position: [6, 18, 40], target: [0, 6, 14] },
+  // 美國大樓高（18–19 層）：鏡頭拉遠、看高一點，樓頂才不會被畫面上緣切掉
+  us: { position: [22, 26, 46], target: [16, 9, 0] },
+  // 往下看多一點：後面美國大樓的樓頂不會被切一半、壓在工具列底下（使用者測試 r2，f-1）
+  exchange: { position: [2, 20, 50], target: [2, 8, 12] },
   exchangeWide: { position: [10, 30, 48], target: [0, 10, 14] },
-  exchangeSide: { position: [34, 14, 20], target: [0, 7, 14] },
-  plazaNear: { position: [0, 18, 52], target: [0, 2, 30] },
+  // 雷射刀（沿 x 切）：從斜前方看。正對 x 軸時切掉的是靠近鏡頭那一面，剩下的看起來一模一樣（使用者測試 r2）
+  exchangeSide: { position: [26, 15, 38], target: [0, 6, 14] },
+  // 往下看多一點：後面城市的樓頂不會被畫面上緣切一半、也不會壓在工具列底下（使用者測試 r2）
+  // r3：再往下看一點，後面台灣島的一角不會卡在畫面上緣（像沒收乾淨的黑板子）
+  plazaNear: { position: [0, 24, 39], target: [0, 1.5, 30] },
   underground: { position: [0, -1, 98], target: [0, -9, 24] },
   plaza: { position: [0, 26, 66], target: [0, 4, 30] },
 }

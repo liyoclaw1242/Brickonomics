@@ -2,7 +2,7 @@ import type { Universe } from '../data/universe'
 import { isVerified } from '../data/verified'
 import { sectorBreakdown } from '../scene/layout/underground'
 import { accumulateVsPayout, exDivTimeline, principalTrap } from '../scene/layout/stages'
-import { feeRace, feeRaceLeader } from '../sim/feeRace'
+import { feeRaceLeader, feeRaceRows } from '../sim/feeRace'
 import { overlap } from '../sim/overlap'
 import { shockImpact } from '../sim/scenario'
 import { SHOCK_2330, signedPct } from '../tour/context'
@@ -26,7 +26,8 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
       ]
     }
     case 'feeRace': {
-      const rows = feeRace(u, v.years, v.frontLoad)
+      const withEtf = stage.etf ?? true
+      const rows = feeRaceRows(u, v.years, v.frontLoad, withEtf)
       const label = (id: 'front' | 'back' | 'etf') => (id === 'front' ? T.feeRows.front(v.frontLoad) : T.feeRows[id])
       return [
         ...rows.map((r) => ({
@@ -35,7 +36,7 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
           marks: feeRowMarks(r.id, r.unverified.length),
           note: r.unverified.length ? T.readout.unverifiedParts(r.unverified.map((k) => T.feeParts[k]).join('、')) : undefined,
         })),
-        { label: T.readout.leader, value: label(feeRaceLeader(rows)), note: T.feeRaceCaveat },
+        { label: T.readout.leader, value: label(feeRaceLeader(rows)), note: withEtf ? T.feeRaceCaveat : T.feeRaceCaveatFunds },
       ]
     }
     case 'accumulate': {
