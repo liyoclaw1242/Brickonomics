@@ -5,7 +5,7 @@ import { displayName } from './names'
 describe('displayName', () => {
   it('pairs product codes with a plain nickname on 3D labels', () => {
     expect(displayName(universe, '0050')).toBe('0050（台灣50大）')
-    expect(displayName(universe, 'QQQ')).toBe('QQQ（美國科技100）')
+    expect(displayName(universe, 'QQQ')).toBe('QQQ（那斯達克100）')
     expect(displayName(universe, 'SPY')).toBe('SPY（美國500大）')
   })
 

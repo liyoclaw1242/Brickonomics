@@ -7,7 +7,7 @@ export const T = {
   brand: '積 木 城 市',
   sandboxTitle: '自由探索',
   /** 產品代號一律配一個白話暱稱（3D 標籤與一句話；完整商品名留在多說一點與即時數字表） */
-  nick: { '0050': '0050（台灣50大）', QQQ: 'QQQ（美國科技100）', SPY: 'SPY（美國500大）' },
+  nick: { '0050': '0050（台灣50大）', QQQ: 'QQQ（那斯達克100）', SPY: 'SPY（美國500大）' },
   /** 資料名稱他不認得的公司，畫面上改用大家熟悉的名字（資料名稱不動） */
   nameNick: { GOOGL: 'Google' },
   chapters: [
@@ -33,7 +33,7 @@ export const T = {
     sep: '／',
     switchLabel: '切換簡單版／完整版',
     /** 無障礙名稱：先念看得到的目前路線，再說按下會換成哪一個 */
-    action: (current: string, to: string) => `${current}，切換到${to}`,
+    action: (current: string, to: string) => `簡單版／完整版：目前${current}，切換到${to}`,
   },
   chapterCounter: (i: number, n: number) => `${String(i).padStart(2, '0')} / ${String(n - 1).padStart(2, '0')}`,
   shock: { stock: '只買台積電', withLegend: (name: string) => `${name}・紅色＝假設跌掉的部分` },

@@ -34,6 +34,8 @@ export function resumePosition(levels: readonly Level[], pos: Position | undefin
     }
   }
   if (pos && stepId === undefined && levels[pos.level]?.id === 'fund' && pos.step >= LEGACY_FUND_MERGED_AT) pos = { level: pos.level, step: pos.step - 1 }
+  // 股票章在 r2 把舊 s-5、s-6、s-7 併成新 s-5、s-6：舊第 6 步（索引 5，除息）起往前一步
+  if (pos && stepId === undefined && levels[pos.level]?.id === 'stock' && pos.step >= LEGACY_STOCK_MERGED_AT) pos = { level: pos.level, step: pos.step - 1 }
   if (pos && isValidPosition(levels, pos)) return pos
   const level = pos && Number.isInteger(pos.level) ? levels[pos.level] : undefined
   if (pos && level && level.steps.length > 0) return { level: pos.level, step: level.steps.length - 1 }
@@ -42,6 +44,9 @@ export function resumePosition(levels: readonly Level[], pos: Position | undefin
 
 /** 舊基金章第 7 步（索引 6，f-7）起，f-6、f-7 併成一步後都往前一步 */
 const LEGACY_FUND_MERGED_AT = 6
+
+/** 舊股票章第 6 步（索引 5）起往前一步 */
+const LEGACY_STOCK_MERGED_AT = 5
 
 export function stepAt(levels: readonly Level[], pos: Position): Step {
   const s = levels[pos.level]?.steps[pos.step]

@@ -158,7 +158,7 @@ export const LEVELS: Level[] = [
         id: 'b-2',
         title: '三種借據',
         line: '越**穩**的，利息通常**越少**',
-        more: '國家債＝借給政府，像鑽石一樣堅固，利息通常最少。公司債＝借給公司，金屬材質。高收益債＝借給體質弱的公司，玻璃材質。它利息通常較多，也較容易裂（利息快慢是示意）。',
+        more: '國家債＝借給政府，像鑽石一樣堅固，利息通常最少。公司債＝借給體質好的公司，金屬材質。高收益債＝借給體質弱的公司，玻璃材質。它利息通常較多，也較容易裂（利息快慢是示意）。',
         mark: 'illustrative',
         scene: { camera: 'plaza', product: null, stage: { kind: 'bonds', stressed: false, ranks: true } },
       },
@@ -218,7 +218,7 @@ export const LEVELS: Level[] = [
         line: '同樣股票＋借據，**比例差很多**',
         // 純看圖：換一台怪手，股票和借據的多少整個反過來；專有名詞（可轉債、高收益債）只在多說一點
         more: (c) =>
-          `這是安聯收益成長基金，也是股票＋借據。前一座約 ${pct0(c.assetClassPct('JH_BALANCED', 'stock'))}% 是股票，這座只有約 ${pct0(c.assetClassPct('ALLIANZ_INCOME_GROWTH', 'stock'))}%。它的借據裡，可轉債約 ${pct0(c.weightPct('ALLIANZ_INCOME_GROWTH', 'CONVERTIBLE_US'))}%，高收益債約 ${pct0(c.weightPct('ALLIANZ_INCOME_GROWTH', 'US_HIGH_YIELD'))}%。可轉債＝能換成股票的借據；名稱像，裡面不一定一樣。`,
+          `這是安聯收益成長基金，也是股票＋借據。前一座約 ${pct0(c.assetClassPct('JH_BALANCED', 'stock'))}% 是股票，這座只有約 ${pct0(c.assetClassPct('ALLIANZ_INCOME_GROWTH', 'stock'))}%。整座塔裡，可轉債約 ${pct0(c.weightPct('ALLIANZ_INCOME_GROWTH', 'CONVERTIBLE_US'))}%，高收益債約 ${pct0(c.weightPct('ALLIANZ_INCOME_GROWTH', 'US_HIGH_YIELD'))}%。可轉債＝能換成股票的借據；名稱像，裡面不一定一樣。`,
         // 借據那幾層亮、股票那幾層暗：一眼看出這座塔大半是借據
         focus: { holdings: ['CONVERTIBLE_US', 'US_HIGH_YIELD'] },
         callouts: [
@@ -358,7 +358,7 @@ export const LEVELS: Level[] = [
       },
       {
         id: 'e-5',
-        title: 'ETF 收費少',
+        title: 'ETF 通常較省',
         // r5：突然換成 QQQ、只給 0.18%，陳伯伯差點關掉。改成同一個 0050、和計費表那檔基金比，用「100 萬一年扣多少元」
         line: (c) => {
           const er = c.expenseRatio(METER_FUND)
@@ -377,7 +377,7 @@ export const LEVELS: Level[] = [
         // 大數字＝0050 的；費用低≠比較好，一直寫在卡片上
         bigNumber: (c) => {
           const er = c.expenseRatio('0050')
-          return er === undefined ? undefined : { value: perMillion(er), label: '0050 一年只扣', note: '費用低，不代表比較好' }
+          return er === undefined ? undefined : { value: perMillion(er), label: '0050 一年約扣', note: '費用低，不代表比較好' }
         },
         scene: { camera: 'exchange', product: '0050', cityLabels: false },
       },

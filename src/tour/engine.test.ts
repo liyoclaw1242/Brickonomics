@@ -162,6 +162,14 @@ describe('resumePosition (saved progress after the lesson changed)', () => {
     expect(at(7)).toBe('f-8') // 舊 f-8
     expect(at(8)).toBe('f-9') // 舊 f-9
   })
+  it('migrates an old save (no id) in the stock chapter, where old s-5/s-6/s-7 became s-5/s-6', () => {
+    const stock = REAL.findIndex((l) => l.id === 'stock')
+    const at = (step: number) => REAL[stock]!.steps[resumePosition(REAL, { level: stock, step }).step]!.id
+    expect(at(3)).toBe('s-4')
+    expect(at(4)).toBe('s-5') // 舊 s-5 發金幣
+    expect(at(5)).toBe('s-5') // 舊 s-6 除息（總數不變）
+    expect(at(6)).toBe('s-6') // 舊 s-7 貼息
+  })
   it('parseProgress keeps a string stepId and ignores a non-string one', () => {
     expect(parseProgress('{"completed":[],"sandboxUnlocked":false,"stepId":"f-8"}').stepId).toBe('f-8')
     expect(parseProgress('{"completed":[],"sandboxUnlocked":false,"stepId":5}').stepId).toBeUndefined()
