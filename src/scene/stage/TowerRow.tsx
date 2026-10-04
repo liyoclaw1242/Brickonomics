@@ -45,7 +45,7 @@ export function TowerRow({ towers, quality, base, baseSub }: { towers: TowerSpec
             {t.lost !== undefined && blocksFor(t.lost) > 0 && (
               <>
                 <VoxelColumn count={blocksFor(t.lost)} look={LOST} position={atPlaza(x + 3, 0, 5.5)} w={3} d={3} quality={quality} />
-                <Callout anchor={atPlaza(x + 3, -0.2, 7.2)} offset={[0, 0, 0]} title={t.lostLabel ?? T.towers.lost} />
+                <Callout anchor={atPlaza(x + 3, -0.2, 7.2)} offset={[0, 0, 0]} title={t.lostLabel ?? T.towers.lost} persistent={t.lostLabel !== undefined} />
               </>
             )}
             {t.coins !== undefined && (

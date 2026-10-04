@@ -202,6 +202,8 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .mark__tip { position: absolute; top: 120%; left: 50%; transform: translateX(-50%); z-index: 10; width: max-content; max-width: 220px;
   padding: 6px 8px; border-radius: 8px; background: var(--surface-strong); border: 1px solid var(--border); font-size: 12px; white-space: normal; }
 
+@media (max-width: 720px) { .mark__icon { width: 24px; height: 24px; } }
+
 /* 右上工具列、圖例色票列、底部章節時間軸（版面 insets 見 src/ui/layoutModel.ts） */
 .toolbar { position: fixed; top: 12px; right: 12px; display: flex; gap: 8px; z-index: 6; }
 .pill { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 999px; padding: 8px 14px; font: inherit; font-size: 14px; cursor: pointer; backdrop-filter: blur(10px); }
