@@ -18,6 +18,8 @@ const WIDTH = 44
 const DEPTH = 30
 const FRONT_Z = CENTER_Z + DEPTH / 2
 const ROD_OPACITY = 0.35
+/** 黃金礦脈名稱的色點（r2：標籤太淡） */
+const GOLD_LABEL = ACCENT_COLORS.coin
 const STUB_RADIUS = 1.3
 const CORE_Z = FRONT_Z + 2
 // 地層名稱貼在地層正面左側（地層寬 44，左緣 −22）：手機窄畫面也不會被左邊界切掉
@@ -119,7 +121,7 @@ export function UndergroundStage({ show, cores, quality }: { show: Show; cores?:
       ))}
       {/* 黃金礦脈只在介紹地層與黃金時標名；其他步驟它只是背景，少一個字塊 */}
       {(show === 'strata' || show === 'gold') && (
-        <Callout anchor={[-17, (vein.top + vein.bottom) / 2, FRONT_Z + 0.5]} offset={[0, 0, 0]} title={T.underground.goldVein} dim={veinDim} compact />
+        <Callout anchor={[-17, (vein.top + vein.bottom) / 2, FRONT_Z + 0.5]} offset={[0, 0, 0]} title={T.underground.goldVein} color={GOLD_LABEL} compact />
       )}
       {show === 'cores' &&
         coreData.map((c) => (

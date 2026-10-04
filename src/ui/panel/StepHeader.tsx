@@ -27,7 +27,7 @@ export function StepHeader({ level, levelCount, title, marks, revealed, children
       </p>
       <div className={revealed ? 'step-reveal is-revealed' : 'step-reveal'} aria-live="polite" aria-atomic="true">
         <h1 className="step-title">
-          {title}
+          <span className="step-title__text">{title}</span>
           {marks.length > 0 && (
             <span className="step-title__marks">
               {marks.map((k) => (

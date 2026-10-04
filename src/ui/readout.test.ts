@@ -18,7 +18,7 @@ describe('stageReadout', () => {
     expect(rows[0]!.marks).toEqual(['assumption', 'unverified']) // 前收：假設值，且內扣費用待驗證
     expect(rows[1]!.marks).toEqual(['unverified'])
     expect(rows[2]!.marks).toEqual(['unverified']) // 0050 的內扣費用也待驗證
-    expect(rows[0]!.note).toBe('待驗證：內扣費用')
+    expect(rows[0]!.note).toBe('還沒查證：內扣費用')
     expect(rows.at(-1)!.label).toBe('費用最少（只比費用）')
     expect(rows.at(-1)!.value).toBe('ETF（0050）')
     expect(rows.at(-1)!.note).toBe('三者投資內容與風險不同，費用低不代表比較好')

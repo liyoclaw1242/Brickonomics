@@ -57,9 +57,9 @@ export const T = {
   recapLabel: '這堂課學到的',
   more: '多說一點',
   marks: {
-    illustrative: { icon: '≈', word: '示意', label: '示意：為了說明而設計，不是真實數字' },
-    assumption: { icon: '✎', word: '假設', label: '假設值：可以自己調整' },
-    unverified: { icon: '？', word: '待查', label: '待驗證：這筆資料還沒查證' },
+    illustrative: { icon: '≈', word: '舉例', label: '舉例：為了說明而設計（示意），不是真實數字' },
+    assumption: { icon: '✎', word: '假設的數字', label: '假設的數字：不是查到的資料，自由玩裡可以自己調整' },
+    unverified: { icon: '？', word: '還沒查證', label: '還沒查證：這筆資料還沒核對過，可能不準' },
   },
   controls: {
     years: '持有年數',
@@ -118,7 +118,7 @@ export const T = {
     overlapTotal: '前幾大持股重疊（至少）',
     atLeast: '（至少）',
     overlapNote: '其餘持股沒有列出，實際重疊更多',
-    unverifiedParts: (parts: string) => `待驗證：${parts}`,
+    unverifiedParts: (parts: string) => `還沒查證：${parts}`,
   },
   feeParts: { expenseRatio: '內扣費用', distributionFee: '分銷費', cdsc: '遞延手續費', trading: '交易成本' },
   qualityNotice: '畫面有點卡，已自動切換成省電畫質。',
