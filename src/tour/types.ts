@@ -87,8 +87,8 @@ export type Step = {
   /** 文字版（沒有 3D）專用的多說一點；未填則沿用 more */
   fallbackMore?: LessonText
   mark?: 'illustrative' | 'assumption'
-  /** 回傳 undefined 時不顯示大數字（例如資料沒有內扣費用） */
-  bigNumber?: (c: TextContext) => BigNumber | undefined
+  /** 回傳 undefined 時不顯示大數字（例如資料沒有內扣費用）；values＝導覽目前的拉桿值（跟著拉桿即時變） */
+  bigNumber?: (c: TextContext, values: Readonly<StageValues>) => BigNumber | undefined
   focus?: { holdings?: string[] }
   callouts?: CalloutSpec[]
   scene: SceneDirective

@@ -1,6 +1,18 @@
 /** 所有介面文字（繁體中文）。新增文字一律加在這裡。 */
 export const T = {
   appTitle: '積木城市',
+  brand: '積 木 城 市',
+  sandboxTitle: '自由探索',
+  chapters: [
+    { icon: '🏙', name: '序章' },
+    { icon: '🧱', name: '股票' },
+    { icon: '📜', name: '債券' },
+    { icon: '🚜', name: '基金' },
+    { icon: '🧩', name: 'ETF' },
+    { icon: '⚡', name: '情境' },
+    { icon: '🪨', name: '地底' },
+  ],
+  chapterCounter: (i: number, n: number) => `${String(i).padStart(2, '0')} / ${String(n - 1).padStart(2, '0')}`,
   shock: { stock: '只買台積電', legend: '紅色＝假設跌掉的部分', label: (name: string, pct: string) => `${name}：${pct}` },
   overlapLabel: (name: string, pct: string) => `${name} 重疊 ${pct}`,
   heightNote: '大樓高度為市值的對數比例；籃子裡的方塊數量嚴格依照權重。',

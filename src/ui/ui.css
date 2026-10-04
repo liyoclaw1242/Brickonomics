@@ -45,10 +45,38 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .panel {
   position: fixed; top: 12px; left: 12px; bottom: 12px; width: var(--panel-w);
   overflow-y: auto; padding: 14px 16px; border-radius: 14px;
-  background: var(--surface); border: 1px solid var(--border);
-  backdrop-filter: blur(8px);
 }
-.panel__title { margin: 0 0 8px; font-size: 20px; }
+.panel { background: var(--surface); border: 1px solid var(--border); backdrop-filter: blur(14px); color: var(--text); }
+.brand { margin: 0 0 14px; font-size: 12px; letter-spacing: 0.6em; color: var(--muted); }
+.step-counter { font-size: 12px; letter-spacing: 0.25em; color: var(--muted); }
+.step-title { margin: 4px 0 6px; font-size: 26px; font-weight: 600; letter-spacing: 0.02em; display: flex; gap: 8px; align-items: center; }
+.oneline { margin: 0 0 12px; font-size: 17px; line-height: 1.6; }
+.oneline strong { color: var(--em); font-weight: 700; }
+.bignum { margin: 8px 0 12px; padding: 12px 14px; border-radius: 12px; background: var(--chip); border: 1px solid var(--border); }
+.bignum__value { font-size: 34px; font-weight: 700; display: flex; gap: 8px; align-items: center; font-variant-numeric: tabular-nums; }
+.bignum__label { font-size: 13px; color: var(--muted); }
+.bignum__bar { margin-top: 8px; height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
+.bignum__bar span { display: block; height: 100%; background: var(--accent); }
+.more { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 8px; font-size: 14px; color: var(--muted); }
+.more summary { cursor: pointer; color: var(--text); }
+
+.step-counter { margin: 0; display: flex; align-items: center; gap: 8px; }
+.step-counter__icon { font-size: 16px; letter-spacing: 0; }
+.more__text { line-height: 1.7; }
+.more .readout { color: var(--text); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; border: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* 3b1b「先看再命名」：鏡頭停下前文字隱藏，停下後標題淡入、一句話逐段淡入（每段 80ms，由 OneLine 設 animation-delay） */
+@keyframes reveal { from { opacity: 0; transform: translateY(4px) } }
+.step-reveal:not(.is-revealed) .step-title,
+.step-reveal:not(.is-revealed) .oneline > *,
+.step-reveal:not(.is-revealed) .bignum { opacity: 0; }
+.step-reveal.is-revealed .step-title,
+.step-reveal.is-revealed .oneline > *,
+.step-reveal.is-revealed .bignum { animation: reveal 320ms ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .step-reveal .step-title, .step-reveal .oneline > *, .step-reveal .bignum { opacity: 1 !important; animation: none !important; }
+}
 .panel h2 { margin: 14px 0 6px; font-size: 14px; }
 .panel h3 { margin: 8px 0 4px; font-size: 12px; color: var(--muted); font-weight: 500; }
 .panel input[type='range'] { width: 100%; accent-color: var(--accent); }
@@ -96,16 +124,13 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
   .panel.tour { bottom: auto; max-height: calc(100% - 24px); }
 }
 
-.tour__level { margin: 0 0 6px; font-size: 13px; color: var(--muted); font-weight: 600; }
-.tour__progress { width: 100%; height: 6px; accent-color: var(--accent); }
-.tour__text { margin: 12px 0; font-size: 15px; line-height: 1.75; }
-.tour__nav { display: flex; gap: 8px; margin-top: 12px; }
-.tour__nav button {
-  flex: 1; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border);
+.step-nav { display: flex; gap: 8px; margin-top: 12px; }
+.step-nav button {
+  flex: 1; padding: 9px 10px; border-radius: 10px; border: 1px solid var(--border);
   background: var(--chip); color: var(--text); font: inherit; cursor: pointer;
 }
-.tour__nav button.primary { background: var(--chip-on); color: var(--chip-on-text); border-color: transparent; }
-.tour__nav button:disabled { opacity: 0.45; cursor: not-allowed; }
+.step-nav button.primary { flex: 2; background: var(--accent); color: var(--accent-text); border-color: transparent; font-weight: 600; }
+.step-nav button:disabled { opacity: 0.45; cursor: not-allowed; }
 .link { border: 0; background: none; padding: 4px 0; color: var(--muted); font: inherit; font-size: 12px; text-decoration: underline; cursor: pointer; }
 .controls { display: grid; gap: 10px; margin: 8px 0; }
 .control { display: grid; gap: 4px; font-size: 13px; }
@@ -131,16 +156,20 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 
 @media (max-width: 720px) {
   .notice { bottom: auto; top: 56px; left: 16px; right: 16px; transform: none; max-width: none; justify-content: space-between; }
-  .tour__text { margin: 8px 0; font-size: 14px; line-height: 1.65; }
   .readout { margin: 4px 0; }
-  /* 手機抽屜：控制項放在即時數字之前，拉桿不必捲動就能碰到 */
+  .brand { margin-bottom: 6px; }
+  .step-title { font-size: 22px; margin: 2px 0 4px; }
+  .oneline { font-size: 16px; margin-bottom: 8px; }
+  .bignum { margin: 4px 0 8px; padding: 8px 12px; }
+  .bignum__value { font-size: 28px; }
+  /* 手機抽屜：下一步固定在底部，多說一點在它之後 */
   .panel.tour { display: flex; flex-direction: column; }
   .panel.tour > * { flex-shrink: 0; }
-  .panel.tour > .readout { order: 2; }
-  .panel.tour > .tour__nav { order: 3; }
+  .panel.tour > .step-nav { order: 3; }
+  .panel.tour > .more { order: 2; }
   .panel.tour > .link { order: 4; }
   .readout th, .readout td { padding: 2px 0; }
-  .tour__nav { position: sticky; bottom: -14px; margin: 8px -16px -14px; padding: 8px 16px 14px; background: var(--surface); }
+  .step-nav { position: sticky; bottom: -14px; margin: 8px -16px -14px; padding: 8px 16px 14px; background: var(--surface-strong); }
 }
 
 .fallback { max-width: 720px; margin: 0 auto; padding: 72px 16px 40px; color: var(--text); background: var(--bg); line-height: 1.75; }

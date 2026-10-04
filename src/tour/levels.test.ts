@@ -4,19 +4,21 @@ import { isBasket } from '../data/schema'
 import { overlap } from '../sim/overlap'
 import { LEVELS } from './levels'
 import { makeTextContext } from './context'
-import { lineOf, moreOf } from './engine'
+import { DEFAULT_VALUES, lineOf, moreOf } from './engine'
 import { ACTION_VERBS, forbiddenWordsIn, LINE_SENTENCE_MAX, LINE_SENTENCES_MAX, MORE_SENTENCE_MAX, MORE_SENTENCES_MAX, sentences } from './glossary'
 import { parseEmphasis, stripMarkup, visibleLength } from '../ui/emphasis'
 import { colorForKey } from '../scene/palette'
 import { isVerified } from '../data/verified'
 import type { VerifiedKey } from '../data/schema'
-import type { Stage, Step } from './types'
+import type { Stage, StageValues, Step } from './types'
 
 const ctx = makeTextContext(universe)
 const steps = LEVELS.flatMap((l) => l.steps)
 const PRESETS = ['sky', 'overview', 'tw', 'us', 'exchange', 'exchangeWide', 'exchangeSide', 'plaza', 'plazaNear', 'underground']
 
 const byId = (id: string): Step => steps.find((s) => s.id === id)!
+/** 大數字跟著即時拉桿值；測試預設用進入該步驟時的值 */
+const bigOf = (s: Step, values: Partial<StageValues> = {}) => s.bigNumber?.(ctx, { ...DEFAULT_VALUES, ...s.scene.values, ...values })
 const resolve = (t: Step['line'] | undefined): string | undefined => (t === undefined ? undefined : typeof t === 'function' ? t(ctx) : t)
 
 const assetsIn = (s: Stage): string[] => {
@@ -60,7 +62,7 @@ describe('LEVELS', () => {
     expect(lineOf(byId('c-1'), ctx)).toContain('跌 **30%**') // 0.3 × 100
     expect(moreOf(byId('c-1'), ctx)).toContain('跌 30%')
     expect(moreOf(byId('c-2'), ctx)).toContain('只買台積電：−30.0%')
-    expect(byId('c-2').bigNumber!(ctx)!.fraction).toBeCloseTo(0.5631, 4) // 0.16893 / 0.3
+    expect(bigOf(byId('c-2'))!.fraction).toBeCloseTo(0.5631, 4) // 0.16893 / 0.3
   })
 
   it('renders every text without errors, non-empty, and never mentions 稅', () => {
@@ -69,7 +71,7 @@ describe('LEVELS', () => {
       expect(lineOf(s, ctx).length, s.id).toBeGreaterThan(3)
       expect(moreOf(s, ctx).length, s.id).toBeGreaterThan(10)
       const all = [s.title, lineOf(s, ctx), moreOf(s, ctx), resolve(s.fallbackLine), resolve(s.fallbackMore)]
-      const bn = s.bigNumber?.(ctx)
+      const bn = bigOf(s)
       if (bn) all.push(bn.value, bn.label)
       for (const c of s.callouts ?? []) all.push(resolve(c.title), resolve(c.sub))
       for (const t of all) if (t !== undefined) expect(t, s.id).not.toContain('稅')
@@ -124,7 +126,7 @@ describe('LEVELS', () => {
   it('keeps callout titles ≤ 8 characters and big-number labels ≤ 12', () => {
     for (const s of steps) {
       for (const c of s.callouts ?? []) expect(Array.from(resolve(c.title)!).length, `${s.id}: ${resolve(c.title)}`).toBeLessThanOrEqual(8)
-      const bn = s.bigNumber?.(ctx)
+      const bn = bigOf(s)
       if (bn) expect(Array.from(bn.label).length, `${s.id}: ${bn.label}`).toBeLessThanOrEqual(12)
     }
   })
@@ -141,7 +143,7 @@ describe('LEVELS', () => {
       'u-2': [['0050', 'holdings']],
     }
     for (const s of steps) {
-      const bn = s.bigNumber?.(ctx)
+      const bn = bigOf(s)
       if (!bn) continue
       if (bn.mark) continue
       const src = SOURCES[s.id]
@@ -170,7 +172,7 @@ describe('LEVELS', () => {
         for (const x of ms) expect(Array.from(x).length, `${s.id}: ${x}`).toBeLessThanOrEqual(MORE_SENTENCE_MAX)
       }
       const extra = [fl, fm, ...(s.callouts ?? []).flatMap((c) => [resolve(c.title), resolve(c.sub)])]
-      const bn = s.bigNumber?.(ctx)
+      const bn = bigOf(s)
       if (bn) extra.push(bn.label)
       for (const t of extra) {
         if (t === undefined) continue
@@ -183,7 +185,7 @@ describe('LEVELS', () => {
   it('resolves every colour key in lines and big numbers', () => {
     for (const s of steps) {
       const keys = parseEmphasis(lineOf(s, ctx)).flatMap((seg) => (seg.key ? [seg.key] : []))
-      const bk = s.bigNumber?.(ctx)?.colorKey
+      const bk = bigOf(s)?.colorKey
       if (bk) keys.push(bk)
       for (const k of keys) expect(colorForKey(universe, k), `${s.id}: ${k}`).toBeDefined()
     }
@@ -203,7 +205,7 @@ describe('LEVELS', () => {
 
   it('gives every big number a value and a label, with fraction within 0–1', () => {
     for (const s of steps) {
-      const bn = s.bigNumber?.(ctx)
+      const bn = bigOf(s)
       if (!bn) continue
       expect(bn.value.length, s.id).toBeGreaterThan(0)
       expect(bn.label.length, s.id).toBeGreaterThan(0)
@@ -230,16 +232,19 @@ describe('LEVELS', () => {
   it('computes numbers from data instead of hard-coding them', () => {
     const e3 = byId('e-3')
     expect(lineOf(e3, ctx)).toContain('**56%**') // pct0(56.31)
-    expect(e3.bigNumber!(ctx)).toEqual({ value: '56%', label: '台積電在 0050', fraction: 0.5631, colorKey: '2330' })
+    expect(bigOf(e3)).toEqual({ value: '56%', label: '台積電在 0050', fraction: 0.5631, colorKey: '2330' })
     const c2 = byId('c-2')
     expect(lineOf(c2, ctx)).toContain('跌約 **16.9%**') // |−0.3 × 56.31%| = 16.893%，句子已說「跌」所以用絕對值
     expect(lineOf(c2, ctx)).not.toContain('−')
     expect(moreOf(c2, ctx)).toContain('約 −16.9%')
-    expect(c2.bigNumber!(ctx)!.value).toBe('−16.9%')
-    expect(byId('f-5').bigNumber!(ctx)!.value).toBe('1.88%') // JH_BALANCED expenseRatio 0.0188
-    expect(byId('e-5').bigNumber!(ctx)!.value).toBe('0.18%') // QQQ expenseRatio 0.0018
-    expect(byId('c-3').bigNumber!(ctx)!.value).toBe(`至少 ${(overlap(universe, 'QQQ', 'SPY').total * 100).toFixed(1)}%`)
-    expect(byId('s-6').bigNumber!(ctx)).toEqual({ value: '100', label: '方塊 95 ＋ 金幣 5', mark: 'illustrative' }) // EXDIV 100 − 5 + 5
+    expect(bigOf(c2)!.value).toBe('−16.9%')
+    expect(bigOf(byId('f-5'))!.value).toBe('1.88%') // JH_BALANCED expenseRatio 0.0188
+    expect(bigOf(byId('e-5'))!.value).toBe('0.18%') // QQQ expenseRatio 0.0018
+    expect(bigOf(byId('c-3'))!.value).toBe(`至少 ${(overlap(universe, 'QQQ', 'SPY').total * 100).toFixed(1)}%`)
+    expect(bigOf(byId('s-6'))!).toEqual({ value: '100', label: '方塊 95 ＋ 金幣 5', mark: 'illustrative' }) // EXDIV 100 − 5 + 5
+    // 跟著即時時間軸：配發前 100 ＋ 0；填息一半時方塊 95 + (100 − 95) × 0.5 = 97.5 → 98，合計 102.5 → 103
+    expect(bigOf(byId('s-6'), { phase: 0 })).toEqual({ value: '100', label: '方塊 100 ＋ 金幣 0', mark: 'illustrative' })
+    expect(bigOf(byId('s-6'), { phase: 0.75 })).toEqual({ value: '103', label: '方塊 98 ＋ 金幣 5', mark: 'illustrative' })
   })
 
   it('says 配息來自本金 only on the illustrative principal-trap step', () => {
@@ -259,7 +264,7 @@ describe('LEVELS', () => {
   it('u-2 says the semiconductor share is a lower bound', () => {
     expect(moreOf(byId('u-2'), ctx)).toContain('至少約')
     expect(lineOf(byId('u-2'), ctx)).toContain('至少')
-    expect(byId('u-2').bigNumber!(ctx)!.value.startsWith('至少')).toBe(true)
+    expect(bigOf(byId('u-2'))!.value.startsWith('至少')).toBe(true)
   })
 
   it('derives the u-2 semiconductor percentage from sectorPct', () => {
@@ -283,7 +288,7 @@ describe('LEVELS', () => {
       expect(er('SPY'), f.id).toBeLessThan(f.fees!.expenseRatio!)
     }
     expect(moreOf(byId('f-4'), ctx)).toContain('32%')
-    expect(byId('f-4').bigNumber!(ctx)!.value).toBe('可轉債 32%') // pct0(31.98)
+    expect(bigOf(byId('f-4'))!.value).toBe('可轉債 32%') // pct0(31.98)
     expect(moreOf(byId('e-3'), ctx)).toContain('7%') // 2454: pct0(6.71)
   })
 })

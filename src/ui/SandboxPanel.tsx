@@ -23,8 +23,12 @@ export function SandboxPanel() {
   )
 
   return (
-    <aside className="panel">
-      <h1 className="panel__title">{T.appTitle}</h1>
+    <aside className="panel sandbox">
+      <header className="step-header">
+        <p className="brand">{T.brand}</p>
+        <h1 className="step-title">{T.sandboxTitle}</h1>
+      </header>
+      {/* Task 7 會把「重看導覽」移到右上工具列 */}
       <button className="link" onClick={() => useTour.getState().restartTour()}>
         {T.replayTour}
       </button>

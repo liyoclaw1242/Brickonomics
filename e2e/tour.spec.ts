@@ -46,5 +46,5 @@ test('resumes from the last step after reload', async ({ page }) => {
   await page.goto('/?level=2&step=1&quality=high')
   await settled(page)
   await page.goto('/?quality=high')
-  await expect(page.getByText('第 2 關', { exact: false })).toBeVisible()
+  await expect(page.locator('.step-counter')).toContainText('02 / 06') // 章節編號（第 2 章，共 0–6）
 })
