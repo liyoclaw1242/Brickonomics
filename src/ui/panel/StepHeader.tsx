@@ -24,7 +24,7 @@ export function StepHeader({ level, levelCount, title, mark, revealed, children 
         )}
         {T.chapterCounter(level, levelCount)}
       </p>
-      <div className={revealed ? 'step-reveal is-revealed' : 'step-reveal'} aria-live="polite">
+      <div className={revealed ? 'step-reveal is-revealed' : 'step-reveal'} aria-live="polite" aria-atomic="true">
         <h1 className="step-title">
           {title}
           {mark && <MarkIcon kind={mark} />}

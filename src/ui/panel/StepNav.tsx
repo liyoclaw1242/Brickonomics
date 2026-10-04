@@ -14,7 +14,8 @@ export function StepNav({ onPrev, onNext, canPrev, canNext, isLast, hintId }: {
       <button onClick={onPrev} disabled={!canPrev}>
         {T.prev}
       </button>
-      <button className="primary" onClick={onNext} disabled={!canNext} aria-describedby={canNext ? undefined : hintId}>
+      {/* 用 aria-disabled 而不是 disabled：剛到需要操作的步驟時，按鈕保留焦點並報讀為不可用 */}
+      <button className="primary" onClick={() => canNext && onNext()} aria-disabled={!canNext} aria-describedby={canNext ? undefined : hintId}>
         {isLast ? T.finish : T.next}
       </button>
     </div>

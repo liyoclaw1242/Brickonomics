@@ -13,7 +13,7 @@ const SHOCK_PCT = -SHOCK_2330['2330']! // 0.3
 const pctOf = (er: number): string => `${(er * 100).toFixed(2)}%`
 const n0 = (v: number): string => v.toFixed(0)
 
-/** s-6 進入時停在「剛配發」的時間軸位置；大數字讀即時 phase，拖時間軸會跟著變 */
+/** s-6 進入時停在「剛配發」的時間軸位置；大數字讀即時 phase，但只算到配發那一刻（之後的填息不算），所以合計永遠不變 */
 export const EXDIV_AFTER_PHASE = 0.5
 
 /** 內扣費用大數字；資料沒有時不顯示 */
@@ -105,11 +105,11 @@ export const LEVELS: Level[] = [
       {
         id: 's-6',
         title: '除息',
-        line: '方塊＋金幣＝**不變**',
+        line: '配息那刻：方塊＋金幣＝**不變**',
         more: '方塊縮小的部分，剛好等於你拿到的金幣。這叫除息：方塊價值＋金幣＝不變。之後方塊慢慢長回原本大小，叫填息。數字是示意。',
         mark: 'illustrative',
         bigNumber: (_c, v) => {
-          const e = exDivTimeline(v.phase, 'fill')
+          const e = exDivTimeline(Math.min(v.phase, EXDIV_AFTER_PHASE), 'fill')
           return { value: n0(e.blockValue + e.cash), label: `方塊 ${n0(e.blockValue)} ＋ 金幣 ${n0(e.cash)}`, mark: 'illustrative' }
         },
         scene: { camera: 'plazaNear', product: null, stage: { kind: 'exdiv', outcome: 'fill' }, values: { phase: EXDIV_AFTER_PHASE } },

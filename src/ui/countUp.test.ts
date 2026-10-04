@@ -20,7 +20,10 @@ describe('countUp', () => {
   })
 
   it('keeps decimals and starts at zero', () => {
-    expect(countUp('-16.9%', 0)).toBe('-0.0%')
+    expect(countUp('-16.9%', 0)).toBe('0.0%') // 顯示為 0 時不帶負號（不出現 −0.0%）
+    expect(countUp('−16.9%', 0)).toBe('0.0%')
+    expect(countUp('−16.9%', 0.0005)).toBe('0.0%') // 16.9 × (1 − 0.9995³) ≈ 0.025 → 0.0
+    expect(countUp('−16.9%', 0.5)).toMatch(/^−\d+\.\d%$/)
     expect(countUp('1.88%', 0)).toBe('0.00%')
     expect(countUp('-16.9%', 0.5)).toMatch(/^-\d+\.\d%$/)
     expect(countUp('至少 63%', 0)).toBe('至少 0%')

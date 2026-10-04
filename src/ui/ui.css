@@ -25,7 +25,7 @@
   --surface-strong: rgba(255, 255, 255, 0.95);
   --text: #1f2933;
   --muted: #52606d;
-  --accent: #ff2d6f;
+  --accent: #d6125c; /* 白字對比 5.1:1（AA） */
   --accent-text: #ffffff;
   --chip: #eef2f7;
   --chip-on: #1f2933;
@@ -130,7 +130,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
   background: var(--chip); color: var(--text); font: inherit; cursor: pointer;
 }
 .step-nav button.primary { flex: 2; background: var(--accent); color: var(--accent-text); border-color: transparent; font-weight: 600; }
-.step-nav button:disabled { opacity: 0.45; cursor: not-allowed; }
+.step-nav button:disabled, .step-nav button[aria-disabled='true'] { opacity: 0.45; cursor: not-allowed; }
 .link { border: 0; background: none; padding: 4px 0; color: var(--muted); font: inherit; font-size: 12px; text-decoration: underline; cursor: pointer; }
 .controls { display: grid; gap: 10px; margin: 8px 0; }
 .control { display: grid; gap: 4px; font-size: 13px; }
@@ -157,12 +157,12 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 @media (max-width: 720px) {
   .notice { bottom: auto; top: 56px; left: 16px; right: 16px; transform: none; max-width: none; justify-content: space-between; }
   .readout { margin: 4px 0; }
-  .brand { margin-bottom: 6px; }
+  .brand { display: none; } /* 手機省空間：品牌只在桌機顯示 */
   .step-title { font-size: 22px; margin: 2px 0 4px; }
   .oneline { font-size: 16px; margin-bottom: 8px; }
   .bignum { margin: 4px 0 8px; padding: 8px 12px; }
   .bignum__value { font-size: 28px; }
-  /* 手機抽屜：下一步固定在底部，多說一點在它之後 */
+  /* 手機抽屜：多說一點排在上一步／下一步之前，上一步／下一步固定（sticky）在抽屜底部 */
   .panel.tour { display: flex; flex-direction: column; }
   .panel.tour > * { flex-shrink: 0; }
   .panel.tour > .step-nav { order: 3; }

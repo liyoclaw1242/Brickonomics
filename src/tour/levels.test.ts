@@ -242,9 +242,16 @@ describe('LEVELS', () => {
     expect(bigOf(byId('e-5'))!.value).toBe('0.18%') // QQQ expenseRatio 0.0018
     expect(bigOf(byId('c-3'))!.value).toBe(`至少 ${(overlap(universe, 'QQQ', 'SPY').total * 100).toFixed(1)}%`)
     expect(bigOf(byId('s-6'))!).toEqual({ value: '100', label: '方塊 95 ＋ 金幣 5', mark: 'illustrative' }) // EXDIV 100 − 5 + 5
-    // 跟著即時時間軸：配發前 100 ＋ 0；填息一半時方塊 95 + (100 − 95) × 0.5 = 97.5 → 98，合計 102.5 → 103
+    // 跟著即時時間軸，但只到配發那一刻（之後的填息不算）：配發前 100 ＋ 0，配發後 95 ＋ 5，合計永遠 100
     expect(bigOf(byId('s-6'), { phase: 0 })).toEqual({ value: '100', label: '方塊 100 ＋ 金幣 0', mark: 'illustrative' })
-    expect(bigOf(byId('s-6'), { phase: 0.75 })).toEqual({ value: '103', label: '方塊 98 ＋ 金幣 5', mark: 'illustrative' })
+    for (let i = 0; i <= 20; i++) {
+      const phase = i * 0.05
+      const bn = bigOf(byId('s-6'), { phase })!
+      expect(bn.value, `phase ${phase}`).toBe('100')
+      const [block, coins] = (bn.label.match(/\d+/g) ?? []).map(Number)
+      expect(block! + coins!, `phase ${phase}: ${bn.label}`).toBe(100)
+    }
+    expect(lineOf(byId('s-6'), ctx)).toBe('配息那刻：方塊＋金幣＝**不變**')
   })
 
   it('says 配息來自本金 only on the illustrative principal-trap step', () => {
