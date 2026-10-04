@@ -615,3 +615,17 @@ describe('ROUTES', () => {
     for (const l of LEVELS) expect(l.steps.some((s) => ROUTES.simple!.includes(s.id)), l.id).toBe(true)
   })
 })
+
+describe('simple route copy stands on its own (no reference to a dropped step)', () => {
+  it('b-3 says what 高收益債 is (b-2 that explained the three kinds is dropped)', () => {
+    expect(moreOf(byId('b-3'), ctx)).toContain('高收益債＝')
+  })
+  it('f-9 says what 配息 is (s-5 and f-8 are dropped) and its line names 配息', () => {
+    expect(moreOf(byId('f-9'), ctx)).toContain('配息＝')
+    expect(lineOf(byId('f-9'), ctx)).toContain('配息')
+  })
+  it('u-6 does not claim the whole course was finished', () => {
+    expect(moreOf(byId('u-6'), ctx)).not.toContain('全部')
+    expect(resolve(byId('u-6').fallbackMore)).not.toContain('全部')
+  })
+})

@@ -166,7 +166,8 @@ export const LEVELS: Level[] = [
         id: 'b-3',
         title: '經濟風暴',
         line: '利息高的，比較**容易裂**',
-        more: '報酬較高的，風險通常也較高。假設遇上一場經濟風暴。股票方塊大幅縮水，高收益債裂開、停付利息（紅色）。國家債通常比較穩，這是示意。',
+        // 簡單版沒有 b-2（三種借據），所以這裡自己說高收益債是什麼；完整版當作複習
+        more: '高收益債＝借給體質弱的公司，利息較多。假設遇上一場經濟風暴。股票方塊大幅縮水，高收益債裂開、停付利息（紅色）。國家債通常比較穩，這是示意。',
         mark: 'illustrative',
         scene: { camera: 'plaza', product: null, stage: { kind: 'bonds', stressed: true } },
       },
@@ -278,8 +279,9 @@ export const LEVELS: Level[] = [
       {
         id: 'f-9',
         title: '配息陷阱',
-        line: '拖**經過年數**。配太多會削**本金|loss**',
-        more: '塔越來越矮。因為金幣不夠配，怪手削下方塊熔成金幣。這叫配息來自本金。這是示意基金，不代表任何真實商品。',
+        line: '拖**經過年數**。配息太多會削**本金|loss**',
+        // 簡單版沒有 s-5、f-8，第一次聽到配息就在這裡，所以先說配息是什麼
+        more: '配息＝基金發給你的金幣，這座塔越發越矮。因為金幣不夠配，怪手削下方塊熔成金幣。這叫配息來自本金。這是示意基金，不代表任何真實商品。',
         mark: 'illustrative',
         scene: { camera: 'plaza', product: null, stage: { kind: 'principalTrap' }, values: { periods: 0 } },
         controls: ['periods'],
@@ -440,8 +442,8 @@ export const LEVELS: Level[] = [
         title: '完成！',
         line: '學完了！按**自由玩**到處看',
         fallbackLine: '課程**完成**了',
-        more: '恭喜完成全部課程！自由玩已經解鎖。所有商品都能自由切開、拆開、比較。',
-        fallbackMore: '恭喜完成全部課程！在支援 3D 的瀏覽器上，還可以自由玩。自由玩裡能切開、拆開、比較。',
+        more: '恭喜完成課程！自由玩已經解鎖。所有商品都能自由切開、拆開、比較。',
+        fallbackMore: '恭喜完成課程！在支援 3D 的瀏覽器上，還可以自由玩。自由玩裡能切開、拆開、比較。',
         recap: [
           { icon: '🧱', text: '股票＝拿一顆方塊' },
           { icon: '📜', text: '債券＝借據滴金幣' },
