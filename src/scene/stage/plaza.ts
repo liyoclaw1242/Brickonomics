@@ -1,5 +1,6 @@
 import type { Stage } from '../../tour/types'
 import type { Vec3 } from '../camera'
+import { T } from '../../ui/strings'
 
 /** 前方廣場：教學舞台都擺在這裡 */
 export const PLAZA: Vec3 = [0, 0, 30]
@@ -27,4 +28,13 @@ export function cityNamesOnPlaza(kind: Stage['kind']): boolean {
 /** 交易所台座：上面有東西（籃子）或在自由玩時才顯示（r3：空著的黑板子像壞掉、沒收乾淨） */
 export function showPedestal(mode: 'tour' | 'sandbox', productId: string | null): boolean {
   return mode === 'sandbox' || productId !== null
+}
+
+/**
+ * 借據標籤下面那一行：b-2（ranks）寫「穩不穩、利息多少」；其他時候（b-1、b-3）寫「借給誰」。
+ * 股票方塊不是借據，不寫。
+ */
+export function bondSub(key: 'stock' | 'gov' | 'corp' | 'hy', ranks: boolean): string | undefined {
+  if (key === 'stock') return undefined
+  return ranks ? T.stage.bondRanks[key] : T.stage.bondWho[key]
 }

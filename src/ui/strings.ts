@@ -99,18 +99,24 @@ export const T = {
     held: '你手上的方塊',
     bonds: { stock: '股票方塊', gov: '國家債', corp: '公司債', hy: '高收益債' },
     bondRanks: { gov: '最穩・利息少', corp: '中間', hy: '不穩・利息多' },
+    /** 借給誰（r5：簡單版沒有 b-2，三個名字一次出現卻沒說借給誰） */
+    bondWho: { gov: '借給政府', corp: '借給體質好的公司', hy: '借給體質弱的公司' },
     bondHurt: (name: string) => `${name}：出問題了`,
     rateNote: '利息快慢為示意',
     exdiv: { block: '方塊', coins: '金幣', lost: (v: number) => `少了 ${v}` },
   },
   /** 基金那一章的錢：投入 100＝100 萬（和計費表同一個底），一位小數、去掉「.0」 */
   wan,
+  /** 元（四捨五入、千分位）：18800 → '18,800 元'（r5：有感的錢，像計費表的「已磨掉約 39,073 元」） */
+  yuan: (v: number): string => `${Math.round(v).toLocaleString('zh-TW')} 元`,
   /** 大數字、3D 跌幅標籤用字說漲跌（負號太細，r3 看成正的） */
   move: { down: '跌', up: '漲' },
   towers: {
     lost: '費用扣掉的',
     lostPrincipal: '削掉的本金',
     coins: (v: number) => `領到的金幣 ${wan(v)}`,
+    /** 配息陷阱：領到的金幣裡，有多少其實是削下來的本金（r5：91.2 ＋ 54.4 > 100，看起來像賺） */
+    coinsFromPrincipal: (v: number) => `其中 ${wan(v)}是本金`,
     entry: (v: number) => `進門費 ${wan(v)}`,
     exit: (v: number) => `出門費 ${wan(v)}`,
     /** 一直在扣：出門費歸零時，後收那座才不會看起來「免費」 */

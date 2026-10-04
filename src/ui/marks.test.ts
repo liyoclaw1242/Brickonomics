@@ -3,7 +3,7 @@ import { T } from './strings'
 import { universe } from '../data'
 import { LEVELS } from '../tour/levels'
 import { isVerified } from '../data/verified'
-import { feeRowMarks, markPlacement, stepMarks } from './marks'
+import { feeRowMarks, holdingsSources, markPlacement, stepMarks } from './marks'
 
 describe('mark words (user test r2: 示意／假設／待查 were not understood)', () => {
   it('uses plain words on the pills', () => {
@@ -53,5 +53,18 @@ describe('markPlacement (r3: ？ after the line, not the first thing under the t
       const p = markPlacement(m)
       expect([...p.title, ...p.afterLine].sort(), s.id).toEqual([...new Set(m)].sort())
     }
+  })
+})
+
+describe('holdingsSources (r5: derived from the text, no manual holdingsFrom)', () => {
+  const byId = (id: string) => LEVELS.flatMap((l) => l.steps).find((s) => s.id === id)!
+  it('returns the products whose holdings a step\'s text, callouts and big number read', () => {
+    expect(holdingsSources(byId('e-3'), universe)).toEqual(['0050'])
+    expect(holdingsSources(byId('f-2'), universe)).toEqual(['JH_BALANCED'])
+    expect(holdingsSources(byId('f-4'), universe)).toEqual(['JH_BALANCED', 'ALLIANZ_INCOME_GROWTH'])
+    expect(holdingsSources(byId('c-2'), universe)).toEqual(['0050', 'SPY']) // shock 也是從持股算的
+    expect(holdingsSources(byId('c-3'), universe)).toEqual(['QQQ', 'SPY'])
+    expect(holdingsSources(byId('p-1'), universe)).toEqual([])
+    expect(holdingsSources(byId('f-5'), universe)).toEqual([]) // 內扣費用不是持股
   })
 })

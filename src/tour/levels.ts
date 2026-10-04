@@ -1,7 +1,7 @@
 import type { BigNumber, Level, Route, RouteIds, TextContext } from './types'
 import { movePct, pct0, SHOCK_2330, signedPct, wan } from './context'
 import { DEFAULT_VALUES } from './engine'
-import { EXDIV, exDivTimeline } from '../scene/layout/stages'
+import { EXDIV, exDivTimeline, principalTrap, TRAP_DEMO } from '../scene/layout/stages'
 import { T } from '../ui/strings'
 
 /**
@@ -25,6 +25,11 @@ const exitFreeYears = (c: TextContext): number => {
   while (c.exitFee(BACKLOAD, y) > 0 && y < 50) y++
   return y
 }
+
+/** f-5 計費表的那檔基金；e-5 拿它和 0050 比（r5：同樣用「100 萬一年扣多少元」比） */
+const METER_FUND = 'JH_BALANCED'
+/** 100 萬放一年要扣的內扣費用（元） */
+const perMillion = (er: number): string => T.yuan(er * 1_000_000)
 
 /** 時間軸上「發金幣那一刻」的位置；s-5 拉到這裡為止（大數字只算到這一刻，合計永遠不變） */
 export const EXDIV_AFTER_PHASE = 0.5
@@ -149,8 +154,9 @@ export const LEVELS: Level[] = [
       {
         id: 'b-1',
         title: '借錢給大樓',
-        line: '債券＝**借據**，固定滴**金幣|coin**',
-        more: '債券＝借錢給別人，換一張借據方塊。它不跟著大樓長高，只固定滴出利息。到期時，本金還給你。金幣快慢是示意。',
+        // r5：「滴」金幣要想一下；三張借據的標籤下面寫借給誰（bondSub）
+        line: '債券＝**借據**，固定給**金幣|coin**',
+        more: '債券＝借錢給別人，換一張借據方塊。它不跟著大樓長高，只固定給你利息。到期時，本金還給你。金幣快慢是示意。',
         mark: 'illustrative',
         scene: { camera: 'plaza', product: null, stage: { kind: 'bonds', stressed: false } },
       },
@@ -196,7 +202,6 @@ export const LEVELS: Level[] = [
           { anchor: { kind: 'holding', holdingId: 'OTHER_US_STOCK' }, title: '股票方塊', sub: (c) => `約 ${pct0(c.assetClassPct('JH_BALANCED', 'stock'))}%・含輝達等`, when: { control: 'explode', min: 0.6 } },
           { anchor: { kind: 'holding', holdingId: 'BOND_MIXED_US' }, title: '借據', sub: (c) => `約 ${pct0(c.assetClassPct('JH_BALANCED', 'bond'))}%`, when: { control: 'explode', min: 0.6 } },
         ],
-        holdingsFrom: ['JH_BALANCED'],
         scene: { camera: 'exchangeWide', product: 'JH_BALANCED', stage: { kind: 'excavator', meter: false }, cityLabels: false },
         controls: ['explode'],
         until: { control: 'explode', min: 0.6 },
@@ -226,8 +231,6 @@ export const LEVELS: Level[] = [
           { anchor: { kind: 'holding', holdingId: 'OTHER_US_STOCK' }, title: '股票', sub: (c) => `約 ${pct0(c.assetClassPct('ALLIANZ_INCOME_GROWTH', 'stock'))}%` },
           { anchor: { kind: 'holding', holdingId: 'CONVERTIBLE_US' }, title: '借據', sub: (c) => `約 ${pct0(c.assetClassPct('ALLIANZ_INCOME_GROWTH', 'bond'))}%` },
         ],
-        // 多說一點拿前一座（JH_BALANCED，持股沒查證）的股票比例來比
-        holdingsFrom: ['JH_BALANCED', 'ALLIANZ_INCOME_GROWTH'],
         // 另一位經理人：怪手換一個顏色（r3：一模一樣的怪手，他不信是「另一台」）
         scene: { camera: 'exchangeWide', product: 'ALLIANZ_INCOME_GROWTH', explode: 1, stage: { kind: 'excavator', meter: false, other: true }, cityLabels: false },
       },
@@ -236,8 +239,8 @@ export const LEVELS: Level[] = [
         title: '計費表在跑',
         line: '**內扣費用**每天磨掉一點',
         more: '怪手不是免費的。塔上的計費表一直在跑。內扣費用每天從塔上磨掉一點點。',
-        bigNumber: (c) => expenseNumber(c, 'JH_BALANCED', '每年內扣費用'),
-        scene: { camera: 'exchange', product: 'JH_BALANCED', stage: { kind: 'excavator', meter: true }, cityLabels: false },
+        bigNumber: (c) => expenseNumber(c, METER_FUND, '每年內扣費用'),
+        scene: { camera: 'exchange', product: METER_FUND, stage: { kind: 'excavator', meter: true }, cityLabels: false },
       },
       {
         id: 'f-6',
@@ -279,10 +282,26 @@ export const LEVELS: Level[] = [
       {
         id: 'f-9',
         title: '配息陷阱',
-        line: '拖**經過年數**。配息太多會削**本金|loss**',
+        // r5：領到 91.2 ＋ 剩 54.4 ＞ 100，陳伯伯以為賺了、看不到陷阱。重點改成「領到的錢，有一部分是你自己的本金」：
+        // 一句話說它、大數字算出它（跟著拉桿）、3D 金幣堆標註也寫「其中 X 萬是本金」。
+        // 不說「賠」：示意基金每年真的賺 3%，合計本來就比 100 多；陷阱是配 6% 看起來像賺 6%
+        line: '拖**經過年數**。配息裡有些是**你的本金|loss**',
+        fallbackLine: '配息裡有些是**你的本金|loss**',
         // 簡單版沒有 s-5、f-8，第一次聽到配息就在這裡，所以先說配息是什麼
-        more: '配息＝基金發給你的金幣，這座塔越發越矮。因為金幣不夠配，怪手削下方塊熔成金幣。這叫配息來自本金。這是示意基金，不代表任何真實商品。',
+        more: () =>
+          `配息＝基金發給你的金幣。這檔每年配${pct0(TRAP_DEMO.payoutRate * 100)}%，但只賺${pct0(TRAP_DEMO.incomeYield * 100)}%，不夠的怪手削方塊來補。領到的錢有一部分是你的本金，叫配息來自本金。這是示意基金，不代表任何真實商品。`,
         mark: 'illustrative',
+        // 領到的錢裡，有多少是削下來的本金；色條＝佔領到的錢的比例
+        bigNumber: (_c, v) => {
+          const st = principalTrap(v.periods)
+          return {
+            value: wan(st.fromPrincipal),
+            label: '領的錢裡是你的本金',
+            fraction: st.cashReceived > 0 ? st.fromPrincipal / st.cashReceived : 0,
+            colorKey: 'loss',
+            mark: 'illustrative',
+          }
+        },
         scene: { camera: 'plaza', product: null, stage: { kind: 'principalTrap' }, values: { periods: 0 } },
         controls: ['periods'],
         until: { control: 'periods', min: 5 },
@@ -339,11 +358,28 @@ export const LEVELS: Level[] = [
       },
       {
         id: 'e-5',
-        title: '內扣費用低',
-        line: `${NICK.QQQ}。**內扣費用**低`,
-        more: 'QQQ 照美國科技 100 大的藍圖自動挑。SPY 照美國 500 大的藍圖。目前快照裡，它們的內扣費用比本課的基金低。費用低不代表比較好，策略也不同。',
-        bigNumber: (c) => expenseNumber(c, 'QQQ', '每年內扣費用'),
-        scene: { camera: 'exchange', product: 'QQQ', cityLabels: false },
+        title: 'ETF 收費少',
+        // r5：突然換成 QQQ、只給 0.18%，陳伯伯差點關掉。改成同一個 0050、和計費表那檔基金比，用「100 萬一年扣多少元」
+        line: (c) => {
+          const er = c.expenseRatio(METER_FUND)
+          return er === undefined ? '基金每年都在扣**內扣費用**' : `100 萬一年。基金扣 **${perMillion(er)}**`
+        },
+        more: (c) => {
+          const etf = c.expenseRatio('0050')
+          const fund = c.expenseRatio(METER_FUND)
+          return [
+            ...(etf !== undefined ? [`0050 每年的內扣費用約 ${pctOf(etf)}。`] : []),
+            ...(fund !== undefined ? [`前面計費表那檔基金約 ${pctOf(fund)}。`] : []),
+            `美股的 ${NICK.QQQ} 也很低。`,
+            '費用低不代表比較好，投資內容和風險也不同。',
+          ].join('')
+        },
+        // 大數字＝0050 的；費用低≠比較好，一直寫在卡片上
+        bigNumber: (c) => {
+          const er = c.expenseRatio('0050')
+          return er === undefined ? undefined : { value: perMillion(er), label: '0050 一年只扣', note: '費用低，不代表比較好' }
+        },
+        scene: { camera: 'exchange', product: '0050', cityLabels: false },
       },
     ],
   },
@@ -446,7 +482,7 @@ export const LEVELS: Level[] = [
         fallbackMore: '恭喜完成課程！在支援 3D 的瀏覽器上，還可以自由玩。自由玩裡能切開、拆開、比較。',
         recap: [
           { icon: '🧱', text: '股票＝拿一顆方塊' },
-          { icon: '📜', text: '債券＝借據滴金幣' },
+          { icon: '📜', text: '債券＝借據，固定給金幣' },
           { icon: '🚜', text: '基金＝怪手幫你挑（要收費）' },
           { icon: '🧩', text: 'ETF＝照藍圖挑（通常較便宜）' },
         ],

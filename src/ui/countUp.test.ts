@@ -38,3 +38,13 @@ describe('countUp', () => {
     expect(countUp('', 0.3)).toBe('')
   })
 })
+
+describe('countUp with thousands separators (r5: e-5 shows 1,400 元)', () => {
+  it('grows the whole number and keeps the commas', () => {
+    expect(countUp('1,400 元', 1)).toBe('1,400 元')
+    expect(countUp('18,800 元', 0)).toBe('0 元')
+    const mid = countUp('18,800 元', 0.5)
+    expect(mid).toMatch(/^\d{1,3}(,\d{3})* 元$/)
+    expect(Number(mid.replace(/[^\d]/g, ''))).toBeGreaterThan(9400)
+  })
+})

@@ -21,9 +21,11 @@ type Props = {
   persistent?: boolean
   /** 3b1b 顏色連結：標題前的小色點與引線錨點用這個顏色（和物體、課文關鍵詞同色） */
   color?: string
+  /** 副標用這個顏色、字放大加粗（例如配息陷阱「其中 X 萬是本金」用虧損紅，和紅色那堆同色） */
+  subColor?: string
 }
 
-export function Callout({ anchor, offset = [0, 2, 0], title, sub, dim = false, wrap = false, compact = false, persistent = false, color }: Props) {
+export function Callout({ anchor, offset = [0, 2, 0], title, sub, dim = false, wrap = false, compact = false, persistent = false, color, subColor }: Props) {
   const ready = useAfterFirstTick()
   const labels = useThemeStore((s) => s.labels)
   const t = THEMES[useThemeStore((s) => s.theme)]
@@ -52,7 +54,11 @@ export function Callout({ anchor, offset = [0, 2, 0], title, sub, dim = false, w
               {color && <span className="callout__dot" style={{ background: color }} />}
               {title}
             </span>
-            {sub && <span className="callout__sub">{sub}</span>}
+            {sub && (
+              <span className={`callout__sub${subColor ? ' callout__sub--min13 callout__sub--strong' : ''}`} style={subColor ? { color: subColor } : undefined}>
+                {sub}
+              </span>
+            )}
           </div>
         </Html>
       )}

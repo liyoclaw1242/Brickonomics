@@ -1,6 +1,7 @@
 /** 3b1b「數字會長出來」：純函式，畫面與測試共用 */
 
-const NUMBER = /([-−]?)(\d+(?:\.\d+)?)/
+/** 數字可帶千分位逗號（例如 1,400 元）；長的過程中照樣加逗號 */
+const NUMBER = /([-−]?)(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)/
 
 /** ease-out（三次方）：開始快、結尾慢 */
 export const easeOut = (t: number): number => 1 - (1 - t) ** 3
@@ -13,10 +14,12 @@ export function countUp(value: string, t: number): string {
   const m = NUMBER.exec(value)
   if (!m || t >= 1) return value
   const sign = m[1]!
-  const raw = m[2]!
+  const grouped = m[2]!.includes(',')
+  const raw = m[2]!.replaceAll(',', '')
   const decimals = raw.includes('.') ? raw.length - raw.indexOf('.') - 1 : 0
-  const shown = (Number(raw) * easeOut(Math.max(0, t))).toFixed(decimals)
+  const fixed = (Number(raw) * easeOut(Math.max(0, t))).toFixed(decimals)
+  const shown = grouped ? fixed.replace(/^\d+/, (d) => d.replace(/\B(?=(\d{3})+$)/g, ',')) : fixed
   // 顯示為 0 時不帶負號，避免出現 −0.0%
-  const signed = Number(shown) === 0 ? shown : sign + shown
+  const signed = Number(fixed) === 0 ? shown : sign + shown
   return value.slice(0, m.index) + signed + value.slice(m.index + m[0].length)
 }

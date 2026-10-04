@@ -8,7 +8,7 @@ import { Callout } from '../Callout'
 import { BlockMaterial } from '../materials'
 import { ACCENT_COLORS, lookFor } from '../palette'
 import type { Quality } from '../quality'
-import { atPlaza } from './plaza'
+import { atPlaza, bondSub } from './plaza'
 
 const SIZE = 2.4
 /** 金幣放大（r2：遠景下 1 倍的金幣小到像一條線） */
@@ -53,7 +53,7 @@ function CrackedBond({ x }: { x: number }) {
 
 /**
  * 股票方塊 vs 三種借據：材質表示信用品質，金幣快慢表示利息（示意）。
- * ranks：每張借據的標籤下面寫「穩不穩、利息多少」（b-2，三顆長得很像，要用字分出來）。
+ * 每張借據的標籤下面一行（bondSub）：平常寫「借給誰」；ranks（b-2）改寫「穩不穩、利息多少」（三顆長得很像，要用字分出來）。
  * stressed：經濟風暴，股票縮水變紅，高收益債裂成兩半、變紅、停付利息（b-3）。
  */
 export function BondShowcase({ stressed, ranks = false, quality }: { stressed: boolean; ranks?: boolean; quality: Quality }) {
@@ -66,7 +66,7 @@ export function BondShowcase({ stressed, ranks = false, quality }: { stressed: b
         const top: Vec3 = atPlaza(s.x, SIZE * scaleY, 0)
         const pile: Vec3 = atPlaza(s.x + 2.9, 0.1, 0)
         const dripping = s.rate > 0 && !broken
-        const rank = ranks && s.key !== 'stock' ? T.stage.bondRanks[s.key] : undefined
+        const sub = bondSub(s.key, ranks)
         return (
           <group key={s.key}>
             {broken ? (
@@ -91,7 +91,7 @@ export function BondShowcase({ stressed, ranks = false, quality }: { stressed: b
               anchor={atPlaza(s.x, 0.1, SIZE / 2)}
               offset={[0, -0.3, 1.4]}
               title={broken ? T.stage.bondHurt(T.stage.bonds.hy) : T.stage.bonds[s.key]}
-              sub={rank}
+              sub={sub}
               color={broken ? ACCENT_COLORS.loss : undefined}
               persistent={s.key !== 'stock' || stressed}
             />

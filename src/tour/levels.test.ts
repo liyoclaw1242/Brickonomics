@@ -3,7 +3,8 @@ import { universe } from '../data'
 import { isBasket } from '../data/schema'
 import { overlap } from '../sim/overlap'
 import { EXDIV_AFTER_PHASE, LEVELS, ROUTES } from './levels'
-import { exDivTimeline } from '../scene/layout/stages'
+import { exDivTimeline, principalTrap } from '../scene/layout/stages'
+import { towerTexts, trapTowerSpec } from '../scene/layout/towers'
 import { makeTextContext, pct0, wan } from './context'
 import { controlRange, DEFAULT_VALUES, lineOf, moreOf } from './engine'
 import { ACTION_VERBS, forbiddenWordsIn, jargonIn, LINE_SENTENCE_MAX, LINE_SENTENCES_MAX, MORE_SENTENCE_MAX, MORE_SENTENCES_MAX, sentences } from './glossary'
@@ -150,7 +151,7 @@ describe('LEVELS', () => {
       'f-5': [['JH_BALANCED', 'fees.expenseRatio']],
       'f-6': [['SCHRODER_GLOBAL_INCOME_BOND', 'fees.expenseRatio'], ['SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD', 'fees.expenseRatio'], ['SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD', 'fees.cdsc']],
       'e-3': [['0050', 'holdings']],
-      'e-5': [['QQQ', 'fees.expenseRatio']],
+      'e-5': [['0050', 'fees.expenseRatio'], ['JH_BALANCED', 'fees.expenseRatio']],
       'c-2': [['0050', 'holdings']],
       'c-3': [['QQQ', 'holdings'], ['SPY', 'holdings']],
       'u-2': [['0050', 'holdings']],
@@ -166,13 +167,14 @@ describe('LEVELS', () => {
   })
 
   it('marks ？ on every step whose numbers come from unverified holdings (user test: f-2 had no mark)', () => {
+    // 獨立的記錄器（不用 marks.ts 的 holdingsSources，免得自己驗自己）：記下每一步的文字用了哪些產品的持股
     const used = (s: Step): Set<string> => {
       const seen = new Set<string>()
       const rec = new Proxy(ctx, {
         get: (t, k: keyof typeof ctx) => {
           const f = t[k] as (...a: never[]) => unknown
           return (...a: never[]) => {
-            if (k === 'weightPct' || k === 'assetClassPct' || k === 'sectorPct') seen.add(String(a[0]))
+            if (k === 'weightPct' || k === 'assetClassPct' || k === 'sectorPct' || k === 'shock') seen.add(String(a[0]))
             if (k === 'overlapShared') { seen.add(String(a[0])); seen.add(String(a[1])) }
             return f(...a)
           }
@@ -184,8 +186,9 @@ describe('LEVELS', () => {
       s.bigNumber?.(rec, values)
       return seen
     }
-    // 目前快照的持股都已查證；為了讓這道防線繼續有效，把宣告了 holdingsFrom 的產品（f-2、f-4 用到的）持股旗標清空再檢查一次
-    const stale = unverify(['JH_BALANCED', 'ALLIANZ_INCOME_GROWTH'])
+    // 目前快照的持股都已查證；為了讓這道防線繼續有效，把基金（f-2、f-4）和 0050（e-3、c-2、u-2）的持股旗標清空再檢查一次。
+    // 不用手動宣告：stepMarks 從步驟文字實際用到的資料自己推出來（r5 之前只有 f-2、f-4 宣告了 holdingsFrom）
+    const stale = unverify(['JH_BALANCED', 'ALLIANZ_INCOME_GROWTH', '0050'])
     let checked = 0
     for (const s of steps) {
       for (const id of used(s)) {
@@ -197,11 +200,11 @@ describe('LEVELS', () => {
       }
     }
     expect(checked).toBeGreaterThan(0)
-    expect(stepMarks(byId('f-2'), stale)).toContain('unverified')
-    expect(stepMarks(byId('f-4'), stale)).toContain('unverified')
-    // 2026-10 JH_BALANCED（f-2）與 ALLIANZ_INCOME_GROWTH（f-4）持股都已查證 → ？消失
-    expect(stepMarks(byId('f-2'), universe)).not.toContain('unverified')
-    expect(stepMarks(byId('f-4'), universe)).not.toContain('unverified')
+    for (const id of ['f-2', 'f-4', 'e-3', 'c-2', 'u-2']) expect(stepMarks(byId(id), stale), id).toContain('unverified')
+    // 沒用到持股的步驟不會多出 ？
+    expect(stepMarks(byId('e-1'), stale)).not.toContain('unverified')
+    // 真實快照：持股都已查證 → 沒有 ？
+    for (const id of ['f-2', 'f-4', 'e-3', 'c-2', 'u-2']) expect(stepMarks(byId(id), universe), id).not.toContain('unverified')
   })
 
   it('exposes the assumed front-load fee only on steps marked ✎', () => {
@@ -291,7 +294,9 @@ describe('LEVELS', () => {
     expect(moreOf(c2, ctx)).toContain('約 −16.9%')
     expect(bigOf(c2)!.value).toBe('跌 16.9%') // r3：大數字的負號太細，看成正的 → 用字說「跌」
     expect(bigOf(byId('f-5'))!.value).toBe('1.88%') // JH_BALANCED expenseRatio 0.0188
-    expect(bigOf(byId('e-5'))!.value).toBe('0.18%') // QQQ expenseRatio 0.0018
+    // e-5：100 萬放一年要扣的錢＝內扣費用 × 1,000,000（r5：只有 0.18% 沒感覺）
+    expect(bigOf(byId('e-5'))!.value).toBe('1,400 元') // 0050 expenseRatio 0.0014 × 1,000,000 = 1,400
+    expect(lineOf(byId('e-5'), ctx)).toContain('18,800 元') // JH_BALANCED expenseRatio 0.0188 × 1,000,000 = 18,800
     expect(bigOf(byId('c-3'))!.value).toBe(`至少 ${(overlap(universe, 'QQQ', 'SPY').total * 100).toFixed(1)}%`)
     // s-5 跟著即時時間軸，但只到配發那一刻（之後的填息不算）：配發前 100 ＋ 0，配發那一刻 95 ＋ 5，合計永遠 100
     expect(bigOf(byId('s-5'))).toEqual({ value: '100', label: '方塊 100＋金幣 0', mark: 'illustrative' })
@@ -643,5 +648,53 @@ describe('simple route copy stands on its own (no reference to a dropped step)',
   it('u-6 does not claim the whole course was finished', () => {
     expect(moreOf(byId('u-6'), ctx)).not.toContain('全部')
     expect(resolve(byId('u-6').fallbackMore)).not.toContain('全部')
+  })
+})
+
+describe('simple route user test r5', () => {
+  it('f-9 makes the trap visible: the big number is the part of the payout that was your own principal', () => {
+    const f9 = byId('f-9')
+    const at = (periods: number) => bigOf(f9, { periods })!
+    // TRAP_DEMO：產出 3%、配 6%，20 年後塔剩 100 × 0.97^20 = 54.38；配出超過產出的部分＝100 − 54.38 = 45.62
+    const st = principalTrap(20)
+    expect(st.fromPrincipal).toBeCloseTo(100 - st.value, 9)
+    expect(at(20).value).toBe(wan(st.fromPrincipal))
+    expect(at(20).value).toBe('45.6 萬')
+    expect(at(20).colorKey).toBe('loss')
+    expect(at(20).mark).toBe('illustrative')
+    expect(at(10).value).toBe(wan(principalTrap(10).fromPrincipal)) // 跟著拉桿
+    expect(at(20).label).toContain('本金')
+    // 一句話：拖拉桿的動作詞開頭，意思是「領的錢有一部分是你的本金」
+    expect(stripMarkup(lineOf(f9, ctx))).toContain('本金')
+    // 不說成「賠錢」：示意基金每年真的產出 3%，總數本來就比 100 多（領到的錢裡，一部分是賺的、一部分是本金）
+    for (const t of [lineOf(f9, ctx), moreOf(f9, ctx)]) for (const w of ['賠', '虧']) expect(t, w).not.toContain(w)
+  })
+
+  it('f-9: the coin pile label says how much of it came from principal (3D)', () => {
+    const st = principalTrap(20)
+    const t = trapTowerSpec(st)
+    expect(t.coins).toBe(st.cashReceived)
+    expect(t.coinsSub).toBe(`其中 ${wan(st.fromPrincipal)}是本金`)
+    expect(towerTexts(t)).toContain(t.coinsSub)
+    expect(trapTowerSpec(principalTrap(0)).coinsSub).toBeUndefined() // 還沒領，不寫
+  })
+
+  it('e-5 compares 0050 with the fund from f-5 in yuan per 100 萬 per year, and keeps the caveat', () => {
+    const e5 = byId('e-5')
+    const yuan = (id: string) => `${Math.round(ctx.expenseRatio(id)! * 1_000_000).toLocaleString('zh-TW')} 元`
+    expect(bigOf(e5)!.value).toBe(yuan('0050'))
+    expect(lineOf(e5, ctx)).toContain(yuan(byId('f-5').scene.product!))
+    expect(stripMarkup(lineOf(e5, ctx))).toContain('100 萬')
+    expect(bigOf(e5)!.note).toContain('不代表比較好')
+    expect(e5.scene.product).toBe('0050')
+    for (const t of [e5.title, stripMarkup(lineOf(e5, ctx)), bigOf(e5)!.label]) for (const code of ['QQQ', 'SPY']) expect(t).not.toContain(code)
+    expect(moreOf(e5, ctx)).toContain('QQQ')
+  })
+
+  it('b-1 says 固定給 instead of 滴, everywhere a learner reads it', () => {
+    expect(stripMarkup(lineOf(byId('b-1'), ctx))).toContain('固定給')
+    for (const s of steps) for (const t of [s.title, lineOf(s, ctx), moreOf(s, ctx), resolve(s.fallbackLine), resolve(s.fallbackMore), ...(s.recap ?? []).map((r) => r.text)]) {
+      if (t !== undefined) expect(t.includes('滴'), `${s.id}: ${t}`).toBe(false)
+    }
   })
 })

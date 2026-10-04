@@ -64,7 +64,17 @@ export function TowerRow({ towers, quality, base, baseSub }: { towers: TowerSpec
             {t.coins !== undefined && (
               <>
                 <CoinPile count={blocksFor(t.coins)} position={atPlaza(x - 3, 0, 5.5)} />
-                {blocksFor(t.coins) > 0 && <Callout anchor={atPlaza(x - 3, -0.2, 7.2)} offset={[0, 0, 0]} title={T.towers.coins(t.coins)} />}
+                {/* 有副標（配息陷阱：其中多少是本金）時一直顯示、用虧損色，總數才不會看成全是賺的 */}
+                {blocksFor(t.coins) > 0 && (
+                  <Callout
+                    anchor={atPlaza(x - 3, -0.2, 7.2)}
+                    offset={[0, 0, 0]}
+                    title={T.towers.coins(t.coins)}
+                    sub={t.coinsSub}
+                    subColor={t.coinsSub !== undefined ? ACCENT_COLORS.loss : undefined}
+                    persistent={t.coinsSub !== undefined}
+                  />
+                )}
               </>
             )}
             {/* 標註放在塔頂上方，不和下方的紅色小堆／金幣堆標註搶位置。數值當標題、名稱當副標；色點＝塔的顏色（3b1b 顏色連結） */}
