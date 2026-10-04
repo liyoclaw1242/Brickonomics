@@ -8,3 +8,6 @@ export const atPlaza = (dx: number, dy = 0, dz = 0): Vec3 => [PLAZA[0] + dx, PLA
 
 /** 交易所櫃台的位置（從 Scene.tsx 移過來，避免舞台元件與 Scene 互相 import） */
 export const EXCHANGE_POSITION: Vec3 = [0, 0, 14]
+
+/** 交易所櫃台台座的高度：籃子放在台座上面 */
+export const PEDESTAL_HEIGHT = 0.6

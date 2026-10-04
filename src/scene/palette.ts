@@ -81,3 +81,10 @@ export function colorForKey(u: Universe, key: string): string | undefined {
   const asset = u.get(key)
   return asset ? lookFor(asset).color : undefined
 }
+
+/** 籃子裡某持股實際畫出來的顏色（含同色調亮／調暗）；不在籃子裡就退回 colorForKey */
+export function holdingColor(u: Universe, productId: string, holdingId: string): string | undefined {
+  const holdings = u.get(productId)?.holdings
+  const i = holdings ? holdings.findIndex((h) => h.id === holdingId) : -1
+  return i >= 0 ? productLooks(u, productId)[i]!.color : colorForKey(u, holdingId)
+}

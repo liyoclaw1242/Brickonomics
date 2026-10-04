@@ -12,11 +12,11 @@ import { THEMES } from './theme'
 import { useThemeStore } from '../store/theme'
 import { damageFromShocks } from './layout/stages'
 import { MAX_DISTANCE, MAX_POLAR, MIN_DISTANCE } from './camera'
-import { EXCHANGE_POSITION } from './stage/plaza'
+import { EXCHANGE_POSITION, PEDESTAL_HEIGHT } from './stage/plaza'
 import { StageView } from './stage/StageView'
+import { StepCallouts } from './StepCallouts'
 import { ViewFraming } from './ViewFraming'
 
-const PEDESTAL_HEIGHT = 0.6
 const SHOCK_SHRINK = damageFromShocks(SHOCK_2330)
 
 function Pedestal() {
@@ -56,6 +56,7 @@ export function Scene({ quality }: { quality: Quality }) {
           position={[EXCHANGE_POSITION[0], PEDESTAL_HEIGHT, EXCHANGE_POSITION[2]]}
         />
       )}
+      {mode === 'tour' && <StepCallouts quality={quality} />}
       <OrbitControls makeDefault target={[0, 5, 12]} maxPolarAngle={MAX_POLAR} minDistance={MIN_DISTANCE} maxDistance={MAX_DISTANCE} />
       <CameraRig />
       {import.meta.env.DEV && <FrameCounter />}

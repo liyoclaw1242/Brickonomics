@@ -19,9 +19,11 @@ type Props = {
    * persistent（內容、提醒、圖例、帶標示圖示的數字）連同指引線一律留著。NameLabel 也一併隱藏。
    */
   persistent?: boolean
+  /** 3b1b 顏色連結：標題前的小色點與引線錨點用這個顏色（和物體、課文關鍵詞同色） */
+  color?: string
 }
 
-export function Callout({ anchor, offset = [0, 2, 0], title, sub, marks, dim = false, wrap = false, persistent = false }: Props) {
+export function Callout({ anchor, offset = [0, 2, 0], title, sub, marks, dim = false, wrap = false, persistent = false, color }: Props) {
   const ready = useAfterFirstTick()
   const labels = useThemeStore((s) => s.labels)
   const t = THEMES[useThemeStore((s) => s.theme)]
@@ -37,8 +39,8 @@ export function Callout({ anchor, offset = [0, 2, 0], title, sub, marks, dim = f
       {leader && (
         <>
           <mesh position={anchor} renderOrder={11}>
-            <sphereGeometry args={[0.12, 12, 12]} />
-            <meshBasicMaterial color={t.calloutLine} transparent opacity={opacity} depthTest={false} />
+            <sphereGeometry args={[color ? 0.18 : 0.12, 12, 12]} />
+            <meshBasicMaterial color={color ?? t.calloutLine} transparent opacity={color ? 1 : opacity} depthTest={false} />
           </mesh>
           <Line points={[anchor, end]} color={t.calloutLine} lineWidth={1} transparent opacity={opacity} depthTest={false} renderOrder={10} />
         </>
@@ -47,6 +49,7 @@ export function Callout({ anchor, offset = [0, 2, 0], title, sub, marks, dim = f
         <Html position={end} center={!side}>
           <div className={`callout${side ? ` ${side}` : ''}${dim ? ' callout--dim' : ''}${wrap ? ' callout--wrap' : ''}`}>
             <span className="callout__title">
+              {color && <span className="callout__dot" style={{ background: color }} />}
               {title}
               {marks?.map((k) => <MarkIcon key={k} kind={k} />)}
             </span>

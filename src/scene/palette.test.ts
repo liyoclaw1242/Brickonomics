@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { universe } from '../data'
 import type { Asset } from '../data/schema'
-import { lookFor, basketLooks, productLooks, SECTOR_COLORS, ACCENT_COLORS, colorForKey } from './palette'
+import { lookFor, basketLooks, productLooks, SECTOR_COLORS, ACCENT_COLORS, colorForKey, holdingColor } from './palette'
 
 const a = (id: string, type: Asset['type'], sector?: string): Asset => ({ id, name: id, type, sector, asOf: '2026-10-03', source: [] })
 
@@ -69,5 +69,30 @@ describe('colorForKey', () => {
   it('returns undefined for unknown keys', () => {
     expect(colorForKey(universe, 'nope')).toBeUndefined()
     expect(colorForKey(universe, 'toString')).toBeUndefined()
+  })
+})
+
+describe('holdingColor', () => {
+  it('matches the shade the basket renders for each holding', () => {
+    for (const pid of ['0050', 'JH_BALANCED']) {
+      const looks = productLooks(universe, pid)
+      universe.get(pid)!.holdings!.forEach((h, i) => {
+        expect(holdingColor(universe, pid, h.id)).toBe(looks[i]!.color)
+      })
+    }
+  })
+
+  it('keeps the first holding of a colour unshaded (2330 = panel blue)', () => {
+    expect(holdingColor(universe, '0050', '2330')).toBe(colorForKey(universe, '2330'))
+    expect(holdingColor(universe, '0050', '2330')).toBe(SECTOR_COLORS.semiconductor)
+  })
+
+  it('shades the second holding of the same colour, unlike colorForKey', () => {
+    const second = universe.get('0050')!.holdings!.find((h, i) => i > 0 && colorForKey(universe, h.id) === SECTOR_COLORS.semiconductor)!
+    expect(holdingColor(universe, '0050', second.id)).not.toBe(colorForKey(universe, second.id))
+  })
+
+  it('falls back to colorForKey when the holding is not in the basket', () => {
+    expect(holdingColor(universe, '0050', 'NVDA')).toBe(colorForKey(universe, 'NVDA'))
   })
 })

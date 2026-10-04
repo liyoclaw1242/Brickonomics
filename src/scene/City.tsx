@@ -3,6 +3,7 @@ import { useThree, type ThreeEvent } from '@react-three/fiber'
 import { Color, type InstancedMesh, Object3D } from 'three'
 import { universe } from '../data'
 import { useSandbox } from '../store/sandbox'
+import { currentStep, useTour } from '../store/tour'
 import { useThemeStore } from '../store/theme'
 import { T } from '../ui/strings'
 import { NameLabel } from './NameLabel'
@@ -26,6 +27,12 @@ export function City({ labels, islandLabels = true, shrink }: { labels: boolean;
   const theme = useThemeStore((s) => s.theme)
   const picked = useSandbox((s) => s.picked)
   const pickedId = picked?.productId ?? null
+  // 導覽步驟標註錨在某棟大樓：那棟鮮豔、名稱亮起（字串 key 讓 selector 穩定）
+  const anchorKey = useTour((s) =>
+    s.mode === 'tour' ? (currentStep(s).callouts ?? []).flatMap((c) => (c.anchor.kind === 'building' ? [c.anchor.id] : [])).join(',') : '',
+  )
+  const anchored = useMemo(() => new Set(anchorKey === '' ? [] : anchorKey.split(',')), [anchorKey])
+  const isActive = (id: string) => pickedId === id || anchored.has(id)
 
   useLayoutEffect(() => {
     const mesh = ref.current
@@ -37,14 +44,14 @@ export function City({ labels, islandLabels = true, shrink }: { labels: boolean;
       o.scale.setScalar(VOXEL_SCALE)
       o.updateMatrix()
       mesh.setMatrixAt(i, o.matrix)
-      c.set(toneColor(lookFor(universe.get(v.id)!).color, pickedId === v.id ? 'vivid' : 'muted', THEMES[theme]))
+      c.set(toneColor(lookFor(universe.get(v.id)!).color, isActive(v.id) ? 'vivid' : 'muted', THEMES[theme]))
       mesh.setColorAt(i, c)
     })
     mesh.instanceMatrix.needsUpdate = true
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
     mesh.computeBoundingSphere()
     invalidate()
-  }, [voxels, pickedId, theme, invalidate])
+  }, [voxels, pickedId, anchored, theme, invalidate])
 
   const onClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation()
@@ -81,7 +88,7 @@ export function City({ labels, islandLabels = true, shrink }: { labels: boolean;
       </instancedMesh>
       {/* NameLabel 自己在第一個 tick 後才掛 Html，並受「標註」開關控制 */}
       {labels && placements.map((p) => (
-        <NameLabel key={p.id} position={[p.x, p.height + 0.8, p.z]} text={universe.get(p.id)!.name} active={pickedId === p.id} />
+        <NameLabel key={p.id} position={[p.x, p.height + 0.8, p.z]} text={universe.get(p.id)!.name} active={isActive(p.id)} />
       ))}
       {islandLabels && (['TW', 'US'] as const).map((region) => {
         const [x, z] = ISLAND_CENTERS[region]
