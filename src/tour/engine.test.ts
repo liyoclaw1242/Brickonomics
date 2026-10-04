@@ -6,7 +6,7 @@ import {
   DEFAULT_VALUES, stepAt, isValidPosition, positionOf,
   isSatisfied, sandboxPatchFor, lineOf, moreOf, titleOf, parseProgress, serializeProgress, controlRange, resumePosition,
   stepAtCourse, nextIndex, prevIndex, progressFractionCourse, chapterOfIndex, firstIndexOfChapter, isValidCoursePos,
-  resumeCoursePosition, parseCourseQuery, queryPosition, startOfCourse, emptyProgress, nextCourse, switchTarget, indexOfStep, stepsOf,
+  resumeCoursePosition, resumeInCourse, parseCourseQuery, queryPosition, startOfCourse, emptyProgress, nextCourse, switchTarget, indexOfStep, stepsOf,
 } from './engine'
 
 const L: Level[] = [
@@ -195,13 +195,26 @@ describe('progress persistence (per course)', () => {
     expect(parseProgress(null)).toEqual(emptyProgress())
     expect(parseProgress('{oops')).toEqual(emptyProgress())
     expect(parseProgress('[1,2]')).toEqual(emptyProgress())
-    expect(parseProgress('{"course":"weird","completed":{"beginner":[1,"stock"]},"finished":["x","beginner"]}')).toEqual({
+    expect(parseProgress('{"course":"weird","completed":{"beginner":[1,"stock"]},"finished":["x","beginner","advanced"]}')).toEqual({
       course: null, completed: { beginner: ['stock'], intermediate: [], advanced: [] }, finished: ['beginner'], sandboxUnlocked: true,
     })
   })
 
   it('a stepId outside the saved course resumes at that course’s first step', () => {
     expect(parseProgress('{"course":"beginner","stepId":"b-2","completed":{},"finished":[],"sandboxUnlocked":false}')).toMatchObject({ course: 'beginner', stepId: 'p-1' })
+  })
+
+  it('keeps each course’s last step, dropping unknown courses and steps outside the course', () => {
+    const p = parseProgress('{"course":"beginner","stepId":"p-2","completed":{},"finished":[],"sandboxUnlocked":false,"lastStep":{"beginner":"p-2","intermediate":"p-1","advanced":"x","weird":"b-2"}}')
+    expect(p.lastStep).toEqual({ beginner: 'p-2' })
+    expect(parseProgress('{"course":"beginner","completed":{},"finished":[],"lastStep":5}').lastStep).toBeUndefined()
+  })
+
+  it('resumeInCourse: an unfinished course resumes at its last step, a finished or unvisited one at the start', () => {
+    const p = { ...emptyProgress(), lastStep: { beginner: 'b-3', intermediate: 'u-3' } }
+    expect(resumeInCourse(p, 'intermediate')).toEqual(at('intermediate', 'u-3'))
+    expect(resumeInCourse({ ...p, finished: ['intermediate'] }, 'intermediate')).toEqual({ course: 'intermediate', index: 0 })
+    expect(resumeInCourse(emptyProgress(), 'beginner')).toEqual({ course: 'beginner', index: 0 })
   })
 
   it('an unavailable course is treated as not chosen', () => {
@@ -238,6 +251,7 @@ describe('resumeCoursePosition (old saves)', () => {
     expect(resumeCoursePosition({ route: 'simple', stepId: 'b-3' })).toEqual(at('beginner', 'b-3'))
     expect(resumeCoursePosition({ route: 'simple', pos: { level: 1, step: 4 } })).toEqual(at('beginner', 's-3')) // s-5
     expect(resumeCoursePosition({ route: 'simple' })).toEqual({ course: 'beginner', index: 0 })
+    expect(resumeCoursePosition({ route: 'full' })).toEqual({ course: 'intermediate', index: 0 }) // 和 ?route=full 一致
   })
 
   it('an unknown old stepId falls back to the old position', () => {
@@ -300,5 +314,12 @@ describe('parseCourseQuery / queryPosition / startOfCourse', () => {
     const saved = { ...empty, course: 'intermediate' as const, stepId: 'u-3' }
     expect(startOfCourse(saved, {})).toEqual({ course: 'intermediate', pos: at('intermediate', 'u-3') })
     expect(startOfCourse(saved, parseCourseQuery('?course=beginner&step=e-1'))).toEqual({ course: 'beginner', pos: at('beginner', 'e-1') })
+  })
+
+  it('straight into the sandbox without a course: the course becomes 初階 (switcher, timeline and 重看導覽 work)', () => {
+    const begin = { course: 'beginner', pos: { course: 'beginner', index: 0 } }
+    expect(startOfCourse(emptyProgress(), parseCourseQuery('?mode=sandbox'))).toEqual(begin)
+    expect(startOfCourse({ ...emptyProgress(), sandboxUnlocked: true }, {})).toEqual(begin)
+    expect(startOfCourse(parseProgress('{"completed":[],"sandboxUnlocked":true}'), {})).toEqual(begin) // 舊存檔只有解鎖
   })
 })

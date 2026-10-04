@@ -234,7 +234,8 @@ export function resumeCoursePosition(saved: unknown): CoursePosition | null {
   }
   const route = isLegacyRoute(r.route) ? r.route : undefined
   const pos = legacyPos(r.pos)
-  if (stepId === undefined && pos === undefined) return route ? { course: 'beginner', index: 0 } : null
+  // 選過路線卻沒有位置：簡單版 → 初階第一步，完整版 → 中階第一步（和網址 ?route= 的規則一致）
+  if (stepId === undefined && pos === undefined) return route === 'simple' ? { course: 'beginner', index: 0 } : route === 'full' ? { course: 'intermediate', index: 0 } : null
   const known = stepId !== undefined && LEVEL_ORDER.includes(stepId)
   const old = resumePosition(LEVELS, pos, known ? stepId : undefined)
   return locate(LEVELS[old.level]!.steps[old.step]!.id, route)
@@ -259,6 +260,22 @@ function migrateCompleted(oldChapters: readonly string[]): Record<CourseId, stri
   return out
 }
 
+/** 每門課最後停的步驟：只留可上的課、而且步驟真的在那門課裡的 */
+function parseLastStep(x: unknown): Partial<Record<CourseId, string>> | undefined {
+  if (typeof x !== 'object' || x === null || Array.isArray(x)) return undefined
+  const out: Partial<Record<CourseId, string>> = {}
+  for (const [k, v] of Object.entries(x as Record<string, unknown>)) {
+    if (isAvailableCourse(k) && typeof v === 'string' && indexOfStep(k, v) >= 0) out[k] = v
+  }
+  return Object.keys(out).length > 0 ? out : undefined
+}
+
+/** 換階時進哪一步：那門課還沒上完、而且記得停在哪 → 那一步；否則第一步 */
+export function resumeInCourse(progress: Progress, course: CourseId): CoursePosition {
+  const id = progress.finished.includes(course) ? undefined : progress.lastStep?.[course]
+  return { course, index: Math.max(0, id === undefined ? 0 : indexOfStep(course, id)) }
+}
+
 /** 讀進度：新格式照讀；舊格式（completed 是章 id 陣列、pos、route）遷移成課程進度 */
 export function parseProgress(raw: string | null): Progress {
   if (!raw) return emptyProgress()
@@ -279,8 +296,9 @@ export function parseProgress(raw: string | null): Progress {
   const completed = emptyCompleted()
   const cr = typeof rec.completed === 'object' && rec.completed !== null && !Array.isArray(rec.completed) ? (rec.completed as Record<string, unknown>) : {}
   for (const id of COURSE_IDS) completed[id] = strings(cr[id])
-  const finished = strings(rec.finished).filter(isCourseId)
-  return { ...where, completed, finished, sandboxUnlocked: sandboxUnlocked || finished.length > 0 }
+  const finished = strings(rec.finished).filter(isAvailableCourse)
+  const lastStep = parseLastStep(rec.lastStep)
+  return { ...where, completed, finished, sandboxUnlocked: sandboxUnlocked || finished.length > 0, ...(lastStep ? { lastStep } : {}) }
 }
 
 export function serializeProgress(p: Progress): string {
@@ -334,10 +352,14 @@ export function queryPosition(q: CourseQuery): CoursePosition | null {
   return null
 }
 
-/** 開網頁時停在哪：網址優先，再來是存檔；都沒有＝第一次來（course null，背景照初階第一步） */
+/**
+ * 開網頁時停在哪：網址優先，再來是存檔；都沒有＝第一次來（course null，背景照初階第一步）。
+ * 直接進自由玩（?mode=sandbox，或存檔已解鎖自由玩）卻沒有課的：課設成初階，換階、時間軸、重看導覽才有東西可用。
+ */
 export function startOfCourse(progress: Progress, q: CourseQuery): { course: CourseId | null; pos: CoursePosition } {
   const fromQuery = queryPosition(q)
   if (fromQuery) return { course: fromQuery.course, pos: fromQuery }
   if (progress.course !== null && isAvailableCourse(progress.course)) return { course: progress.course, pos: switchTarget(progress.course, progress.stepId) }
-  return { course: null, pos: { course: 'beginner', index: 0 } }
+  const sandbox = q.mode === 'sandbox' || progress.sandboxUnlocked
+  return { course: sandbox ? 'beginner' : null, pos: { course: 'beginner', index: 0 } }
 }

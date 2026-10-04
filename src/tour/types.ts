@@ -138,4 +138,6 @@ export type Progress = {
   /** 上完（走過結尾步）的課 */
   finished: CourseId[]
   sandboxUnlocked: boolean
+  /** 每門課最後停的步驟 id：換階回到還沒上完的課時從這裡繼續 */
+  lastStep?: Partial<Record<CourseId, string>>
 }

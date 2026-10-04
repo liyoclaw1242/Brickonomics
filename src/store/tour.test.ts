@@ -76,7 +76,9 @@ describe('useTour', () => {
   it('enterStep preserves completed/finished/sandboxUnlocked and remembers course + stepId', () => {
     useTour.setState({ progress: { ...emptyProgress(), course: 'beginner', completed: { beginner: ['prologue'], intermediate: [], advanced: [] }, sandboxUnlocked: true } })
     go('intermediate', 'b-2')
-    expect(useTour.getState().progress).toEqual({ course: 'intermediate', stepId: 'b-2', completed: { beginner: ['prologue'], intermediate: [], advanced: [] }, finished: [], sandboxUnlocked: true })
+    expect(useTour.getState().progress).toEqual({
+      course: 'intermediate', stepId: 'b-2', completed: { beginner: ['prologue'], intermediate: [], advanced: [] }, finished: [], sandboxUnlocked: true, lastStep: { intermediate: 'b-2' },
+    })
     expect(useTour.getState().course).toBe('intermediate')
   })
 
@@ -92,6 +94,43 @@ describe('useTour', () => {
     expect(idOf()).toBe('m-0')
     expect(useTour.getState().course).toBe('intermediate')
     expect(useTour.getState().progress.course).toBe('intermediate')
+  })
+
+  it('switchCourse resumes an unfinished course at its last step', () => {
+    useTour.getState().chooseCourse('intermediate')
+    go('intermediate', 'f-4')
+    useTour.getState().switchCourse('beginner')
+    expect(idOf()).toBe('p-1') // 初階還沒去過
+    go('beginner', 'b-3')
+    useTour.getState().switchCourse('intermediate')
+    expect(idOf()).toBe('f-4')
+    useTour.getState().switchCourse('beginner')
+    expect(idOf()).toBe('b-3')
+    expect(useTour.getState().progress.lastStep).toEqual({ intermediate: 'f-4', beginner: 'b-3' })
+  })
+
+  it('switchCourse to a finished course starts it over', () => {
+    useTour.getState().chooseCourse('beginner')
+    go('beginner', 'u-6')
+    useTour.getState().next() // 上完初階
+    useTour.getState().switchCourse('intermediate')
+    useTour.getState().switchCourse('beginner')
+    expect(idOf()).toBe('p-1')
+  })
+
+  it('chooseCourse, goNextCourse and restartCourse always start at the first step', () => {
+    useTour.getState().chooseCourse('intermediate')
+    go('intermediate', 'u-3')
+    useTour.getState().chooseCourse('intermediate')
+    expect(idOf()).toBe('m-0')
+    go('intermediate', 'u-3')
+    useTour.getState().restartCourse()
+    expect(idOf()).toBe('m-0')
+    go('intermediate', 'b-2')
+    go('beginner', 'u-6')
+    useTour.setState({ progress: { ...useTour.getState().progress, lastStep: { beginner: 'u-6', intermediate: 'b-2' } } })
+    useTour.getState().goNextCourse()
+    expect(idOf()).toBe('m-0')
   })
 
   it('switchCourse from the sandbox goes back to the tour', () => {

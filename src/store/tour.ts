@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import {
   chapterOfIndex, controlRange, courseById, DEFAULT_RANGES, DEFAULT_VALUES, emptyProgress, firstIndexOfChapter, nextCourse, nextIndex, parseProgress, prevIndex,
-  sandboxPatchFor, serializeProgress, stepAtCourse, switchTarget,
+  resumeInCourse, sandboxPatchFor, serializeProgress, stepAtCourse,
 } from '../tour/engine'
 import type { CourseId, CoursePosition, Progress, StageValues, Step, ValueKey } from '../tour/types'
 import { useSandbox } from './sandbox'
@@ -35,7 +35,11 @@ export const VALUE_RANGES: Record<ValueKey, [number, number]> = {
 
 type TourState = {
   mode: 'tour' | 'sandbox'
-  /** 目前的課；null＝第一次來、還沒選（面板顯示開場卡，背景照初階第一步） */
+  /**
+   * 目前的課；null＝第一次來、還沒選（面板顯示開場卡，背景照初階第一步）。
+   * 和 progress.course 是同一件事（progress 是存檔用的那份）：選了課之後只由 enterStep 同時寫兩邊；
+   * chooseCourse／switchCourse 先把 course 設成非 null，enterStep 才知道「已選課、可以存」。
+   */
   course: CourseId | null
   pos: CoursePosition
   values: StageValues
@@ -53,7 +57,7 @@ type TourState = {
   restartCourse: () => void
   /** 開場卡：選一門課，從第一步開始 */
   chooseCourse: (id: CourseId) => void
-  /** 換階：新課裡有目前這一步就停那步，否則新課第一步 */
+  /** 換階：那門課還沒上完、記得停在哪就回到那一步，否則第一步 */
   switchCourse: (id: CourseId) => void
   /** 結尾步的「下一階」：記下這門課上完，然後進下一門課（沒有可上的就去自由玩） */
   goNextCourse: () => void
@@ -84,7 +88,8 @@ export const useTour = create<TourState>()((set, get) => ({
     useSandbox.getState().applyScene(sandboxPatchFor(step.scene))
     // 還沒選課（開場卡還在）就不存：不然下次來會被當成舊使用者、不再問
     const chosen = get().course !== null
-    const progress = chosen ? { ...get().progress, course: pos.course, stepId: step.id } : get().progress
+    const prev = get().progress
+    const progress = chosen ? { ...prev, course: pos.course, stepId: step.id, lastStep: { ...prev.lastStep, [pos.course]: step.id } } : prev
     if (chosen) saveProgress(progress)
     set({ mode: 'tour', pos, ...(chosen ? { course: pos.course } : {}), values: { ...DEFAULT_VALUES, ...step.scene.values }, progress })
   },
@@ -126,7 +131,7 @@ export const useTour = create<TourState>()((set, get) => ({
   },
   switchCourse: (id) => {
     set({ course: id })
-    get().enterStep(switchTarget(id, stepAtCourse(get().pos).id))
+    get().enterStep(resumeInCourse(get().progress, id))
   },
   goNextCourse: () => {
     const { pos, progress } = get()
