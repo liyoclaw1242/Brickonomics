@@ -2,9 +2,10 @@ import { describe, it, expect } from 'vitest'
 import { universe } from '../data'
 import { isBasket } from '../data/schema'
 import { overlap } from '../sim/overlap'
-import { LEVELS } from './levels'
+import { EXDIV_AFTER_PHASE, LEVELS } from './levels'
+import { exDivTimeline } from '../scene/layout/stages'
 import { makeTextContext } from './context'
-import { DEFAULT_VALUES, lineOf, moreOf } from './engine'
+import { controlRange, DEFAULT_VALUES, lineOf, moreOf } from './engine'
 import { ACTION_VERBS, forbiddenWordsIn, LINE_SENTENCE_MAX, LINE_SENTENCES_MAX, MORE_SENTENCE_MAX, MORE_SENTENCES_MAX, sentences } from './glossary'
 import { parseEmphasis, stripMarkup, visibleLength } from '../ui/emphasis'
 import { colorForKey } from '../scene/palette'
@@ -251,7 +252,8 @@ describe('LEVELS', () => {
       const [block, coins] = (bn.label.match(/\d+/g) ?? []).map(Number)
       expect(block! + coins!, `phase ${phase}: ${bn.label}`).toBe(100)
     }
-    expect(lineOf(byId('s-6'), ctx)).toBe('**配息|coin**那刻：方塊＋金幣＝**不變**') // 配息用金幣色（3b1b 顏色連結）
+    expect(lineOf(byId('s-6'), ctx)).toContain('**金幣|coin**') // 金幣用金幣色（3b1b 顏色連結）
+    expect(lineOf(byId('s-6'), ctx)).toContain('**不變**')
   })
 
   it('says 配息來自本金 only on the illustrative principal-trap step', () => {
@@ -299,3 +301,68 @@ describe('LEVELS', () => {
     expect(moreOf(byId('e-3'), ctx)).toContain('7%') // 2454: pct0(6.71)
   })
 })
+
+describe('control ranges and the dividend steps (user test r1)', () => {
+  const ranged = (s: Step) => (s.controls ?? []).map((c) => [c, controlRange(s, c)] as const)
+
+  it('keeps every entry value and gate inside the step control range, and gates need a drag', () => {
+    for (const s of steps) {
+      for (const [c, [lo, hi]] of ranged(s)) {
+        expect(lo, `${s.id}:${c}`).toBeLessThan(hi)
+        if (c === 'slice' || c === 'explode') {
+          const start = (c === 'slice' ? s.scene.slice : s.scene.explode) ?? 0
+          expect(start, `${s.id}:${c}`).toBeGreaterThanOrEqual(lo)
+          expect(start, `${s.id}:${c}`).toBeLessThanOrEqual(hi)
+        } else {
+          const start = { ...DEFAULT_VALUES, ...s.scene.values }[c]
+          expect(start, `${s.id}:${c}`).toBeGreaterThanOrEqual(lo)
+          expect(start, `${s.id}:${c}`).toBeLessThanOrEqual(hi)
+        }
+      }
+      if (s.until) {
+        const [lo, hi] = controlRange(s, s.until.control)
+        expect(s.until.min, s.id).toBeGreaterThan(lo)
+        expect(s.until.min, s.id).toBeLessThanOrEqual(hi)
+      }
+    }
+  })
+
+  it('s-6 stops the timeline at the payout moment so the card and the 3D tags always agree', () => {
+    const s6 = byId('s-6')
+    expect(controlRange(s6, 'phase')).toEqual([0, EXDIV_AFTER_PHASE])
+    expect(s6.scene.values?.phase).toBe(EXDIV_AFTER_PHASE)
+    for (let i = 0; i <= 10; i++) {
+      const phase = (i / 10) * EXDIV_AFTER_PHASE
+      const e = exDivTimeline(phase, 'fill') // 3D 舞台用同一條時間軸
+      const bn = bigOf(s6, { phase })!
+      expect(bn.label, `phase ${phase}`).toBe(`方塊 ${e.blockValue.toFixed(0)} ＋ 金幣 ${e.cash.toFixed(0)}`)
+    }
+    expect(s6.title).toBe('發金幣那一刻')
+  })
+
+  it('s-7 starts at the payout moment and needs a drag that shows the block not growing back', () => {
+    const s7 = byId('s-7')
+    expect(s7.title).toBe('方塊沒長回來')
+    expect(s7.scene.values?.phase).toBe(EXDIV_AFTER_PHASE)
+    expect(s7.until?.control).toBe('phase')
+    expect(s7.until!.min).toBeGreaterThan(EXDIV_AFTER_PHASE)
+    expect(stripMarkup(lineOf(s7, ctx))).toContain('變少')
+    // 剛進來：95 ＋ 5 ＝ 100；拉到底：貼息到 92，92 ＋ 5 ＝ 97
+    expect(bigOf(s7)).toMatchObject({ value: '100', label: '方塊 95 ＋ 金幣 5', colorKey: 'loss', mark: 'illustrative' })
+    expect(bigOf(s7, { phase: 1 })).toMatchObject({ value: '97', label: '方塊 92 ＋ 金幣 5', colorKey: 'loss', mark: 'illustrative' })
+    expect(bigOf(s7, { phase: 1 })!.fraction).toBeCloseTo(0.97, 6)
+  })
+
+  it('keeps 除息／填息／貼息 out of titles and lines (多說一點 only)', () => {
+    for (const s of steps) for (const w of ['除息', '填息', '貼息']) {
+      expect(s.title.includes(w), `${s.id}: ${w}`).toBe(false)
+      expect(lineOf(s, ctx).includes(w), `${s.id}: ${w}`).toBe(false)
+    }
+  })
+
+  it('e-2 caps the laser so part of 0050 always remains', () => {
+    const [, hi] = controlRange(byId('e-2'), 'slice')
+    expect(hi).toBeLessThanOrEqual(0.6)
+  })
+})
+

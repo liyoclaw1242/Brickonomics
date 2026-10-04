@@ -93,6 +93,8 @@ export type Step = {
   callouts?: CalloutSpec[]
   scene: SceneDirective
   controls?: Control[]
+  /** 這一步拉桿可拖的範圍（未填用預設範圍）；例如 s-6 的時間軸只到配發那一刻 */
+  ranges?: Partial<Record<Control, [number, number]>>
   until?: Condition
 }
 

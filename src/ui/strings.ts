@@ -64,7 +64,7 @@ export const T = {
     periods: '經過年數',
     periodsValue: (v: number) => `${v} 年`,
     phase: '時間軸',
-    phaseValue: (v: number) => (v < 0.5 ? '配發前' : '配發後'),
+    phaseValue: (v: number) => (v < 0.5 ? '發金幣前' : v < 0.55 ? '發金幣那一刻' : '過了一陣子'),
     frontLoad: '假設的前收手續費',
     frontLoadValue: (v: number) => `${(v * 100).toFixed(2)}%`,
   },

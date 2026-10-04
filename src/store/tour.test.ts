@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useTour, currentStep } from './tour'
 import { useSandbox } from './sandbox'
-import { LEVELS } from '../tour/levels'
+import { EXDIV_AFTER_PHASE, LEVELS } from '../tour/levels'
 import { positionOf } from '../tour/engine'
 
 beforeEach(() => {
@@ -46,6 +46,16 @@ describe('useTour', () => {
     expect(useTour.getState().values.years).toBe(10)
     useTour.getState().setValue('frontLoad', Number.NaN)
     expect(useTour.getState().values.frontLoad).toBe(0)
+  })
+
+  it('setValue also clamps to the current step range (s-6 stops at the payout moment)', () => {
+    useTour.getState().enterStep(positionOf(LEVELS, 's-6'))
+    useTour.getState().setValue('phase', 1)
+    expect(useTour.getState().values.phase).toBe(EXDIV_AFTER_PHASE)
+    useTour.getState().enterStep(positionOf(LEVELS, 's-7'))
+    expect(useTour.getState().values.phase).toBe(EXDIV_AFTER_PHASE)
+    useTour.getState().setValue('phase', 1)
+    expect(useTour.getState().values.phase).toBe(1)
   })
 
   it('currentStep follows pos', () => {

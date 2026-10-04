@@ -1,5 +1,6 @@
 import { useSandbox } from '../store/sandbox'
-import { useTour, VALUE_RANGES } from '../store/tour'
+import { currentStep, useTour } from '../store/tour'
+import { controlRange } from '../tour/engine'
 import type { Control, ValueKey } from '../tour/types'
 import { MarkIcon } from './MarkIcon'
 import { T } from './strings'
@@ -9,7 +10,7 @@ const STEP: Record<ValueKey, number> = { years: 0.5, periods: 1, phase: 0.01, fr
 function ValueSlider({ k }: { k: ValueKey }) {
   const v = useTour((s) => s.values[k])
   const setValue = useTour((s) => s.setValue)
-  const [lo, hi] = VALUE_RANGES[k]
+  const [lo, hi] = useTour((s) => controlRange(currentStep(s), k))
   const fmt = { years: T.controls.yearsValue, periods: T.controls.periodsValue, phase: T.controls.phaseValue, frontLoad: T.controls.frontLoadValue }[k]
   return (
     <label className="control">
@@ -27,6 +28,9 @@ export function StageControls({ controls }: { controls: readonly Control[] }) {
   const slice = useSandbox((s) => s.slice)
   const explode = useSandbox((s) => s.explode)
   const { setSlice, setExplode } = useSandbox.getState()
+  // 每一步可以縮小拉桿範圍（例如 e-2 的雷射刀不切到底，免得整顆消失）
+  const sliceMax = useTour((s) => controlRange(currentStep(s), 'slice')[1])
+  const explodeMax = useTour((s) => controlRange(currentStep(s), 'explode')[1])
   return (
     <div className="controls">
       {controls.map((c) => {
@@ -34,14 +38,14 @@ export function StageControls({ controls }: { controls: readonly Control[] }) {
           return (
             <label key={c} className="control">
               <span className="control__label">{T.slice}</span>
-              <input type="range" min={0} max={1} step={0.01} value={slice} onChange={(e) => setSlice(Number(e.target.value))} />
+              <input type="range" min={0} max={sliceMax} step={0.01} value={Math.min(slice, sliceMax)} onChange={(e) => setSlice(Math.min(sliceMax, Number(e.target.value)))} />
             </label>
           )
         if (c === 'explode')
           return (
             <label key={c} className="control">
               <span className="control__label">{T.explode}</span>
-              <input type="range" min={0} max={1} step={0.01} value={explode} onChange={(e) => setExplode(Number(e.target.value))} />
+              <input type="range" min={0} max={explodeMax} step={0.01} value={Math.min(explode, explodeMax)} onChange={(e) => setExplode(Math.min(explodeMax, Number(e.target.value)))} />
             </label>
           )
         return <ValueSlider key={c} k={c} />

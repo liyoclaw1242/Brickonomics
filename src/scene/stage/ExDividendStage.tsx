@@ -13,7 +13,7 @@ const BASE_EDGE = 4
 /** 金幣放大，讓 5 枚金幣的堆疊在近景看得清楚 */
 const COIN_SCALE = 2
 
-/** 除息：方塊體積 ∝ 價值；金幣一枚 = 1（示意價格 100、股利 5） */
+/** 除息：標籤取整數，和面板大數字（n0）一致。方塊體積 ∝ 價值；金幣一枚 = 1（示意價格 100、股利 5） */
 export function ExDividendStage({ outcome }: { outcome: ExDivOutcome; quality?: Quality }) {
   const phase = useTour((s) => s.values.phase)
   const st = exDivTimeline(phase, outcome)
@@ -31,8 +31,8 @@ export function ExDividendStage({ outcome }: { outcome: ExDivOutcome; quality?: 
         <CoinPile count={Math.round(st.cash)} position={[0, 0, 0]} />
       </group>
       {paying && <CoinDrip from={atPlaza(-4, edge, 0)} to={atPlaza(3, 0.3, 0)} rate={6} fallTime={0.8} size={COIN_SCALE} limit={Math.round(st.cash)} />}
-      <Callout anchor={atPlaza(-4, 0.1, edge / 2)} offset={[0, -0.3, 3 - edge / 2]} title={`${T.stage.exdiv.block} ${st.blockValue.toFixed(1)}`} marks={['illustrative']} persistent />
-      <Callout anchor={atPlaza(3.5, 0.1, 1.5)} offset={[0, -0.3, 1.5]} title={`${T.stage.exdiv.coins} ${st.cash.toFixed(1)}`} />
+      <Callout anchor={atPlaza(-4, 0.1, edge / 2)} offset={[0, -0.3, 3 - edge / 2]} title={`${T.stage.exdiv.block} ${st.blockValue.toFixed(0)}`} marks={['illustrative']} persistent />
+      <Callout anchor={atPlaza(3.5, 0.1, 1.5)} offset={[0, -0.3, 1.5]} title={`${T.stage.exdiv.coins} ${st.cash.toFixed(0)}`} />
     </>
   )
 }

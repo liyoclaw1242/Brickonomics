@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import type { Level } from './types'
 import {
   DEFAULT_VALUES, stepAt, isValidPosition, nextPosition, prevPosition, positionOf, progressFraction,
-  isSatisfied, sandboxPatchFor, lineOf, moreOf, titleOf, parseProgress, serializeProgress, parseTourQuery,
+  isSatisfied, sandboxPatchFor, lineOf, moreOf, titleOf, parseProgress, serializeProgress, parseTourQuery, controlRange,
 } from './engine'
 
 const L: Level[] = [
@@ -64,6 +64,20 @@ describe('isSatisfied', () => {
     expect(isSatisfied({ control: 'slice', min: 0.4 }, { ...values, slice: 0.39 })).toBe(false)
     expect(isSatisfied({ control: 'slice', min: 0.4 }, { ...values, slice: 0.4 })).toBe(true)
     expect(isSatisfied({ control: 'years', min: 3 }, { ...values, years: 5 })).toBe(true)
+  })
+})
+
+describe('controlRange', () => {
+  it('uses the default range unless the step narrows it', () => {
+    const plain = L[0]!.steps[0]!
+    expect(controlRange(plain, 'years')).toEqual([0, 10])
+    expect(controlRange(plain, 'phase')).toEqual([0, 1])
+    expect(controlRange(plain, 'slice')).toEqual([0, 1])
+    expect(controlRange(plain, 'explode')).toEqual([0, 1])
+    const narrowed = { ...plain, ranges: { phase: [0, 0.5] as [number, number], slice: [0, 0.6] as [number, number] } }
+    expect(controlRange(narrowed, 'phase')).toEqual([0, 0.5])
+    expect(controlRange(narrowed, 'slice')).toEqual([0, 0.6])
+    expect(controlRange(narrowed, 'years')).toEqual([0, 10])
   })
 })
 

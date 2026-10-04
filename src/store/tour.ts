@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { LEVELS } from '../tour/levels'
-import { DEFAULT_VALUES, nextPosition, parseProgress, prevPosition, sandboxPatchFor, serializeProgress, stepAt } from '../tour/engine'
+import { controlRange, DEFAULT_RANGES, DEFAULT_VALUES, nextPosition, parseProgress, prevPosition, sandboxPatchFor, serializeProgress, stepAt } from '../tour/engine'
 import type { Position, Progress, StageValues, Step, ValueKey } from '../tour/types'
 import { useSandbox } from './sandbox'
 
@@ -23,11 +23,12 @@ function saveProgress(p: Progress) {
   }
 }
 
+/** 拉桿的預設範圍（沙盒與沒有指定範圍的步驟） */
 export const VALUE_RANGES: Record<ValueKey, [number, number]> = {
-  years: [0, 10],
-  periods: [0, 20],
-  phase: [0, 1],
-  frontLoad: [0, 0.03],
+  years: DEFAULT_RANGES.years,
+  periods: DEFAULT_RANGES.periods,
+  phase: DEFAULT_RANGES.phase,
+  frontLoad: DEFAULT_RANGES.frontLoad,
 }
 
 type TourState = {
@@ -81,7 +82,8 @@ export const useTour = create<TourState>()((set, get) => ({
   },
   restartTour: () => get().enterStep({ level: 0, step: 0 }),
   setValue: (k, v) => {
-    const [lo, hi] = VALUE_RANGES[k]
+    // 導覽模式依目前步驟的範圍（例如 s-6 的時間軸停在配發那一刻）
+    const [lo, hi] = get().mode === 'tour' ? controlRange(stepAt(LEVELS, get().pos), k) : VALUE_RANGES[k]
     const x = Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : lo
     set({ values: { ...get().values, [k]: x } })
   },

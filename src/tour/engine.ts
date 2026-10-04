@@ -1,7 +1,21 @@
 import type { SandboxPatch } from '../store/sandbox'
-import type { Condition, Level, Position, Progress, SceneDirective, StageValues, Step, TextContext, TourValues } from './types'
+import type { Condition, Control, Level, Position, Progress, SceneDirective, StageValues, Step, TextContext, TourValues } from './types'
 
 export const DEFAULT_VALUES: StageValues = { years: 1, periods: 0, phase: 0, frontLoad: 0.015 }
+
+/** 拉桿的預設範圍；步驟可用 step.ranges 縮小 */
+export const DEFAULT_RANGES: Record<Control, [number, number]> = {
+  years: [0, 10],
+  periods: [0, 20],
+  phase: [0, 1],
+  frontLoad: [0, 0.03],
+  slice: [0, 1],
+  explode: [0, 1],
+}
+
+export function controlRange(step: Pick<Step, 'ranges'>, c: Control): [number, number] {
+  return step.ranges?.[c] ?? DEFAULT_RANGES[c]
+}
 
 export function isValidPosition(levels: readonly Level[], pos: Position): boolean {
   return Number.isInteger(pos.level) && Number.isInteger(pos.step) && !!levels[pos.level]?.steps[pos.step]
