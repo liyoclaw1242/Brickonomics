@@ -1,7 +1,7 @@
 import type { SandboxPatch } from '../store/sandbox'
 import type { Condition, Control, Level, Position, Progress, Route, RouteIds, SceneDirective, StageValues, Step, TextContext, TourValues } from './types'
 
-export const DEFAULT_VALUES: StageValues = { years: 1, periods: 0, phase: 0, frontLoad: 0.015 }
+export { DEFAULT_VALUES } from './values'
 
 /** 拉桿的預設範圍；步驟可用 step.ranges 縮小 */
 export const DEFAULT_RANGES: Record<Control, [number, number]> = {

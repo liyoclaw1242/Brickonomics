@@ -1,6 +1,6 @@
 import type { BigNumber, Level, RecapLine, Route, RouteIds, Step, TextContext } from './types'
 import { movePct, pct0, SHOCK_2330, signedPct, wan } from './context'
-import { DEFAULT_VALUES } from './engine'
+import { DEFAULT_VALUES } from './values'
 import { EXDIV, exDivTimeline, principalTrap, TRAP_DEMO } from '../scene/layout/stages'
 import { T } from '../ui/strings'
 
