@@ -24,7 +24,8 @@ export function ChapterTimeline() {
               className={`timeline__chapter timeline__chapter--${c.state}`}
               disabled={!c.clickable}
               aria-current={current ? 'step' : undefined}
-              aria-label={`${T.levelLabel(c.index)} ${ch.name}`}
+              // 無障礙名稱＝看得到的「編號 名稱」（WCAG 2.5.3）；窄畫面只剩圖示時仍念得出章名
+              aria-label={T.chapterName(c.index, ch.name)}
               title={ch.name}
               onClick={() => useTour.getState().enterStep({ level: c.index, step: 0 })}
             >
@@ -32,7 +33,7 @@ export function ChapterTimeline() {
                 {ch.icon}
               </span>
               <span className="timeline__name">
-                {String(c.index).padStart(2, '0')} {ch.name}
+                {T.chapterName(c.index, ch.name)}
               </span>
             </button>
           )

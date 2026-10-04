@@ -7,14 +7,16 @@ export const MOBILE_MAX = 720
 export const PANEL_WIDTH = 312
 /** 手機底部抽屜佔畫面高度的比例（ui.css 的 42vh） */
 const DRAWER_FRACTION = 0.42
+/** 手機時間軸（含與抽屜的間距）佔的高度；須與 ui.css 手機版 .timeline 的高度一致 */
+const TIMELINE_MOBILE = 60
 
 export type Insets = { top: number; right: number; bottom: number; left: number }
 export type Layout = { mobile: boolean; insets: Insets }
 
 export function layoutModel(w: number, h: number): Layout {
   if (w <= MOBILE_MAX) {
-    // 上：工具列；下：抽屜＋浮在抽屜上方的時間軸
-    return { mobile: true, insets: { top: 56, right: 0, bottom: Math.round(h * DRAWER_FRACTION) + 40, left: 0 } }
+    // 上：工具列；下：抽屜＋浮在抽屜上方的時間軸（ui.css：間距 8＋時間軸 49 ≈ 60）
+    return { mobile: true, insets: { top: 56, right: 0, bottom: Math.round(h * DRAWER_FRACTION) + TIMELINE_MOBILE, left: 0 } }
   }
   // 上：工具列；左：面板＋間距；下：時間軸
   return { mobile: false, insets: { top: 64, right: 0, bottom: 76, left: PANEL_WIDTH + 24 } }

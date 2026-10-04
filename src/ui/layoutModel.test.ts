@@ -6,7 +6,7 @@ describe('layoutModel', () => {
     expect(layoutModel(1280, 800)).toEqual({ mobile: false, insets: { top: 64, right: 0, bottom: 76, left: 336 } })
   })
   it('reserves the drawer and top bar on mobile', () => {
-    expect(layoutModel(390, 844)).toEqual({ mobile: true, insets: { top: 56, right: 0, bottom: 394, left: 0 } }) // round(844×0.42)=354 +40
+    expect(layoutModel(390, 844)).toEqual({ mobile: true, insets: { top: 56, right: 0, bottom: 414, left: 0 } }) // round(844×0.42)=354 + 時間軸 60
   })
 })
 
@@ -23,9 +23,9 @@ describe('viewFraming', () => {
   })
   it('fits the narrow visible area above the mobile drawer', () => {
     const f = viewFraming(390, 844)
-    // 往上 (394−56)/2 = 169；寬度限制 390×0.85/844 ≈ 0.3928 小於高度限制 394/844 ≈ 0.4668
+    // 往上 (414−56)/2 = 179；寬度限制 390×0.85/844 ≈ 0.3928 小於高度限制 (844−56−414)/844 ≈ 0.4431
     expect(f.offsetX).toBe(0)
-    expect(f.offsetY).toBe(169)
+    expect(f.offsetY).toBe(179)
     expect(f.zoom).toBeCloseTo((390 * 0.85) / 844, 4)
   })
   it('never zooms in past 1', () => {

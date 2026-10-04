@@ -18,6 +18,7 @@
   --border: rgba(255, 255, 255, 0.12);
   --badge: #8fb8c8;
   --em: #e9b97a;
+  --label-shadow: rgba(0, 0, 0, 0.45);
 }
 :root[data-theme='day'] {
   --bg: #cfe8ff;
@@ -33,6 +34,7 @@
   --border: rgba(31, 41, 51, 0.12);
   --badge: #b45309;
   --em: #c2410c;
+  --label-shadow: rgba(255, 255, 255, 0.8); /* 白天：亮色光暈，不要黑影（看起來髒） */
 }
 html, body { margin: 0; height: 100%; background: var(--bg); }
 * { box-sizing: border-box; }
@@ -52,6 +54,8 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .step-title { margin: 4px 0 6px; font-size: 26px; font-weight: 600; letter-spacing: 0.02em; display: flex; gap: 8px; align-items: center; }
 .oneline { margin: 0 0 12px; font-size: 17px; line-height: 1.6; }
 .oneline strong { color: var(--em); font-weight: 700; }
+.oneline strong.em-key { color: var(--key); }
+:root[data-theme='day'] .oneline strong.em-key { color: color-mix(in oklab, var(--key) 62%, #1f2933); text-decoration: underline 3px var(--key); text-underline-offset: 4px; }
 .bignum { margin: 8px 0 12px; padding: 12px 14px; border-radius: 12px; background: var(--chip); border: 1px solid var(--border); }
 .bignum__value { font-size: 34px; font-weight: 700; display: flex; gap: 8px; align-items: center; font-variant-numeric: tabular-nums; }
 .bignum__label { font-size: 13px; color: var(--muted); }
@@ -113,7 +117,8 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .badge { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 6px; font-size: 11px; color: var(--badge); border: 1px solid currentColor; }
 
 @media (max-width: 720px) {
-  .panel { top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 42vh; max-height: 42dvh; overscroll-behavior: contain; border-radius: 14px 14px 0 0; }
+  /* 抽屜固定 42dvh 高（不是最大高）：時間軸浮在抽屜上方 8px，內容短時兩者之間也不會留一大段空隙 */
+  .panel { top: auto; left: 0; right: 0; bottom: 0; width: auto; height: 42vh; height: 42dvh; max-height: none; overscroll-behavior: contain; border-radius: 14px 14px 0 0; }
   .chip, .seg button { min-height: 36px; padding: 8px 12px; }
   .seg button { flex: 1; }
   .legend button { min-height: 36px; padding: 6px 2px; }
@@ -165,7 +170,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
   /* 手機抽屜：多說一點排在上一步／下一步之前，上一步／下一步固定（sticky）在抽屜底部 */
   .panel.tour { display: flex; flex-direction: column; }
   .panel.tour > * { flex-shrink: 0; }
-  .panel.tour > .step-nav { order: 3; }
+  .panel.tour > .step-nav { order: 3; margin-top: auto; } /* 抽屜固定高：內容短時上一步／下一步仍貼底 */
   .panel.tour > .more { order: 2; }
   .panel.tour > .link { order: 4; }
   .readout th, .readout td { padding: 2px 0; }
@@ -177,19 +182,20 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .fallback ol { padding-left: 20px; }
 .fallback li { margin-bottom: 14px; }
 
-/* 3D 標註（Callout / NameLabel）與標示圖示（MarkIcon） */
+/* 3D 標註（Callout / NameLabel）與標示圖示（MarkIcon）。--label-scale 由 ViewFraming 依鏡頭 zoom 設定：窄畫面字跟著縮小（設下限以保可讀） */
 .callout { pointer-events: none; display: grid; gap: 2px; padding: 6px 10px; border-radius: 8px; white-space: nowrap;
-  background: var(--surface-strong); border: 1px solid var(--border); color: var(--text); font-size: 13px; width: max-content; }
+  background: var(--surface-strong); border: 1px solid var(--border); color: var(--text); font-size: calc(13px * max(0.8, var(--label-scale, 1))); width: max-content; }
 .callout--right { transform: translate(8px, -50%); }
 .callout--left { transform: translate(calc(-100% - 8px), -50%); }
 .callout--dim { opacity: 0.45; }
-.callout--wrap { white-space: normal; width: max-content; max-width: 240px; text-align: center; line-height: 1.5; }
+.callout--compact { padding: 1px 6px; line-height: 1.25; border-radius: 4px; }
+.callout--wrap { white-space: normal; width: max-content; max-width: min(340px, 80vw); text-align: center; line-height: 1.5; }
 .callout__title { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
-.callout__dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
-.callout__sub { font-size: 11px; color: var(--muted); letter-spacing: 0.04em; }
-.name-label { pointer-events: none; font-size: 11px; color: var(--muted); opacity: 0.7; white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+.callout__dot { width: 8px; height: 8px; border-radius: 50%; flex: none; box-shadow: 0 0 0 1px var(--border); } /* 外框：近白色（如公債）的色點在白天也看得到 */
+.callout__sub { font-size: calc(11px * max(0.85, var(--label-scale, 1))); color: var(--muted); letter-spacing: 0.04em; }
+.name-label { pointer-events: none; font-size: calc(11px * max(0.75, var(--label-scale, 1))); color: var(--muted); opacity: 0.7; white-space: nowrap; text-shadow: 0 1px 2px var(--label-shadow); }
 .name-label--active { opacity: 1; color: var(--text); font-weight: 600; }
-.name-label--island { font-size: 16px; font-weight: 600; }
+.name-label--island { font-size: calc(16px * max(0.75, var(--label-scale, 1))); font-weight: 600; }
 .mark { position: relative; display: inline-flex; }
 .mark__icon { pointer-events: auto; border: 1px solid var(--border); background: var(--chip); color: var(--badge);
   width: 18px; height: 18px; border-radius: 50%; font-size: 11px; line-height: 1; padding: 0; cursor: pointer; }
@@ -216,16 +222,21 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 /* 圖例列打開時，選取資訊卡往下讓位；品質提示讓出底部時間軸 */
 .legend-bar ~ .info { top: 108px; }
 @media (min-width: 721px) { .notice { bottom: 88px; } }
+/* 窄桌機（≤1000px）放不下 7 個「編號 名稱」：只留圖示，名稱仍在按鈕的無障礙名稱與 title 裡 */
+@media (max-width: 1000px) {
+  .timeline__name { display: none; }
+  .timeline__chapter { min-width: 32px; min-height: 32px; justify-content: center; }
+}
 @media (max-width: 720px) {
   .toolbar { top: 8px; right: 8px; gap: 4px; }
   .pill { padding: 6px 10px; font-size: 12px; }
-  .timeline { left: 8px; right: 8px; bottom: calc(42vh + 8px); padding: 6px 10px; }
-  .timeline__chapter .timeline__name { display: none; }
+  .timeline { left: 8px; right: 8px; bottom: calc(42vh + 8px); padding: 4px 8px; }
   .timeline { bottom: calc(42dvh + 8px); }
-  /* 手機只留 7 個圖示小點；時間軸總高約 40px，與 layoutModel 的 bottom = 抽屜 + 40 一致 */
-  .timeline__chapter { min-width: 28px; padding: 2px 4px; justify-content: center; }
+  /* 手機只留 7 個圖示（觸控目標 32×32）；時間軸總高 4+32+4+3+4+2(框) = 49px，加上與抽屜的 8px 間距 = 57px，
+     layoutModel 的 bottom = 抽屜 + 60 涵蓋它 */
+  .timeline__chapter { min-width: 32px; min-height: 32px; padding: 0 4px; justify-content: center; }
   .timeline__bar { margin-top: 4px; }
   .legend-bar { top: 48px; left: 8px; right: 8px; flex-wrap: wrap; gap: 6px 10px; font-size: 12px; }
-  .info { bottom: calc(42vh + 60px); bottom: calc(42dvh + 60px); }
+  .info { bottom: calc(42vh + 64px); bottom: calc(42dvh + 64px); }
   .legend-bar ~ .info { top: auto; }
 }

@@ -17,7 +17,12 @@ export function Toolbar() {
         </button>
       )}
       {/* 文字顯示目前主題，按下切換到另一個 */}
-      <button className="pill" title={T.themeLabel} onClick={toggleTheme}>
+      <button
+        className="pill"
+        title={T.themeLabel}
+        aria-label={theme === 'dusk' ? T.themeAction(T.toolbar.dusk, T.themeNames.day) : T.themeAction(T.toolbar.day, T.themeNames.dusk)}
+        onClick={toggleTheme}
+      >
         {theme === 'dusk' ? T.toolbar.dusk : T.toolbar.day}
       </button>
       <button className="pill" aria-pressed={labels} onClick={toggleLabels}>
