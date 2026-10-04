@@ -119,11 +119,17 @@ test('first visit: choose 初階, walk its steps to 自由玩, timeline shows th
     if (id === ids.at(-1)) {
       await expect(next).toHaveText('自由玩')
       await expect(page.getByRole('button', { name: '下一階：中階 →' })).toBeVisible() // 結尾步推薦下一階
+      break
     }
     before = await cameraSeq(page)
     await next.click()
   }
-  await expect(page.getByRole('navigation', { name: '畫面設定' }).getByRole('button', { name: '↺ 重看導覽' })).toBeVisible()
+  // 結尾步按「下一階：中階」→ 中階第一步 m-0（序章，時間軸 00）
+  before = await cameraSeq(page)
+  await page.getByRole('button', { name: '下一階：中階 →' }).click()
+  await settled(page, before)
+  await expect(page.locator('.step-counter')).toContainText('00 / 05')
+  await expect(page.getByRole('navigation', { name: '畫面設定' }).getByRole('button', { name: /中階，換階/ })).toBeVisible()
   // 選過了：重新整理不再問
   await page.reload()
   await expect(page.getByRole('heading', { name: '從哪一階開始？' })).toHaveCount(0)
@@ -157,4 +163,24 @@ test('the toolbar course switcher opens a menu, closes on Escape, and switches c
   await page.keyboard.press('Space')
   await expect(menu).toHaveCount(0)
   await expect(page.locator('.step-title__text')).toHaveText('發金幣那一刻')
+})
+
+test('legacy URL ?route=simple&level=0&step=0 lands in 初階 at its first step', async ({ page }) => {
+  await page.goto('/?quality=high')
+  await page.evaluate(() => localStorage.clear())
+  await page.goto('/?quality=high&route=simple&level=0&step=0')
+  await expect(page.getByRole('heading', { name: '從哪一階開始？' })).toHaveCount(0)
+  await expect(page.locator('.step-title__text')).toHaveText('歡迎來到積木城市')
+  await expect(page.getByRole('navigation', { name: '畫面設定' }).getByRole('button', { name: /初階，換階/ })).toBeVisible()
+})
+
+test('an old simple-route save migrates into 初階 without showing the start card', async ({ page }) => {
+  await page.goto('/?quality=high')
+  await page.evaluate(() =>
+    localStorage.setItem('block-city-invest:progress', JSON.stringify({ route: 'simple', completed: ['prologue'], sandboxUnlocked: false, stepId: 'b-3' })),
+  )
+  await page.goto('/?quality=high')
+  await expect(page.getByRole('heading', { name: '從哪一階開始？' })).toHaveCount(0)
+  await expect(page.getByRole('navigation', { name: '畫面設定' }).getByRole('button', { name: /初階，換階/ })).toBeVisible()
+  await expect(page.locator('.step-counter')).toContainText('02 / 05')
 })

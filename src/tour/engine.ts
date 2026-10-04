@@ -176,7 +176,7 @@ export function nextCourse(course: CourseId): CourseId | null {
   return n && n.available ? n.id : null
 }
 
-/** 換階：新課裡有目前這一步就停那步，否則新課第一步 */
+/** 解析網址與舊存檔用：新課裡有這一步就停那步，否則新課第一步（換階選單改走各課上次停的位置，不用這個） */
 export function switchTarget(to: CourseId, stepId: string | undefined): CoursePosition {
   const i = stepId === undefined ? -1 : indexOfStep(to, stepId)
   return { course: to, index: Math.max(0, i) }

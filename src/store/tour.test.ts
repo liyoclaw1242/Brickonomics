@@ -88,7 +88,7 @@ describe('useTour', () => {
     expect(idOf()).toBe('f-2')
   })
 
-  it('switchCourse goes to the first step of the new course (courses share no steps)', () => {
+  it('an unvisited course starts at its first step', () => {
     go('beginner', 'f-5')
     useTour.getState().switchCourse('intermediate')
     expect(idOf()).toBe('m-0')
