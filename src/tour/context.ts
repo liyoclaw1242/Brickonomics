@@ -18,6 +18,7 @@ export function makeTextContext(u: Universe): TextContext {
     sectorPct: (productId, sector) => sectorBreakdown(u, productId).find((r) => r.sector === sector)?.weightPct ?? 0,
     expenseRatio: (productId) => u.get(productId)?.fees?.expenseRatio,
     overlapShared: (a, b) => overlap(u, a, b).total,
+    exitFee: (productId, years) => u.get(productId)?.fees?.cdsc?.[Math.floor(years)] ?? 0,
   }
 }
 

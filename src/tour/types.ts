@@ -15,9 +15,11 @@ export type Stage =
   | { kind: 'none' }
   | { kind: 'held'; items: HeldItem[] }
   | { kind: 'exdiv'; outcome: 'fill' | 'gap' }
-  | { kind: 'bonds'; stressed: boolean }
+  /** ranks：每張借據下面寫「穩不穩、利息多少」 */
+  | { kind: 'bonds'; stressed: boolean; ranks?: boolean }
   | { kind: 'excavator'; meter: boolean }
-  | { kind: 'feeRace' }
+  /** focus 'back'：只看後收那座塔（其他塔變暗），出門費另外堆一小堆 */
+  | { kind: 'feeRace'; focus?: 'back' }
   | { kind: 'accumulate' }
   | { kind: 'principalTrap' }
   | { kind: 'ticker' }
@@ -60,6 +62,8 @@ export type TextContext = {
   expenseRatio: (productId: string) => number | undefined
   /** 兩檔籃子前幾大持股的重疊比例（0–1） */
   overlapShared: (a: string, b: string) => number
+  /** 持有 years 年後賣出的遞延手續費率（出門費，小數）；超出資料表為 0 */
+  exitFee: (productId: string, years: number) => number
 }
 
 /** 大數字卡：value 已格式化；fraction（0–1）畫色條；colorKey 對應物體顏色 */
@@ -70,7 +74,12 @@ export type CalloutSpec = {
   anchor: { kind: 'holding'; holdingId: string } | { kind: 'building'; id: string }
   title: string | ((c: TextContext) => string)
   sub?: string | ((c: TextContext) => string)
+  /** 拉桿到這個值才顯示（例如拆開之後才標出每一層的名字） */
+  when?: Condition
 }
+
+/** 課程最後的回顧：一個圖示＋一句短話 */
+export type RecapLine = { icon: string; text: string }
 
 export type LessonText = string | ((c: TextContext) => string)
 
@@ -90,6 +99,8 @@ export type Step = {
   /** 回傳 undefined 時不顯示大數字（例如資料沒有內扣費用）；values＝導覽目前的拉桿值（跟著拉桿即時變） */
   bigNumber?: (c: TextContext, values: Readonly<StageValues>) => BigNumber | undefined
   focus?: { holdings?: string[] }
+  /** 面板上的回顧清單（最後一步用；文字版也顯示） */
+  recap?: RecapLine[]
   callouts?: CalloutSpec[]
   scene: SceneDirective
   controls?: Control[]

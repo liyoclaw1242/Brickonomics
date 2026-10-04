@@ -39,6 +39,13 @@ describe('fallbackLevels', () => {
     expect(u6.more).toContain('在支援 3D 的瀏覽器上')
   })
 
+  it('shows the closing recap in the text-only version too', () => {
+    const u6 = out.flatMap((l) => l.steps).find((s) => s.id === 'u-6')!
+    const step = LEVELS.flatMap((l) => l.steps).find((s) => s.id === 'u-6')!
+    expect(u6.recap).toEqual(step.recap)
+    expect(u6.recap!.length).toBe(4)
+  })
+
   it('uses the 3D line and more when a step has no text-only version', () => {
     const step = LEVELS.flatMap((l) => l.steps).find((s) => s.id === 'e-3')!
     const e3 = out.flatMap((l) => l.steps).find((s) => s.id === 'e-3')!

@@ -6,10 +6,11 @@ import { EXDIV_AFTER_PHASE, LEVELS } from './levels'
 import { exDivTimeline } from '../scene/layout/stages'
 import { makeTextContext } from './context'
 import { controlRange, DEFAULT_VALUES, lineOf, moreOf } from './engine'
-import { ACTION_VERBS, forbiddenWordsIn, LINE_SENTENCE_MAX, LINE_SENTENCES_MAX, MORE_SENTENCE_MAX, MORE_SENTENCES_MAX, sentences } from './glossary'
+import { ACTION_VERBS, forbiddenWordsIn, jargonIn, LINE_SENTENCE_MAX, LINE_SENTENCES_MAX, MORE_SENTENCE_MAX, MORE_SENTENCES_MAX, sentences } from './glossary'
 import { parseEmphasis, stripMarkup, visibleLength } from '../ui/emphasis'
 import { colorForKey } from '../scene/palette'
 import { isVerified } from '../data/verified'
+import { T } from '../ui/strings'
 import type { VerifiedKey } from '../data/schema'
 import type { Stage, StageValues, Step } from './types'
 
@@ -137,6 +138,7 @@ describe('LEVELS', () => {
     const SOURCES: Record<string, [string, VerifiedKey][]> = {
       'f-4': [['ALLIANZ_INCOME_GROWTH', 'holdings']],
       'f-5': [['JH_BALANCED', 'fees.expenseRatio']],
+      'f-7': [['SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD', 'fees.cdsc']],
       'e-3': [['0050', 'holdings']],
       'e-5': [['QQQ', 'fees.expenseRatio']],
       'c-2': [['0050', 'holdings']],
@@ -297,7 +299,7 @@ describe('LEVELS', () => {
       expect(er('SPY'), f.id).toBeLessThan(f.fees!.expenseRatio!)
     }
     expect(moreOf(byId('f-4'), ctx)).toContain('32%')
-    expect(bigOf(byId('f-4'))!.value).toBe('可轉債 32%') // pct0(31.98)
+    expect(bigOf(byId('f-4'))!.value).toBe('32%') // pct0(31.98)
     expect(moreOf(byId('e-3'), ctx)).toContain('7%') // 2454: pct0(6.71)
   })
 })
@@ -366,3 +368,88 @@ describe('control ranges and the dividend steps (user test r1)', () => {
   })
 })
 
+
+describe('jargon diet (user test r1)', () => {
+  const NICK = T.nick as Record<string, string>
+  const labelsOf = (s: Step): string[] => {
+    const out = [s.title, stripMarkup(lineOf(s, ctx))]
+    const bn = bigOf(s)
+    if (bn) out.push(bn.label)
+    for (const c of s.callouts ?? []) out.push(resolve(c.title)!)
+    return out
+  }
+
+  it('keeps jargon out of titles, lines, big-number labels and callout titles', () => {
+    for (const s of steps) for (const t of labelsOf(s)) expect(jargonIn(t), `${s.id}: ${t}`).toEqual([])
+  })
+
+  it('introduces 0050, QQQ and SPY by nickname the first time a line names them', () => {
+    for (const code of Object.keys(NICK)) {
+      const first = steps.find((s) => stripMarkup(lineOf(s, ctx)).includes(code))
+      if (!first) continue // 一句話從沒提到（例如 SPY 只出現在 3D 標籤，標籤一律用暱稱）
+      expect(stripMarkup(lineOf(first!, ctx)), `${first!.id}: ${code}`).toContain(NICK[code])
+    }
+  })
+
+  it('renames s-4 and drops the frontLoad slider from f-6', () => {
+    expect(byId('s-4').title).toBe('有的晃很兇')
+    expect(byId('f-6').controls).toEqual(['years'])
+    expect(byId('f-6').mark).toBe('assumption') // 預設的前收手續費仍是假設值
+  })
+
+  it('b-2 ranks the three bonds on the stage; b-3 stresses them', () => {
+    expect(byId('b-2').scene.stage).toEqual({ kind: 'bonds', stressed: false, ranks: true })
+    expect(byId('b-3').scene.stage).toMatchObject({ kind: 'bonds', stressed: true })
+  })
+
+  it('names the two biggest layers on f-2 (after the explode) and e-1', () => {
+    const top2 = (productId: string) =>
+      [...universe.get(productId)!.holdings!].sort((a, b) => b.weightPct - a.weightPct).slice(0, 2).map((h) => h.id)
+    for (const id of ['f-2', 'e-1']) {
+      const s = byId(id)
+      const anchors = (s.callouts ?? []).map((c) => (c.anchor.kind === 'holding' ? c.anchor.holdingId : ''))
+      expect(anchors.sort(), id).toEqual(top2(s.scene.product!).sort())
+    }
+    for (const c of byId('f-2').callouts!) expect(c.when, 'f-2 shows names once the tower is apart').toEqual(byId('f-2').until)
+  })
+
+  it('f-4 needs no jargon: plain subs on its two unusual layers', () => {
+    const f4 = byId('f-4')
+    expect(f4.focus?.holdings).toEqual(['CONVERTIBLE_US', 'US_HIGH_YIELD'])
+    expect(f4.callouts?.map((c) => resolve(c.sub))).toEqual(['能換成股票的借據', '利息高、不穩的借據'])
+    expect(stripMarkup(lineOf(f4, ctx))).not.toMatch(/可轉債|多重資產|安聯/)
+    expect(bigOf(f4)!.label).not.toMatch(/可轉債|多重資產|安聯/)
+  })
+
+  it('f-7 looks different from f-6: back-load only, from year 0, exit fee shrinking to 0', () => {
+    const f6 = byId('f-6')
+    const f7 = byId('f-7')
+    expect(f7.scene.stage).toEqual({ kind: 'feeRace', focus: 'back' })
+    expect(f7.scene.values?.years).toBe(0)
+    expect(f7.controls).toEqual(['years'])
+    expect(f7.until?.control).toBe('years')
+    expect(controlRange(f7, 'years')[1]).not.toBe(controlRange(f6, 'years')[1]) // 拉到底的結果不同
+    // 出門費（CDSC）：未滿 1 年 3%，滿 3 年 0%（資料：[0.03, 0.02, 0.01]）
+    expect(bigOf(f7)).toMatchObject({ value: '3%', colorKey: 'loss', fraction: 1 })
+    expect(bigOf(f7, { years: 1 })!.value).toBe('2%')
+    expect(bigOf(f7, { years: controlRange(f7, 'years')[1] })).toMatchObject({ value: '0%', fraction: 0 })
+  })
+
+  it('c-3 says plainly that both boxes hold the same companies', () => {
+    expect(stripMarkup(lineOf(byId('c-3'), ctx))).toContain('一樣的公司')
+  })
+
+  it('u-6 ends with a four-line recap and calls the sandbox 自由玩', () => {
+    const u6 = byId('u-6')
+    expect(u6.recap).toHaveLength(4)
+    for (const r of u6.recap!) {
+      expect(r.icon.length).toBeGreaterThan(0)
+      expect(Array.from(r.text).length, r.text).toBeLessThanOrEqual(18)
+      expect(forbiddenWordsIn(r.text)).toEqual([])
+    }
+    expect(T.finish).toBe('自由玩')
+    for (const s of steps) for (const t of [lineOf(s, ctx), moreOf(s, ctx), resolve(s.fallbackLine), resolve(s.fallbackMore)]) {
+      if (t !== undefined) expect(t.includes('沙盒'), s.id).toBe(false)
+    }
+  })
+})

@@ -13,6 +13,17 @@ export const GLOSSARY = [
 /** 專有名稱，檢查禁用詞前先移除。 */
 export const PROPER_NAMES = ['高股息'] as const
 
+/**
+ * 使用者測試 r1：陳伯伯（零基礎）看不懂、又沒有圖可對照的詞。
+ * 標題、一句話、大數字標籤、標註標題都不用；要講就放進「多說一點」。
+ * 產品代號（0050、QQQ、SPY）改用 T.nick 的暱稱，所以完整商品名也列在這裡。
+ */
+export const JARGON = ['除息', '填息', '貼息', '多重資產', '淨值', '成交價', '開盤', '沙盒', '岩芯', '未細分', '波動', '再投資', '元大台灣50', 'SPDR', 'Invesco'] as const
+
+export function jargonIn(text: string): string[] {
+  return JARGON.filter((w) => text.includes(w))
+}
+
 /** 有 until 的步驟，line 必須用這些動作詞開頭。 */
 export const ACTION_VERBS = ['拖', '點', '切', '按', '選', '看'] as const
 

@@ -19,7 +19,7 @@ test('walks the whole tour by clicking 下一步 and unlocks the sandbox', async
   await page.goto('/?quality=high')
   await page.evaluate(() => localStorage.clear())
   await page.goto('/?quality=high')
-  const next = page.getByRole('button', { name: /下一步|進入沙盒/ })
+  const next = page.getByRole('button', { name: /下一步|自由玩/ })
   const ids = await page.evaluate(() => (window as unknown as { __BCI_STEP_IDS__: string[] }).__BCI_STEP_IDS__)
   const gates = await page.evaluate(() => (window as unknown as { __BCI_STEP_GATES__: { id: string; control: string; min: number }[] }).__BCI_STEP_GATES__)
   const GATES = new Map(gates.map((g) => [g.id, g]))

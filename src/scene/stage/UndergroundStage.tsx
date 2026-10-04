@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { Color } from 'three'
 import { universe } from '../../data'
 import { useThemeStore } from '../../store/theme'
+import { displayName } from '../../ui/names'
 import { T } from '../../ui/strings'
 import { CoinPile } from '../CoinPile'
 import { Callout } from '../Callout'
@@ -44,7 +45,7 @@ export function UndergroundStage({ show, cores, quality }: { show: Show; cores?:
     () =>
       (cores ?? []).map((id, i) => {
         const rows = sectorBreakdown(universe, id)
-        return { id, name: universe.get(id)?.name ?? id, x: i === 0 ? -9 : 9, discs: coreDiscs(rows), stub: unclassifiedStub(rows) }
+        return { id, name: displayName(universe, id), x: i === 0 ? -9 : 9, discs: coreDiscs(rows), stub: unclassifiedStub(rows) }
       }),
     [cores],
   )
@@ -129,7 +130,7 @@ export function UndergroundStage({ show, cores, quality }: { show: Show; cores?:
             )}
           </group>
         ))}
-      {show === 'cores' && <Callout anchor={[0, GROUND_TOP - 19.5, CORE_Z]} offset={[0, 0, 0]} title={T.underground.rodLegend} wrap persistent />}
+      {/* 細桿的說明（快照只列前幾大持股）移到面板的「多說一點」：畫面上少一段兩行小字 */}
       {show === 'dig' && <Callout anchor={[0, digY, 40]} offset={[0, 1.4, 1]} title={T.underground.dig} marks={['illustrative']} persistent />}
       {show === 'veins' && <Callout anchor={[0, GROUND_TOP + 1.2, FRONT_Z + 1]} offset={[0, 0, 0]} title={T.underground.veins} marks={['illustrative']} persistent />}
     </group>

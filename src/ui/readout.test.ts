@@ -34,7 +34,7 @@ describe('stageReadout', () => {
     const rows = stageReadout({ kind: 'overlap', a: 'QQQ', b: 'SPY' }, v(), universe, null)
     expect(rows[0]).toMatchObject({ label: '輝達', value: '8.3%' })
     expect(rows.at(-1)!.label).toBe('前幾大持股重疊（至少）')
-    expect(rows.at(-1)!.note).toBe('其餘持股未細分，實際重疊更多')
+    expect(rows.at(-1)!.note).toBe('其餘持股沒有列出，實際重疊更多')
   })
 
   it('shows the expense ratio for the fee meter and nothing for plain stages', () => {
@@ -54,7 +54,7 @@ describe('stageReadout', () => {
   it('lists sector shares for underground cores and nothing otherwise', () => {
     const rows = stageReadout({ kind: 'underground', show: 'cores', cores: ['QQQ', 'SPY'] }, v(), universe, null)
     expect(rows[0]).toEqual({ label: 'Invesco QQQ・半導體（至少）', value: '13.3%' })
-    expect(rows.find((r) => r.label.endsWith('未細分'))).toBeDefined() // 未細分那一列不加「至少」
+    expect(rows.find((r) => r.label.endsWith('其他'))).toBeDefined() // 其他（快照沒有細分）那一列不加「至少」
     expect(stageReadout({ kind: 'underground', show: 'strata' }, v(), universe, null)).toEqual([])
   })
 })

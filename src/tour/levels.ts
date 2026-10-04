@@ -1,6 +1,7 @@
 import type { BigNumber, Level, TextContext } from './types'
 import { pct0, SHOCK_2330, signedPct } from './context'
 import { exDivTimeline } from '../scene/layout/stages'
+import { T } from '../ui/strings'
 
 /**
  * 課程內文。數字一律由 TextContext 即時計算。
@@ -12,6 +13,9 @@ import { exDivTimeline } from '../scene/layout/stages'
 const SHOCK_PCT = -SHOCK_2330['2330']! // 0.3
 const pctOf = (er: number): string => `${(er * 100).toFixed(2)}%`
 const n0 = (v: number): string => v.toFixed(0)
+const NICK = T.nick
+/** f-6／f-7 的後收級別（出門費＝遞延手續費 CDSC） */
+const BACKLOAD = 'SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD'
 
 /** s-6 進入時停在「剛配發」的時間軸位置；大數字讀即時 phase，但只算到配發那一刻（之後的填息不算），所以合計永遠不變 */
 export const EXDIV_AFTER_PHASE = 0.5
@@ -40,7 +44,7 @@ export const LEVELS: Level[] = [
         title: '樓高＝公司大小',
         line: '樓越**高**，公司越**大**',
         more: '左邊是台灣島，右邊是美國大陸。樓越高，公司市值越大。高度用對數比例縮放。因為這樣，大公司才不會擋住別人。',
-        callouts: [{ anchor: { kind: 'building', id: '2330' }, title: '最高' }],
+        callouts: [{ anchor: { kind: 'building', id: '2330' }, title: '台積電：最高' }],
         scene: { camera: 'tw', product: null },
       },
       {
@@ -82,7 +86,7 @@ export const LEVELS: Level[] = [
       },
       {
         id: 's-4',
-        title: '晃動＝波動',
+        title: '有的晃很兇',
         line: '有些股票晃得**特別兇**',
         more: '左邊是台積電，右邊是特斯拉。波動＝價格常常上上下下。有些公司晃得特別厲害。晃動幅度是示意，不是真實數字。',
         mark: 'illustrative',
@@ -154,13 +158,13 @@ export const LEVELS: Level[] = [
         line: '越**穩**的，利息通常**越少**',
         more: '國家債＝借給政府，像鑽石一樣堅固，利息通常最少。公司債＝借給公司，金屬材質。高收益債＝借給體質弱的公司，玻璃材質。它利息通常較多，也較容易裂（利息快慢是示意）。',
         mark: 'illustrative',
-        scene: { camera: 'plaza', product: null, stage: { kind: 'bonds', stressed: false } },
+        scene: { camera: 'plaza', product: null, stage: { kind: 'bonds', stressed: false, ranks: true } },
       },
       {
         id: 'b-3',
         title: '經濟風暴',
         line: '利息高的，比較**容易裂**',
-        more: '報酬較高的，風險通常也較高。假設遇上一場經濟風暴。股票方塊大幅縮水，高收益債裂開、停付利息。國家債通常比較穩，這是示意。',
+        more: '報酬較高的，風險通常也較高。假設遇上一場經濟風暴。股票方塊大幅縮水，高收益債裂開、停付利息（紅色）。國家債通常比較穩，這是示意。',
         mark: 'illustrative',
         scene: { camera: 'plaza', product: null, stage: { kind: 'bonds', stressed: true } },
       },
@@ -173,7 +177,7 @@ export const LEVELS: Level[] = [
       {
         id: 'f-1',
         title: '怪手幫你挑',
-        line: '基金＝**經理人**幫你挑方塊',
+        line: '基金＝**怪手**（經理人）幫你挑方塊',
         more: '基金＝把錢交給經理人。經理人就是這台怪手。他挑方塊，堆成一座小塔。這是駿利亨德森平衡基金。',
         scene: { camera: 'exchange', product: 'JH_BALANCED', stage: { kind: 'excavator', meter: false }, cityLabels: false },
       },
@@ -181,7 +185,12 @@ export const LEVELS: Level[] = [
         id: 'f-2',
         title: '拆開看看',
         line: '拖**拆開**。看裡面有什麼',
-        more: '拖「拆開」拉桿。看看這座塔裡裝了什麼。',
+        more: '拖「拆開」拉桿。看看這座塔裡裝了什麼。最大的兩層是其他美股和其他債券（快照沒有細分）。',
+        // 拆開之後才標出最大的兩層，免得層層只有顏色、沒有名字
+        callouts: [
+          { anchor: { kind: 'holding', holdingId: 'OTHER_US_STOCK' }, title: '其他美股', sub: (c) => `股票方塊・約 ${pct0(c.weightPct('JH_BALANCED', 'OTHER_US_STOCK'))}%`, when: { control: 'explode', min: 0.6 } },
+          { anchor: { kind: 'holding', holdingId: 'BOND_MIXED_US' }, title: '其他債券', sub: (c) => `借據・約 ${pct0(c.weightPct('JH_BALANCED', 'BOND_MIXED_US'))}%`, when: { control: 'explode', min: 0.6 } },
+        ],
         scene: { camera: 'exchangeWide', product: 'JH_BALANCED', stage: { kind: 'excavator', meter: false }, cityLabels: false },
         controls: ['explode'],
         until: { control: 'explode', min: 0.6 },
@@ -189,26 +198,30 @@ export const LEVELS: Level[] = [
       {
         id: 'f-3',
         title: '股票＋債券',
-        line: '兩種都有，叫**平衡型**',
+        line: '方塊＋借據都有，叫**平衡型**',
         more: '塔裡有輝達、微軟這些股票方塊。也有美國公債的鑽石借據。同時有股票和債券的基金，叫多重資產或平衡型。',
         focus: { holdings: ['NVDA', 'US_TREASURY'] },
         callouts: [
           { anchor: { kind: 'holding', holdingId: 'NVDA' }, title: '輝達' },
-          { anchor: { kind: 'holding', holdingId: 'US_TREASURY' }, title: '美國公債' },
+          { anchor: { kind: 'holding', holdingId: 'US_TREASURY' }, title: '美國公債', sub: '借錢給美國政府' },
         ],
         scene: { camera: 'exchangeWide', product: 'JH_BALANCED', explode: 1, stage: { kind: 'excavator', meter: false }, cityLabels: false },
       },
       {
         id: 'f-4',
         title: '同名不同料',
-        line: '也叫多重資產，裡面**不一樣**',
+        line: '**另一檔**也叫平衡，裡面差很多',
         more: (c) =>
-          `同樣叫多重資產，安聯收益成長很不一樣。依目前快照，可轉債約 ${pct0(c.weightPct('ALLIANZ_INCOME_GROWTH', 'CONVERTIBLE_US'))}%。高收益債約 ${pct0(c.weightPct('ALLIANZ_INCOME_GROWTH', 'US_HIGH_YIELD'))}%。名稱一樣，裡面不一定一樣。`,
+          `這檔是安聯收益成長基金，也是多重資產。依目前快照，可轉債約 ${pct0(c.weightPct('ALLIANZ_INCOME_GROWTH', 'CONVERTIBLE_US'))}%，高收益債約 ${pct0(c.weightPct('ALLIANZ_INCOME_GROWTH', 'US_HIGH_YIELD'))}%。可轉債＝能換成股票的借據。名稱一樣，裡面不一定一樣。`,
         bigNumber: (c) => {
           const w = c.weightPct('ALLIANZ_INCOME_GROWTH', 'CONVERTIBLE_US')
-          return { value: `可轉債 ${pct0(w)}%`, label: '安聯收益成長', fraction: w / 100, colorKey: 'CONVERTIBLE_US' }
+          return { value: `${pct0(w)}%`, label: '能換成股票的借據', fraction: w / 100, colorKey: 'CONVERTIBLE_US' }
         },
-        focus: { holdings: ['CONVERTIBLE_US'] },
+        focus: { holdings: ['CONVERTIBLE_US', 'US_HIGH_YIELD'] },
+        callouts: [
+          { anchor: { kind: 'holding', holdingId: 'CONVERTIBLE_US' }, title: '可轉債', sub: '能換成股票的借據' },
+          { anchor: { kind: 'holding', holdingId: 'US_HIGH_YIELD' }, title: '高收益債', sub: '利息高、不穩的借據' },
+        ],
         scene: { camera: 'exchangeWide', product: 'ALLIANZ_INCOME_GROWTH', explode: 1, stage: { kind: 'excavator', meter: false }, cityLabels: false },
       },
       {
@@ -222,26 +235,36 @@ export const LEVELS: Level[] = [
       {
         id: 'f-6',
         title: '入口門、出口門',
-        line: '拖**持有年數**。比較費用',
-        more: '買基金有入口門和出口門。比較施羅德債券基金前收型、後收 U 級別。再和 ETF 0050 比一比。前收手續費是假設值，可以自己調。',
+        line: '拖**持有年數**。看誰**剩最多**',
+        more: '前收型＝買時先付手續費（假設值），像入口門。後收 U 級別＝賣時才付，像出口門。兩者都是施羅德環球收息債券，再和 0050 比一比。三者內容與風險不同，費用低不代表比較好。',
         mark: 'assumption',
         scene: { camera: 'plaza', product: null, stage: { kind: 'feeRace' }, values: { years: 0 } },
-        controls: ['years', 'frontLoad'],
+        controls: ['years'],
         until: { control: 'years', min: 3 },
       },
       {
         id: 'f-7',
         title: '後收不是免費',
-        line: '越**早賣**，手續費越貴',
-        more: '後收型不是免費。買時免手續費，前幾年每年多收分銷費。越早賣，遞延手續費越貴。划不划算，要看你持有多久。',
+        line: '拖**持有年數**。看**出門費|loss**變少',
+        more: (c) =>
+          `後收型買時不收手續費，賣時才收出門費（遞延手續費）。未滿 1 年賣，出門費 ${n0(c.exitFee(BACKLOAD, 0) * 100)}%，之後每年變少。前幾年每年還多收分銷費。划不划算，要看你持有多久。`,
         mark: 'assumption',
-        scene: { camera: 'plaza', product: null, stage: { kind: 'feeRace' }, values: { years: 3 } },
-        controls: ['years', 'frontLoad'],
+        // 出門費（CDSC）跟著持有年數即時變；資料：未滿 1 年 3%、第 2 年 2%、第 3 年 1%，之後 0
+        bigNumber: (c, v) => {
+          const fee = c.exitFee(BACKLOAD, v.years)
+          const first = c.exitFee(BACKLOAD, 0)
+          return { value: `${n0(fee * 100)}%`, label: '現在賣要付的出門費', fraction: first > 0 ? fee / first : 0, colorKey: 'loss' }
+        },
+        scene: { camera: 'plaza', product: null, stage: { kind: 'feeRace', focus: 'back' }, values: { years: 0 } },
+        controls: ['years'],
+        // 只拉到出門費歸零之後一年，拉到底的畫面和 f-6 不一樣
+        ranges: { years: [0, 4] },
+        until: { control: 'years', min: 3 },
       },
       {
         id: 'f-8',
         title: '配息或累積',
-        line: '拖**經過年數**。看**再投資**的塔',
+        line: '拖**經過年數**。看**金幣滾回去**的塔',
         more: '同一檔基金常有兩種級別。配息型把金幣放進你的口袋。累積型把金幣熔回方塊，繼續投資。拖經過年數，看差距怎麼長出來（示意參數）。',
         mark: 'illustrative',
         scene: { camera: 'plaza', product: null, stage: { kind: 'accumulate' }, values: { periods: 0 } },
@@ -267,14 +290,18 @@ export const LEVELS: Level[] = [
       {
         id: 'e-1',
         title: '照藍圖組合',
-        line: 'ETF＝照**指數**自動挑',
+        line: 'ETF＝照**藍圖**自動挑，不用怪手',
         more: 'ETF＝照一張藍圖自動挑方塊。藍圖＝指數。挑好的方塊壓成一顆混合方塊，在交易所櫃台買賣。這是元大台灣50（0050）。',
+        callouts: [
+          { anchor: { kind: 'holding', holdingId: '2330' }, title: '台積電', sub: '最大的一層' },
+          { anchor: { kind: 'holding', holdingId: 'OTHER_TW_STOCK' }, title: '其他台股', sub: '很多家小公司' },
+        ],
         scene: { camera: 'exchange', product: '0050', cityLabels: false },
       },
       {
         id: 'e-2',
         title: '拿起雷射刀',
-        line: '拖**雷射刀**。切開 0050（台灣50大）',
+        line: `拖**雷射刀**。切開 ${NICK['0050']}`,
         more: '0050＝元大台灣50，裝台灣市值前 50 大公司。拿起雷射刀，把它切開看看。',
         scene: { camera: 'exchangeSide', product: '0050', sliceAxis: 'x', cityLabels: false },
         controls: ['slice'],
@@ -299,17 +326,17 @@ export const LEVELS: Level[] = [
       {
         id: 'e-4',
         title: '隨時有價格',
-        line: 'ETF 開盤**隨時能買賣**',
-        more: 'ETF 開盤時隨時有成交價。它可以像股票一樣買賣。一般基金每天收盤後才算出一個淨值。價格跳動是示意。',
+        line: 'ETF 像股票，**隨時能買賣**',
+        more: 'ETF 開盤時隨時有成交價，可以像股票一樣買賣。一般基金每天收盤後才算出一個價錢，叫淨值。價格跳動是示意。',
         mark: 'illustrative',
         scene: { camera: 'exchange', product: '0050', stage: { kind: 'ticker' }, cityLabels: false },
       },
       {
         id: 'e-5',
         title: '內扣費用低',
-        line: 'QQQ **內扣費用**低，不代表較好',
-        more: 'QQQ 和 SPY（標普500）是美國的 ETF。它們照藍圖自動配置，不用怪手挑股。目前快照裡，它們的內扣費用比本課的基金低。費用低不代表比較好，策略也不同。',
-        bigNumber: (c) => expenseNumber(c, 'QQQ', 'QQQ 每年內扣'),
+        line: `${NICK.QQQ}。**內扣費用**很低`,
+        more: 'QQQ 照美國科技 100 大的藍圖自動挑。SPY 照美國 500 大的藍圖。目前快照裡，它們的內扣費用比本課的基金低。費用低不代表比較好，策略也不同。',
+        bigNumber: (c) => expenseNumber(c, 'QQQ', '每年內扣費用'),
         scene: { camera: 'exchange', product: 'QQQ', cityLabels: false },
       },
     ],
@@ -322,7 +349,7 @@ export const LEVELS: Level[] = [
         id: 'c-1',
         title: '假設台積電跌',
         line: () => `假設台積電跌 **${pct0(SHOCK_PCT * 100)}%**`,
-        more: () => `來做個假設：台積電跌 ${pct0(SHOCK_PCT * 100)}%。左邊只買台積電。中間是 0050，右邊是 SPY。看看會發生什麼事。`,
+        more: () => `來做個假設：台積電跌 ${pct0(SHOCK_PCT * 100)}%。左邊只買台積電，中間是 0050（台灣50大）。右邊是 SPY（美國500大）。`,
         scene: { camera: 'plaza', product: null, stage: { kind: 'shock', active: false } },
       },
       {
@@ -339,12 +366,12 @@ export const LEVELS: Level[] = [
       },
       {
         id: 'c-3',
-        title: '重疊',
-        line: '買兩檔≠**分散兩倍**',
-        more: '買兩檔不等於分散兩倍。QQQ 和 SPY 拆開後，發光的線連起同一家公司。兩檔都有輝達、蘋果、微軟。只列前幾大持股，實際重疊更多。',
+        title: '買到同一家',
+        line: '兩個盒子裡有**一樣的公司**',
+        more: '買兩檔不等於分散兩倍。QQQ 和 SPY 都有輝達、蘋果、微軟。發光的線連起同一家公司。只列前幾大持股，實際重疊更多。',
         bigNumber: (c) => {
           const o = c.overlapShared('QQQ', 'SPY')
-          return { value: `至少 ${(o * 100).toFixed(1)}%`, label: 'QQQ 與 SPY 重疊', fraction: o }
+          return { value: `至少 ${(o * 100).toFixed(1)}%`, label: '兩盒一樣的部分', fraction: o }
         },
         scene: { camera: 'plaza', product: null, stage: { kind: 'overlap', a: 'QQQ', b: 'SPY' }, cityLabels: false },
       },
@@ -370,10 +397,10 @@ export const LEVELS: Level[] = [
       },
       {
         id: 'u-2',
-        title: '垂直岩芯',
+        title: '直直往下鑽',
         line: (c) => `0050：**半導體|semiconductor**至少 **${pct0(c.sectorPct('0050', 'semiconductor'))}%**`,
         more: (c) =>
-          `市值型 ETF＝垂直岩芯，粗細＝產業比例。左邊 0050：至少約 ${pct0(c.sectorPct('0050', 'semiconductor'))}% 在半導體層。右邊 QQQ 的前幾大持股分屬好幾種產業。地面上的灰色＝快照沒有細分的部分。`,
+          `市值型 ETF＝直直往下鑽的岩芯，粗細＝產業比例。左邊 0050：至少約 ${pct0(c.sectorPct('0050', 'semiconductor'))}% 在半導體層。地面上的灰色＝其他，快照沒有細分。細桿＝這層沒列到，不代表完全沒有。`,
         bigNumber: (c) => {
           const sp = c.sectorPct('0050', 'semiconductor')
           return { value: `至少 ${pct0(sp)}%`, label: '0050 的半導體', fraction: sp / 100, colorKey: 'semiconductor' }
@@ -407,10 +434,16 @@ export const LEVELS: Level[] = [
       {
         id: 'u-6',
         title: '完成！',
-        line: '沙盒**解鎖**了，自由玩',
+        line: '學完了！按**自由玩**到處看',
         fallbackLine: '課程**完成**了',
-        more: '恭喜完成全部課程！沙盒模式已經解鎖。所有商品都能自由切開、拆開、比較。',
-        fallbackMore: '恭喜完成全部課程！在支援 3D 的瀏覽器上，還可以進入沙盒。在沙盒裡能自由切開、拆開、比較。',
+        more: '恭喜完成全部課程！自由玩已經解鎖。所有商品都能自由切開、拆開、比較。',
+        fallbackMore: '恭喜完成全部課程！在支援 3D 的瀏覽器上，還可以自由玩。自由玩裡能切開、拆開、比較。',
+        recap: [
+          { icon: '🧱', text: '股票＝拿一顆方塊' },
+          { icon: '📜', text: '債券＝借據滴金幣' },
+          { icon: '🚜', text: '基金＝怪手幫你挑（要收費）' },
+          { icon: '🧩', text: 'ETF＝照藍圖自動挑（通常較便宜）' },
+        ],
         scene: { camera: 'overview', product: '0050' },
       },
     ],

@@ -36,6 +36,18 @@ describe('text context', () => {
   })
 })
 
+describe('exitFee', () => {
+  it('reads the CDSC for the holding year and is 0 past the table', () => {
+    const c = makeTextContext(universe)
+    const id = 'SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD' // cdsc [0.03, 0.02, 0.01]
+    expect(c.exitFee(id, 0)).toBe(0.03)
+    expect(c.exitFee(id, 1.5)).toBe(0.02)
+    expect(c.exitFee(id, 2)).toBe(0.01)
+    expect(c.exitFee(id, 3)).toBe(0)
+    expect(c.exitFee('0050', 0)).toBe(0)
+  })
+})
+
 describe('formatting', () => {
   it('pct0 rounds percentages', () => {
     expect(pct0(57.35)).toBe('57')

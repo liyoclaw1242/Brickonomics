@@ -15,6 +15,10 @@ import { StepNav } from './panel/StepNav'
 import { stageReadout } from './readout'
 import { StageControls } from './StageControls'
 import { T } from './strings'
+import type { Control } from '../tour/types'
+
+/** 拉桿在面板上的名稱（和 StageControls 一致） */
+const controlName = (c: Control): string => (c === 'slice' ? T.slice : c === 'explode' ? T.explode : T.controls[c])
 
 const ctx = makeTextContext(universe)
 const HINT_ID = 'tour-hint'
@@ -48,10 +52,22 @@ export function TourPanel() {
         </div>
       )}
       {step.controls && <StageControls controls={step.controls} />}
-      {!ok && (
-        <p className="hint" id={HINT_ID}>
-          {T.tryIt}
+      {!ok && step.until && (
+        <p className="hint hint--try" id={HINT_ID}>
+          {T.tryIt(controlName(step.until.control))}
         </p>
+      )}
+      {step.recap && (
+        <ul className="recap" aria-label={T.recapLabel}>
+          {step.recap.map((r) => (
+            <li key={r.text}>
+              <span className="recap__icon" aria-hidden="true">
+                {r.icon}
+              </span>
+              {r.text}
+            </li>
+          ))}
+        </ul>
       )}
       <StepNav onPrev={prev} onNext={next} canPrev={!(pos.level === 0 && pos.step === 0)} canNext={ok} isLast={isLast} hintId={HINT_ID} />
       <MoreSection key={step.id} more={more} rows={rows} />

@@ -25,9 +25,9 @@ export function StageView({ quality }: { quality: Quality }) {
     <>
       {ON_PLAZA.has(stage.kind) && <Plaza />}
       {stage.kind === 'held' && <HeldBlocks items={stage.items} />}
-      {stage.kind === 'bonds' && <BondShowcase stressed={stage.stressed} quality={quality} />}
+      {stage.kind === 'bonds' && <BondShowcase stressed={stage.stressed} ranks={stage.ranks} quality={quality} />}
       {stage.kind === 'exdiv' && <ExDividendStage outcome={stage.outcome} quality={quality} />}
-      {stage.kind === 'feeRace' && <FeeRaceStage quality={quality} />}
+      {stage.kind === 'feeRace' && <FeeRaceStage focus={stage.focus} quality={quality} />}
       {stage.kind === 'accumulate' && <AccumulateStage quality={quality} />}
       {stage.kind === 'principalTrap' && <PrincipalTrapStage quality={quality} />}
       {stage.kind === 'shock' && <ShockStage active={stage.active} quality={quality} />}

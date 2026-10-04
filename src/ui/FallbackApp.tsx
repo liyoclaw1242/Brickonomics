@@ -45,6 +45,19 @@ export function FallbackApp() {
                   {s.mark && <MarkIcon kind={s.mark} />}
                 </h3>
                 <Line line={s.line} />
+                {/* 回顧不用 li：e2e 以 li 數步驟 */}
+                {s.recap && (
+                  <div className="recap" role="list" aria-label={T.recapLabel}>
+                    {s.recap.map((r) => (
+                      <p key={r.text} role="listitem">
+                        <span className="recap__icon" aria-hidden="true">
+                          {r.icon}
+                        </span>
+                        {r.text}
+                      </p>
+                    ))}
+                  </div>
+                )}
                 <details className="fallback__more">
                   <summary>{T.more}</summary>
                   <p>{s.more}</p>

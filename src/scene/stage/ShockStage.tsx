@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { universe } from '../../data'
 import { shockImpact } from '../../sim/scenario'
 import { SHOCK_2330, signedPct } from '../../tour/context'
+import { displayName } from '../../ui/names'
 import { T } from '../../ui/strings'
 import { Basket } from '../Basket'
 import { Callout } from '../Callout'
@@ -30,7 +31,7 @@ export function ShockStage({ active, quality }: { active: boolean; quality: Qual
       <Basket productId="0050" quality="low" position={atPlaza(SUBJECTS[1].x, 0, 0)} slice={0} sliceAxis="x" explode={0} damage={damage} />
       <Basket productId="SPY" quality="low" position={atPlaza(SUBJECTS[2].x, 0, 0)} slice={0} sliceAxis="x" explode={0} />
       {SUBJECTS.map((s) => {
-        const name = s.key === 'stock' ? T.shock.stock : universe.get(s.key)!.name
+        const name = s.key === 'stock' ? T.shock.stock : displayName(universe, s.key)
         const pct = active ? signedPct(s.key === 'stock' ? SHOCK_2330['2330']! : shockImpact(universe, s.key, { ...SHOCK_2330 })) : ''
         return (
           <Callout

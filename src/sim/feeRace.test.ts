@@ -30,6 +30,17 @@ describe('feeRace', () => {
     expect(row(1, 'back').unverified).not.toContain('cdsc')
   })
 
+  it('splits out the exit fee (出門費) the back-load pays when selling', () => {
+    expect(row(0, 'back').exit).toBeCloseTo(3, 6) // 100 × 0.03（未滿 1 年）
+    expect(row(1, 'back').exit).toBeCloseTo(0.989 * 0.99 * 2, 6) // 賣前 97.911 × 0.02
+    expect(row(3, 'back').exit).toBe(0) // 滿 3 年不收
+    expect(row(0, 'front').exit).toBe(0)
+    for (const y of [0, 1, 2, 3, 5]) {
+      const r = row(y, 'back')
+      expect(r.exit, `year ${y}`).toBeLessThanOrEqual(r.lost + 1e-9)
+    }
+  })
+
   it('picks the leader by remaining value', () => {
     expect(feeRaceLeader(feeRace(universe, 3, 0.015))).toBe('etf')
   })
