@@ -116,6 +116,13 @@ export type Step = {
 }
 
 export type Level = { id: string; title: string; steps: Step[] }
+
+/** 三門獨立的課（初階／中階／高階） */
+export type CourseId = 'beginner' | 'intermediate' | 'advanced'
+/** 課程裡的一章：id 在同一門課內唯一；stepIds＝步驟池裡的步驟 id（照課程順序） */
+export type CourseChapter = { id: string; icon: string; name: string; stepIds: readonly string[] }
+/** available false＝還沒開放（開場卡、換階選單、網址都不能進入） */
+export type Course = { id: CourseId; name: string; tagline: string; chapters: readonly CourseChapter[]; available: boolean }
 export type Position = { level: number; step: number }
 /** 路線：簡單版只走一部分步驟（ROUTES.simple），完整版走全部 */
 export type Route = 'simple' | 'full'

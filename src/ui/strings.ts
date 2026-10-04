@@ -21,6 +21,8 @@ export const T = {
   ],
   /** 簡單版裡地底章只剩最後的回顧，時間軸叫它「完成」 */
   finishChapter: { icon: '🎉', name: '完成' },
+  /** 課程的開頭章（中階以上：上一階口訣複習）與結尾章（口訣卡）；序章與四個內容章沿用 chapters */
+  courseChapters: { review: { icon: '🔁', name: '複習' }, finish: { icon: '🎓', name: '完成' } },
   /** 路線：第一次來的開始卡片、右上角切換 */
   route: {
     names: { simple: '簡單版', full: '完整版' },

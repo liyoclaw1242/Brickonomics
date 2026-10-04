@@ -3,6 +3,7 @@ import { universe } from '../data'
 import { isBasket } from '../data/schema'
 import { overlap } from '../sim/overlap'
 import { EXDIV_AFTER_PHASE, LEVELS, ROUTES } from './levels'
+import { STEP_POOL } from './courses'
 import { exDivTimeline, principalTrap } from '../scene/layout/stages'
 import { towerTexts, trapTowerSpec } from '../scene/layout/towers'
 import { makeTextContext, pct0, wan } from './context'
@@ -19,7 +20,8 @@ import type { Universe } from '../data'
 import type { Stage, StageValues, Step } from './types'
 
 const ctx = makeTextContext(universe)
-const steps = LEVELS.flatMap((l) => l.steps)
+/** 規則測試遍歷整個步驟池（LEVELS＋課程專用的新步驟 m-0、m-fin） */
+const steps = [...STEP_POOL.values()]
 const PRESETS = ['sky', 'overview', 'tw', 'us', 'exchange', 'exchangeWide', 'exchangeSide', 'plaza', 'plazaNear', 'underground']
 
 /** 測試用：把指定產品的查證旗標清空（模擬「資料尚待查證」），驗證 ？ 的判斷邏輯仍然有效 */
@@ -608,10 +610,14 @@ describe('jargon diet (user test r1)', () => {
   it('u-6 ends with a four-line recap and calls the sandbox 自由玩', () => {
     const u6 = byId('u-6')
     expect(u6.recap).toHaveLength(4)
-    for (const r of u6.recap!) {
+    const recaps = steps.flatMap((s) => s.recap ?? [])
+    expect(recaps.length).toBeGreaterThan(u6.recap!.length) // m-0、m-fin 也照同樣規則
+    for (const r of recaps) {
       expect(r.icon.length).toBeGreaterThan(0)
       expect(Array.from(r.text).length, r.text).toBeLessThanOrEqual(18)
       expect(forbiddenWordsIn(r.text)).toEqual([])
+      expect(r.text.includes('被'), r.text).toBe(false)
+      expect(jargonIn(r.text), r.text).toEqual([])
     }
     expect(T.finish).toBe('自由玩')
     for (const s of steps) for (const t of [lineOf(s, ctx), moreOf(s, ctx), resolve(s.fallbackLine), resolve(s.fallbackMore)]) {

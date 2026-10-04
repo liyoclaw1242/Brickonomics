@@ -1,4 +1,4 @@
-import type { BigNumber, Level, Route, RouteIds, TextContext } from './types'
+import type { BigNumber, Level, RecapLine, Route, RouteIds, Step, TextContext } from './types'
 import { movePct, pct0, SHOCK_2330, signedPct, wan } from './context'
 import { DEFAULT_VALUES } from './engine'
 import { EXDIV, exDivTimeline, principalTrap, TRAP_DEMO } from '../scene/layout/stages'
@@ -33,6 +33,14 @@ const perMillion = (er: number): string => T.yuan(er * 1_000_000)
 
 /** 時間軸上「發金幣那一刻」的位置；s-5 拉到這裡為止（大數字只算到這一刻，合計永遠不變） */
 export const EXDIV_AFTER_PHASE = 0.5
+
+/** 初階口訣：初階結尾（u-6）與中階開頭的複習（m-0）用同一份 */
+const BEGINNER_RECAP: RecapLine[] = [
+  { icon: '🧱', text: '股票＝拿一顆方塊' },
+  { icon: '📜', text: '債券＝借據，固定給金幣' },
+  { icon: '🚜', text: '基金＝怪手幫你挑（要收費）' },
+  { icon: '🧩', text: 'ETF＝照藍圖挑（通常較便宜）' },
+]
 
 export const LEVELS: Level[] = [
   {
@@ -480,15 +488,40 @@ export const LEVELS: Level[] = [
         fallbackLine: '課程**完成**了',
         more: '恭喜完成課程！自由玩已經解鎖。所有商品都能自由切開、拆開、比較。',
         fallbackMore: '恭喜完成課程！在支援 3D 的瀏覽器上，還可以自由玩。自由玩裡能切開、拆開、比較。',
-        recap: [
-          { icon: '🧱', text: '股票＝拿一顆方塊' },
-          { icon: '📜', text: '債券＝借據，固定給金幣' },
-          { icon: '🚜', text: '基金＝怪手幫你挑（要收費）' },
-          { icon: '🧩', text: 'ETF＝照藍圖挑（通常較便宜）' },
-        ],
+        recap: BEGINNER_RECAP,
         scene: { camera: 'overview', product: '0050' },
       },
     ],
+  },
+]
+
+/**
+ * 課程專用的新步驟（不在 LEVELS 裡，只由 courses.ts 排進課程）：
+ * m-0＝中階開頭的初階口訣複習；m-fin＝中階結尾的口訣卡（高階還沒開放，所以推薦自由玩）。
+ */
+export const COURSE_STEPS: Step[] = [
+  {
+    id: 'm-0',
+    title: '初階口訣複習',
+    line: '先複習**初階**的四句話',
+    more: '這四句是初階學到的重點。中階每一章都多看一點細節。',
+    recap: BEGINNER_RECAP,
+    scene: { camera: 'overview', product: null },
+  },
+  {
+    id: 'm-fin',
+    title: '中階口訣卡',
+    line: '學完中階！按**自由玩**到處看',
+    fallbackLine: '中階課程**完成**了',
+    more: '恭喜完成中階！自由玩已經解鎖。所有商品都能自由切開、拆開、比較。',
+    fallbackMore: '恭喜完成中階！在支援 3D 的瀏覽器上，還可以自由玩。自由玩裡能切開、拆開、比較。',
+    recap: [
+      { icon: '🧱', text: '股票看總報酬：方塊＋金幣' },
+      { icon: '📜', text: '越穩的借據，利息越少' },
+      { icon: '🚜', text: '基金費用：進門、出門、每年' },
+      { icon: '🧩', text: 'ETF 拆開看：重疊、產業、配息型' },
+    ],
+    scene: { camera: 'overview', product: null },
   },
 ]
 
