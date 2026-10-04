@@ -10,8 +10,8 @@ import { detectQuality, parseQualityParam, readEnv } from './scene/quality'
 import { parseSandboxQuery, useSandbox } from './store/sandbox'
 import { useQuality } from './store/quality'
 import { useThemeStore, parseThemeParam, loadTheme } from './store/theme'
-import { LEVELS, ROUTES } from './tour/levels'
-import { parseTourQuery, startOf } from './tour/engine'
+import { COURSES } from './tour/courses'
+import { parseCourseQuery, queryPosition, startOfCourse, stepsOf } from './tour/engine'
 import { loadProgress, useTour } from './store/tour'
 
 const forceFallback = new URLSearchParams(window.location.search).get('fallback') === '1'
@@ -32,22 +32,22 @@ if (webgl) {
   useTour.setState({ progress })
   const pinnedQuality = parseQualityParam(window.location.search)
   useQuality.setState({ quality: pinnedQuality ?? detectQuality(readEnv()), pinned: pinnedQuality !== null })
-  const tq = parseTourQuery(window.location.search, LEVELS)
-  // 路線：網址 ?route= 優先，再來是存檔；第一次來是 null（面板先問簡單版或完整版）
-  const start = startOf(LEVELS, progress, tq, ROUTES)
-  useTour.setState({ route: start.route, progress: start.route ? { ...progress, route: start.route } : progress })
-  if (tq.mode === 'sandbox' || (!tq.pos && progress.sandboxUnlocked)) {
+  const cq = parseCourseQuery(window.location.search)
+  // 課程：網址 ?course=&step= 優先（舊 ?route=、?level=&step= 也轉得過來），再來是存檔；第一次來是 null（面板先顯示開場卡）
+  const start = startOfCourse(progress, cq)
+  useTour.setState({ course: start.course, pos: start.pos })
+  if (cq.mode === 'sandbox' || (!queryPosition(cq) && progress.sandboxUnlocked)) {
     useTour.setState({ mode: 'sandbox' })
     useSandbox.setState(parseSandboxQuery(window.location.search, baskets))
   } else {
     useTour.getState().enterStep(start.pos)
   }
   if (import.meta.env.DEV) {
-    ;(window as unknown as { __BCI_STEPS__: number[] }).__BCI_STEPS__ = LEVELS.map((l) => l.steps.length)
-    ;(window as unknown as { __BCI_STEP_IDS__: string[] }).__BCI_STEP_IDS__ = LEVELS.flatMap((l) => l.steps.map((st) => st.id))
-    ;(window as unknown as { __BCI_ROUTES__: typeof ROUTES }).__BCI_ROUTES__ = ROUTES
-    ;(window as unknown as { __BCI_STEP_GATES__: { id: string; control: string; min: number }[] }).__BCI_STEP_GATES__ = LEVELS.flatMap((l) =>
-      l.steps.flatMap((st) => (st.until ? [{ id: st.id, control: st.until.control, min: st.until.min }] : [])),
+    const available = COURSES.filter((c) => c.available)
+    // 每門課的步驟 id（照課程順序）；e2e／截圖腳本用 ?course=&step= 走
+    ;(window as unknown as { __BCI_COURSES__: Record<string, string[]> }).__BCI_COURSES__ = Object.fromEntries(available.map((c) => [c.id, stepsOf(c.id).map((st) => st.id)]))
+    ;(window as unknown as { __BCI_STEP_GATES__: { id: string; control: string; min: number }[] }).__BCI_STEP_GATES__ = available.flatMap((c) =>
+      stepsOf(c.id).flatMap((st) => (st.until ? [{ id: st.id, control: st.until.control, min: st.until.min }] : [])),
     )
     ;(window as unknown as { __BCI_DEGRADE__?: () => void }).__BCI_DEGRADE__ = () => useQuality.getState().degrade()
   }

@@ -1,10 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import type { Level } from './types'
 import { LEVELS as REAL } from './levels'
+import { COURSES, courseSteps } from './courses'
 import {
-  DEFAULT_VALUES, stepAt, isValidPosition, nextPosition, prevPosition, positionOf, progressFraction,
-  isSatisfied, sandboxPatchFor, lineOf, moreOf, titleOf, parseProgress, serializeProgress, parseTourQuery, controlRange, resumePosition,
-  snapToRoute, firstInLevel, firstPosition, inRoute, initialRoute, startOf,
+  DEFAULT_VALUES, stepAt, isValidPosition, positionOf,
+  isSatisfied, sandboxPatchFor, lineOf, moreOf, titleOf, parseProgress, serializeProgress, controlRange, resumePosition,
+  stepAtCourse, nextIndex, prevIndex, progressFractionCourse, chapterOfIndex, firstIndexOfChapter, isValidCoursePos,
+  resumeCoursePosition, parseCourseQuery, queryPosition, startOfCourse, emptyProgress, nextCourse, switchTarget, indexOfStep, stepsOf,
 } from './engine'
 
 const L: Level[] = [
@@ -32,18 +34,7 @@ const L: Level[] = [
 ]
 const values = { ...DEFAULT_VALUES, slice: 0, explode: 0 }
 
-describe('navigation', () => {
-  it('walks steps, crosses levels, and ends with null', () => {
-    expect(nextPosition(L, { level: 0, step: 0 })).toEqual({ level: 0, step: 1 })
-    expect(nextPosition(L, { level: 0, step: 1 })).toEqual({ level: 1, step: 0 })
-    expect(nextPosition(L, { level: 1, step: 0 })).toBeNull()
-  })
-
-  it('goes back across levels and stops at the start', () => {
-    expect(prevPosition(L, { level: 1, step: 0 })).toEqual({ level: 0, step: 1 })
-    expect(prevPosition(L, { level: 0, step: 0 })).toBeNull()
-  })
-
+describe('legacy positions (LEVELS)', () => {
   it('validates and looks up positions', () => {
     expect(isValidPosition(L, { level: 1, step: 0 })).toBe(true)
     expect(isValidPosition(L, { level: 1, step: 1 })).toBe(false)
@@ -52,11 +43,6 @@ describe('navigation', () => {
     expect(() => stepAt(L, { level: 2, step: 0 })).toThrow(RangeError)
     expect(positionOf(L, 'b1')).toEqual({ level: 1, step: 0 })
     expect(() => positionOf(L, 'zz')).toThrow('unknown step zz')
-  })
-
-  it('reports progress as steps before the current one over all steps', () => {
-    expect(progressFraction(L, { level: 0, step: 0 })).toBe(0)
-    expect(progressFraction(L, { level: 1, step: 0 })).toBeCloseTo(2 / 3)
   })
 })
 
@@ -106,36 +92,6 @@ describe('titleOf / lineOf / moreOf', () => {
   })
 })
 
-describe('progress persistence', () => {
-  it('round-trips and tolerates garbage', () => {
-    const p = { completed: ['a'], sandboxUnlocked: true }
-    expect(parseProgress(serializeProgress(p))).toEqual(p)
-    const withPos = { ...p, pos: { level: 3, step: 2 } }
-    expect(parseProgress(serializeProgress(withPos))).toEqual(withPos)
-    expect(parseProgress(null)).toEqual({ completed: [], sandboxUnlocked: false })
-    expect(parseProgress('{oops')).toEqual({ completed: [], sandboxUnlocked: false })
-    expect(parseProgress('{"completed":[1,"b"],"sandboxUnlocked":"yes"}')).toEqual({ completed: ['b'], sandboxUnlocked: false })
-  })
-
-  it('round-trips a saved position and drops invalid ones', () => {
-    expect(parseProgress('{"completed":[],"sandboxUnlocked":false,"pos":{"level":2,"step":1}}').pos).toEqual({ level: 2, step: 1 })
-    expect(parseProgress('{"completed":[],"sandboxUnlocked":false,"pos":{"level":-1,"step":"x"}}').pos).toBeUndefined()
-  })
-})
-
-describe('parseTourQuery', () => {
-  it('reads mode and a valid position', () => {
-    expect(parseTourQuery('?mode=sandbox', L)).toEqual({ mode: 'sandbox' })
-    expect(parseTourQuery('?level=1&step=0', L)).toEqual({ mode: 'tour', pos: { level: 1, step: 0 } })
-  })
-
-  it('treats sandbox parameters as sandbox mode and ignores invalid positions', () => {
-    expect(parseTourQuery('?product=0050&slice=0.5', L)).toEqual({ mode: 'sandbox' })
-    expect(parseTourQuery('?level=9&step=0', L)).toEqual({})
-    expect(parseTourQuery('', L)).toEqual({})
-  })
-})
-
 describe('resumePosition (saved progress after the lesson changed)', () => {
   it('keeps a valid saved position', () => {
     expect(resumePosition(L, { level: 1, step: 0 })).toEqual({ level: 1, step: 0 })
@@ -170,93 +126,179 @@ describe('resumePosition (saved progress after the lesson changed)', () => {
     expect(at(5)).toBe('s-5') // 舊 s-6 除息（總數不變）
     expect(at(6)).toBe('s-6') // 舊 s-7 貼息
   })
-  it('parseProgress keeps a string stepId and ignores a non-string one', () => {
-    expect(parseProgress('{"completed":[],"sandboxUnlocked":false,"stepId":"f-8"}').stepId).toBe('f-8')
-    expect(parseProgress('{"completed":[],"sandboxUnlocked":false,"stepId":5}').stepId).toBeUndefined()
-  })
   it('a chapter that no longer exists, or no saved position, starts from the beginning', () => {
     expect(resumePosition(L, { level: 9, step: 0 })).toEqual({ level: 0, step: 0 })
     expect(resumePosition(L, undefined)).toEqual({ level: 0, step: 0 })
   })
 })
 
-describe('routes (簡單版只走一部分步驟)', () => {
-  // a1, a2 | b1 ；路線只有 a1、b1
-  const R = ['a1', 'b1']
+const ids = (c: string) => courseSteps(COURSES.find((x) => x.id === c)!).map((s) => s.id)
+const B = ids('beginner')
+const M = ids('intermediate')
+const at = (course: 'beginner' | 'intermediate', id: string) => ({ course, index: (course === 'beginner' ? B : M).indexOf(id) })
 
-  it('next and prev skip steps outside the route', () => {
-    expect(nextPosition(L, { level: 0, step: 0 }, R)).toEqual({ level: 1, step: 0 })
-    expect(nextPosition(L, { level: 1, step: 0 }, R)).toBeNull()
-    expect(prevPosition(L, { level: 1, step: 0 }, R)).toEqual({ level: 0, step: 0 })
-    expect(prevPosition(L, { level: 0, step: 0 }, R)).toBeNull()
-    // null＝完整版：每一步都走
-    expect(nextPosition(L, { level: 0, step: 0 }, null)).toEqual({ level: 0, step: 1 })
+describe('course navigation (never crosses into another course)', () => {
+  it('steps through a course and stops at both ends', () => {
+    expect(stepAtCourse({ course: 'beginner', index: 0 }).id).toBe('p-1')
+    expect(stepAtCourse({ course: 'intermediate', index: 0 }).id).toBe('m-0')
+    expect(nextIndex({ course: 'beginner', index: 0 })).toBe(1)
+    expect(nextIndex({ course: 'beginner', index: B.length - 1 })).toBeNull() // u-6 之後不會跑到 m-0
+    expect(prevIndex({ course: 'intermediate', index: 0 })).toBeNull()
+    expect(prevIndex({ course: 'intermediate', index: 3 })).toBe(2)
+    expect(stepsOf('beginner')).toBe(stepsOf('beginner')) // 同一個參考
   })
 
-  it('reports progress over route steps only', () => {
-    expect(progressFraction(L, { level: 0, step: 0 }, R)).toBe(0)
-    expect(progressFraction(L, { level: 1, step: 0 }, R)).toBe(1 / 2)
-    expect(progressFraction(L, { level: 1, step: 0 }, null)).toBeCloseTo(2 / 3)
+  it('validates course positions', () => {
+    expect(isValidCoursePos({ course: 'beginner', index: B.length - 1 })).toBe(true)
+    expect(isValidCoursePos({ course: 'beginner', index: B.length })).toBe(false)
+    expect(isValidCoursePos({ course: 'beginner', index: -1 })).toBe(false)
+    expect(isValidCoursePos({ course: 'beginner', index: 0.5 })).toBe(false)
+    expect(isValidCoursePos({ course: 'advanced', index: 0 })).toBe(false) // 高階還沒有步驟
+    expect(() => stepAtCourse({ course: 'advanced', index: 0 })).toThrow(RangeError)
   })
 
-  it('snaps to the nearest route step at or before the position (or the first one)', () => {
-    expect(snapToRoute(L, { level: 0, step: 1 }, R)).toEqual({ level: 0, step: 0 })
-    expect(snapToRoute(L, { level: 1, step: 0 }, R)).toEqual({ level: 1, step: 0 })
-    expect(snapToRoute(L, { level: 0, step: 0 }, ['b1'])).toEqual({ level: 1, step: 0 })
-    expect(snapToRoute(L, { level: 0, step: 1 }, null)).toEqual({ level: 0, step: 1 })
+  it('reports progress inside the course only', () => {
+    expect(progressFractionCourse({ course: 'beginner', index: 0 })).toBe(0)
+    expect(progressFractionCourse({ course: 'beginner', index: 1 })).toBeCloseTo(1 / 17)
+    expect(progressFractionCourse({ course: 'intermediate', index: M.length - 1 })).toBeCloseTo((M.length - 1) / M.length)
   })
 
-  it('finds the first route step of a chapter and of the whole route', () => {
-    expect(firstInLevel(L, 0, ['a2', 'b1'])).toEqual({ level: 0, step: 1 })
-    expect(firstInLevel(L, 0, ['b1'])).toBeNull()
-    expect(firstPosition(L, ['a2', 'b1'])).toEqual({ level: 0, step: 1 })
-    expect(firstPosition(L, null)).toEqual({ level: 0, step: 0 })
-    expect(inRoute(L, { level: 0, step: 1 }, R)).toBe(false)
-    expect(inRoute(L, { level: 0, step: 1 }, null)).toBe(true)
+  it('maps indexes to chapters and chapters to their first index', () => {
+    expect(chapterOfIndex('beginner', 0)).toBe(0)
+    expect(chapterOfIndex('beginner', B.indexOf('s-1'))).toBe(1)
+    expect(chapterOfIndex('beginner', B.indexOf('u-6'))).toBe(5)
+    expect(chapterOfIndex('intermediate', M.indexOf('p-3'))).toBe(0)
+    expect(chapterOfIndex('beginner', 99)).toBe(-1)
+    expect(firstIndexOfChapter('beginner', 2)).toBe(B.indexOf('b-1'))
+    expect(firstIndexOfChapter('intermediate', 5)).toBe(M.indexOf('m-fin'))
+    expect(firstIndexOfChapter('beginner', 9)).toBeNull()
   })
 
-  it('resumes inside the route', () => {
-    expect(snapToRoute(L, resumePosition(L, undefined, 'a2'), R)).toEqual({ level: 0, step: 0 })
+  it('the next course follows course order and skips nothing that is unavailable', () => {
+    expect(nextCourse('beginner')).toBe('intermediate')
+    expect(nextCourse('intermediate')).toBeNull() // 高階還沒開放
+    expect(nextCourse('advanced')).toBeNull()
   })
 
-  it('reads ?route= and keeps level/step absolute', () => {
-    expect(parseTourQuery('?route=simple', L)).toEqual({ route: 'simple' })
-    expect(parseTourQuery('?route=full&level=0&step=1', L)).toEqual({ mode: 'tour', pos: { level: 0, step: 1 }, route: 'full' })
-    expect(parseTourQuery('?route=weird', L)).toEqual({})
-  })
-
-  it('persists the chosen route with the progress', () => {
-    expect(parseProgress('{"completed":[],"sandboxUnlocked":false,"route":"simple"}').route).toBe('simple')
-    expect(parseProgress('{"completed":[],"sandboxUnlocked":false,"route":"x"}').route).toBeUndefined()
-  })
-
-  it('asks for a route only on a first visit', () => {
-    const empty = { completed: [], sandboxUnlocked: false }
-    expect(initialRoute(empty, {})).toBeNull() // 第一次來：問
-    expect(initialRoute({ ...empty, route: 'simple' }, {})).toBe('simple')
-    expect(initialRoute({ ...empty, stepId: 'a2', pos: { level: 0, step: 1 } }, {})).toBe('full') // 舊存檔：完整版
-    expect(initialRoute({ ...empty, sandboxUnlocked: true }, {})).toBe('full')
-    expect(initialRoute(empty, { route: 'simple' })).toBe('simple') // 網址指定
-    expect(initialRoute({ ...empty, route: 'simple' }, { route: 'full' })).toBe('full')
-    expect(initialRoute(empty, { mode: 'tour', pos: { level: 0, step: 1 } })).toBe('full') // 直接連到某一步
+  it('switching course keeps the step when the new course has it, else the first step', () => {
+    expect(switchTarget('intermediate', 'p-1')).toEqual({ course: 'intermediate', index: 0 })
+    expect(switchTarget('intermediate', 'b-2')).toEqual(at('intermediate', 'b-2'))
+    expect(switchTarget('beginner', undefined)).toEqual({ course: 'beginner', index: 0 })
+    expect(indexOfStep('beginner', 'm-0')).toBe(-1)
   })
 })
 
-describe('startOf (where the page opens)', () => {
-  const routes = { full: null, simple: ['a1', 'b1'] } as const
-  const empty = { completed: [], sandboxUnlocked: false }
-  it('first visit: no route yet, first step', () => {
-    expect(startOf(L, empty, {}, routes)).toEqual({ route: null, pos: { level: 0, step: 0 } })
+describe('progress persistence (per course)', () => {
+  it('round-trips the new format and tolerates garbage', () => {
+    const p = { course: 'intermediate' as const, stepId: 'b-2', completed: { beginner: ['prologue'], intermediate: ['review'], advanced: [] }, finished: ['beginner' as const], sandboxUnlocked: true }
+    expect(parseProgress(serializeProgress(p))).toEqual(p)
+    expect(parseProgress(null)).toEqual(emptyProgress())
+    expect(parseProgress('{oops')).toEqual(emptyProgress())
+    expect(parseProgress('[1,2]')).toEqual(emptyProgress())
+    expect(parseProgress('{"course":"weird","completed":{"beginner":[1,"stock"]},"finished":["x","beginner"]}')).toEqual({
+      course: null, completed: { beginner: ['stock'], intermediate: [], advanced: [] }, finished: ['beginner'], sandboxUnlocked: true,
+    })
   })
-  it('resumes a saved simple route inside the route', () => {
-    expect(startOf(L, { ...empty, route: 'simple', stepId: 'b1', pos: { level: 1, step: 0 } }, {}, routes)).toEqual({ route: 'simple', pos: { level: 1, step: 0 } })
-    expect(startOf(L, { ...empty, route: 'simple', stepId: 'a2' }, {}, routes)).toEqual({ route: 'simple', pos: { level: 0, step: 0 } })
+
+  it('a stepId outside the saved course resumes at that course’s first step', () => {
+    expect(parseProgress('{"course":"beginner","stepId":"b-2","completed":{},"finished":[],"sandboxUnlocked":false}')).toMatchObject({ course: 'beginner', stepId: 'p-1' })
   })
-  it('a deep link to a step outside the saved route opens the full route there', () => {
-    expect(startOf(L, { ...empty, route: 'simple' }, { mode: 'tour', pos: { level: 0, step: 1 } }, routes)).toEqual({ route: 'full', pos: { level: 0, step: 1 } })
+
+  it('an unavailable course is treated as not chosen', () => {
+    expect(parseProgress('{"course":"advanced","completed":{},"finished":[],"sandboxUnlocked":false}').course).toBeNull()
   })
-  it('an explicit ?route= wins and the deep-linked step snaps into it', () => {
-    expect(startOf(L, empty, { mode: 'tour', pos: { level: 0, step: 1 }, route: 'simple' }, routes)).toEqual({ route: 'simple', pos: { level: 0, step: 0 } })
-    expect(startOf(L, empty, { route: 'simple' }, routes)).toEqual({ route: 'simple', pos: { level: 0, step: 0 } })
+})
+
+describe('resumeCoursePosition (old saves)', () => {
+  it('first visit or garbage → null (start card)', () => {
+    expect(resumeCoursePosition(null)).toBeNull()
+    expect(resumeCoursePosition('x')).toBeNull()
+    expect(resumeCoursePosition({ completed: [], sandboxUnlocked: false })).toBeNull()
+    expect(resumeCoursePosition({ course: null })).toBeNull()
+  })
+
+  it('an old save with a stepId goes to the course that has that step', () => {
+    expect(resumeCoursePosition({ completed: [], sandboxUnlocked: false, stepId: 'f-8' })).toEqual(at('intermediate', 'f-8'))
+    expect(resumeCoursePosition({ completed: [], sandboxUnlocked: false, stepId: 'f-5', route: 'full' })).toEqual(at('beginner', 'f-5'))
+  })
+
+  it('an old save without an id uses the old migration (merged fund/stock steps) then finds the course', () => {
+    const fund = REAL.findIndex((l) => l.id === 'fund')
+    const stock = REAL.findIndex((l) => l.id === 'stock')
+    expect(resumeCoursePosition({ pos: { level: fund, step: 6 } })).toEqual(at('intermediate', 'f-6')) // 舊 f-7
+    expect(resumeCoursePosition({ pos: { level: fund, step: 8 } })).toEqual(at('beginner', 'f-9'))
+    expect(resumeCoursePosition({ pos: { level: stock, step: 5 } })).toEqual(at('intermediate', 's-5'))
+    expect(resumeCoursePosition({ pos: { level: 2, step: 1 } })).toEqual(at('intermediate', 'b-2'))
+    expect(resumeCoursePosition({ pos: { level: 99, step: 0 } })).toEqual(at('beginner', 'p-1'))
+  })
+
+  it('an old simple-route save whose step is not in 初階 lands on the nearest earlier 初階 step', () => {
+    expect(resumeCoursePosition({ route: 'simple', stepId: 'f-6' })).toEqual(at('beginner', 'f-5'))
+    expect(resumeCoursePosition({ route: 'simple', stepId: 'u-3' })).toEqual(at('beginner', 'c-2'))
+    expect(resumeCoursePosition({ route: 'simple', stepId: 'b-3' })).toEqual(at('beginner', 'b-3'))
+    expect(resumeCoursePosition({ route: 'simple', pos: { level: 1, step: 4 } })).toEqual(at('beginner', 's-3')) // s-5
+    expect(resumeCoursePosition({ route: 'simple' })).toEqual({ course: 'beginner', index: 0 })
+  })
+
+  it('an unknown old stepId falls back to the old position', () => {
+    expect(resumeCoursePosition({ stepId: 'gone', pos: { level: 1, step: 0 } })).toEqual(at('beginner', 's-1'))
+  })
+
+  it('parseProgress migrates an old save: course, stepId, completed chapters per course, sandbox kept', () => {
+    const p = parseProgress(JSON.stringify({ completed: ['prologue', 'stock'], sandboxUnlocked: true, pos: { level: 2, step: 1 } }))
+    expect(p.course).toBe('intermediate')
+    expect(p.stepId).toBe('b-2')
+    expect(p.sandboxUnlocked).toBe(true)
+    expect(p.finished).toEqual([])
+    expect(p.completed.beginner).toEqual(['prologue', 'stock'])
+    expect(p.completed.intermediate).toEqual(['review', 'stock']) // 複習章的 m-0 是新步驟，看 p-3（序章）
+    expect(parseProgress(JSON.stringify({ completed: [], sandboxUnlocked: false })).course).toBeNull()
+  })
+})
+
+describe('parseCourseQuery / queryPosition / startOfCourse', () => {
+  const pos = (search: string) => queryPosition(parseCourseQuery(search))
+
+  it('?course=&step= wins; a step outside that course → its first step', () => {
+    expect(parseCourseQuery('?course=intermediate&step=u-3')).toEqual({ mode: 'tour', course: 'intermediate', stepId: 'u-3' })
+    expect(pos('?course=intermediate&step=u-3')).toEqual(at('intermediate', 'u-3'))
+    expect(pos('?course=intermediate&step=p-1')).toEqual({ course: 'intermediate', index: 0 })
+    expect(pos('?course=beginner')).toEqual({ course: 'beginner', index: 0 })
+    expect(pos('?course=advanced')).toBeNull() // 還沒開放
+    expect(pos('?course=weird')).toBeNull()
+  })
+
+  it('a bare ?step= finds its course', () => {
+    expect(pos('?step=m-fin')).toEqual(at('intermediate', 'm-fin'))
+    expect(pos('?step=nope')).toBeNull()
+  })
+
+  it('old ?route=: simple → 初階, full → by step (no step → 中階 first step)', () => {
+    expect(pos('?route=simple')).toEqual({ course: 'beginner', index: 0 })
+    expect(pos('?route=full')).toEqual({ course: 'intermediate', index: 0 })
+    expect(pos('?route=full&level=1&step=4')).toEqual(at('intermediate', 's-5'))
+    expect(pos('?route=simple&level=1&step=4')).toEqual(at('beginner', 's-3'))
+    expect(pos('?route=weird')).toBeNull()
+  })
+
+  it('old ?level=&step= (absolute) → the course of that step; invalid ones are ignored', () => {
+    expect(pos('?level=2&step=1')).toEqual(at('intermediate', 'b-2'))
+    expect(pos('?level=0&step=0')).toEqual(at('beginner', 'p-1'))
+    expect(pos('?level=9&step=0')).toBeNull()
+    expect(pos('')).toBeNull()
+  })
+
+  it('sandbox parameters mean sandbox mode', () => {
+    expect(parseCourseQuery('?mode=sandbox').mode).toBe('sandbox')
+    expect(parseCourseQuery('?product=0050&slice=0.5').mode).toBe('sandbox')
+    expect(parseCourseQuery('?mode=sandbox&course=beginner')).toEqual({ mode: 'sandbox', course: 'beginner' })
+  })
+
+  it('start: URL, then save, then the start card', () => {
+    const empty = emptyProgress()
+    expect(startOfCourse(empty, {})).toEqual({ course: null, pos: { course: 'beginner', index: 0 } })
+    const saved = { ...empty, course: 'intermediate' as const, stepId: 'u-3' }
+    expect(startOfCourse(saved, {})).toEqual({ course: 'intermediate', pos: at('intermediate', 'u-3') })
+    expect(startOfCourse(saved, parseCourseQuery('?course=beginner&step=e-1'))).toEqual({ course: 'beginner', pos: at('beginner', 'e-1') })
   })
 })

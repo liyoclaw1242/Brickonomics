@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { availableCourses, COURSES, courseOfStep, courseSteps, STEP_POOL } from './courses'
-import { LEVELS, ROUTES } from './levels'
+import { LEVELS } from './levels'
 import { forbiddenWordsIn } from './glossary'
 import { T } from '../ui/strings'
 import type { Course, CourseId } from './types'
@@ -54,7 +54,7 @@ describe('COURSES', () => {
 
   it('初階 is the old 17-step simple route, chapters 序章／股票／債券／基金／ETF／完成', () => {
     const b = course('beginner')
-    expect(ids(b)).toEqual(ROUTES.simple)
+    expect(ids(b)).toEqual(['p-1', 'p-2', 's-1', 's-2', 's-3', 'b-1', 'b-3', 'f-1', 'f-5', 'f-9', 'e-1', 'e-2', 'e-3', 'e-5', 'c-1', 'c-2', 'u-6'])
     expect(ids(b)).toHaveLength(17)
     expect(b.chapters.map((ch) => ch.id)).toEqual(['prologue', 'stock', 'bond', 'fund', 'etf', 'finish'])
     expect(b.chapters.map((ch) => ch.stepIds)).toEqual([

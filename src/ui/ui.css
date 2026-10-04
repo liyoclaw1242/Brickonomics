@@ -206,7 +206,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .fallback h2 { font-size: 18px; margin: 28px 0 8px; }
 .fallback ol { padding-left: 20px; }
 .fallback li { margin-bottom: 14px; }
-.fallback__routes { display: flex; gap: 8px; margin: 12px 0; }
+.fallback__courses { display: flex; gap: 8px; margin: 12px 0; }
 
 /* 3D 標註（Callout / NameLabel）與標示圖示（MarkIcon）。--label-scale 由 ViewFraming 依鏡頭 zoom 設定：窄畫面字跟著縮小（設下限以保可讀） */
 .callout { pointer-events: none; display: grid; gap: 2px; padding: 6px 10px; border-radius: 8px; white-space: nowrap;
@@ -283,18 +283,37 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
   .legend-bar ~ .info { top: auto; }
 }
 
-/* 第一次來：選簡單版或完整版（兩顆大按鈕，各一句白話） */
-.route-start { display: grid; gap: 12px; margin-top: 6px; }
-.route-start .step-title { margin: 4px 0 2px; }
-.route-start__choice {
-  display: grid; gap: 4px; text-align: left; padding: 14px 16px; border-radius: 14px;
+/* 第一次來：選一階（照建議順序，第一顆最醒目；不鎖） */
+.course-start { display: grid; gap: 12px; margin-top: 6px; }
+.course-start .step-title { margin: 4px 0 2px; }
+.course-start__choice {
+  display: grid; gap: 2px; text-align: left; padding: 12px 16px; border-radius: 14px;
   border: 1px solid var(--border); background: var(--chip); color: var(--text); font: inherit; cursor: pointer;
 }
-.route-start__choice--simple { background: var(--accent); color: var(--accent-text); border-color: transparent; }
-.route-start__name { font-size: 19px; font-weight: 700; }
-.route-start__note { font-size: 16px; }
-.route-start .hint { font-size: 14px; }
+.course-start__choice--first { background: var(--accent); color: var(--accent-text); border-color: transparent; }
+.course-start__order { font-size: 13px; opacity: 0.8; }
+.course-start__name { font-size: 21px; font-weight: 700; }
+.course-start__note { font-size: 16px; }
+.course-start .hint { font-size: 14px; }
 
-/* 右上路線切換：兩個名字都在，目前的那個亮 */
-.route-pill__on { font-weight: 700; color: var(--em); }
-.route-pill__off { color: var(--muted); }
+/* 右上換階：膠囊顯示目前階，點開選單 */
+.course-switch { position: relative; }
+.course-switch__pill { font-weight: 700; color: var(--em); }
+.course-switch__menu {
+  position: absolute; top: calc(100% + 6px); left: 0; min-width: 180px; display: grid; gap: 4px; padding: 6px;
+  border-radius: 14px; border: 1px solid var(--border); background: var(--surface-strong); backdrop-filter: blur(10px); z-index: 7;
+}
+.course-switch__item {
+  display: grid; gap: 2px; text-align: left; padding: 8px 12px; border-radius: 10px; border: 1px solid transparent;
+  background: none; color: var(--text); font: inherit; cursor: pointer;
+}
+.course-switch__item:hover, .course-switch__item:focus-visible { background: var(--chip); }
+.course-switch__item[aria-checked='true'] { border-color: var(--accent); }
+.course-switch__name { font-size: 16px; font-weight: 700; }
+.course-switch__note { font-size: 13px; color: var(--muted); }
+
+/* 結尾步：口訣卡下面的「下一階 →」或「去自由玩」 */
+.next-tier {
+  width: 100%; margin: 8px 0 0; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--accent);
+  background: none; color: var(--em); font: inherit; font-size: 16px; font-weight: 700; cursor: pointer;
+}

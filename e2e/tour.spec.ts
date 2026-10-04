@@ -11,16 +11,16 @@ const CONTROL_LABEL: Record<string, string> = {
   frontLoad: '假設的前收手續費',
 }
 
-test('walks the whole tour by clicking 下一步 and unlocks the sandbox', async ({ page }) => {
-  test.setTimeout(300_000) // 軟體渲染約 1fps，整段導覽 30+ 步要一至兩分鐘
+test('walks the whole 中階 course by clicking 下一步 and unlocks the sandbox', async ({ page }) => {
+  test.setTimeout(300_000) // 軟體渲染約 1fps，整門課 20 步要一分鐘左右（初階由下面的第一次來測試走完）
   const errors: string[] = []
   page.on('pageerror', (e) => errors.push(String(e)))
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
   await page.goto('/?quality=high')
   await page.evaluate(() => localStorage.clear())
-  await page.goto('/?quality=high&route=full') // 指定完整版，不出現第一次來的開始卡片
-  const next = page.getByRole('button', { name: /下一步|自由玩/ })
-  const ids = await page.evaluate(() => (window as unknown as { __BCI_STEP_IDS__: string[] }).__BCI_STEP_IDS__)
+  await page.goto('/?quality=high&course=intermediate') // 指定課程，不出現第一次來的開場卡
+  const next = page.locator('.step-nav button.primary') // 結尾步另有「去自由玩」按鈕，用位置找下一步
+  const ids = await page.evaluate(() => (window as unknown as { __BCI_COURSES__: Record<string, string[]> }).__BCI_COURSES__.intermediate!)
   const gates = await page.evaluate(() => (window as unknown as { __BCI_STEP_GATES__: { id: string; control: string; min: number }[] }).__BCI_STEP_GATES__)
   const GATES = new Map(gates.map((g) => [g.id, g]))
   expect(GATES.size).toBeGreaterThan(0)
@@ -43,16 +43,17 @@ test('walks the whole tour by clicking 下一步 and unlocks the sandbox', async
 })
 
 test('resumes from the last step after reload', async ({ page }) => {
-  await page.goto('/?level=2&step=1&quality=high')
+  await page.goto('/?course=intermediate&step=b-2&quality=high')
   await settled(page)
   await page.goto('/?quality=high')
-  await expect(page.locator('.step-counter')).toContainText('02 / 06') // 章節編號（第 2 章，共 0–6）
+  await expect(page.locator('.step-counter')).toContainText('02 / 05') // 中階的章節編號（第 2 章，共 0–5）
+  await expect(page.locator('.step-title__text')).toHaveText('三種借據')
 })
 
 test('theme chosen in the toolbar survives a reload', async ({ page }) => {
   await page.goto('/?quality=high')
   await page.evaluate(() => localStorage.clear())
-  await page.goto('/?quality=high&route=full')
+  await page.goto('/?quality=high&course=beginner')
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dusk') // 預設黃昏
   const toolbar = page.getByRole('navigation', { name: '畫面設定' })
   await toolbar.getByRole('button', { name: /切換到白天/ }).click()
@@ -64,26 +65,26 @@ test('theme chosen in the toolbar survives a reload', async ({ page }) => {
 
 test('the chapter timeline jumps back to a finished chapter and locks future ones', async ({ page }) => {
   await page.goto('/?quality=high')
-  // 已完成序章與股票、停在債券第 2 步、尚未解鎖沙盒
+  // 舊存檔：已完成序章與股票、停在債券第 2 步（b-2，中階）、尚未解鎖沙盒 → 遷移成中階、複習與股票章已完成
   await page.evaluate(() =>
     localStorage.setItem('block-city-invest:progress', JSON.stringify({ completed: ['prologue', 'stock'], sandboxUnlocked: false, pos: { level: 2, step: 1 } })),
   )
   await page.goto('/?quality=high')
-  await expect(page.locator('.step-counter')).toContainText('02 / 06')
+  await expect(page.locator('.step-counter')).toContainText('02 / 05')
   const timeline = page.getByRole('navigation', { name: '章節' })
-  await expect(timeline.getByRole('button', { name: '06 地底' })).toBeDisabled()
+  await expect(timeline.getByRole('button', { name: '05 完成' })).toBeDisabled()
   await expect(timeline.getByRole('button', { name: '03 基金' })).toBeDisabled()
   await expect(timeline.getByRole('button', { name: '02 債券' })).toHaveAttribute('aria-current', 'step')
   const before = await cameraSeq(page)
   await timeline.getByRole('button', { name: '01 股票' }).click()
-  await expect(page.locator('.step-counter')).toContainText('01 / 06')
+  await expect(page.locator('.step-counter')).toContainText('01 / 05')
   await expect(timeline.getByRole('button', { name: '01 股票' })).toHaveAttribute('aria-current', 'step')
   await settled(page, before)
-  await expect(page.locator('h1.step-title')).toHaveText('拿走一顆方塊') // 該章第一步
+  await expect(page.locator('.step-title__text')).toHaveText('有的晃很兇') // 中階股票章第一步（s-4）
   await expect(page.locator('details.more')).not.toHaveAttribute('open', /.*/) // 多說一點預設收起
 })
 
-test('first visit: choose 簡單版, walk its steps to 自由玩, timeline shows only route chapters', async ({ page }) => {
+test('first visit: choose 初階, walk its steps to 自由玩, timeline shows the course chapters', async ({ page }) => {
   test.setTimeout(300_000)
   const errors: string[] = []
   page.on('pageerror', (e) => errors.push(String(e)))
@@ -91,20 +92,21 @@ test('first visit: choose 簡單版, walk its steps to 自由玩, timeline shows
   await page.goto('/?quality=high')
   await page.evaluate(() => localStorage.clear())
   await page.goto('/?quality=high')
-  // 開始卡片：兩顆大按鈕；還沒選之前沒有時間軸、也沒有下一步
-  const simpleBtn = page.getByRole('button', { name: /簡單版（約 17 步）/ })
-  await expect(simpleBtn).toBeVisible()
-  await expect(page.getByRole('button', { name: /完整版（35 步）/ })).toBeVisible()
+  // 開場卡：可上的課各一顆大按鈕（高階還沒開放）；還沒選之前沒有時間軸、也沒有下一步
+  const beginnerBtn = page.getByRole('button', { name: /初階.*17 步/ })
+  await expect(beginnerBtn).toBeVisible()
+  await expect(page.getByRole('button', { name: /中階.*20 步/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /高階/ })).toHaveCount(0)
   await expect(page.getByRole('navigation', { name: '章節' })).toHaveCount(0)
   await expect(page.getByRole('button', { name: /下一步/ })).toHaveCount(0)
-  await simpleBtn.click()
+  await beginnerBtn.click()
   const timeline = page.getByRole('navigation', { name: '章節' })
-  await expect(timeline.getByRole('button')).toHaveText(['🏙00 序章', '🧱01 股票', '📜02 債券', '🚜03 基金', '🧩04 ETF', '⚡05 情境', '🎉06 完成'])
-  const ids = await page.evaluate(() => (window as unknown as { __BCI_ROUTES__: { simple: string[] } }).__BCI_ROUTES__.simple)
+  await expect(timeline.getByRole('button')).toHaveText(['🏙00 序章', '🧱01 股票', '📜02 債券', '🚜03 基金', '🧩04 ETF', '🎓05 完成'])
+  const ids = await page.evaluate(() => (window as unknown as { __BCI_COURSES__: Record<string, string[]> }).__BCI_COURSES__.beginner!)
   expect(ids).toHaveLength(17)
   const gates = await page.evaluate(() => (window as unknown as { __BCI_STEP_GATES__: { id: string; control: string; min: number }[] }).__BCI_STEP_GATES__)
   const GATES = new Map(gates.map((g) => [g.id, g]))
-  const next = page.getByRole('button', { name: /下一步|自由玩/ })
+  const next = page.locator('.step-nav button.primary')
   let before = 0
   for (const id of ids) {
     await settled(page, before)
@@ -114,25 +116,38 @@ test('first visit: choose 簡單版, walk its steps to 自由玩, timeline shows
       await setRange(page, CONTROL_LABEL[gate.control]!, gate.min)
     }
     await expect(next).toBeEnabled()
-    if (id === ids.at(-1)) await expect(next).toHaveText('自由玩')
+    if (id === ids.at(-1)) {
+      await expect(next).toHaveText('自由玩')
+      await expect(page.getByRole('button', { name: '下一階：中階 →' })).toBeVisible() // 結尾步推薦下一階
+    }
     before = await cameraSeq(page)
     await next.click()
   }
   await expect(page.getByRole('navigation', { name: '畫面設定' }).getByRole('button', { name: '↺ 重看導覽' })).toBeVisible()
   // 選過了：重新整理不再問
   await page.reload()
-  await expect(page.getByRole('button', { name: /簡單版（約 17 步）/ })).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: '從哪一階開始？' })).toHaveCount(0)
   expect(errors).toEqual([])
 })
 
-test('the toolbar switches route and stays on the nearest step at or before', async ({ page }) => {
-  await page.goto('/?quality=high&route=full&level=1&step=4') // s-5 發金幣那一刻：簡單版沒有
+test('the toolbar course switcher opens a menu, closes on Escape, and switches course', async ({ page }) => {
+  await page.goto('/?quality=high&course=intermediate&step=s-5')
   await expect(page.locator('.step-title__text')).toHaveText('發金幣那一刻')
   const toolbar = page.getByRole('navigation', { name: '畫面設定' })
-  await toolbar.getByRole('button', { name: /完整版，切換到簡單版/ }).click()
-  await expect(page.locator('.step-title__text')).toHaveText('公司變不值錢') // s-3
-  await expect(page.getByRole('navigation', { name: '章節' }).getByRole('button', { name: '06 完成' })).toBeVisible()
-  await toolbar.getByRole('button', { name: /簡單版，切換到完整版/ }).click()
-  await expect(page.locator('.step-title__text')).toHaveText('公司變不值錢')
-  await expect(page.getByRole('navigation', { name: '章節' }).getByRole('button', { name: '06 地底' })).toBeVisible()
+  const pill = toolbar.getByRole('button', { name: /中階，換階/ })
+  await expect(pill).toHaveAttribute('aria-haspopup', 'menu')
+  await pill.click()
+  await expect(pill).toHaveAttribute('aria-expanded', 'true')
+  const menu = page.getByRole('menu', { name: '選擇課程' })
+  await expect(menu.getByRole('menuitemradio', { name: /中階/ })).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect(menu).toHaveCount(0)
+  await expect(pill).toBeFocused()
+  await page.keyboard.press('Enter')
+  await page.keyboard.press('ArrowUp')
+  await expect(menu.getByRole('menuitemradio', { name: /初階/ })).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(page.locator('.step-title__text')).toHaveText('歡迎來到積木城市') // 初階沒有 s-5 → 第一步
+  await expect(toolbar.getByRole('button', { name: /初階，換階/ })).toBeFocused()
+  await expect(page.getByRole('navigation', { name: '章節' }).getByRole('button', { name: '00 序章' })).toBeVisible()
 })

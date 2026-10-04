@@ -19,23 +19,25 @@ export const T = {
     { icon: '⚡', name: '情境' },
     { icon: '🪨', name: '地底' },
   ],
-  /** 簡單版裡地底章只剩最後的回顧，時間軸叫它「完成」 */
-  finishChapter: { icon: '🎉', name: '完成' },
   /** 課程的開頭章（中階以上：上一階口訣複習）與結尾章（口訣卡）；序章與四個內容章沿用 chapters */
   courseChapters: { review: { icon: '🔁', name: '複習' }, finish: { icon: '🎓', name: '完成' } },
-  /** 路線：第一次來的開始卡片、右上角切換 */
-  route: {
-    names: { simple: '簡單版', full: '完整版' },
-    startTitle: '要怎麼看？',
-    simple: (n: number) => `簡單版（約 ${n} 步）`,
-    full: (n: number) => `完整版（${n} 步）`,
-    simpleNote: '先懂大概',
-    fullNote: '看所有細節',
-    later: '右上角隨時可以換',
-    sep: '／',
-    switchLabel: '切換簡單版／完整版',
-    /** 無障礙名稱：先念看得到的目前路線，再說按下會換成哪一個 */
-    action: (current: string, to: string) => `簡單版／完整版：目前${current}，切換到${to}`,
+  /** 課程（初階／中階／高階）：開場卡、右上角換階、結尾的下一階 */
+  course: {
+    startTitle: '從哪一階開始？',
+    /** 開場卡上的一句白話＋步數 */
+    note: (tagline: string, n: number) => `${tagline}・${n} 步`,
+    /** 開場卡上建議的順序（不鎖，任何一階都能先看） */
+    order: (i: number) => `第 ${i + 1} 階`,
+    later: '右上角隨時可以換階',
+    /** 工具列膠囊的無障礙名稱：先念看得到的目前階 */
+    switchLabel: (current: string) => `${current}，換階`,
+    /** 工具列膠囊上看得到的字：目前階＋下拉記號 */
+    pill: (current: string) => `${current} ▾`,
+    menuLabel: '選擇課程',
+    nextTier: (name: string) => `下一階：${name} →`,
+    toSandbox: '去自由玩',
+    /** 文字版選階的群組名 */
+    pickLabel: '選擇課程',
   },
   chapterCounter: (i: number, n: number) => `${String(i).padStart(2, '0')} / ${String(n - 1).padStart(2, '0')}`,
   shock: { stock: '只買台積電', withLegend: (name: string) => `${name}・紅色＝假設跌掉的部分`, struck: '假設：台積電被打中' },

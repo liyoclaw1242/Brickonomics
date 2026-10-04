@@ -123,17 +123,19 @@ export type CourseId = 'beginner' | 'intermediate' | 'advanced'
 export type CourseChapter = { id: string; icon: string; name: string; stepIds: readonly string[] }
 /** available false＝還沒開放（開場卡、換階選單、網址都不能進入） */
 export type Course = { id: CourseId; name: string; tagline: string; chapters: readonly CourseChapter[]; available: boolean }
+/** 舊版（Plan 5 以前）的絕對位置：LEVELS 的章與步；只剩存檔／網址遷移在用 */
 export type Position = { level: number; step: number }
-/** 路線：簡單版只走一部分步驟（ROUTES.simple），完整版走全部 */
-export type Route = 'simple' | 'full'
-/** 路線裡的步驟 id（照課程順序）；null＝全部步驟 */
-export type RouteIds = readonly string[] | null
+/** 課程裡的位置：index＝課內扁平索引（0 起） */
+export type CoursePosition = { course: CourseId; index: number }
+/** 進度（每門課分開記）；sandboxUnlocked：上完任一門課就解鎖自由玩 */
 export type Progress = {
-  completed: string[]
-  sandboxUnlocked: boolean
-  pos?: Position
-  /** 存檔時所在步驟的 id：課程改版後用它找回位置（比 pos 可靠） */
+  /** 目前選的課；null＝還沒選（第一次來，顯示開場卡） */
+  course: CourseId | null
+  /** 存檔時所在步驟的 id（找回位置用） */
   stepId?: string
-  /** 選過的路線；沒有＝還沒選（第一次來）或舊存檔 */
-  route?: Route
+  /** 每門課已完成的章（章 id） */
+  completed: Record<CourseId, string[]>
+  /** 上完（走過結尾步）的課 */
+  finished: CourseId[]
+  sandboxUnlocked: boolean
 }
