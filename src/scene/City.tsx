@@ -4,15 +4,16 @@ import { Html } from '@react-three/drei'
 import { Color, type InstancedMesh, Object3D } from 'three'
 import { universe } from '../data'
 import { useSandbox } from '../store/sandbox'
+import { useThemeStore } from '../store/theme'
 import { T } from '../ui/strings'
 import { labelStyle } from './labelStyle'
 import { lookFor } from './palette'
 import { VOXEL_SCALE } from './layout/voxels'
+import { THEMES } from './theme'
 import { useAfterFirstTick } from './useAfterFirstTick'
 import { useLongPress } from './useLongPress'
 import { applyShrink, buildingVoxels, cityLayout, islandSize, ISLAND_CENTERS, type Region } from './layout/city'
 
-const ISLAND_COLORS: Record<Region, string> = { TW: '#a5d6a7', US: '#e6d3a3' }
 const ISLAND_THICKNESS = 0.5
 
 /** 兩座島與大樓；每棟大樓是一根方塊柱，所有大樓共用一個 InstancedMesh */
@@ -23,6 +24,7 @@ export function City({ labels, islandLabels = true, shrink }: { labels: boolean;
   const ref = useRef<InstancedMesh>(null)
   const pick = useSandbox((s) => s.pick)
   const labelsReady = useAfterFirstTick()
+  const theme = useThemeStore((s) => s.theme)
 
   useLayoutEffect(() => {
     const mesh = ref.current
@@ -66,7 +68,7 @@ export function City({ labels, islandLabels = true, shrink }: { labels: boolean;
           <group key={region}>
             <mesh position={[x, -ISLAND_THICKNESS / 2, z]} receiveShadow>
               <boxGeometry args={[size, ISLAND_THICKNESS, size]} />
-              <meshStandardMaterial color={ISLAND_COLORS[region]} />
+              <meshStandardMaterial color={THEMES[theme].island[region]} />
             </mesh>
           </group>
         )

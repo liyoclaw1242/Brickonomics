@@ -2,12 +2,14 @@ import { useMemo, type CSSProperties } from 'react'
 import { Html } from '@react-three/drei'
 import { Color } from 'three'
 import { universe } from '../../data'
+import { useThemeStore } from '../../store/theme'
 import { T } from '../../ui/strings'
 import { CoinPile } from '../CoinPile'
 import { labelStyle } from '../labelStyle'
 import { BlockMaterial } from '../materials'
 import { SECTOR_COLORS } from '../palette'
 import type { Quality } from '../quality'
+import { THEMES } from '../theme'
 import { useAfterFirstTick } from '../useAfterFirstTick'
 import { CORE_R_MIN, coreDiscs, goldVein, GROUND_TOP, sectorBreakdown, strataLayout, STUB_MAX_HEIGHT, unclassifiedStub, type Sector } from '../layout/underground'
 
@@ -16,9 +18,6 @@ const CENTER_Z = 24
 const WIDTH = 44
 const DEPTH = 30
 const FRONT_Z = CENTER_Z + DEPTH / 2
-const SOIL = new Color('#5d4037')
-const UNCLASSIFIED = '#cfd8dc'
-const ROD = '#78909c'
 const ROD_OPACITY = 0.35
 const STUB_RADIUS = 1.3
 const CORE_Z = FRONT_Z + 2
@@ -32,13 +31,15 @@ const LEDGE_DEPTH = 2.4
 const LEDGE_HEIGHT = 0.2
 
 const dimLabelStyle: CSSProperties = { ...labelStyle, opacity: FADE }
-const colorOf = (s: Sector): string => (s === 'unclassified' ? UNCLASSIFIED : SECTOR_COLORS[s] ?? UNCLASSIFIED)
-const soilTint = (hex: string): string => `#${new Color(hex).lerp(SOIL, 0.25).getHexString()}`
+const colorOf = (s: Sector, unclassified: string): string => (s === 'unclassified' ? unclassified : SECTOR_COLORS[s] ?? unclassified)
+const soilTint = (hex: string, soil: string): string => `#${new Color(hex).lerp(new Color(soil), 0.25).getHexString()}`
 
 /** 第 6 關：城市底下的產業地層、岩芯、水平挖、礦脈與黃金礦脈（靜態，不需要連續繪製） */
 export function UndergroundStage({ show, cores, quality }: { show: Show; cores?: [string, string]; quality: Quality }) {
   const ready = useAfterFirstTick()
-  const layers = useMemo(() => strataLayout().map((l) => ({ ...l, color: soilTint(colorOf(l.sector)) })), [])
+  const t = THEMES[useThemeStore((s) => s.theme)]
+  const UNCLASSIFIED = t.unclassified
+  const layers = useMemo(() => strataLayout().map((l) => ({ ...l, color: soilTint(colorOf(l.sector, t.unclassified), t.soil) })), [t.unclassified, t.soil])
   const vein = goldVein()
   const faded = show === 'gold'
   const veinDim = show !== 'gold'
@@ -76,9 +77,9 @@ export function UndergroundStage({ show, cores, quality }: { show: Show; cores?:
                 <cylinderGeometry args={[d.radius, d.radius, d.top - d.bottom, 32]} />
                 {/* 該產業 0%：細桿用中性深色，避免被讀成「有一點點」 */}
                 {d.radius <= CORE_R_MIN ? (
-                  <meshStandardMaterial color={ROD} roughness={0.8} metalness={0} transparent opacity={ROD_OPACITY} depthWrite={false} />
+                  <meshStandardMaterial color={t.rod} roughness={0.8} metalness={0} transparent opacity={ROD_OPACITY} depthWrite={false} />
                 ) : (
-                  <BlockMaterial kind="matte" quality={quality} color={colorOf(d.sector)} />
+                  <BlockMaterial kind="matte" quality={quality} color={colorOf(d.sector, UNCLASSIFIED)} />
                 )}
               </mesh>
             ))}
