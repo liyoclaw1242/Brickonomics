@@ -48,3 +48,36 @@ test('resumes from the last step after reload', async ({ page }) => {
   await page.goto('/?quality=high')
   await expect(page.locator('.step-counter')).toContainText('02 / 06') // 章節編號（第 2 章，共 0–6）
 })
+
+test('theme chosen in the toolbar survives a reload', async ({ page }) => {
+  await page.goto('/?quality=high')
+  await page.evaluate(() => localStorage.clear())
+  await page.goto('/?quality=high')
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dusk') // 預設黃昏
+  const toolbar = page.getByRole('navigation', { name: '畫面設定' })
+  await toolbar.getByRole('button', { name: /切換到白天/ }).click()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'day')
+  await page.reload()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'day')
+  await expect(toolbar.getByRole('button', { name: /切換到黃昏/ })).toBeVisible()
+})
+
+test('the chapter timeline jumps back to a finished chapter and locks future ones', async ({ page }) => {
+  await page.goto('/?quality=high')
+  // 已完成序章與股票、停在債券第 2 步、尚未解鎖沙盒
+  await page.evaluate(() =>
+    localStorage.setItem('block-city-invest:progress', JSON.stringify({ completed: ['prologue', 'stock'], sandboxUnlocked: false, pos: { level: 2, step: 1 } })),
+  )
+  await page.goto('/?quality=high')
+  await expect(page.locator('.step-counter')).toContainText('02 / 06')
+  const timeline = page.getByRole('navigation', { name: '章節' })
+  await expect(timeline.getByRole('button', { name: '06 地底' })).toBeDisabled()
+  await expect(timeline.getByRole('button', { name: '03 基金' })).toBeDisabled()
+  await expect(timeline.getByRole('button', { name: '02 債券' })).toHaveAttribute('aria-current', 'step')
+  const before = await cameraSeq(page)
+  await timeline.getByRole('button', { name: '01 股票' }).click()
+  await expect(page.locator('.step-counter')).toContainText('01 / 06')
+  await settled(page, before)
+  await expect(page.locator('h1.step-title')).toHaveText('拿走一顆方塊') // 該章第一步
+  await expect(page.locator('details.more')).not.toHaveAttribute('open', /.*/) // 多說一點預設收起
+})
