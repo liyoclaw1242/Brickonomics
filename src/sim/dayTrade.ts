@@ -3,7 +3,7 @@ import { finite, inRange, nonNegInt, rate } from './guard'
 
 /**
  * 當沖一進一出（買進＋同一天賣出）的成本，占成交金額的比例；全部從 data/trading（TW_TRADING）讀：
- * buyFee、sellFee：券商手續費；
+ * buyFee、sellFee：券商手續費的公告費率上限（實務常有折扣，所以這是「最多」的成本）；
  * sellCost：現股當沖賣出那一次的交易成本（TW_TRADING.dayTradeSellCost，適用至 dayTradeSellCostUntil）。
  * verified：各項的查證狀態（Task 4 依此自動標 ？）。三項直接相加（買、賣的成交金額都約等於本金）。
  */
@@ -35,10 +35,12 @@ export type DayTradeParams = {
 }
 
 /**
- * 舉例（≈）：一年約 250 個交易日，每天進出一次；勝率五五波、賺賠都是 1%（輸贏對稱：不算成本時是公平的遊戲）。
+ * 舉例（≈ 示意，不是資料）：trades 250（一年約 250 個交易日，每天進出一次）、勝率五五波、賺賠都是 1%
+ * （輸贏對稱：不算成本時是公平的遊戲）；只有 costPerTrade 來自資料（DAY_TRADE_COST）。
  * 這是「為什麼多數人賠」的示意，不是策略。
  */
-export const DAY_TRADE: DayTradeParams = {
+export const DAY_TRADE: DayTradeParams & { illustrative: readonly ['trades', 'winRate', 'avgWin', 'avgLoss'] } = {
+  illustrative: ['trades', 'winRate', 'avgWin', 'avgLoss'],
   trades: 250,
   costPerTrade: DAY_TRADE_COST.buyFee + DAY_TRADE_COST.sellFee + DAY_TRADE_COST.sellCost,
   winRate: 0.5,

@@ -21,8 +21,10 @@ describe('day-trade example (why most lose: costs at a 50% win rate)', () => {
     expect(DAY_TRADE_COST.sellCostUntil).toBe('2027-12-31')
   })
 
-  it('example: 250 trades, win 50% of the time, +1% / −1%', () => {
+  it('example: 250 trades, win 50% of the time, +1% / −1% — all illustrative (≈), only the cost comes from data', () => {
     expect(DAY_TRADE).toMatchObject({ trades: 250, winRate: 0.5, avgWin: 0.01, avgLoss: 0.01 })
+    expect(DAY_TRADE.illustrative).toEqual(['trades', 'winRate', 'avgWin', 'avgLoss'])
+    expect(TW_TRADING.brokerFeeIsCap).toBe(true) // 手續費是公告的上限
   })
 })
 
