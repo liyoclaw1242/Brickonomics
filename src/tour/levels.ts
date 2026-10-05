@@ -608,10 +608,10 @@ export const COURSE_STEPS: Step[] = [
     more: '恭喜完成中階！自由玩已經解鎖。所有商品都能自由切開、拆開、比較。',
     fallbackMore: '恭喜完成中階！在支援 3D 的瀏覽器上，還可以自由玩。自由玩裡能切開、拆開、比較。',
     recap: [
-      { icon: '🧱', text: '股票看總報酬：方塊＋金幣' },
-      { icon: '📜', text: '越穩的借據，利息通常越少' },
+      { icon: '🧱', text: '股票看總報酬、最大跌幅、本益比' },
+      { icon: '📜', text: '利率漲，舊借據價格跌；通膨吃利息' },
       { icon: '🚜', text: '基金費用：進門、出門、每年' },
-      { icon: '🧩', text: 'ETF 拆開看：重疊、產業、高股息' },
+      { icon: '🧩', text: 'ETF 拆開看；定期定額讓成本平均' },
     ],
     scene: { camera: 'overview', product: null },
   },

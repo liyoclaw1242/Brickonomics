@@ -822,3 +822,14 @@ describe('Plan 7 中階: 通膨 (b-infl)', () => {
     expect(moreOf(s(), ctx)).toContain('利息 5%，通膨 3%，真正賺到約 2%')
   })
 })
+
+describe('m-fin recap covers the Plan 7 ideas (Tasks 2–4 review)', () => {
+  it('names 最大跌幅, 本益比, 利率 with 舊借據, 通膨 and 定期定額, in the same words the steps use', () => {
+    const text = byId('m-fin').recap!.map((r) => r.text).join('')
+    for (const w of ['最大跌幅', '本益比', '利率', '舊借據', '通膨', '定期定額', '讓成本平均']) expect(text, w).toContain(w)
+    // 同一個詞＝步驟標題或一句話裡用的詞
+    for (const [id, w] of [['s-dd', '最大跌幅'], ['s-pe', '本益比'], ['b-rate', '舊借據'], ['b-infl', '通膨'], ['e-dca', '定期定額']] as const) {
+      expect([byId(id).title, stripMarkup(lineOf(byId(id), ctx))].join(''), `${id}: ${w}`).toContain(w)
+    }
+  })
+})
