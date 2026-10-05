@@ -536,7 +536,8 @@ describe('jargon diet (user test r1)', () => {
     const subs = (f2.callouts ?? []).map((c) => resolve(c.sub)!)
     expect(subs[0]).toContain(`約 ${pct0(ctx.assetClassPct('JH_BALANCED', 'stock'))}%`) // 64.08 → 64
     expect(subs[0]).toContain('輝達')
-    expect(subs[1]).toBe(`約 ${pct0(ctx.assetClassPct('JH_BALANCED', 'bond'))}%`) // 33.86 → 34
+    expect(subs[1]).toBe(`約 ${pct0(ctx.assetClassPct('JH_BALANCED', 'bond'))}%・其他約 ${pct0(100 - ctx.assetClassPct('JH_BALANCED', 'stock') - ctx.assetClassPct('JH_BALANCED', 'bond'))}%`) // 33.86 → 34；mid-r2：剩下的也寫出來
+    expect(subs[1]).toBe('約 34%・其他約 2%') // 100 − 64.08 − 33.86 = 2.06
     for (const t of [...subs, stripMarkup(lineOf(f2, ctx))]) expect(t).not.toContain('美股')
   })
 
@@ -557,9 +558,9 @@ describe('jargon diet (user test r1)', () => {
     // 副標的百分比從資料加總：股票約 32%、借據約 62%
     expect((f4.callouts ?? []).map((c) => resolve(c.sub))).toEqual([
       `約 ${pct0(ctx.assetClassPct('ALLIANZ_INCOME_GROWTH', 'stock'))}%`,
-      `約 ${pct0(ctx.assetClassPct('ALLIANZ_INCOME_GROWTH', 'bond'))}%`,
+      `約 ${pct0(ctx.assetClassPct('ALLIANZ_INCOME_GROWTH', 'bond'))}%・其他約 ${pct0(100 - ctx.assetClassPct('ALLIANZ_INCOME_GROWTH', 'stock') - ctx.assetClassPct('ALLIANZ_INCOME_GROWTH', 'bond'))}%`,
     ])
-    expect((f4.callouts ?? []).map((c) => resolve(c.sub))).toEqual(['約 32%', '約 62%'])
+    expect((f4.callouts ?? []).map((c) => resolve(c.sub))).toEqual(['約 32%', '約 62%・其他約 6%'])
     // 細節留在多說一點
     expect(moreOf(f4, ctx)).toContain('可轉債')
     expect(moreOf(f4, ctx)).toContain('高收益債')

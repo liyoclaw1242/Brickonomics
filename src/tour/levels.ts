@@ -19,6 +19,8 @@ const n0 = (v: number): string => v.toFixed(0)
 /** 0.015 → '1.5%' */
 const pct1 = (r: number): string => `${Number((r * 100).toFixed(2))}%`
 const NICK = T.nick
+/** 股票＋借據以外剩下的（現金等）：標註寫出來，加起來才看得到 100（mid-r2：34＋64＝98，剩下的呢） */
+const restPct = (c: TextContext, productId: string): number => Math.max(0, 100 - c.assetClassPct(productId, 'stock') - c.assetClassPct(productId, 'bond'))
 /** f-6 的後收級別（出門費＝遞延手續費 CDSC） */
 const BACKLOAD = 'SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD'
 /** 持有滿幾年後出門費歸零（從資料找第一個 0） */
@@ -197,7 +199,7 @@ export const LEVELS: Level[] = [
         // 錨在最大的兩層，寫的是整類的比例——股票（含最下面幾層大公司）、借據
         callouts: [
           { anchor: { kind: 'holding', holdingId: 'OTHER_US_STOCK' }, title: '股票方塊', sub: (c) => `約 ${pct0(c.assetClassPct('JH_BALANCED', 'stock'))}%・含輝達等`, when: { control: 'explode', min: 0.6 } },
-          { anchor: { kind: 'holding', holdingId: 'BOND_MIXED_US' }, title: '借據', sub: (c) => `約 ${pct0(c.assetClassPct('JH_BALANCED', 'bond'))}%`, when: { control: 'explode', min: 0.6 } },
+          { anchor: { kind: 'holding', holdingId: 'BOND_MIXED_US' }, title: '借據', sub: (c) => `約 ${pct0(c.assetClassPct('JH_BALANCED', 'bond'))}%・其他約 ${pct0(restPct(c, 'JH_BALANCED'))}%`, when: { control: 'explode', min: 0.6 } },
         ],
         scene: { cityDim: true, camera: 'exchangeWide', product: 'JH_BALANCED', stage: { kind: 'excavator', meter: false }, cityLabels: false },
         controls: ['explode'],
@@ -226,7 +228,7 @@ export const LEVELS: Level[] = [
         focus: { holdings: ['CONVERTIBLE_US', 'US_HIGH_YIELD'] },
         callouts: [
           { anchor: { kind: 'holding', holdingId: 'OTHER_US_STOCK' }, title: '股票', sub: (c) => `約 ${pct0(c.assetClassPct('ALLIANZ_INCOME_GROWTH', 'stock'))}%` },
-          { anchor: { kind: 'holding', holdingId: 'CONVERTIBLE_US' }, title: '借據', sub: (c) => `約 ${pct0(c.assetClassPct('ALLIANZ_INCOME_GROWTH', 'bond'))}%` },
+          { anchor: { kind: 'holding', holdingId: 'CONVERTIBLE_US' }, title: '借據', sub: (c) => `約 ${pct0(c.assetClassPct('ALLIANZ_INCOME_GROWTH', 'bond'))}%・其他約 ${pct0(restPct(c, 'ALLIANZ_INCOME_GROWTH'))}%` },
         ],
         // 另一位經理人：怪手換一個顏色（r3：一模一樣的怪手，他不信是「另一台」）
         scene: { cityDim: true, camera: 'exchangeWide', product: 'ALLIANZ_INCOME_GROWTH', explode: 1, stage: { kind: 'excavator', meter: false, other: true }, cityLabels: false },

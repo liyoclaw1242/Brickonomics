@@ -253,6 +253,8 @@ export const T = {
   underground: {
     goldVein: '黃金礦脈',
     unclassifiedStub: (pct: number) => `其他 ${pct.toFixed(0)}%`,
+    /** 地底各層合計（mid-r2：63＋31 不是 100） */
+    classified: (pct: number) => `各產業層合計 ${pct.toFixed(0)}%`,
     dig: '產業型 ETF',
     veins: '高股息型 ETF',
   },

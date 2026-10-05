@@ -10,7 +10,7 @@ import { BlockMaterial } from '../materials'
 import { ACCENT_COLORS, SECTOR_COLORS } from '../palette'
 import type { Quality } from '../quality'
 import { THEMES } from '../theme'
-import { CORE_R_MIN, coreDiscs, goldVein, GROUND_TOP, sectorBreakdown, strataLayout, STUB_MAX_HEIGHT, unclassifiedStub, type Sector } from '../layout/underground'
+import { classifiedPct, CORE_R_MIN, coreDiscs, goldVein, GROUND_TOP, sectorBreakdown, strataLayout, STUB_MAX_HEIGHT, unclassifiedStub, type Sector } from '../layout/underground'
 
 type Show = 'strata' | 'cores' | 'dig' | 'veins' | 'gold'
 const CENTER_Z = 24
@@ -47,7 +47,7 @@ export function UndergroundStage({ show, cores, quality }: { show: Show; cores?:
     () =>
       (cores ?? []).map((id, i) => {
         const rows = sectorBreakdown(universe, id)
-        return { id, name: displayName(universe, id), x: i === 0 ? -9 : 9, discs: coreDiscs(rows), stub: unclassifiedStub(rows) }
+        return { id, name: displayName(universe, id), x: i === 0 ? -9 : 9, discs: coreDiscs(rows), stub: unclassifiedStub(rows), classified: classifiedPct(rows) }
       }),
     [cores],
   )
@@ -128,7 +128,7 @@ export function UndergroundStage({ show, cores, quality }: { show: Show; cores?:
           <group key={c.id}>
             <Callout anchor={[c.x, GROUND_TOP + c.stub.height, CORE_Z]} offset={[0, STUB_MAX_HEIGHT + 1.6 - c.stub.height, 0]} title={c.name} />
             {c.stub.height > 0 && (
-              <Callout anchor={[c.x + STUB_RADIUS, GROUND_TOP + c.stub.height / 2, CORE_Z]} offset={[2.5, 0, 0]} title={T.underground.unclassifiedStub(c.stub.weightPct)} />
+              <Callout anchor={[c.x + STUB_RADIUS, GROUND_TOP + c.stub.height / 2, CORE_Z]} offset={[2.5, 0, 0]} title={T.underground.unclassifiedStub(c.stub.weightPct)} sub={T.underground.classified(c.classified)} />
             )}
           </group>
         ))}
