@@ -39,6 +39,7 @@ export function FallbackApp() {
     <main className="fallback" data-levels={levels.length} data-course={id}>
       <h1>{T.appTitle}</h1>
       <p className="hint">{T.fallbackIntro}</p>
+      <p className="hint disclaimer">{T.disclaimer}</p>
       <div className="fallback__courses" role="group" aria-label={T.course.pickLabel}>
         {courses.map((c) => (
           <button key={c.id} className="pill" aria-pressed={id === c.id} onClick={() => setId(c.id)}>

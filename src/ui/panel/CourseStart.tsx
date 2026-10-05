@@ -18,6 +18,7 @@ export function CourseStart({ onChoose }: { onChoose: (id: CourseId) => void }) 
         </button>
       ))}
       <p className="hint">{T.course.later}</p>
+      <p className="hint disclaimer">{T.disclaimer}</p>
     </section>
   )
 }
