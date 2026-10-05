@@ -859,10 +859,10 @@ describe('mid-r1: comparisons never read as advice', () => {
     return ['bonds', 'feeRace', 'accumulate', 'overlap', 'shock', 'pe'].includes(st.kind)
   }
 
-  it('every side-by-side step and every step the review named carries the compare flag', () => {
-    const flagged = steps.filter((s) => s.compare).map((s) => s.id)
-    for (const s of steps) if (sideBySide(s)) expect(s.compare, `${s.id} shows things side by side`).toBe(true)
-    for (const id of ['s-pe', 'f-6', 'f-8', 'e-dca', 'c-3', 'u-2', 's-dd', 'b-rate']) expect(flagged, id).toContain(id)
+  it('the compare note sits only where a side-by-side outcome could be read as a pick (mid-r2: on 15 steps it became wallpaper)', () => {
+    const flagged = steps.filter((s) => s.compare).map((s) => s.id).sort()
+    expect(flagged).toEqual(['c-3', 'e-dca', 'f-6', 'f-8', 's-pe'])
+    for (const id of flagged) if (id !== 'e-dca') expect(sideBySide(byId(id)), id).toBe(true)
     expect(T.compareNote).toBe('只是比較，不是叫你買或賣')
     expect(forbiddenWordsIn(T.compareNote)).toEqual([])
   })

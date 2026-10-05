@@ -101,7 +101,6 @@ export const LEVELS: Level[] = [
         line: '**晃越兇**，跌起來通常**越深|loss**',
         more: '左邊是台積電，右邊是特斯拉。晃＝價格常常大漲大跌。晃越兇，下一步的最大跌幅通常越深。晃動幅度是示意，不是真實數字。',
         mark: 'illustrative',
-        compare: true,
         scene: { cityDim: true,
           camera: 'plazaNear',
           product: null,
@@ -156,7 +155,6 @@ export const LEVELS: Level[] = [
         line: '債券＝**借據**，固定給**金幣|coin**',
         more: '債券＝借錢給別人，換一張借據方塊。它不跟著大樓長高，只固定給你利息。到期時，本金還給你。金幣快慢是示意。',
         mark: 'illustrative',
-        compare: true,
         scene: { camera: 'plaza', product: null, stage: { kind: 'bonds' } },
       },
       {
@@ -165,7 +163,6 @@ export const LEVELS: Level[] = [
         line: '越**穩**的，利息通常**越少**',
         more: '國家債＝借給政府，像鑽石一樣堅固，利息通常最少。公司債＝借給體質好的公司，金屬材質。高收益債＝借給體質弱的公司，玻璃材質。它利息通常較多，也較容易裂（利息快慢是示意）。',
         mark: 'illustrative',
-        compare: true,
         scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'bonds', ranks: true } },
       },
       {
@@ -175,7 +172,6 @@ export const LEVELS: Level[] = [
         // 初階沒有 b-2（三種借據，在中階），所以這裡自己說高收益債是什麼
         more: '高收益債＝借給體質弱的公司，利息較多。假設遇上一場經濟風暴。股票方塊大幅縮水，高收益債裂開、停付利息（紅色）。國家債通常比較穩，這是示意。',
         mark: 'illustrative',
-        compare: true,
         scene: { camera: 'plaza', product: null, stage: { kind: 'bonds' }, event: { kind: 'tornado' } },
       },
     ],
@@ -396,7 +392,6 @@ export const LEVELS: Level[] = [
           const er = c.expenseRatio('0050')
           return er === undefined ? undefined : { value: perMillion(er), label: '0050 一年約扣', note: '費用低，不代表比較好' }
         },
-        compare: true,
         scene: { camera: 'exchange', product: '0050', cityLabels: false },
       },
     ],
@@ -410,7 +405,6 @@ export const LEVELS: Level[] = [
         title: '假設台積電跌',
         line: () => `假設台積電跌 **${pct0(SHOCK_PCT * 100)}%**`,
         more: () => `來做個假設：台積電跌 ${pct0(SHOCK_PCT * 100)}%。左邊只買台積電，中間是 0050（台灣50大）。右邊是 SPY（美國500大）。`,
-        compare: true,
         scene: { camera: 'plaza', product: null, stage: { kind: 'shock' }, event: { kind: 'lightning', phase: 'gather' } },
       },
       {
@@ -423,7 +417,6 @@ export const LEVELS: Level[] = [
           const s = c.shock('0050')
           return { value: movePct(s), label: '假設下的 0050', fraction: Math.abs(s) / SHOCK_PCT, note: `整條＝只買台積電跌 ${pct0(SHOCK_PCT * 100)}%` }
         },
-        compare: true,
         scene: { camera: 'plaza', product: null, stage: { kind: 'shock' }, event: { kind: 'lightning', phase: 'strike' } },
       },
       {
@@ -461,7 +454,6 @@ export const LEVELS: Level[] = [
           const sp = c.sectorPct('0050', 'semiconductor')
           return { value: `至少 ${pct0(sp)}%`, label: '0050 的半導體', fraction: sp / 100, colorKey: 'semiconductor', note: '只算列出的公司，實際更多' }
         },
-        compare: true,
         scene: { camera: 'underground', product: null, stage: { kind: 'underground', show: 'cores', cores: ['0050', 'QQQ'] }, cityLabels: false },
       },
       {
@@ -525,7 +517,6 @@ export const COURSE_STEPS: Step[] = [
       // mid-r1：「40% 算嚴重嗎？」——誠實的一句：股票常有這種跌法，跌完不一定很快長回來（不是建議）
       return { value: `${pct0(worst * 100)}%`, label: '最多曾經少掉', note: '股票常見；跌完不一定很快長回來', fraction: worst, colorKey: 'loss', mark: 'illustrative' }
     },
-    compare: true,
     scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'drawdown' }, event: ddQuake(), eventWhen: { control: 'tick', min: DD_TROUGH }, values: { tick: 0 }, cityLabels: false },
     controls: ['tick'],
     ranges: { tick: [0, DD_DEMO.path.length - 1] },
@@ -559,7 +550,6 @@ export const COURSE_STEPS: Step[] = [
     mark: 'illustrative',
     // 跟著拉桿：舊借據現在值多少（面額 100）；note 一直提醒到期還是拿回 100
     bigNumber: (_c, v) => ({ value: `約 ${n0(ratePrice(v.rate))} 元`, label: '舊借據現在值', note: '借的人沒出問題，到期拿回 100 元', mark: 'illustrative' }),
-    compare: true,
     scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'seesaw' }, event: rateFreeze(), eventWhen: { control: 'rate', min: RATE_DEMO.to }, values: { rate: RATE_DEMO.from }, cityLabels: false },
     controls: ['rate'],
     ranges: { rate: [RATE_DEMO.from, RATE_DEMO.to] },
