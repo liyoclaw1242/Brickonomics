@@ -92,8 +92,8 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
       return [
         { label: T.readout.dcaAmount, value: T.yuan(DCA_DEMO.amount), marks: ['illustrative'] },
         { label: T.readout.dcaUnits, value: n1(r.totalUnits) },
-        { label: T.readout.dcaCost, value: `${n1(r.avgCost)} 元` },
-        { label: T.readout.dcaPrice, value: `${n1(r.avgPrice)} 元` },
+        { label: T.readout.dcaCost, value: T.yuan1(r.avgCost) },
+        { label: T.readout.dcaPrice, value: T.yuan1(r.avgPrice) },
       ]
     }
     case 'inflation': {

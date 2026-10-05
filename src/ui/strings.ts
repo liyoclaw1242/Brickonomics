@@ -151,6 +151,8 @@ export const T = {
   wan,
   /** 元（四捨五入、千分位）：18800 → '18,800 元'（r5：有感的錢，像計費表的「已磨掉約 39,073 元」） */
   yuan: (v: number): string => `${Math.round(v).toLocaleString('zh-TW')} 元`,
+  /** 元（一位小數）：39.03 → '39.0 元'（定期定額的平均成本、平均價格） */
+  yuan1: (v: number): string => `${v.toFixed(1)} 元`,
   /** 大數字、3D 跌幅標籤用字說漲跌（負號太細，r3 看成正的） */
   move: { down: '跌', up: '漲' },
   towers: {

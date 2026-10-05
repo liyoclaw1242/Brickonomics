@@ -833,3 +833,11 @@ describe('m-fin recap covers the Plan 7 ideas (Tasks 2–4 review)', () => {
     }
   })
 })
+
+describe('e-dca readout formats 元 through strings.ts (whole-branch review)', () => {
+  it('average cost and price use T.yuan1', () => {
+    const rows = stageReadout({ kind: 'dca' }, { ...DEFAULT_VALUES, months: 12, slice: 0, explode: 0 }, universe, null)
+    expect(rows.map((r) => r.value)).toEqual(['3,000 元', '922.9', '39.0 元', '40.9 元'])
+    expect(T.yuan1(39.03)).toBe('39.0 元')
+  })
+})
