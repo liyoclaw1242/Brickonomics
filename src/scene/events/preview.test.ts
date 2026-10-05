@@ -55,6 +55,11 @@ describe('event preview query', () => {
     expect(parsePreview('?eventPreview=sunnyTree&warmth=0.4')?.spec).toEqual({ kind: 'sunnyTree', warmth: 0.4 })
   })
 
+  it('heatwave melt', () => {
+    expect(parsePreview('?eventPreview=heatwave')?.spec).toMatchObject({ kind: 'heatwave', melt: 0.5 })
+    expect(parsePreview('?eventPreview=heatwave&melt=0.3')?.spec).toMatchObject({ kind: 'heatwave', melt: 0.3 })
+  })
+
   it('numParam clamps and falls back', () => {
     const q = new URLSearchParams('a=2&b=x&c=-1&d=')
     expect(numParam(q, 'a', 0.5, 0, 1)).toBe(1)

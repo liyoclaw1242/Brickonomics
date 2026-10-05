@@ -46,6 +46,22 @@ export type Theme = {
     leaf: string
     leafDark: string
   }
+  /** ☀️ 熱浪：變熱後的天空與霧、烈日（圓盤、光暈）、熱氣線、橘色天光（顏色、最大強度、地面反光色） */
+  heat: {
+    sky: string
+    fog: string
+    sun: string
+    glow: string
+    glowOpacity: number
+    glowAdditive: boolean
+    shimmer: string
+    /** 舞台後面那片暖色霧的顏色與最大不透明度 */
+    haze: string
+    hazeOpacity: number
+    light: string
+    ambient: number
+    ground: string
+  }
   /** 低飽和方塊：飽和度乘數、亮度位移；鮮豔方塊：亮度乘數 */
   tone: { mutedSaturation: number; mutedLightness: number; vividBoost: number }
 }
@@ -89,6 +105,21 @@ export const THEMES: Record<ThemeId, Theme> = {
       leaf: '#5fbf5a',
       leafDark: '#3f9a48',
     },
+    // 黃昏的熱浪：天空與霧往暗橘紅混，烈日偏白、光暈橘紅
+    heat: {
+      sky: '#5a2a26',
+      fog: '#4a2a28',
+      sun: '#fff1c8',
+      glow: '#ff7a3d',
+      glowOpacity: 0.8,
+      glowAdditive: true,
+      shimmer: '#ffb27a',
+      haze: '#ff7a45',
+      hazeOpacity: 0.45,
+      light: '#ff9a52',
+      ambient: 0.6,
+      ground: '#4a2418',
+    },
     tone: { mutedSaturation: 0.55, mutedLightness: -0.09, vividBoost: 1.15 },
   },
   day: {
@@ -131,6 +162,21 @@ export const THEMES: Record<ThemeId, Theme> = {
       ground: '#c9b48a',
       leaf: '#66bb6a',
       leafDark: '#43a047',
+    },
+    // 白天的熱浪：天空往淡橘黃混；熱氣線用深一點的橘（亮底上才看得到）
+    heat: {
+      sky: '#ffd9a8',
+      fog: '#ffe2bf',
+      sun: '#fff6d8',
+      glow: '#ff9a3d',
+      glowOpacity: 0.7,
+      glowAdditive: false,
+      shimmer: '#e8762e',
+      haze: '#ffb36b',
+      hazeOpacity: 0.55,
+      light: '#ffb070',
+      ambient: 0.45,
+      ground: '#d9a070',
     },
     tone: { mutedSaturation: 0.55, mutedLightness: 0.06, vividBoost: 1 },
   },

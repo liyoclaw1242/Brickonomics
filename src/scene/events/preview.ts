@@ -34,6 +34,12 @@ export const PREVIEW_LAYOUT = {
   /** 晴天：中間一座塔像樹一樣長高（2 → 9），旁邊幾小堆當對照 */
   tree: { at: [3, 0, 0] as [number, number, number], width: 2.4, from: 2, to: 9 },
   treePiles: [1, 1.5, 1, 2, 1.5] as readonly number[],
+  /** 熱浪：三疊金幣（舞台的利息金幣） */
+  heatCoins: [
+    [-5, 0, 1],
+    [0, 0, 1],
+    [5, 0, 1],
+  ] as readonly [number, number, number][],
   bubbleOther: { at: [-6, 0, 0] as [number, number, number], size: [3, 7, 3] as [number, number, number] },
 } as const
 
@@ -61,6 +67,8 @@ export const PREVIEW_SPECS: { [K in EventKind]: (q: URLSearchParams) => SpecOf<K
   freeze: (q) => ({ kind: 'freeze', amount: numParam(q, 'amount', 0.9, 0, 1), targets: PREVIEW_LAYOUT.freezeBoards }),
   // warmth＝光線多暖（0–1）
   sunnyTree: (q) => ({ kind: 'sunnyTree', warmth: numParam(q, 'warmth', 1, 0, 1) }),
+  // melt＝最後融掉的比例（0–1），例如 0.3＝剩 70%
+  heatwave: (q) => ({ kind: 'heatwave', melt: numParam(q, 'melt', 0.5, 0, 1), coins: PREVIEW_LAYOUT.heatCoins, coinRadius: 1.1 }),
 }
 
 const isKind = (k: string | null): k is EventKind => k !== null && Object.hasOwn(PREVIEW_SPECS, k)

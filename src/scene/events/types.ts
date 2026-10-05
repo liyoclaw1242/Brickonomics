@@ -47,6 +47,11 @@ export type EventSpec =
    * 目標像樹一樣長高由舞台負責（高度可跟著拉桿；也可用 treeGrowAt 的時間軸），樹冠用 SunnyTree.tsx 匯出的 TreeCrown。
    */
   | { kind: 'sunnyTree'; warmth?: number; sun?: Vec3 }
+  /**
+   * ☀️ 熱浪（通膨）：烈日、暖色的霧、從地面往上飄的熱氣線；目標金幣慢慢融化變小，melt（0–1）＝最後少掉的比例（0.3＝剩 70%）。
+   * coins：金幣（堆）的底部中心（相對廣場中心），事件在它們下面畫融化的金色水窪；金幣本身由舞台畫，舞台用 coinScaleAt 縮小。
+   */
+  | { kind: 'heatwave'; melt: number; coins?: readonly Vec3[]; coinRadius?: number }
 
 export type EventKind = EventSpec['kind']
 

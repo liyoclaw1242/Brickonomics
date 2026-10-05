@@ -1,7 +1,7 @@
 import { type ComponentType, useCallback, useLayoutEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Color, type Group, type InstancedMesh, Object3D } from 'three'
-import { SECTOR_COLORS } from '../palette'
+import { ACCENT_COLORS, SECTOR_COLORS } from '../palette'
 import type { Quality } from '../quality'
 import { atPlaza } from '../stage/plaza'
 import { PREVIEW_LAYOUT } from './preview'
@@ -9,6 +9,7 @@ import { useThemeStore } from '../../store/theme'
 import { THEMES } from '../theme'
 import { bubbleAt, bubbleFinal } from './bubble'
 import { freezeTint } from './freeze'
+import { coinScaleAt } from './heatwave'
 import { TreeCrown } from './SunnyTree'
 import { treeGrowAt } from './sunnyTree'
 import { quakeAt } from './quake'
@@ -168,6 +169,39 @@ function SunnyTreeProps({ clock, quality }: PreviewPropsOf<'sunnyTree'>) {
   )
 }
 
+const COINS_PER_STACK = 4
+const COIN_H = 0.32
+
+/** 熱浪：三疊金幣，跟著 coinScaleAt 一起縮小（底部貼地） */
+function HeatwaveProps({ spec, clock }: PreviewPropsOf<'heatwave'>) {
+  const coins = spec.coins ?? []
+  const r = spec.coinRadius ?? 1
+  const ref = useRef<InstancedMesh>(null)
+  const dummy = useMemo(() => new Object3D(), [])
+  const n = coins.length * COINS_PER_STACK
+  useFrame(() => {
+    const m = ref.current
+    if (!m) return
+    const k = Math.max(0.001, coinScaleAt(spec, clock.reduced ? Infinity : clock.t.current))
+    coins.forEach((c, i) => {
+      for (let j = 0; j < COINS_PER_STACK; j++) {
+        dummy.position.set(...atPlaza(c[0], c[1] + (j + 0.5) * COIN_H * k, c[2]))
+        dummy.rotation.set(0, j * 0.4, 0)
+        dummy.scale.set(r * k, k, r * k)
+        dummy.updateMatrix()
+        m.setMatrixAt(i * COINS_PER_STACK + j, dummy.matrix)
+      }
+    })
+    m.instanceMatrix.needsUpdate = true
+  })
+  return (
+    <instancedMesh ref={ref} args={[undefined, undefined, n]} castShadow receiveShadow frustumCulled={false}>
+      <cylinderGeometry args={[1, 1, COIN_H * 0.9, 20]} />
+      <meshStandardMaterial color={ACCENT_COLORS.coin} metalness={0.5} roughness={0.35} emissive={ACCENT_COLORS.coin} emissiveIntensity={0.1} />
+    </instancedMesh>
+  )
+}
+
 export const PREVIEW_PROPS: { [K in EventKind]: ComponentType<PreviewPropsOf<K>> | null } = {
   tornado: null,
   lightning: null,
@@ -175,4 +209,5 @@ export const PREVIEW_PROPS: { [K in EventKind]: ComponentType<PreviewPropsOf<K>>
   bubble: BubbleProps,
   freeze: FreezeProps,
   sunnyTree: SunnyTreeProps,
+  heatwave: HeatwaveProps,
 }
