@@ -14,6 +14,7 @@ import { LEV_LAYOUT, levNow, levWave } from './advanced'
 import { waveSteps } from '../events/wave'
 import { HEDGE_CASES, HEDGE_LAYOUT, hedgeLightning, hedgeTowers } from './advanced'
 import { hedgeExample } from '../../sim/hedge'
+import { REBAL_LAYOUT, rebalNow, rebalTower } from './advanced'
 
 describe('a-port portfolio tower (🌪)', () => {
   it('portNow: 100 split by the bond slider; the example storm takes stocks −40%, bonds +5% (sim/portfolio STORM)', () => {
@@ -224,5 +225,27 @@ describe('a-hedge three towers (⚡ on the strike case)', () => {
   it('the bolt hits the top of each tower (everything holds 0050)', () => {
     const l = hedgeLightning()
     expect(l.targets).toEqual(HEDGE_LAYOUT.x.map((x) => [x, 100 * HEDGE_LAYOUT.unit, 0]))
+  })
+})
+
+describe('a-rebal trim the tall side, top up the short side', () => {
+  it('rebalNow: 60/40 → stocks +30% → 78/40 (66.1% stocks) → back to 60%: 70.8/47.2, 7.2 moved (sim/rebalance)', () => {
+    expect(rebalNow(0)).toMatchObject({ stage: 0, stock: 60, bond: 40, total: 100, stockPct: 60, moved: 0 })
+    const d = rebalNow(1)
+    expect(d.stock).toBeCloseTo(78, 12)
+    expect(d.stockPct).toBeCloseTo(66.10, 2)
+    const r = rebalNow(2)
+    expect(r.stock).toBeCloseTo(70.8, 12)
+    expect(r.bond).toBeCloseTo(47.2, 12)
+    expect(r.total).toBeCloseTo(118, 12) // 總數不變
+    expect(r.moved).toBeCloseTo(7.2, 12)
+    expect(rebalNow(9).stage).toBe(2)
+  })
+  it('rebalTower: stock at the bottom, bond on top, and the target line at 60% of the tower', () => {
+    const t = rebalTower(1)
+    expect(t.stock + t.bond).toBeCloseTo(118 * REBAL_LAYOUT.unit, 12)
+    expect(t.target).toBeCloseTo(0.6 * 118 * REBAL_LAYOUT.unit, 12)
+    expect(t.stock).toBeGreaterThan(t.target) // 長歪了：股票超過目標線
+    expect(rebalTower(2).stock).toBeCloseTo(rebalTower(2).target, 12)
   })
 })

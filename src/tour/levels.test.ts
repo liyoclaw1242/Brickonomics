@@ -40,7 +40,7 @@ const byId = (id: string): Step => steps.find((s) => s.id === id)!
 /** Plan 7 的舉例舞台：一定要標 ≈、多說一點寫「示意」 */
 const PLAN7_STAGES: string[] = ['drawdown', 'pe', 'seesaw', 'dca', 'inflation']
 /** Plan 8 的高階舞台：都是舉例（≈、多說一點寫「示意」） */
-const PLAN8_STAGES: string[] = ['portfolio', 'correlation', 'dayTrade', 'duration', 'feeTrees', 'leverage', 'hedge']
+const PLAN8_STAGES: string[] = ['portfolio', 'correlation', 'dayTrade', 'duration', 'feeTrees', 'leverage', 'hedge', 'rebalance']
 /** 大數字跟著即時拉桿值；測試預設用進入該步驟時的值 */
 const bigOf = (s: Step, values: Partial<StageValues> = {}) => s.bigNumber?.(ctx, { ...DEFAULT_VALUES, ...s.scene.values, ...values })
 const resolve = (t: Step['line'] | undefined): string | undefined => (t === undefined ? undefined : typeof t === 'function' ? t(ctx) : t)
@@ -1114,5 +1114,24 @@ describe('Plan 8 高階: 反向來對沖 (a-hedge)', () => {
     expect(stepMarks(s(), unverify(['0050']))).toEqual(['illustrative', 'assumption', 'unverified'])
     expect(moreOf(s(), ctx)).toContain('反向的費用這裡假設一年 1%')
     expect(moreOf(s(), ctx)).toContain('少買 0050、多留現金，⚡ 時也一樣少賠')
+  })
+})
+
+describe('Plan 8 高階: 剪高補低 (a-rebal)', () => {
+  const s = () => byId('a-rebal')
+  it('drag the progress: start → stocks grew → trim and top up (gate)', () => {
+    expect(controlRange(s(), 'rebal')).toEqual([0, 2])
+    expect(s().until).toEqual({ control: 'rebal', min: 2 })
+    expect(stripMarkup(lineOf(s(), ctx))).toBe('拖進度。塔歪了就剪高補低')
+  })
+  it('big number = the stock share: 60% → 66% (78 ÷ 118) → back to 60% after moving 7.2 萬', () => {
+    expect(bigOf(s(), { rebal: 0 })).toMatchObject({ value: '股票 60%', label: '組合裡的股票比例', note: '目標：股票 60%', colorKey: 'stock', mark: 'illustrative' })
+    expect(bigOf(s(), { rebal: 1 })).toMatchObject({ value: '股票 66%', note: '股票漲了 30%，比例跑掉了' })
+    expect(bigOf(s(), { rebal: 2 })).toMatchObject({ value: '股票 60%', note: '剪掉 7.2 萬股票，補到債券' })
+    expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('股票漲到 66%。剪 7.2 萬補債券')
+  })
+  it('honest: rebalancing does not promise more profit, and moving money has trading costs', () => {
+    expect(moreOf(s(), ctx)).toContain('不保證賺比較多')
+    expect(moreOf(s(), ctx)).toContain('交易成本')
   })
 })

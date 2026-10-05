@@ -34,6 +34,7 @@ export const VALUE_RANGES: Record<ValueKey, [number, number]> = {
   tick: DEFAULT_RANGES.tick,
   rate: DEFAULT_RANGES.rate,
   months: DEFAULT_RANGES.months,
+  rebal: DEFAULT_RANGES.rebal,
   hedgeCase: DEFAULT_RANGES.hedgeCase,
   trades: DEFAULT_RANGES.trades,
   bondPct: DEFAULT_RANGES.bondPct,

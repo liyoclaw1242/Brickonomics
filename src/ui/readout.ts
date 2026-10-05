@@ -4,7 +4,7 @@ import { sectorBreakdown } from '../scene/layout/underground'
 import { accumulateVsPayout, exDivTimeline, principalTrap } from '../scene/layout/stages'
 import { feeRaceLeader, feeRaceRows } from '../sim/feeRace'
 import { DCA_DEMO, dcaNow, ddNow, INFL_DEMO, inflReal, PE_DEMO, peYears, ratePrice } from '../scene/layout/intermediate'
-import { corrNow, dtNow, durNow, feeTreesNow, hedgeCaseIndex, hedgeTowers, levNow, portNow } from '../scene/layout/advanced'
+import { corrNow, dtNow, durNow, feeTreesNow, hedgeCaseIndex, hedgeTowers, levNow, portNow, rebalNow } from '../scene/layout/advanced'
 import { hedgeExample } from '../sim/hedge'
 import { FEE_DRAG } from '../sim/feeDrag'
 import { DURATION } from '../sim/duration'
@@ -130,6 +130,16 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
         { label: T.readout.fee30Active(pct(a)), value: T.wan(n.active.value), marks: mark(FEE_DRAG.active) },
         { label: T.readout.fee30Passive(pct(p)), value: T.wan(n.passive.value), marks: mark(FEE_DRAG.passive) },
         { label: T.readout.fee30NoFee, value: T.wan(n.noFee) },
+      ]
+    }
+    case 'rebalance': {
+      const r = rebalNow(v.rebal)
+      return [
+        { label: T.readout.rebalStage, value: T.controls.rebalValue(r.stage), marks: ['illustrative'] },
+        { label: T.readout.rebalStock, value: T.wan(r.stock) },
+        { label: T.readout.rebalBond, value: T.wan(r.bond) },
+        { label: T.readout.rebalPct, value: `${r.stockPct.toFixed(1)}%` },
+        ...(r.moved !== 0 ? [{ label: T.readout.rebalMoved, value: T.wan(r.moved) }] : []),
       ]
     }
     case 'hedge': {

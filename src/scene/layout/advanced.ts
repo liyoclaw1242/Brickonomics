@@ -9,6 +9,7 @@ import { DURATION, priceChange } from '../../sim/duration'
 import { FEE_DRAG, grow } from '../../sim/feeDrag'
 import { LEVERAGE, leverageTowers } from '../../sim/leverage'
 import type { HedgeExample, HedgeRow } from '../../sim/hedge'
+import { REBALANCE, drift, rebalance } from '../../sim/rebalance'
 import type { Vec3 } from '../camera'
 
 /**
@@ -287,3 +288,28 @@ export const hedgeLightning = (): SpecOf<'lightning'> => ({
 
 /** ⚡ 打中之後的進度 0..1（和 a-corr 一樣） */
 export const hedgeDropAt = corrDropAt
+
+// ───────────── a-rebal 剪高補低（再平衡） ─────────────
+
+/** 一座組合塔（股票在下、債券在上）；unit＝每 1 萬多高；一條目標線在股票該到的高度 */
+export const REBAL_LAYOUT = { x: 0, w: 5.5, unit: 0.1 } as const
+
+export type RebalNow = { stage: number; stock: number; bond: number; total: number; stockPct: number; moved: number }
+
+/** 拉桿值 → 第幾步（0 一開始、1 股票漲了一年、2 剪高補低）與兩截各多少（sim/rebalance） */
+export function rebalNow(v: number): RebalNow {
+  const stage = Math.min(2, Math.max(0, Math.round(Number.isFinite(v) ? v : 0)))
+  const t = REBALANCE.targetStockPct
+  if (stage === 0) return { stage, stock: t, bond: 100 - t, total: 100, stockPct: t, moved: 0 }
+  const d = drift(REBALANCE)
+  if (stage === 1) return { stage, stock: d.stock, bond: d.bond, total: d.total, stockPct: d.stockPct, moved: 0 }
+  const r = rebalance(d, t)
+  return { stage, stock: r.stock, bond: r.bond, total: r.total, stockPct: r.stockPct, moved: r.moved }
+}
+
+/** 塔的兩截高度與目標線的高度（世界單位） */
+export function rebalTower(v: number): { stock: number; bond: number; target: number } {
+  const n = rebalNow(v)
+  const k = REBAL_LAYOUT.unit
+  return { stock: n.stock * k, bond: n.bond * k, target: ((n.total * REBALANCE.targetStockPct) / 100) * k }
+}

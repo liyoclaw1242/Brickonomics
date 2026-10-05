@@ -6,9 +6,10 @@ import { T } from '../ui/strings'
 import { DD_DEMO, DD_TROUGH, ddNow, ddQuake, PE_DEMO, peBubble, peYears, RATE_DEMO, rateFreeze, ratePrice, DCA_DEMO, dcaNow, dcaSunny, INFL_DEMO, inflHeat, inflReal } from '../scene/layout/intermediate'
 import { maxDrawdown } from '../sim/drawdown'
 import { STORM } from '../sim/portfolio'
-import { corrLightning, corrNow, dtNow, durFreeze, durNow, feeSunny, feeTreesNow, HEDGE_CASES, hedgeCaseIndex, hedgeLightning, levNow, levWave, PORT_LAYOUT, PORT_MAX_BOND, portNow } from '../scene/layout/advanced'
+import { corrLightning, corrNow, dtNow, durFreeze, durNow, feeSunny, feeTreesNow, HEDGE_CASES, hedgeCaseIndex, hedgeLightning, levNow, levWave, PORT_LAYOUT, PORT_MAX_BOND, portNow, rebalNow } from '../scene/layout/advanced'
 import { LEVERAGE } from '../sim/leverage'
 import { HEDGE } from '../sim/hedge'
+import { REBALANCE } from '../sim/rebalance'
 import { FEE_DRAG } from '../sim/feeDrag'
 import { DURATION } from '../sim/duration'
 import { DAY_TRADE, DAY_TRADE_COST, dayTradeCostVerified } from '../sim/dayTrade'
@@ -850,5 +851,23 @@ export const COURSE_STEPS: Step[] = [
     controls: ['hedgeCase'],
     ranges: { hedgeCase: [0, HEDGE_CASES.length - 1] },
     until: { control: 'hedgeCase', min: HEDGE_CASES.length - 1 },
+  },
+  {
+    // 高階 ETF 章：再平衡。60/40 的塔，股票漲 30%（示意）後長歪（66%）；剪高補低，總數不變、比例回到 60%
+    id: 'a-rebal',
+    title: '剪高補低',
+    line: '拖**進度**。塔歪了就**剪高補低|stock**',
+    fallbackLine: () => `股票漲到 ${pct0(rebalNow(1).stockPct)}%。剪 ${wan(rebalNow(2).moved)}補債券`,
+    more: '再平衡＝把比例搬回目標。股票漲多了，賣一點股票、補一點債券。目的是讓風險回到原本，不保證賺比較多。這是示意，搬的時候也有交易成本。',
+    mark: 'illustrative',
+    bigNumber: (_c, v) => {
+      const r = rebalNow(v.rebal)
+      const note = r.stage === 0 ? `目標：股票 ${REBALANCE.targetStockPct}%` : r.stage === 1 ? `股票漲了 ${pct0(REBALANCE.stockReturn * 100)}%，比例跑掉了` : `剪掉 ${wan(r.moved)}股票，補到債券`
+      return { value: `股票 ${pct0(r.stockPct)}%`, label: '組合裡的股票比例', fraction: r.stockPct / 100, note, colorKey: 'stock', mark: 'illustrative' }
+    },
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'rebalance' }, values: { rebal: 0 }, cityLabels: false },
+    controls: ['rebal'],
+    ranges: { rebal: [0, 2] },
+    until: { control: 'rebal', min: 2 },
   },
 ]

@@ -53,6 +53,8 @@ export type Stage =
   | { kind: 'leverage' }
   /** a-hedge 反向來對沖：三座塔（全押、加反向、少買＋現金；hedgeCase 拉桿換情境）；⚡ 情境時閃電（scene.event lightning＋eventWhen） */
   | { kind: 'hedge' }
+  /** a-rebal 剪高補低：一座組合塔＋目標線（rebal 拉桿：一開始、股票漲了、剪高補低） */
+  | { kind: 'rebalance' }
   | { kind: 'overlap'; a: string; b: string }
   | { kind: 'underground'; show: 'strata' | 'cores' | 'dig' | 'veins' | 'gold'; cores?: [string, string] }
 
@@ -63,7 +65,8 @@ export type StageKind = Stage['kind']
 /** bondPct：a-port 組合塔裡債券佔幾 %（其餘是股票） */
 /** trades：a-dt 當沖進出了幾次（一次＝買進再賣出） */
 /** hedgeCase：a-hedge 看哪一種情境（0 平穩一年、1 慢慢漲一年、2 ⚡ 打下那天） */
-export type StageValues = { years: number; periods: number; phase: number; frontLoad: number; tick: number; rate: number; months: number; bondPct: number; trades: number; hedgeCase: number }
+/** rebal：a-rebal 走到哪一步（0 一開始、1 股票漲了一年、2 剪高補低） */
+export type StageValues = { years: number; periods: number; phase: number; frontLoad: number; tick: number; rate: number; months: number; bondPct: number; trades: number; hedgeCase: number; rebal: number }
 export type ValueKey = keyof StageValues
 export type Control = 'slice' | 'explode' | ValueKey
 /** 要讓「下一步」可按，control 的值必須 ≥ min */

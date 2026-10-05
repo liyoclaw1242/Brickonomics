@@ -109,6 +109,9 @@ export const T = {
     /** e-dca：定期定額買了幾個月 */
     months: '經過月數',
     monthsValue: (v: number) => `${v} 個月`,
+    /** a-rebal 走到哪一步（0 一開始、1 股票漲了一年、2 剪高補低） */
+    rebal: '進度',
+    rebalValue: (v: number) => (['一開始', '股票漲了一年', '剪高補低'] as const)[Math.round(v)] ?? '',
     /** a-hedge 看哪一種情境（0 平穩一年、1 慢慢漲一年、2 ⚡ 打下那天） */
     hedgeCase: '情境',
     hedgeCaseValue: (v: number) => (['平穩的一年', '慢慢漲的一年', '⚡ 打下那天'] as const)[Math.round(v)] ?? '',
@@ -231,6 +234,13 @@ export const T = {
     cash: '少買 0050＋現金',
     split: (base: number, other: number) => `${base}／${other}`,
   },
+  /** a-rebal 組合塔的 3D 標註（高階） */
+  rebal: {
+    stock: (v: string, pct: string) => `股票 ${v}（${pct}）`,
+    bond: (v: string) => `債券 ${v}`,
+    target: (pct: number) => `目標線：股票 ${pct}%`,
+    moved: (v: string) => `剪 ${v}，補到債券`,
+  },
   /** 基金那一章的錢：投入 100＝100 萬（和計費表同一個底），一位小數、去掉「.0」 */
   wan,
   /** 元（四捨五入、千分位）：18800 → '18,800 元'（r5：有感的錢，像計費表的「已磨掉約 39,073 元」） */
@@ -327,6 +337,11 @@ export const T = {
     levDouble: '2 倍塔：來回 5 次後',
     levInverse: '反向塔：來回 5 次後',
     hedgeCase: '情境',
+    rebalStage: '進度',
+    rebalStock: '股票',
+    rebalBond: '債券',
+    rebalPct: '股票比例',
+    rebalMoved: '從股票搬到債券',
     dtTrades: '進出次數',
     dtCost: '每次進出的交易成本',
     dtCapital: '本金剩',
