@@ -224,10 +224,11 @@ export const T = {
   },
   /** a-fee30 兩棵樹的 3D 標註（高階） */
   fee30: {
-    active: '怪手挑（主動型）',
-    passive: '照藍圖（指數型）',
-    sub: (fee: string, v: string) => `每年 ${fee}・${v}`,
-    lost: (v: string) => `費用吃掉 ${v}`,
+    /** 樹的名字寫出每年的費用（adv-r1：0.14% 是哪裡的費率？——就是 0050 的） */
+    active: (fee: string) => `基金（每年 ${fee}）`,
+    passive: (fee: string) => `0050（每年 ${fee}）`,
+    /** 紅色帽子只說是什麼，不再放第二個數字（adv-r1：225.7 和 249.3 兩個數字打架） */
+    lost: '紅色＝費用吃掉的',
     base: (gross: string) => `假設扣費前報酬一樣：每年 ${gross}`,
   },
   /** a-lev 三座塔（高階；通用名稱，不是真實商品） */

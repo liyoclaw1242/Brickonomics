@@ -1070,6 +1070,10 @@ describe('Plan 8 高階: 主動 vs 被動 30 年 (a-fee30)', () => {
     expect(bigOf(s(), { periods: 30 })).toEqual({ value: '差 225.7 萬', label: '30 年後，兩棵樹差', note: '假設扣費前報酬一樣，每年 6%', mark: 'illustrative' })
     expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('30 年後。兩棵樹差 225.7 萬')
   })
+  it('one headline number on screen: the cap label carries no second figure, and the cheap tree is named 0050 with its yearly fee', () => {
+    expect(T.fee30.lost).not.toMatch(/\d/)
+    expect(T.fee30.passive('0.14%')).toBe('0050（每年 0.14%）')
+  })
   it('fees come from the data (1.88% vs 0.14%) and ？ appears if either is unverified', () => {
     expect(moreOf(s(), ctx)).toContain('這檔基金扣 1.88%，0050 扣 0.14%')
     expect(moreOf(s(), ctx)).toContain('扣費前誰賺得多不一定')

@@ -13,7 +13,7 @@ import type { Quality } from '../quality'
 import { atPlaza } from './plaza'
 
 const KEYS = ['active', 'passive'] as const
-const pct2 = (r: number) => `${(r * 100).toFixed(2)}%`
+const pct2 = (r: number) => `${Number((r * 100).toFixed(2))}%`
 
 /** 兩檔的內扣費用（資料；查證狀態由 stepMarks 標 ？） */
 export const feeTreeFees = () => ({
@@ -74,8 +74,8 @@ export function FeeTreesStage({ quality }: { quality: Quality }) {
             <Callout
               anchor={atPlaza(x, 0.1, W / 2)}
               offset={[k === 'active' ? -0.6 : 0.6, -0.3, 2.4]}
-              title={T.fee30[k]}
-              sub={T.fee30.sub(pct2(t.fee), T.wan(t.value))}
+              title={T.fee30[k](pct2(t.fee))}
+              sub={T.wan(t.value)}
               color={ACCENT_COLORS[k]}
               persistent
             />
@@ -86,7 +86,7 @@ export function FeeTreesStage({ quality }: { quality: Quality }) {
         <Callout
           anchor={atPlaza(FEE_TREES.x.active + W / 2, (now.active.value + now.active.lost / 2) * unit, 0)}
           offset={[1.4, -1.2, 0]}
-          title={T.fee30.lost(T.wan(now.active.lost))}
+          title={T.fee30.lost}
           color={ACCENT_COLORS.loss}
           persistent
         />
