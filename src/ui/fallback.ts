@@ -1,6 +1,6 @@
 import type { Universe } from '../data/universe'
 import { makeTextContext } from '../tour/context'
-import { DEFAULT_VALUES, sandboxPatchFor } from '../tour/engine'
+import { activeEvent, DEFAULT_VALUES, sandboxPatchFor } from '../tour/engine'
 import { courseSteps } from '../tour/courses'
 import type { Course, LessonText, RecapLine, Step, TextContext } from '../tour/types'
 import { stageReadout, type ReadoutRow } from './readout'
@@ -8,7 +8,7 @@ import { stepMarks, type Mark } from './marks'
 import { T } from './strings'
 
 /** line 保留 `**…**` 強調標記；more 是多說一點 */
-export type FallbackStep = { id: string; title: string; line: string; more: string; marks: Mark[]; rows: ReadoutRow[]; recap?: RecapLine[] }
+export type FallbackStep = { id: string; title: string; line: string; more: string; marks: Mark[]; rows: ReadoutRow[]; recap?: RecapLine[]; compare?: boolean }
 export type FallbackLevel = { label: string; steps: FallbackStep[] }
 
 const resolve = (t: LessonText, ctx: TextContext): string => (typeof t === 'function' ? t(ctx) : t)
@@ -38,7 +38,8 @@ function fallbackStep(step: Step, ctx: TextContext, u: Universe): FallbackStep {
     line: resolve(step.fallbackLine ?? step.line, ctx),
     more: resolve(step.fallbackMore ?? step.more, ctx),
     marks: stepMarks(step, u),
-    rows: stageReadout(step.scene.stage ?? { kind: 'none' }, values, u, productId, step.scene.event),
+    rows: stageReadout(step.scene.stage ?? { kind: 'none' }, values, u, productId, activeEvent(step, values)),
     ...(step.recap ? { recap: step.recap } : {}),
+    ...(step.compare ? { compare: true } : {}),
   }
 }

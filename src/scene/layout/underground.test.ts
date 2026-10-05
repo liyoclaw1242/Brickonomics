@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { universe } from '../../data'
 import { parseUniverse } from '../../data/universe'
 import { T } from '../../ui/strings'
-import { SECTORS, LAYER_THICKNESS, GROUND_TOP, strataLayout, goldVein, sectorBreakdown, coreDiscs, unclassifiedStub } from './underground'
+import { SECTORS, LAYER_THICKNESS, GROUND_TOP, strataLayout, goldVein, sectorBreakdown, coreDiscs, unclassifiedStub, classifiedPct } from './underground'
 
 describe('strataLayout', () => {
   it('stacks one layer per sector from the ground down', () => {
@@ -105,5 +105,16 @@ describe('unclassifiedStub', () => {
   })
   it('QQQ: 70.72% → 4 × 0.7072 = 2.8288', () => {
     expect(unclassifiedStub(sectorBreakdown(universe, 'QQQ')).height).toBeCloseTo(2.8288, 6)
+  })
+})
+
+describe('classifiedPct (mid-r2: labels that visibly sum to ~100)', () => {
+  it('其他 + 各產業層合計 = 100 for 0050 and QQQ (rounded labels within 1)', () => {
+    for (const id of ['0050', 'QQQ']) {
+      const rows = sectorBreakdown(universe, id)
+      const unc = unclassifiedStub(rows).weightPct
+      expect(classifiedPct(rows) + unc, id).toBeCloseTo(100, 6)
+      expect(Math.abs(Math.round(classifiedPct(rows)) + Math.round(unc) - 100), id).toBeLessThanOrEqual(1)
+    }
   })
 })

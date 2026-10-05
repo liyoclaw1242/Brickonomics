@@ -35,7 +35,8 @@ export function TowerRow({ towers, quality, base, baseSub }: { towers: TowerSpec
   const stagger = layoutModel(size.width, size.height).mobile ? 2.5 : 0
   const anyFocus = towers.some((t) => t.focus)
   // 手機上進門／出門費和每年費用兩個標註會撞在一起：門的那個往前（往下）錯開一排
-  const doorDrop = stagger > 0 ? 2.4 : 0
+  // 桌機也錯開（mid-r1 14-b：進門費、每年費用、出門費、每年費用四個標註擠成一排）
+  const doorDrop = stagger > 0 ? 2.4 : 1.8
   return (
     <>
       {/* 手機上門費標註往前錯開了一排：前提說明再往前一點，免得疊在一起 */}
@@ -80,8 +81,8 @@ export function TowerRow({ towers, quality, base, baseSub }: { towers: TowerSpec
             {/* 標註放在塔頂上方，不和下方的紅色小堆／金幣堆標註搶位置。數值當標題、名稱當副標；色點＝塔的顏色（3b1b 顏色連結） */}
             <Callout
               anchor={atPlaza(x, Math.ceil(blocksFor(t.value) / TOWER_FLOOR) + 0.1, 0)}
-              // 高塔（例如累積型 20 年）頂上的標註會疊到後面城市的大樓：改放塔的右邊（r2）
-              offset={Math.ceil(blocksFor(t.value) / TOWER_FLOOR) > TALL_LAYERS ? [3.6, -0.6, 0] : [0, 2.4 + (i % 2) * stagger, 0]}
+              // 高塔（例如累積型 20 年）頂上的標註會疊到後面城市的大樓：改放塔的旁邊（r2）；第一座往左，免得蓋到右邊那座的標註（mid-r2）
+              offset={Math.ceil(blocksFor(t.value) / TOWER_FLOOR) > TALL_LAYERS ? [i === 0 ? -3.6 : 3.6, -0.6, 0] : [0, 2.4 + (i % 2) * stagger, 0]}
               title={towerTitle(t)}
               sub={t.label}
               color={t.color}

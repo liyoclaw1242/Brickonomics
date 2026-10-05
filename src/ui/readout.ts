@@ -3,6 +3,7 @@ import { isVerified } from '../data/verified'
 import { sectorBreakdown } from '../scene/layout/underground'
 import { accumulateVsPayout, exDivTimeline, principalTrap } from '../scene/layout/stages'
 import { feeRaceLeader, feeRaceRows } from '../sim/feeRace'
+import { DCA_DEMO, dcaNow, ddNow, INFL_DEMO, inflReal, PE_DEMO, peYears, ratePrice } from '../scene/layout/intermediate'
 import { overlap } from '../sim/overlap'
 import { shockImpact } from '../sim/scenario'
 import { SHOCK_2330, signedPct } from '../tour/context'
@@ -65,6 +66,44 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
         { label: u.get('0050')!.name, value: signedPct(shockImpact(u, '0050', { ...SHOCK_2330 })) },
         { label: u.get('SPY')!.name, value: signedPct(shockImpact(u, 'SPY', { ...SHOCK_2330 })) },
       ]
+    case 'drawdown': {
+      const d = ddNow(v.tick)
+      const p = (r: number) => `${(r * 100).toFixed(1)}%`
+      return [
+        { label: T.readout.ddPrice, value: String(d.price), marks: ['illustrative'] },
+        { label: T.readout.ddPeak, value: String(d.peak) },
+        { label: T.readout.ddDrop, value: p(d.drop) },
+        { label: T.readout.ddWorst, value: p(d.worst) },
+      ]
+    }
+    case 'pe':
+      return [
+        { label: T.readout.pePrice, value: String(PE_DEMO.price), marks: ['illustrative'] },
+        ...(['cheap', 'pricey'] as const).map((k) => ({ label: T.readout.peYears(PE_DEMO.earnings[k]), value: T.pe.years(peYears(k)) })),
+      ]
+    case 'seesaw':
+      return [
+        { label: T.readout.rateNow, value: T.controls.rateValue(v.rate), marks: ['illustrative'] },
+        { label: T.readout.ratePrice, value: n1(ratePrice(v.rate)) },
+        { label: T.readout.rateFace, value: '100' },
+      ]
+    case 'dca': {
+      const { result: r } = dcaNow(v.months)
+      return [
+        { label: T.readout.dcaAmount, value: T.yuan(DCA_DEMO.amount), marks: ['illustrative'] },
+        { label: T.readout.dcaUnits, value: n1(r.totalUnits) },
+        { label: T.readout.dcaCost, value: T.yuan1(r.avgCost) },
+        { label: T.readout.dcaPrice, value: T.yuan1(r.avgPrice) },
+      ]
+    }
+    case 'inflation': {
+      const p = (r: number) => `${(r * 100).toFixed(1)}%`
+      return [
+        { label: T.readout.inflNominal, value: p(INFL_DEMO.nominal), marks: ['illustrative'] },
+        { label: T.readout.inflInflation, value: p(INFL_DEMO.inflation) },
+        { label: T.readout.inflReal, value: p(inflReal()) },
+      ]
+    }
     case 'overlap': {
       const o = overlap(u, stage.a, stage.b)
       return [

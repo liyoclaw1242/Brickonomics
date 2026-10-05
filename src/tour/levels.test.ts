@@ -3,7 +3,12 @@ import { universe } from '../data'
 import { isBasket } from '../data/schema'
 import { overlap } from '../sim/overlap'
 import { EXDIV_AFTER_PHASE, LEVELS } from './levels'
-import { STEP_POOL } from './courses'
+import { accumulateVsPayout } from '../scene/layout/stages'
+import { COURSES, courseSteps, STEP_POOL } from './courses'
+import { ON_PLAZA } from '../scene/stage/plaza'
+import { maxDrawdown } from '../sim/drawdown'
+import { DD_DEMO, DD_LAYOUT, ddBarX, peYears } from '../scene/layout/intermediate'
+import { stageReadout } from '../ui/readout'
 import { exDivTimeline, principalTrap } from '../scene/layout/stages'
 import { towerTexts, trapTowerSpec } from '../scene/layout/towers'
 import { makeTextContext, pct0, wan } from './context'
@@ -32,6 +37,8 @@ const unverify = (ids: string[]): Universe => {
 }
 
 const byId = (id: string): Step => steps.find((s) => s.id === id)!
+/** Plan 7 的舉例舞台：一定要標 ≈、多說一點寫「示意」 */
+const PLAN7_STAGES: string[] = ['drawdown', 'pe', 'seesaw', 'dca', 'inflation']
 /** 大數字跟著即時拉桿值；測試預設用進入該步驟時的值 */
 const bigOf = (s: Step, values: Partial<StageValues> = {}) => s.bigNumber?.(ctx, { ...DEFAULT_VALUES, ...s.scene.values, ...values })
 const resolve = (t: Step['line'] | undefined): string | undefined => (t === undefined ? undefined : typeof t === 'function' ? t(ctx) : t)
@@ -104,7 +111,7 @@ describe('LEVELS', () => {
   })
 
   it('illustrative stages carry the illustrative mark', () => {
-    const illustrative = new Set(['exdiv', 'bonds', 'accumulate', 'principalTrap', 'ticker'])
+    const illustrative = new Set(['exdiv', 'bonds', 'accumulate', 'principalTrap', 'ticker', ...PLAN7_STAGES])
     for (const s of steps) {
       const st = s.scene.stage
       const needs =
@@ -153,7 +160,7 @@ describe('LEVELS', () => {
     const SOURCES: Record<string, [string, VerifiedKey][]> = {
       'f-4': [['ALLIANZ_INCOME_GROWTH', 'holdings']],
       'f-5': [['JH_BALANCED', 'fees.expenseRatio']],
-      'f-6': [['SCHRODER_GLOBAL_INCOME_BOND', 'fees.expenseRatio'], ['SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD', 'fees.expenseRatio'], ['SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD', 'fees.cdsc']],
+      'f-6': [['SCHRODER_GLOBAL_INCOME_BOND', 'fees.expenseRatio'], ['SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD', 'fees.expenseRatio'], ['SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD', 'fees.cdsc'], ['SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD', 'fees.distributionFee']],
       'e-3': [['0050', 'holdings']],
       'e-5': [['0050', 'fees.expenseRatio'], ['JH_BALANCED', 'fees.expenseRatio']],
       'c-2': [['0050', 'holdings']],
@@ -276,7 +283,7 @@ describe('LEVELS', () => {
   })
 
   it('labels illustrative stages as 示意 in their more text', () => {
-    const illustrative = new Set(['held', 'exdiv', 'bonds', 'accumulate', 'principalTrap', 'ticker'])
+    const illustrative = new Set(['held', 'exdiv', 'bonds', 'accumulate', 'principalTrap', 'ticker', ...PLAN7_STAGES])
     const undergroundIllustrative = new Set(['dig', 'veins', 'gold'])
     for (const s of steps) {
       const st = s.scene.stage
@@ -493,6 +500,7 @@ describe('jargon diet (user test r1)', () => {
 
   it('renames s-4 and drops the frontLoad slider from f-6', () => {
     expect(byId('s-4').title).toBe('有的晃很兇')
+    expect(stripMarkup(lineOf(byId('s-4'), ctx))).toBe('晃越兇，跌起來通常越深') // mid-r1：接到最大跌幅
     expect(byId('f-6').controls).toEqual(['years'])
     expect(byId('f-6').mark).toBe('assumption') // 預設的前收手續費仍是假設值
   })
@@ -528,7 +536,8 @@ describe('jargon diet (user test r1)', () => {
     const subs = (f2.callouts ?? []).map((c) => resolve(c.sub)!)
     expect(subs[0]).toContain(`約 ${pct0(ctx.assetClassPct('JH_BALANCED', 'stock'))}%`) // 64.08 → 64
     expect(subs[0]).toContain('輝達')
-    expect(subs[1]).toBe(`約 ${pct0(ctx.assetClassPct('JH_BALANCED', 'bond'))}%`) // 33.86 → 34
+    expect(subs[1]).toBe(`約 ${pct0(ctx.assetClassPct('JH_BALANCED', 'bond'))}%・其他約 ${pct0(100 - ctx.assetClassPct('JH_BALANCED', 'stock') - ctx.assetClassPct('JH_BALANCED', 'bond'))}%`) // 33.86 → 34；mid-r2：剩下的也寫出來
+    expect(subs[1]).toBe('約 34%・其他約 2%') // 100 − 64.08 − 33.86 = 2.06
     for (const t of [...subs, stripMarkup(lineOf(f2, ctx))]) expect(t).not.toContain('美股')
   })
 
@@ -549,9 +558,9 @@ describe('jargon diet (user test r1)', () => {
     // 副標的百分比從資料加總：股票約 32%、借據約 62%
     expect((f4.callouts ?? []).map((c) => resolve(c.sub))).toEqual([
       `約 ${pct0(ctx.assetClassPct('ALLIANZ_INCOME_GROWTH', 'stock'))}%`,
-      `約 ${pct0(ctx.assetClassPct('ALLIANZ_INCOME_GROWTH', 'bond'))}%`,
+      `約 ${pct0(ctx.assetClassPct('ALLIANZ_INCOME_GROWTH', 'bond'))}%・其他約 ${pct0(100 - ctx.assetClassPct('ALLIANZ_INCOME_GROWTH', 'stock') - ctx.assetClassPct('ALLIANZ_INCOME_GROWTH', 'bond'))}%`,
     ])
-    expect((f4.callouts ?? []).map((c) => resolve(c.sub))).toEqual(['約 32%', '約 62%'])
+    expect((f4.callouts ?? []).map((c) => resolve(c.sub))).toEqual(['約 32%', '約 62%・其他約 6%'])
     // 細節留在多說一點
     expect(moreOf(f4, ctx)).toContain('可轉債')
     expect(moreOf(f4, ctx)).toContain('高收益債')
@@ -583,16 +592,19 @@ describe('jargon diet (user test r1)', () => {
     expect(f6.scene.stage).toEqual({ kind: 'feeRace', etf: false })
     expect(f6.scene.values?.years).toBe(0)
     expect(f6.until).toEqual({ control: 'years', min: 3 }) // 出門費滿 3 年歸零
-    const line = stripMarkup(lineOf(f6, ctx))
-    for (const w of ['前收', '進門', '後收', '出門']) expect(line, w).toContain(w)
+    // mid-r2：一個問題——現在賣，兩種收費總共扣多少
+    expect(stripMarkup(lineOf(f6, ctx))).toBe('拖持有年數。看兩種收費總共扣多少')
     expect(stripMarkup(resolve(f6.fallbackLine)!)).not.toMatch(/^拖/) // 文字版沒有拉桿
-    // 大數字＝後收「現在賣」要付的出門費，100 萬為底、單位萬（跟 3D 的出門費標籤同一個數字）
-    expect(bigOf(f6, { years: 0 })).toMatchObject({ value: '3 萬', colorKey: 'loss', fraction: 1 }) // 100 × 3%
-    expect(bigOf(f6, { years: 1 })!.value).toBe('2 萬') // 賣前 97.911 × 2% = 1.958
-    expect(bigOf(f6, { years: 2 })!.value).toBe('1 萬') // 賣前 95.866 × 1% = 0.959
-    expect(bigOf(f6, { years: 3 })).toMatchObject({ value: '0 萬', fraction: 0 })
-    for (let y = 0; y <= 10; y += 0.5) expect(bigOf(f6, { years: y })!.value, `year ${y}`).toBe(wan(ctx.fundFeeRows(y, DEFAULT_VALUES.frontLoad)[1]!.exit))
-    expect(bigOf(f6)!.label).not.toMatch(/0%|免費/)
+    // 大數字＝前收、後收各總共扣了多少（100 萬為底、單位萬；＝ 100 − 塔的價值）
+    expect(bigOf(f6, { years: 0 })).toMatchObject({ value: '1.5 vs 3 萬', label: '現在賣：前收 vs 後收', colorKey: 'loss' }) // 進門 1.5%；出門 3%
+    expect(bigOf(f6, { years: 10 })!.value).toBe('14.3 vs 15.6 萬') // 100 − 85.72；100 − 84.44
+    for (let y = 0; y <= 10; y += 0.5) {
+      const [front, back] = ctx.fundFeeRows(y, DEFAULT_VALUES.frontLoad)
+      expect(bigOf(f6, { years: y })!.value, `year ${y}`).toBe(`${Number(front!.lost.toFixed(1))} vs ${wan(back!.lost)}`)
+    }
+    // 為什麼後收一直多一點：前 3 年每年多扣 1% 分銷費（資料算出來），而且要看各檔費用
+    expect(bigOf(f6)!.note).toBe('只算費用，沒算漲跌。後收前 3 年每年多扣 1%（看各檔費用）')
+    expect(moreOf(f6, ctx)).toContain('誰比較省要看各檔的費用')
     // 多說一點的數字從資料算：出門費 cdsc[0] = 3%、滿 3 年歸零；前收手續費是預設的假設值 1.5%
     expect(moreOf(f6, ctx)).toContain('出門費 3%')
     expect(moreOf(f6, ctx)).toContain('滿 3 年不收')
@@ -701,5 +713,218 @@ describe('初階 user test r5', () => {
     for (const s of steps) for (const t of [s.title, lineOf(s, ctx), moreOf(s, ctx), resolve(s.fallbackLine), resolve(s.fallbackMore), ...(s.recap ?? []).map((r) => r.text)]) {
       if (t !== undefined) expect(t.includes('滴'), `${s.id}: ${t}`).toBe(false)
     }
+  })
+})
+
+describe('Plan 7 中階: 最大跌幅 (s-dd)', () => {
+  const s = () => byId('s-dd')
+  it('drag the timeline to the trough: the quake turns on there, the gate is the same point, and the pit depth is the max drawdown', () => {
+    const d = maxDrawdown(DD_DEMO.path)
+    expect(s().until).toEqual({ control: 'tick', min: d.troughIndex })
+    expect(s().scene.eventWhen).toEqual(s().until)
+    expect(s().scene.event).toEqual({ kind: 'quake', depth: d.pct, at: [ddBarX(d.troughIndex), DD_LAYOUT.pitZ], width: DD_LAYOUT.pitWidth })
+    expect(controlRange(s(), 'tick')).toEqual([0, DD_DEMO.path.length - 1])
+    expect(s().scene.values?.tick).toBe(0)
+    expect(stripMarkup(lineOf(s(), ctx)).startsWith('拖')).toBe(true)
+  })
+  it('the big number is the biggest drop so far (hidden before any drop) and stays at 40% after the price grows back', () => {
+    expect(bigOf(s(), { tick: 0 })).toBeUndefined()
+    expect(bigOf(s(), { tick: 4 })).toMatchObject({ value: '20%', label: '最多曾經少掉', colorKey: 'loss', mark: 'illustrative' }) // (140 − 112) ÷ 140
+    expect(bigOf(s(), { tick: 5 })!.value).toBe('40%') // (140 − 84) ÷ 140
+    expect(bigOf(s(), { tick: 5 })!.fraction).toBeCloseTo(0.4, 12)
+    expect(bigOf(s(), { tick: 7 })!.value).toBe('40%')
+    expect(moreOf(s(), ctx)).toContain('從 140 跌到 84，少掉 40%')
+    expect(resolve(s().fallbackLine)).toContain('40%')
+  })
+  it('the fallback (text) version shows the readout at the gate', () => {
+    const rows = stageReadout({ kind: 'drawdown' }, { ...DEFAULT_VALUES, tick: 5, slice: 0, explode: 0 }, universe, null)
+    expect(rows.map((r) => r.value)).toEqual(['84', '140', '40.0%', '40.0%'])
+  })
+})
+
+describe('Plan 7 中階: 本益比 (s-pe)', () => {
+  const s = () => byId('s-pe')
+  it('drag the years until the pricey one pays back (60): that is the gate, and the bubble floats then (no pop)', () => {
+    expect(peYears('cheap')).toBe(15) // 600 ÷ 40
+    expect(peYears('pricey')).toBe(60) // 600 ÷ 10
+    expect(s().until).toEqual({ control: 'periods', min: 60 })
+    expect(s().scene.eventWhen).toEqual(s().until)
+    expect(s().scene.event).toMatchObject({ kind: 'bubble', phase: 'float' })
+    expect(controlRange(s(), 'periods')).toEqual([0, 60])
+  })
+  it('big number 15 年 vs 60 年; the more text says a high P/E does not mean it will fall', () => {
+    // mid-r1：答案等拉到 60 年才出現
+    expect(bigOf(s())).toBeUndefined()
+    expect(bigOf(s(), { periods: 59 })).toBeUndefined()
+    expect(bigOf(s(), { periods: 60 })).toMatchObject({ value: '15 年 vs 60 年', label: '幾年賺回股價', mark: 'illustrative' })
+    expect(bigOf(s(), { periods: 60 })!.note).toContain('600')
+    expect(moreOf(s(), ctx)).toContain('本益比＝股價÷每股盈餘')
+    expect(moreOf(s(), ctx)).toContain('不代表一定會跌')
+    expect(moreOf(s(), ctx)).toContain('假設每年賺的錢不變') // 年數的前提
+    expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('15 年和 60 年才賺回股價')
+    // 每年賺的錢是公司的獲利（不一定發給你）：不叫金幣、配息
+    for (const t of [lineOf(s(), ctx), moreOf(s(), ctx)]) for (const w of ['金幣', '配息']) expect(t).not.toContain(w)
+  })
+})
+
+describe('Plan 7 中階: 利率翹翹板 (b-rate)', () => {
+  const s = () => byId('b-rate')
+  it('drag the market rate from 2% to 5%: the gate and the freeze are both at 5%, the top of the range', () => {
+    expect(controlRange(s(), 'rate')).toEqual([0.02, 0.05])
+    expect(s().scene.values?.rate).toBe(0.02)
+    expect(s().until).toEqual({ control: 'rate', min: 0.05 })
+    expect(s().scene.eventWhen).toEqual(s().until)
+    expect(s().scene.event).toMatchObject({ kind: 'freeze' })
+  })
+  it('the big number follows the slider: 100 at 2%, about 77 at 5% (2 × annuity(5%, 10) + 100 ÷ 1.05^10 = 76.83)', () => {
+    expect(bigOf(s(), { rate: 0.02 })!.value).toBe('約 100 元')
+    expect(bigOf(s(), { rate: 0.05 })!.value).toBe(`約 ${(2 * ((1 - 1.05 ** -10) / 0.05) + 100 / 1.05 ** 10).toFixed(0)} 元`)
+    expect(bigOf(s(), { rate: 0.05 })!.value).toBe('約 77 元')
+    expect(bigOf(s())!.note).toBe('借的人沒出問題，到期拿回 100 元。中途要賣，價格才會比較低') // mid-r2：那為什麼要怕
+    expect(stripMarkup(lineOf(s(), ctx))).toBe('拖市場利率。新借據利息多，舊借據就跌') // 先原因、後結果
+  })
+  it('talks about the price of an existing bond, which goes back to 100 at maturity', () => {
+    const more = moreOf(s(), ctx)
+    expect(more).toContain('舊借據')
+    expect(more).toContain('借的人沒出問題，到期拿回 100 元')
+    expect(T.seesaw.maturity).toContain('借的人沒出問題') // 3D 標註也一樣（三個地方）
+    expect(more).toContain('10 年')
+    expect(more).toContain('2%')
+    expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('利率到 5%，舊借據約 77 元')
+  })
+})
+
+describe('Plan 7 中階: 定期定額 (e-dca)', () => {
+  const s = () => byId('e-dca')
+  it('drag the months 1→12 (gate at 12); the weather is a sunnyTree event with a sun that stays on screen', () => {
+    expect(controlRange(s(), 'months')).toEqual([1, 12])
+    expect(s().until).toEqual({ control: 'months', min: 12 })
+    expect(s().scene.event).toMatchObject({ kind: 'sunnyTree' })
+    expect(s().scene.eventWhen).toBeUndefined()
+  })
+  it('big number = average cost (total ÷ units), with the average price as the note; cost ≤ price', () => {
+    const units = [50, 45, 40, 32, 25, 30, 36, 40, 45, 48, 50, 50].reduce((n, p) => n + 3000 / p, 0) // 922.92
+    expect(bigOf(s(), { months: 12 })).toEqual({ value: `${(36000 / units).toFixed(1)} 元`, label: '平均成本', note: '平均價格 40.9 元', mark: 'illustrative' })
+    expect(bigOf(s(), { months: 12 })!.value).toBe('39.0 元')
+    expect(bigOf(s(), { months: 1 })).toMatchObject({ value: '50.0 元', note: '平均價格 50.0 元' }) // 第一個月：一樣
+    for (let m = 1; m <= 12; m++) {
+      const b = bigOf(s(), { months: m })!
+      expect(parseFloat(b.value), `month ${m}`).toBeLessThanOrEqual(parseFloat(b.note!.replace('平均價格 ', '')))
+    }
+  })
+  it('says it does not guarantee a profit; it only averages the cost', () => {
+    expect(moreOf(s(), ctx)).toContain('只是讓成本平均')
+    expect(moreOf(s(), ctx)).toContain('這是算術，只是讓成本平均，不一定比一次買完好') // 成本 ≤ 平均價格是算術，不是贏過一次買完
+    expect(moreOf(s(), ctx)).toContain('不保證賺錢，價格一路跌，一樣會賠')
+    expect(moreOf(s(), ctx)).toContain('平均成本 39.0 元，比平均價格 40.9 元低')
+  })
+})
+
+describe('Plan 7 中階: 通膨 (b-infl)', () => {
+  const s = () => byId('b-infl')
+  it('no drag: the heatwave plays when the camera stops and melts the coins by the part inflation eats', () => {
+    expect(s().until).toBeUndefined()
+    expect(s().scene.event).toMatchObject({ kind: 'heatwave' })
+    expect((s().scene.event as { melt: number }).melt).toBeCloseTo(1 - (1.05 / 1.03 - 1) / 0.05, 12)
+  })
+  it('big number ≈ 2%: 1.05 ÷ 1.03 − 1 = 1.94%, and the more text gives the approximation 利息 − 通膨', () => {
+    expect(1.05 / 1.03 - 1).toBeCloseTo(0.0194, 4)
+    expect(bigOf(s())).toEqual({ value: '約 2%', label: '扣掉通膨，真正賺到', note: '利息 5%・通膨 3%', colorKey: 'coin', mark: 'illustrative' })
+    expect(moreOf(s(), ctx)).toContain('真正賺到 ≈ 利息 − 通膨')
+    expect(moreOf(s(), ctx)).toContain('利息 5%，通膨 3%，真正賺到約 2%')
+  })
+})
+
+describe('m-fin recap covers the Plan 7 ideas (Tasks 2–4 review)', () => {
+  it('names 最大跌幅, 本益比, 利率 with 舊借據, 通膨 and 定期定額, in the same words the steps use', () => {
+    const text = byId('m-fin').recap!.map((r) => r.text).join('')
+    for (const w of ['最大跌幅', '本益比', '利率', '舊借據現價', '通膨', '定期定額', '讓成本平均', 'ETF 看重疊']) expect(text, w).toContain(w)
+    // 同一個詞＝步驟標題或一句話裡用的詞
+    for (const [id, w] of [['s-dd', '最大跌幅'], ['s-pe', '本益比'], ['b-rate', '舊借據'], ['b-infl', '通膨'], ['e-dca', '定期定額']] as const) {
+      expect([byId(id).title, stripMarkup(lineOf(byId(id), ctx))].join(''), `${id}: ${w}`).toContain(w)
+    }
+  })
+})
+
+describe('e-dca readout formats 元 through strings.ts (whole-branch review)', () => {
+  it('average cost and price use T.yuan1', () => {
+    const rows = stageReadout({ kind: 'dca' }, { ...DEFAULT_VALUES, months: 12, slice: 0, explode: 0 }, universe, null)
+    expect(rows.map((r) => r.value)).toEqual(['3,000 元', '922.9', '39.0 元', '40.9 元'])
+    expect(T.yuan1(39.03)).toBe('39.0 元')
+  })
+})
+
+describe('mid-r1: comparisons never read as advice', () => {
+  /** 兩種以上的商品或做法並排的舞台 */
+  const sideBySide = (s: Step): boolean => {
+    const st = s.scene.stage
+    if (!st) return false
+    if (st.kind === 'held') return st.items.length >= 2
+    if (st.kind === 'underground') return (st.cores ?? []).length >= 2
+    return ['bonds', 'feeRace', 'accumulate', 'overlap', 'shock', 'pe'].includes(st.kind)
+  }
+
+  it('the compare note sits only where a side-by-side outcome could be read as a pick (mid-r2: on 15 steps it became wallpaper)', () => {
+    const flagged = steps.filter((s) => s.compare).map((s) => s.id).sort()
+    expect(flagged).toEqual(['c-3', 'e-dca', 'f-6', 'f-8', 's-pe'])
+    for (const id of flagged) if (id !== 'e-dca') expect(sideBySide(byId(id)), id).toBe(true)
+    expect(T.compareNote).toBe('只是比較，不是叫你買或賣')
+    expect(forbiddenWordsIn(T.compareNote)).toEqual([])
+  })
+
+  it('f-8 shows what the gap is (coins that keep growing), computed and hidden before the drag', () => {
+    const f8 = byId('f-8')
+    expect(bigOf(f8, { periods: 0 })).toBeUndefined()
+    const r = accumulateVsPayout(20)
+    expect(r.payout.total).toBeCloseTo(r.payout.value + r.payout.cashReceived, 9)
+    // mid-r2：大數字＝差多少（金幣再滾出來的），不是「誰比較多」：387.0 − (180.6 + 107.5) = 98.9
+    expect(bigOf(f8, { periods: 20 })).toEqual({ value: wan(r.accumulate.value - r.payout.total), label: '差別＝金幣再滾出來的', note: '配息型：金幣能先用；累積型：讓它繼續滾', colorKey: 'coin', mark: 'illustrative' })
+    expect(bigOf(f8, { periods: 20 })!.value).toBe('98.9 萬')
+    expect(stripMarkup(lineOf(f8, ctx))).toBe('拖經過年數。差別：金幣有沒有繼續滾')
+    expect(moreOf(f8, ctx)).toContain('發的那一刻總數不變') // 和 s-5 接起來
+    expect(moreOf(f8, ctx)).toContain('能拿去用')
+  })
+
+  it('f-6 says on screen that it only counts fees, not market moves', () => {
+    expect(bigOf(byId('f-6'))!.note).toContain('只算費用，沒算漲跌')
+    expect(T.towers.feesOnly).toBe('只算費用，沒算漲跌')
+  })
+
+  it('s-dd answers "is 40% a lot?" honestly on the card, and its line no longer reads 最多少掉多少', () => {
+    expect(bigOf(byId('s-dd'), { tick: 5 })!.note).toBe('股票常見；跌完不一定很快長回來')
+    expect(stripMarkup(lineOf(byId('s-dd'), ctx))).toBe('拖時間軸。找出跌最深那次')
+  })
+})
+
+describe('mid-r1: the background city steps back on 中階 teaching steps', () => {
+  it('every 中階 step with a plaza stage or an exchange product dims the city; city-subject steps do not', () => {
+    const mid = new Set(courseSteps(COURSES.find((c) => c.id === 'intermediate')!).map((s) => s.id))
+    for (const s of steps) {
+      if (!mid.has(s.id)) continue
+      const prop = (s.scene.stage && ON_PLAZA.has(s.scene.stage.kind)) || !!s.scene.product
+      expect(!!s.scene.cityDim, s.id).toBe(prop)
+    }
+    for (const id of ['f-2', 'f-3', 'f-4', 'f-8', 'e-4', 'c-3']) expect(byId(id).scene.cityDim, id).toBe(true)
+  })
+})
+
+describe('mid-r2: s-pe says 比較貴, never 泡沫', () => {
+  it('the bubble label is plain and the profit stacks say whose profit they are', () => {
+    expect(T.pe.bubble).toBe('比較貴')
+    expect(T.pe.bubbleSub).toBe('不代表一定會跌')
+    expect(T.pe.years(15)).toBe('15 年的獲利')
+    expect(T.pe.sub(600, 40)).toContain('公司每年賺')
+    for (const t of [T.pe.bubble, T.pe.bubbleSub, lineOf(byId('s-pe'), ctx), moreOf(byId('s-pe'), ctx)]) expect(t).not.toContain('泡沫')
+    expect(byId('s-pe').scene.event).toMatchObject({ kind: 'bubble', phase: 'float' }) // 不破
+  })
+})
+
+describe('mid-r2: 總報酬 is named where it is taught (s-6), before the m-fin recap uses it', () => {
+  it('s-6 big-number label uses the exact term', () => {
+    expect(bigOf(byId('s-6'))!.label).toBe('總報酬（方塊＋金幣）變少')
+    expect(byId('m-fin').recap!.some((r) => r.text.includes('總報酬'))).toBe(true)
+    const ids = courseSteps(COURSES.find((c) => c.id === 'intermediate')!).map((s) => s.id)
+    const first = ids.find((id) => { const s = byId(id); return [s.title, stripMarkup(lineOf(s, ctx)), bigOf(s)?.label ?? ''].some((t) => t.includes('總報酬')) })
+    expect(first).toBe('s-6')
   })
 })

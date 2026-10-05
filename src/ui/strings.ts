@@ -36,6 +36,10 @@ export const T = {
     /** 文字版選階的群組名 */
     pickLabel: '選擇課程',
   },
+  /** 比較步驟的提醒（mid-r1：比較結果一面倒，被讀成投資建議） */
+  compareNote: '只是比較，不是叫你買或賣',
+  /** 課內的第幾步（mid-r1：章的編號在同一章裡不動，她以為按壞了） */
+  stepCount: (i: number, n: number) => `第 ${i} / ${n} 步`,
   chapterCounter: (i: number, n: number) => `${String(i).padStart(2, '0')} / ${String(n - 1).padStart(2, '0')}`,
   shock: { stock: '只買台積電', withLegend: (name: string) => `${name}・紅色＝假設跌掉的部分`, struck: '假設：台積電被打中' },
   overlapLabel: (name: string) => `${name}：兩盒都有`,
@@ -94,9 +98,20 @@ export const T = {
     phaseValue: (v: number) => (v < 0.5 ? '發金幣前' : v < 0.55 ? '發金幣那一刻' : '過了一陣子'),
     frontLoad: '假設的前收手續費',
     frontLoadValue: (v: number) => `${(v * 100).toFixed(2)}%`,
+    /** s-dd：價格路徑走到第幾年（0＝一開始） */
+    tick: '時間軸',
+    tickValue: (v: number) => (v === 0 ? '一開始' : `第 ${v} 年`),
+    /** b-rate：現在的市場利率 */
+    rate: '市場利率',
+    rateValue: (v: number) => `${Number((v * 100).toFixed(1))}%`,
+    /** e-dca：定期定額買了幾個月 */
+    months: '經過月數',
+    monthsValue: (v: number) => `${v} 個月`,
   },
   stage: {
     held: '你手上的方塊',
+    /** s-4：殘影分得多開（示意） */
+    shake: { small: '晃得小', big: '晃得大' },
     bonds: { stock: '股票方塊', gov: '國家債', corp: '公司債', hy: '高收益債' },
     bondRanks: { gov: '最穩・利息少', corp: '中間', hy: '不穩・利息多' },
     /** 借給誰（r5：初階沒有 b-2，三個名字一次出現卻沒說借給誰） */
@@ -107,10 +122,54 @@ export const T = {
     storm: '經濟風暴',
     exdiv: { block: '方塊', coins: '金幣', lost: (v: number) => `少了 ${v}` },
   },
+  /** s-dd 最大跌幅的 3D 標註 */
+  dd: {
+    peak: (price: number) => `最高 ${price}`,
+    drop: (pct: string) => `現在比最高少 ${pct}`,
+    pit: (pct: string) => `坑深＝最多少掉 ${pct}`,
+  },
+  /** s-pe 本益比的 3D 標註：每疊旁邊寫疊了幾年、股價與每年賺多少 */
+  pe: {
+    /** 綠色薄片＝公司每年賺的錢（mid-r2：綠色疊疊樂沒標、「每年賺」不知道誰賺） */
+    years: (n: number) => `${n} 年的獲利`,
+    sub: (price: number, earn: number) => `股價 ${price}・公司每年賺 ${earn}`,
+    /** 泡泡的意思：只說比較貴（mid-r2：「泡泡」被讀成「泡沫，會破」）；不說會跌 */
+    bubble: '比較貴',
+    bubbleSub: '不代表一定會跌',
+  },
+  /** b-rate 利率翹翹板的 3D 標註 */
+  seesaw: {
+    rate: (v: string) => `市場利率 ${v}`,
+    bond: (price: number) => `舊借據 約 ${price} 元`,
+    maturity: '借的人沒出問題，到期拿回 100',
+    /** 寒流（結霜）的意思（mid-r1：借據變白不知道是什麼） */
+    cold: '寒流＝利率漲，舊借據變便宜',
+    /** 市場利率是什麼（mid-r2：先講原因） */
+    rateIs: '＝新借據給的利息',
+  },
+  /** e-dca 定期定額的 3D 標註 */
+  dca: {
+    /** 最高那根小堆（mid-r2：「越高＝越便宜」反直覺，直接寫在上面） */
+    cheap: '便宜的月份買到比較多',
+    cheapSub: (price: number) => `${price} 元那個月`,
+    piles: '粗柱＝那個月買到的單位',
+    prices: '細線＝那個月的價格',
+    tower: (months: number) => `買了 ${months} 個月`,
+    cost: (v: string) => `平均成本 ${v} 元`,
+  },
+  /** b-infl 通膨的 3D 標註 */
+  infl: {
+    bond: (pct: string) => `借據：利息 ${pct}`,
+    coins: (pct: string) => `利息 ${pct}`,
+    real: (pct: string) => `真正賺到約 ${pct}`,
+    eaten: (pct: string) => `通膨 ${pct} 融掉了`,
+  },
   /** 基金那一章的錢：投入 100＝100 萬（和計費表同一個底），一位小數、去掉「.0」 */
   wan,
   /** 元（四捨五入、千分位）：18800 → '18,800 元'（r5：有感的錢，像計費表的「已磨掉約 39,073 元」） */
   yuan: (v: number): string => `${Math.round(v).toLocaleString('zh-TW')} 元`,
+  /** 元（一位小數）：39.03 → '39.0 元'（定期定額的平均成本、平均價格） */
+  yuan1: (v: number): string => `${v.toFixed(1)} 元`,
   /** 大數字、3D 跌幅標籤用字說漲跌（負號太細，r3 看成正的） */
   move: { down: '跌', up: '漲' },
   towers: {
@@ -125,6 +184,8 @@ export const T = {
     held: '每年費用（一直在扣）',
     base: '假設投入 100 萬',
     baseDemo: '假設投入 100 萬（舉例的數字）',
+    /** f-6：只算費用（mid-r1：85.7 萬被讀成基金會虧） */
+    feesOnly: '只算費用，沒算漲跌',
     value: (v: number) => wan(v),
   },
   feeRaceCaveat: '三者投資內容與風險不同，費用低不代表比較好',
@@ -138,6 +199,8 @@ export const T = {
     etf: 'ETF（0050）',
   },
   accumulateRows: { accumulate: '累積型', payout: '配息型' },
+  /** f-8 塔的副標：講機制，不講好壞（mid-r2） */
+  accumulateSubs: { accumulate: '金幣滾回塔裡', payout: '金幣在你手上' },
   trapRow: '高配息基金',
   excavator: '經理人（怪手）',
   excavatorOther: '另一位經理人（怪手）',
@@ -169,6 +232,22 @@ export const T = {
     atLeast: '（至少）',
     overlapNote: '其餘持股沒有列出，實際重疊更多',
     unverifiedParts: (parts: string) => `資料待更新：${parts}`,
+    ddPrice: '現在的價格',
+    ddPeak: '到目前的最高價',
+    ddDrop: '現在比最高少',
+    ddWorst: '最多曾經少掉',
+    pePrice: '兩棟的股價',
+    rateNow: '現在的市場利率',
+    ratePrice: '舊借據現在值',
+    rateFace: '到期拿回',
+    dcaAmount: '每月投入',
+    inflNominal: '利息',
+    inflInflation: '通膨',
+    inflReal: '真正賺到（約）',
+    dcaUnits: '累積的單位',
+    dcaCost: '平均成本',
+    dcaPrice: '平均價格',
+    peYears: (earn: number) => `每年賺 ${earn}：幾年賺回`,
   },
   feeParts: { expenseRatio: '內扣費用', distributionFee: '分銷費', cdsc: '遞延手續費', trading: '交易成本' },
   qualityNotice: '畫面有點卡，已自動切換成省電畫質。',
@@ -177,6 +256,8 @@ export const T = {
   underground: {
     goldVein: '黃金礦脈',
     unclassifiedStub: (pct: number) => `其他 ${pct.toFixed(0)}%`,
+    /** 地底各層合計（mid-r2：63＋31 不是 100） */
+    classified: (pct: number) => `各產業層合計 ${pct.toFixed(0)}%`,
     dig: '產業型 ETF',
     veins: '高股息型 ETF',
   },

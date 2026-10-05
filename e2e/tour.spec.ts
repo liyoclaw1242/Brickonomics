@@ -9,10 +9,13 @@ const CONTROL_LABEL: Record<string, string> = {
   periods: '經過年數',
   phase: '時間軸',
   frontLoad: '假設的前收手續費',
+  tick: '時間軸',
+  rate: '市場利率',
+  months: '經過月數',
 }
 
 test('walks the whole 中階 course by clicking 下一步 and unlocks the sandbox', async ({ page }) => {
-  test.setTimeout(300_000) // 軟體渲染約 1fps，整門課 20 步要一分鐘左右（初階由下面的第一次來測試走完）
+  test.setTimeout(300_000) // 軟體渲染約 1fps，整門課 23 步要一分鐘左右（初階由下面的第一次來測試走完）
   const errors: string[] = []
   page.on('pageerror', (e) => errors.push(String(e)))
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
@@ -24,9 +27,15 @@ test('walks the whole 中階 course by clicking 下一步 and unlocks the sandbo
   const gates = await page.evaluate(() => (window as unknown as { __BCI_STEP_GATES__: { id: string; control: string; min: number }[] }).__BCI_STEP_GATES__)
   const GATES = new Map(gates.map((g) => [g.id, g]))
   expect(GATES.size).toBeGreaterThan(0)
+  // Plan 7 的新門檻（拖到谷底、數滿 60 年、利率拉到 5%、買滿 12 個月）都在這條路上
+  for (const id of ['s-dd', 's-pe', 'b-rate', 'e-dca']) {
+    expect(ids, id).toContain(id)
+    expect(GATES.has(id), id).toBe(true)
+  }
   let before = 0
-  for (const id of ids) {
+  for (const [i, id] of ids.entries()) {
     await settled(page, before)
+    await expect(page.locator('.step-counter')).toContainText(`第 ${i + 1} / ${ids.length} 步`) // mid-r1：課內步數每一步都會動
     const gate = GATES.get(id)
     if (gate) {
       await expect(next).toBeDisabled()
@@ -95,7 +104,7 @@ test('first visit: choose 初階, walk its steps to 自由玩, timeline shows th
   // 開場卡：可上的課各一顆大按鈕（高階還沒開放）；還沒選之前沒有時間軸、也沒有下一步
   const beginnerBtn = page.getByRole('button', { name: /初階.*17 步/ })
   await expect(beginnerBtn).toBeVisible()
-  await expect(page.getByRole('button', { name: /中階.*20 步/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /中階.*23 步/ })).toBeVisible()
   await expect(page.getByRole('button', { name: /高階/ })).toHaveCount(0)
   await expect(page.getByRole('navigation', { name: '章節' })).toHaveCount(0)
   await expect(page.getByRole('button', { name: /下一步/ })).toHaveCount(0)

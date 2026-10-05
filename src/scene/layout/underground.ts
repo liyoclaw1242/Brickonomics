@@ -53,6 +53,11 @@ export function coreDiscs(rows: Row[]): { sector: Sector; top: number; bottom: n
   })
 }
 
+/** 落在各產業層的合計（＝100 − 未細分）：「其他」的標註一起寫出來，加起來看得到 100（mid-r2） */
+export function classifiedPct(rows: Row[]): number {
+  return rows.filter((r) => r.sector !== 'unclassified').reduce((s, r) => s + r.weightPct, 0)
+}
+
 /** 「未細分」不屬於任何一層，畫在地面上方：高度與比例成正比，100% 時為 STUB_MAX_HEIGHT */
 export function unclassifiedStub(rows: Row[]): { weightPct: number; height: number } {
   const w = Math.min(100, Math.max(0, rows.find((r) => r.sector === 'unclassified')?.weightPct ?? 0))

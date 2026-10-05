@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { Color } from 'three'
 import { THEMES } from '../theme'
-import { groupTone, toneColor, toneProgress } from './tone'
+import { CITY_FADE, fadedColor, groupTone, toneColor, toneProgress } from './tone'
 
 const base = { focus: [] as number[], picked: null, explode: 0 }
 
@@ -50,5 +50,23 @@ describe('toneProgress', () => {
     expect(toneProgress(0)).toBe(0)
     expect(toneProgress(0.2)).toBe(0.5)
     expect(toneProgress(1)).toBe(1)
+  })
+})
+
+describe('fadedColor (background city on teaching steps, mid-r1)', () => {
+  it('is closer to the background (sea) than the muted colour, in both themes', () => {
+    const dist = (a: string, b: string) => {
+      const x = new Color(a)
+      const y = new Color(b)
+      return Math.hypot(x.r - y.r, x.g - y.g, x.b - y.b)
+    }
+    for (const th of Object.values(THEMES)) {
+      for (const hex of ['#4f7cff', '#ff8a3d', '#2bb3a3']) {
+        const muted = toneColor(hex, 'muted', th)
+        const faded = fadedColor(hex, th)
+        expect(dist(faded, th.sea)).toBeLessThan(dist(muted, th.sea))
+        expect(dist(faded, th.sea)).toBeCloseTo(dist(muted, th.sea) * (1 - CITY_FADE), 1)
+      }
+    }
   })
 })

@@ -31,6 +31,9 @@ export const VALUE_RANGES: Record<ValueKey, [number, number]> = {
   periods: DEFAULT_RANGES.periods,
   phase: DEFAULT_RANGES.phase,
   frontLoad: DEFAULT_RANGES.frontLoad,
+  tick: DEFAULT_RANGES.tick,
+  rate: DEFAULT_RANGES.rate,
+  months: DEFAULT_RANGES.months,
 }
 
 type TourState = {

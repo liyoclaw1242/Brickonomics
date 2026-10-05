@@ -24,6 +24,19 @@ export function toneColor(hex: string, tone: Tone, theme: Theme): string {
   return `#${c.getHexString()}`
 }
 
+/** 背景城市往背景色（海）混多少（cityDim 的教學步驟） */
+export const CITY_FADE = 0.6
+
+/**
+ * 背景城市（cityDim）：先照 muted 降飽和，再往背景色（主題的海）混 CITY_FADE，
+ * 教具在前面才跳得出來（mid-r1：f-2、f-3、f-4、f-8、e-4、c-3 的教具和後面的大樓擠在一起）
+ */
+export function fadedColor(hex: string, theme: Theme): string {
+  const c = new Color(toneColor(hex, 'muted', theme))
+  c.lerp(new Color(theme.sea), CITY_FADE)
+  return `#${c.getHexString()}`
+}
+
 export const TONE_FADE_SEC = 0.4
 /** 0→1 的漸變進度，smoothstep。 */
 export function toneProgress(elapsedSec: number): number {

@@ -10,7 +10,12 @@ import { T } from '../ui/strings'
 import { NameLabel } from './NameLabel'
 import { displayName } from '../ui/names'
 import { lookFor } from './palette'
-import { toneColor } from './layout/tone'
+import { fadedColor, toneColor } from './layout/tone'
+import type { Theme } from './theme'
+
+/** 島也往背景色混（不降飽和，島本來就是淡色） */
+const fadedIsland = (hex: string, theme: Theme): string => `#${new Color(hex).lerp(new Color(theme.sea), CITY_FADE_ISLAND).getHexString()}`
+const CITY_FADE_ISLAND = 0.5
 import { VOXEL_SCALE } from './layout/voxels'
 import { THEMES } from './theme'
 import { useLongPress } from './useLongPress'
@@ -70,7 +75,7 @@ const LABEL_LIFT_PER_ROW = 1.6
 const ISLAND_THICKNESS = 0.5
 
 /** 兩座島與大樓；每棟大樓是一根方塊柱，所有大樓共用一個 InstancedMesh */
-export function City({ labels, islandLabels = true, shrink }: { labels: boolean; islandLabels?: boolean; shrink?: Readonly<Record<string, number>> }) {
+export function City({ labels, islandLabels = true, shrink, dim = false }: { labels: boolean; islandLabels?: boolean; shrink?: Readonly<Record<string, number>>; dim?: boolean }) {
   const base = useMemo(() => cityLayout([...universe.values()]), [])
   const placements = useMemo(() => (shrink ? applyShrink(base, shrink, (id) => universe.get(id)?.marketCapUsdB) : base), [base, shrink])
   const voxels = useMemo(() => buildingVoxels(placements), [placements])
@@ -110,14 +115,15 @@ export function City({ labels, islandLabels = true, shrink }: { labels: boolean;
       o.scale.setScalar(VOXEL_SCALE)
       o.updateMatrix()
       mesh.setMatrixAt(i, o.matrix)
-      c.set(toneColor(lookFor(universe.get(v.id)!).color, isActive(v.id) ? 'vivid' : 'muted', THEMES[theme]))
+      const hex = lookFor(universe.get(v.id)!).color
+      c.set(isActive(v.id) ? toneColor(hex, 'vivid', THEMES[theme]) : dim ? fadedColor(hex, THEMES[theme]) : toneColor(hex, 'muted', THEMES[theme]))
       mesh.setColorAt(i, c)
     })
     mesh.instanceMatrix.needsUpdate = true
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
     mesh.computeBoundingSphere()
     invalidate()
-  }, [voxels, pickedId, pickedHolding, anchored, revealed, theme, invalidate])
+  }, [voxels, pickedId, pickedHolding, anchored, revealed, theme, dim, invalidate])
 
   const onClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation()
@@ -172,7 +178,7 @@ export function City({ labels, islandLabels = true, shrink }: { labels: boolean;
           <group key={region}>
             <mesh position={[x, -ISLAND_THICKNESS / 2, z]} receiveShadow>
               <boxGeometry args={[size, ISLAND_THICKNESS, size]} />
-              <meshStandardMaterial color={THEMES[theme].island[region]} />
+              <meshStandardMaterial color={dim ? fadedIsland(THEMES[theme].island[region], THEMES[theme]) : THEMES[theme].island[region]} />
             </mesh>
           </group>
         )

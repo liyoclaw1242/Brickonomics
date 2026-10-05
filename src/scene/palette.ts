@@ -16,8 +16,12 @@ export const SECTOR_COLORS: Record<string, string> = {
 
 const FALLBACK_STOCK = '#90a4ae'
 
-/** 金幣色與損失紅：課文顏色鍵 coin／loss 與 3D 物體共用同一個顏色 */
-export const ACCENT_COLORS = { coin: '#ffd54f', loss: '#e53935' } as const
+/**
+ * 課文顏色鍵與 3D 物體共用的顏色：coin＝金幣、loss＝損失紅；
+ * profit＝公司每年賺的錢（s-pe 的淺綠薄片，不發給你，所以不是金幣）；units＝定期定額每月買到的方塊（e-dca）
+ */
+export const ACCENT_COLORS = { coin: '#ffd54f', loss: '#e53935', profit: '#9ccc65', units: '#2bb3a3' } as const
+const isAccent = (k: string): k is keyof typeof ACCENT_COLORS => Object.hasOwn(ACCENT_COLORS, k)
 
 /** 股票依產業上色；債券用材質表示信用品質（國家債鑽石、公司債金屬、高收益債玻璃）。 */
 export function lookFor(asset: Asset): BlockLook {
@@ -76,7 +80,7 @@ export function productLooks(u: Universe, productId: string): BlockLook[] {
 
 /** 課文顏色鍵 → 顏色：coin／loss、產業 id（SECTOR_COLORS）、或持股／資產 id（lookFor）。未知鍵回傳 undefined。 */
 export function colorForKey(u: Universe, key: string): string | undefined {
-  if (key === 'coin' || key === 'loss') return ACCENT_COLORS[key]
+  if (isAccent(key)) return ACCENT_COLORS[key]
   if (Object.hasOwn(SECTOR_COLORS, key)) return SECTOR_COLORS[key]
   const asset = u.get(key)
   return asset ? lookFor(asset).color : undefined

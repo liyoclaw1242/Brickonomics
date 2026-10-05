@@ -1,4 +1,5 @@
 import type { SandboxPatch } from '../store/sandbox'
+import type { EventSpec } from '../scene/events/types'
 import type { Condition, Control, CourseId, CoursePosition, Level, Position, Progress, SceneDirective, Step, TextContext, TourValues } from './types'
 import { COURSES, courseOfStep, courseSteps } from './courses'
 import { LEVELS } from './levels'
@@ -11,6 +12,9 @@ export const DEFAULT_RANGES: Record<Control, [number, number]> = {
   periods: [0, 20],
   phase: [0, 1],
   frontLoad: [0, 0.03],
+  tick: [0, 10],
+  rate: [0, 0.1],
+  months: [1, 12],
   slice: [0, 1],
   explode: [0, 1],
 }
@@ -66,6 +70,25 @@ export function positionOf(levels: readonly Level[], stepId: string): Position {
 
 export function isSatisfied(c: Condition | undefined, v: TourValues): boolean {
   return !c || v[c.control] >= c.min
+}
+
+/**
+ * 這一步此刻的事件：有 scene.eventWhen 時只在條件成立時才有（拉桿還沒到 → undefined）。
+ * 回傳的永遠是步驟資料裡同一個 spec（參數不跟著拉桿變），事件時鐘才不會因為拖拉桿而重播。
+ */
+export function activeEvent(step: Pick<Step, 'scene'>, v: TourValues): EventSpec | undefined {
+  const e = step.scene.event
+  if (!e) return undefined
+  return isSatisfied(step.scene.eventWhen, v) ? e : undefined
+}
+
+/**
+ * 大數字要等哪個事件才開始數：門檻（eventWhen）觸發的事件不算。
+ * 大數字卡在 delayMs 改變時會從 0 重數；門檻事件出現時卡片早就顯示了，再重數會先閃一下錯的數字（例如 b-rate「約 0 元」）。
+ * 所以只有一進來就發生的事件（沒有 eventWhen）才讓大數字等它。
+ */
+export function numberDelayEvent(step: Pick<Step, 'scene'>, v: TourValues): EventSpec | undefined {
+  return step.scene.eventWhen ? undefined : activeEvent(step, v)
 }
 
 export function sandboxPatchFor(d: SceneDirective): SandboxPatch {

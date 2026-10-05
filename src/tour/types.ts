@@ -28,13 +28,24 @@ export type Stage =
   | { kind: 'ticker' }
   /** 台積電跌 30% 的比較；烏雲與閃電由 scene.event（lightning gather／strike）決定 */
   | { kind: 'shock' }
+  /** s-dd 最大跌幅：一排柱子＝每年的價格，跟著 tick 拉桿長；拖到谷底時地震（scene.event quake＋eventWhen） */
+  | { kind: 'drawdown' }
+  /** s-pe 本益比：兩棟股價一樣的大樓＋每年賺的錢一年一片疊起來（periods 拉桿）；數滿時太貴那棟被泡泡包住（scene.event bubble＋eventWhen） */
+  | { kind: 'pe' }
+  /** b-rate 利率翹翹板：市場利率（rate 拉桿）vs 舊借據價格；拉到 5% 時舊借據結霜（scene.event freeze＋eventWhen） */
+  | { kind: 'seesaw' }
+  /** e-dca 定期定額：每月一小堆（months 拉桿）＋累積的塔像樹一樣長高；天氣是 scene.event sunnyTree */
+  | { kind: 'dca' }
+  /** b-infl 通膨：借據＋一排利息金幣；熱浪讓金幣融化變小（scene.event heatwave） */
+  | { kind: 'inflation' }
   | { kind: 'overlap'; a: string; b: string }
   | { kind: 'underground'; show: 'strata' | 'cores' | 'dig' | 'veins' | 'gold'; cores?: [string, string] }
 
 export type StageKind = Stage['kind']
 
 /** 舞台用的拉桿值（由導覽 store 持有） */
-export type StageValues = { years: number; periods: number; phase: number; frontLoad: number }
+/** tick＝價格路徑上的第幾個點（s-dd）；rate＝市場利率（b-rate）；months＝定期定額買了幾個月（e-dca） */
+export type StageValues = { years: number; periods: number; phase: number; frontLoad: number; tick: number; rate: number; months: number }
 export type ValueKey = keyof StageValues
 export type Control = 'slice' | 'explode' | ValueKey
 /** 要讓「下一步」可按，control 的值必須 ≥ min */
@@ -54,9 +65,16 @@ export type SceneDirective = {
   stage?: Stage
   /** 這一步發生的事件（龍捲風、閃電…；src/scene/events）：鏡頭停下後才發生，舞台讀它的進度 */
   event?: EventSpec
+  /**
+   * 事件只在這個條件成立時發生（例如 s-dd 拖到谷底才地震、b-rate 拖到 5% 才寒流）：不成立時當作沒有事件，成立的那一刻事件從頭播一次。
+   * 事件參數仍然固定（不跟著拉桿變），所以條件成立後再拖拉桿不會重播；見 src/scene/events/index.ts 的規則。
+   */
+  eventWhen?: Condition
   values?: Partial<StageValues>
   /** 城市大樓名稱標籤，預設 true */
   cityLabels?: boolean
+  /** 背景城市淡到接近背景色（教具在廣場或交易所、城市不是主角時；mid-r1） */
+  cityDim?: boolean
 }
 
 /** 課程文字需要的資料查詢；數字一律即時計算，不寫死 */
@@ -74,6 +92,8 @@ export type TextContext = {
   exitFee: (productId: string, years: number) => number
   /** 同一檔基金的前收、後收（投入 100＝100 萬、報酬 0，只比費用）；進門費、出門費另外拆出來 */
   fundFeeRows: (years: number, frontLoad: number) => FeeRaceRow[]
+  /** 每年的分銷費（小數）與收幾年；資料沒有時為 undefined */
+  distributionFee: (productId: string) => { rate: number; years: number } | undefined
 }
 
 /** 大數字卡：value 已格式化；fraction（0–1）畫色條；colorKey 對應物體顏色；note＝標籤下一行白話補充（例如為什麼是「至少」） */
@@ -106,6 +126,11 @@ export type Step = {
   /** 文字版（沒有 3D）專用的多說一點；未填則沿用 more */
   fallbackMore?: LessonText
   mark?: 'illustrative' | 'assumption'
+  /**
+   * 比較步驟（兩種商品／做法並排、或一面倒的數字）：面板一直顯示一行「只是比較，不是叫你買或賣」（T.compareNote），
+   * 不藏在多說一點（mid-r1：她把 387 萬 vs 180 萬讀成「選累積型」）
+   */
+  compare?: boolean
   /** 回傳 undefined 時不顯示大數字（例如資料沒有內扣費用）；values＝導覽目前的拉桿值（跟著拉桿即時變） */
   bigNumber?: (c: TextContext, values: Readonly<StageValues>) => BigNumber | undefined
   focus?: { holdings?: string[] }

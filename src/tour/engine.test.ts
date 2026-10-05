@@ -83,7 +83,7 @@ describe('sandboxPatchFor', () => {
 
 describe('titleOf / lineOf / moreOf', () => {
   it('returns static text or calls the template with the context', () => {
-    const ctx = { weightPct: () => 57.35, shock: () => -0.17, sectorPct: () => 0, expenseRatio: () => 0.002, overlapShared: () => 0.3, exitFee: () => 0, assetClassPct: () => 0, fundFeeRows: () => [] }
+    const ctx = { weightPct: () => 57.35, shock: () => -0.17, sectorPct: () => 0, expenseRatio: () => 0.002, overlapShared: () => 0.3, exitFee: () => 0, assetClassPct: () => 0, fundFeeRows: () => [], distributionFee: () => undefined }
     expect(titleOf(L[0]!.steps[0]!)).toBe('T1')
     expect(lineOf(L[0]!.steps[0]!, ctx)).toBe('x')
     expect(moreOf(L[0]!.steps[0]!, ctx)).toBe('mx')
@@ -167,7 +167,7 @@ describe('course navigation (never crosses into another course)', () => {
     expect(chapterOfIndex('beginner', 0)).toBe(0)
     expect(chapterOfIndex('beginner', B.indexOf('s-1'))).toBe(1)
     expect(chapterOfIndex('beginner', B.indexOf('u-6'))).toBe(5)
-    expect(chapterOfIndex('intermediate', M.indexOf('p-3'))).toBe(0)
+    expect(chapterOfIndex('intermediate', M.indexOf('m-0'))).toBe(0)
     expect(chapterOfIndex('beginner', 99)).toBe(-1)
     expect(firstIndexOfChapter('beginner', 2)).toBe(B.indexOf('b-1'))
     expect(firstIndexOfChapter('intermediate', 5)).toBe(M.indexOf('m-fin'))
@@ -265,7 +265,7 @@ describe('resumeCoursePosition (old saves)', () => {
     expect(p.sandboxUnlocked).toBe(true)
     expect(p.finished).toEqual([])
     expect(p.completed.beginner).toEqual(['prologue', 'stock'])
-    expect(p.completed.intermediate).toEqual(['review', 'stock']) // 複習章的 m-0 是新步驟，看 p-3（序章）
+    expect(p.completed.intermediate).toEqual(['stock']) // 複習章只剩新步驟 m-0（p-3 已刪除），舊存檔推不出它完成
     expect(parseProgress(JSON.stringify({ completed: [], sandboxUnlocked: false })).course).toBeNull()
   })
 })

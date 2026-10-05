@@ -1,4 +1,3 @@
-import { LEVELS } from '../../tour/levels'
 import { displayName } from '../../ui/names'
 import { describe, it, expect } from 'vitest'
 import { universe } from '../../data'
@@ -147,8 +146,8 @@ describe('city names at most 3 per island and never on top of each other (r3: �
 
   it('finds the buildings named in a step line or callouts, even beyond the per-island limit', () => {
     const placements = cityLayout([...universe.values()])
-    const p3 = LEVELS.flatMap((l) => l.steps).find((st) => st.id === 'p-3')!
-    const ids = mentionedBuildings(placements, [p3.line as string], (id) => displayName(universe, id))
+    // （p-3「巨人在美國」已刪除，用它原本的一句話測）
+    const ids = mentionedBuildings(placements, ['**輝達**、**蘋果**、**微軟**都在這'], (id) => displayName(universe, id))
     expect([...ids].sort()).toEqual(expect.arrayContaining(['AAPL', 'MSFT', 'NVDA']))
     const named = labeledBuildings(placements, CITY_LABELS_PER_ISLAND, ids)
     for (const id of ids) expect(named.has(id), id).toBe(true)

@@ -1,8 +1,10 @@
 import type { BigNumber, Level, RecapLine, Step, TextContext } from './types'
 import { movePct, pct0, SHOCK_2330, signedPct, wan } from './context'
 import { DEFAULT_VALUES } from './values'
-import { EXDIV, exDivTimeline, principalTrap, TRAP_DEMO } from '../scene/layout/stages'
+import { accumulateVsPayout, EXDIV, exDivTimeline, principalTrap, TRAP_DEMO } from '../scene/layout/stages'
 import { T } from '../ui/strings'
+import { DD_DEMO, DD_TROUGH, ddNow, ddQuake, PE_DEMO, peBubble, peYears, RATE_DEMO, rateFreeze, ratePrice, DCA_DEMO, dcaNow, dcaSunny, INFL_DEMO, inflHeat, inflReal } from '../scene/layout/intermediate'
+import { maxDrawdown } from '../sim/drawdown'
 
 /**
  * 課程內文。數字一律由 TextContext 即時計算。
@@ -17,6 +19,8 @@ const n0 = (v: number): string => v.toFixed(0)
 /** 0.015 → '1.5%' */
 const pct1 = (r: number): string => `${Number((r * 100).toFixed(2))}%`
 const NICK = T.nick
+/** 股票＋借據以外剩下的（現金等）：標註寫出來，加起來才看得到 100（mid-r2：34＋64＝98，剩下的呢） */
+const restPct = (c: TextContext, productId: string): number => Math.max(0, 100 - c.assetClassPct(productId, 'stock') - c.assetClassPct(productId, 'bond'))
 /** f-6 的後收級別（出門費＝遞延手續費 CDSC） */
 const BACKLOAD = 'SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD'
 /** 持有滿幾年後出門費歸零（從資料找第一個 0） */
@@ -63,14 +67,6 @@ export const LEVELS: Level[] = [
         callouts: [{ anchor: { kind: 'building', id: '2330' }, title: '台積電：最高' }],
         scene: { camera: 'tw', product: null },
       },
-      {
-        id: 'p-3',
-        title: '巨人在美國',
-        line: '**輝達**、**蘋果**、**微軟**都在這',
-        more: '美國大陸有輝達、蘋果、微軟這些巨型公司。接下來一步一步看懂股票、債券、基金和 ETF。',
-        callouts: [{ anchor: { kind: 'building', id: 'NVDA' }, title: '輝達' }],
-        scene: { camera: 'us', product: null },
-      },
     ],
   },
   {
@@ -103,10 +99,11 @@ export const LEVELS: Level[] = [
       {
         id: 's-4',
         title: '有的晃很兇',
-        line: '有些股票晃得**特別兇**',
-        more: '左邊是台積電，右邊是特斯拉。波動＝價格常常上上下下。有些公司晃得特別厲害。晃動幅度是示意，不是真實數字。',
+        // mid-r1：「這跟我有什麼關係？」→ 一句話接到下一步的最大跌幅
+        line: '**晃越兇**，跌起來通常**越深|loss**',
+        more: '左邊是台積電，右邊是特斯拉。晃＝價格常常大漲大跌。晃越兇，下一步的最大跌幅通常越深。晃動幅度是示意，不是真實數字。',
         mark: 'illustrative',
-        scene: {
+        scene: { cityDim: true,
           camera: 'plazaNear',
           product: null,
           stage: { kind: 'held', items: [{ assetId: '2330', motion: 'shake', amplitude: 0.12 }, { assetId: 'TSLA', motion: 'shake', amplitude: 0.45 }] },
@@ -124,7 +121,7 @@ export const LEVELS: Level[] = [
           const e = exDivTimeline(Math.min(v.phase, EXDIV_AFTER_PHASE), 'fill')
           return { value: n0(e.blockValue + e.cash), label: `方塊 ${n0(e.blockValue)}＋金幣 ${n0(e.cash)}`, mark: 'illustrative' }
         },
-        scene: { camera: 'plazaNear', product: null, stage: { kind: 'exdiv', outcome: 'fill' }, values: { phase: 0 } },
+        scene: { cityDim: true, camera: 'plazaNear', product: null, stage: { kind: 'exdiv', outcome: 'fill' }, values: { phase: 0 } },
         controls: ['phase'],
         // 時間軸停在配發那一刻：方塊不會「長回來」，卡片和 3D 標籤永遠一致；要拉到那一刻才能下一步
         ranges: { phase: [0, EXDIV_AFTER_PHASE] },
@@ -143,9 +140,9 @@ export const LEVELS: Level[] = [
         // 不用再拉：一進來就是「過了一陣子」的結果（95 ＋ 5 → 92 ＋ 5）。卡片只放一個數字：少了多少
         bigNumber: (_c, v) => {
           const e = exDivTimeline(Math.max(v.phase, EXDIV_AFTER_PHASE), 'gap')
-          return { value: `少 ${n0(EXDIV.price - (e.blockValue + e.cash))}`, label: '方塊＋金幣，合起來變少', colorKey: 'loss', mark: 'illustrative' }
+          return { value: `少 ${n0(EXDIV.price - (e.blockValue + e.cash))}`, label: '總報酬（方塊＋金幣）變少', colorKey: 'loss', mark: 'illustrative' }
         },
-        scene: { camera: 'plazaNear', product: null, stage: { kind: 'exdiv', outcome: 'gap' }, values: { phase: 1 } },
+        scene: { cityDim: true, camera: 'plazaNear', product: null, stage: { kind: 'exdiv', outcome: 'gap' }, values: { phase: 1 } },
       },
     ],
   },
@@ -168,7 +165,7 @@ export const LEVELS: Level[] = [
         line: '越**穩**的，利息通常**越少**',
         more: '國家債＝借給政府，像鑽石一樣堅固，利息通常最少。公司債＝借給體質好的公司，金屬材質。高收益債＝借給體質弱的公司，玻璃材質。它利息通常較多，也較容易裂（利息快慢是示意）。',
         mark: 'illustrative',
-        scene: { camera: 'plaza', product: null, stage: { kind: 'bonds', ranks: true } },
+        scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'bonds', ranks: true } },
       },
       {
         id: 'b-3',
@@ -202,9 +199,9 @@ export const LEVELS: Level[] = [
         // 錨在最大的兩層，寫的是整類的比例——股票（含最下面幾層大公司）、借據
         callouts: [
           { anchor: { kind: 'holding', holdingId: 'OTHER_US_STOCK' }, title: '股票方塊', sub: (c) => `約 ${pct0(c.assetClassPct('JH_BALANCED', 'stock'))}%・含輝達等`, when: { control: 'explode', min: 0.6 } },
-          { anchor: { kind: 'holding', holdingId: 'BOND_MIXED_US' }, title: '借據', sub: (c) => `約 ${pct0(c.assetClassPct('JH_BALANCED', 'bond'))}%`, when: { control: 'explode', min: 0.6 } },
+          { anchor: { kind: 'holding', holdingId: 'BOND_MIXED_US' }, title: '借據', sub: (c) => `約 ${pct0(c.assetClassPct('JH_BALANCED', 'bond'))}%・其他約 ${pct0(restPct(c, 'JH_BALANCED'))}%`, when: { control: 'explode', min: 0.6 } },
         ],
-        scene: { camera: 'exchangeWide', product: 'JH_BALANCED', stage: { kind: 'excavator', meter: false }, cityLabels: false },
+        scene: { cityDim: true, camera: 'exchangeWide', product: 'JH_BALANCED', stage: { kind: 'excavator', meter: false }, cityLabels: false },
         controls: ['explode'],
         until: { control: 'explode', min: 0.6 },
       },
@@ -218,7 +215,7 @@ export const LEVELS: Level[] = [
           { anchor: { kind: 'holding', holdingId: 'NVDA' }, title: '輝達' },
           { anchor: { kind: 'holding', holdingId: 'US_TREASURY' }, title: '美國公債', sub: '借錢給美國政府' },
         ],
-        scene: { camera: 'exchangeWide', product: 'JH_BALANCED', explode: 1, stage: { kind: 'excavator', meter: false }, cityLabels: false },
+        scene: { cityDim: true, camera: 'exchangeWide', product: 'JH_BALANCED', explode: 1, stage: { kind: 'excavator', meter: false }, cityLabels: false },
       },
       {
         id: 'f-4',
@@ -231,10 +228,10 @@ export const LEVELS: Level[] = [
         focus: { holdings: ['CONVERTIBLE_US', 'US_HIGH_YIELD'] },
         callouts: [
           { anchor: { kind: 'holding', holdingId: 'OTHER_US_STOCK' }, title: '股票', sub: (c) => `約 ${pct0(c.assetClassPct('ALLIANZ_INCOME_GROWTH', 'stock'))}%` },
-          { anchor: { kind: 'holding', holdingId: 'CONVERTIBLE_US' }, title: '借據', sub: (c) => `約 ${pct0(c.assetClassPct('ALLIANZ_INCOME_GROWTH', 'bond'))}%` },
+          { anchor: { kind: 'holding', holdingId: 'CONVERTIBLE_US' }, title: '借據', sub: (c) => `約 ${pct0(c.assetClassPct('ALLIANZ_INCOME_GROWTH', 'bond'))}%・其他約 ${pct0(restPct(c, 'ALLIANZ_INCOME_GROWTH'))}%` },
         ],
         // 另一位經理人：怪手換一個顏色（r3：一模一樣的怪手，他不信是「另一台」）
-        scene: { camera: 'exchangeWide', product: 'ALLIANZ_INCOME_GROWTH', explode: 1, stage: { kind: 'excavator', meter: false, other: true }, cityLabels: false },
+        scene: { cityDim: true, camera: 'exchangeWide', product: 'ALLIANZ_INCOME_GROWTH', explode: 1, stage: { kind: 'excavator', meter: false, other: true }, cityLabels: false },
       },
       {
         id: 'f-5',
@@ -251,26 +248,31 @@ export const LEVELS: Level[] = [
       {
         id: 'f-6',
         title: '進門費、出門費',
-        line: '拖**持有年數**。前收**進門**扣，後收**早出門|loss**才扣',
-        fallbackLine: '前收**進門**先扣；後收**早出門|loss**才扣',
+        // mid-r2：大數字（出門費 3→0 萬）和重點（10 年後剩多少）說的不是同一件事。改成一個問題：現在賣，兩種收費總共扣了多少
+        line: '拖**持有年數**。看兩種收費**總共扣多少|loss**',
+        fallbackLine: '比兩種收費**總共扣多少|loss**',
         more: (c) =>
-          `兩座都是施羅德環球收息債券，只差收費方式。前收型買時先付進門費，這裡假設 ${pct1(DEFAULT_VALUES.frontLoad)}。後收型未滿 1 年賣，出門費 ${n0(c.exitFee(BACKLOAD, 0) * 100)}%，滿 ${exitFreeYears(c)} 年不收。兩座每年都還在扣費用，後收前幾年扣得更多。`,
+          `兩座都是施羅德環球收息債券，只差收費方式。前收型買時先付進門費，這裡假設 ${pct1(DEFAULT_VALUES.frontLoad)}。後收型未滿 1 年賣，出門費 ${n0(c.exitFee(BACKLOAD, 0) * 100)}%，滿 ${exitFreeYears(c)} 年不收。兩座每年都還在扣費用，誰比較省要看各檔的費用。`,
         mark: 'assumption',
-        // 只放兩座基金塔：0050 等到 ETF 那一章才出場。大數字＝後收「現在賣」要付的出門費（和 3D 的出門費標籤同一個數字）
+        // 只放兩座基金塔：0050 等到 ETF 那一章才出場。大數字＝現在賣，前收、後收各總共扣了多少（進門／出門費＋每年費用；和塔的高度同一件事）
         bigNumber: (c, v) => {
           const rows = c.fundFeeRows(v.years, v.frontLoad)
+          const front = rows.find((r) => r.id === 'front')!
           const back = rows.find((r) => r.id === 'back')!
-          const first = c.fundFeeRows(0, v.frontLoad).find((r) => r.id === 'back')!.exit
+          const dist = c.distributionFee(BACKLOAD)
           return {
-            value: wan(back.exit),
-            label: '後收現在賣的出門費',
-            fraction: first > 0 ? back.exit / first : 0,
+            // 單位只寫一次，大數字才放得進一行
+            value: `${Number(front.lost.toFixed(1))} vs ${wan(back.lost)}`,
+            label: '現在賣：前收 vs 後收',
+            // mid-r1：只算費用；mid-r2：這個例子後收一直多扣一點，直接說為什麼（分銷費），而且要看各檔的費用
+            note: dist ? `只算費用，沒算漲跌。後收前 ${dist.years} 年每年多扣 ${pct1(dist.rate)}（看各檔費用）` : '只算費用，沒算漲跌',
             colorKey: 'loss',
             // 金額用到還沒查證的內扣費用（拆項見多說一點的數字表）
-            ...(back.unverified.length > 0 ? { mark: 'unverified' as const } : {}),
+            ...(front.unverified.length + back.unverified.length > 0 ? { mark: 'unverified' as const } : {}),
           }
         },
-        scene: { camera: 'plaza', product: null, stage: { kind: 'feeRace', etf: false }, values: { years: 0 } },
+        compare: true,
+        scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'feeRace', etf: false }, values: { years: 0 } },
         controls: ['years'],
         // 拉到出門費歸零（滿 3 年）才能下一步
         until: { control: 'years', min: 3 },
@@ -278,10 +280,19 @@ export const LEVELS: Level[] = [
       {
         id: 'f-8',
         title: '配息或累積',
-        line: '拖**經過年數**。看**金幣滾回去**的塔',
-        more: '同一檔基金常有兩種級別。配息型把金幣放進你的口袋。累積型把金幣熔回方塊，繼續投資。拖經過年數，看差距怎麼長出來（示意參數）。',
+        // mid-r2：「387 vs 288」被讀成「配息型選錯了」，也和 s-5「總數不變」打架。講真正的差別：金幣有沒有繼續滾
+        line: '拖**經過年數**。差別：金幣有沒有**繼續滾|coin**',
+        more: '同一檔基金常有兩種級別，這是示意參數。配息型的金幣在你手上，能拿去用，但不再長。累積型把金幣熔回方塊，跟著一起長。發的那一刻總數不變，差在之後有沒有繼續滾。',
         mark: 'illustrative',
-        scene: { camera: 'plaza', product: null, stage: { kind: 'accumulate' }, values: { periods: 0 } },
+        // mid-r1：她只看到 387 vs 180。配息型要算「塔＋領到的金幣」才是全部；拉了才出現
+        bigNumber: (_c, v) => {
+          const r = accumulateVsPayout(v.periods)
+          if (v.periods <= 0) return undefined
+          // 差多少＝金幣再滾出來的（累積型 − 配息型的塔＋金幣）；兩種是不同需要的選擇
+          return { value: wan(r.accumulate.value - r.payout.total), label: '差別＝金幣再滾出來的', note: '配息型：金幣能先用；累積型：讓它繼續滾', colorKey: 'coin', mark: 'illustrative' }
+        },
+        compare: true,
+        scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'accumulate' }, values: { periods: 0 } },
         controls: ['periods'],
         until: { control: 'periods', min: 8 },
       },
@@ -362,7 +373,7 @@ export const LEVELS: Level[] = [
         line: 'ETF 像股票，**隨時能買賣**',
         more: 'ETF 開盤時隨時有成交價，可以像股票一樣買賣。一般基金每天收盤後才算出一個價錢，叫淨值。價格跳動是示意。',
         mark: 'illustrative',
-        scene: { camera: 'exchange', product: '0050', stage: { kind: 'ticker' }, cityLabels: false },
+        scene: { cityDim: true, camera: 'exchange', product: '0050', stage: { kind: 'ticker' }, cityLabels: false },
       },
       {
         id: 'e-5',
@@ -423,14 +434,8 @@ export const LEVELS: Level[] = [
           const o = c.overlapShared('QQQ', 'SPY')
           return { value: `至少 ${(o * 100).toFixed(1)}%`, label: '兩盒一樣的部分', fraction: o, note: '只算前幾大公司，實際更多' }
         },
-        scene: { camera: 'plaza', product: null, stage: { kind: 'overlap', a: 'QQQ', b: 'SPY' }, cityLabels: false },
-      },
-      {
-        id: 'c-4',
-        title: '往地底鑽',
-        line: '看看 ETF 還有**哪幾種**',
-        more: '接下來鑽到城市底下。看看 ETF 還分成哪些種類。',
-        scene: { camera: 'overview', product: null },
+        compare: true,
+        scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'overlap', a: 'QQQ', b: 'SPY' }, cityLabels: false },
       },
     ],
   },
@@ -501,6 +506,102 @@ export const LEVELS: Level[] = [
  */
 export const COURSE_STEPS: Step[] = [
   {
+    // 中階股票章（Plan 7）：一排柱子＝每年的價格；拖到谷底時 🌋 地震，坑深＝最大跌幅
+    id: 's-dd',
+    title: '最大跌幅',
+    line: '拖**時間軸**。找出**跌最深|loss**那次',
+    fallbackLine: () => `最多曾經**少掉 ${pct0(maxDrawdown(DD_DEMO.path).pct * 100)}%|loss**`,
+    more: () => {
+      const d = maxDrawdown(DD_DEMO.path)
+      return `最大跌幅＝從最高點往下，最多少掉多少。舉例價格從 ${DD_DEMO.path[d.peakIndex]} 跌到 ${DD_DEMO.path[d.troughIndex]}，少掉 ${pct0(d.pct * 100)}%。地上的坑越深，跌得越多。數字是示意，不代表任何真實股票。`
+    },
+    mark: 'illustrative',
+    // 跟著時間軸：到目前為止最多曾經少掉多少；還沒跌過時不顯示
+    bigNumber: (_c, v) => {
+      const worst = ddNow(v.tick).worst
+      if (worst <= 0) return undefined
+      // mid-r1：「40% 算嚴重嗎？」——誠實的一句：股票常有這種跌法，跌完不一定很快長回來（不是建議）
+      return { value: `${pct0(worst * 100)}%`, label: '最多曾經少掉', note: '股票常見；跌完不一定很快長回來', fraction: worst, colorKey: 'loss', mark: 'illustrative' }
+    },
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'drawdown' }, event: ddQuake(), eventWhen: { control: 'tick', min: DD_TROUGH }, values: { tick: 0 }, cityLabels: false },
+    controls: ['tick'],
+    ranges: { tick: [0, DD_DEMO.path.length - 1] },
+    until: { control: 'tick', min: DD_TROUGH },
+  },
+  {
+    // 中階股票章（Plan 7）：股價一樣，每年賺的錢不同 → 要賺幾年才賺回股價；數滿時太貴那棟 🫧 被泡泡包住（不破：本益比高不代表一定會跌）
+    id: 's-pe',
+    title: '本益比＝幾年',
+    line: '拖**經過年數**。數幾年**賺回股價|profit**',
+    fallbackLine: () => `**${peYears('cheap')} 年**和 **${peYears('pricey')} 年**才賺回股價`,
+    more: '本益比＝股價÷每股盈餘，就是幾年賺回股價。這裡假設每年賺的錢不變，年數越多越貴。本益比高，不代表一定會跌。泡泡＝比較貴，數字是示意。',
+    mark: 'illustrative',
+    // mid-r1：答案一開始就寫在卡片上，拉桿變多餘。數到 60 年（門檻）才出現
+    bigNumber: (_c, v) =>
+      v.periods < peYears('pricey') ? undefined : { value: `${peYears('cheap')} 年 vs ${peYears('pricey')} 年`, label: '幾年賺回股價', note: `股價都是 ${PE_DEMO.price}，年數多＝較貴`, mark: 'illustrative' },
+    compare: true,
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'pe' }, event: peBubble(), eventWhen: { control: 'periods', min: peYears('pricey') }, values: { periods: 0 }, cityLabels: false },
+    controls: ['periods'],
+    ranges: { periods: [0, peYears('pricey')] },
+    until: { control: 'periods', min: peYears('pricey') },
+  },
+  {
+    // 中階債券章（Plan 7）：市場利率漲，已經發行的舊借據價格就跌；拉到 5% 時 ❄️ 寒流讓舊借據結霜。說的是「舊借據現在的價格」，到期仍拿回 100
+    id: 'b-rate',
+    title: '利率翹翹板',
+    // mid-r2：先講原因再講結果——新借據利息多，沒人要用 100 買舊的
+    line: '拖**市場利率**。新借據利息多，舊借據就**跌|loss**',
+    fallbackLine: () => `利率到 ${pct1(RATE_DEMO.to)}，舊借據約 **${n0(ratePrice(RATE_DEMO.to))} 元|loss**`,
+    more: () =>
+      `利率漲，舊借據的價格就跌，像翹翹板。新借據給更多利息，舊的只好便宜賣。借的人沒出問題，到期拿回 100 元。這是示意，舉例 ${RATE_DEMO.years} 年、每年利息 ${pct1(RATE_DEMO.coupon)}。`,
+    mark: 'illustrative',
+    // 跟著拉桿：舊借據現在值多少（面額 100）；note 一直提醒到期還是拿回 100
+    bigNumber: (_c, v) => ({ value: `約 ${n0(ratePrice(v.rate))} 元`, label: '舊借據現在值', note: '借的人沒出問題，到期拿回 100 元。中途要賣，價格才會比較低', mark: 'illustrative' }),
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'seesaw' }, event: rateFreeze(), eventWhen: { control: 'rate', min: RATE_DEMO.to }, values: { rate: RATE_DEMO.from }, cityLabels: false },
+    controls: ['rate'],
+    ranges: { rate: [RATE_DEMO.from, RATE_DEMO.to] },
+    until: { control: 'rate', min: RATE_DEMO.to },
+  },
+  {
+    // 中階債券章（Plan 7）：☀️ 熱浪讓利息金幣融化變小；真正賺到 ≈ 利息 − 通膨（近似）
+    id: 'b-infl',
+    title: '通膨吃利息',
+    line: '**通膨**讓**金幣|coin**縮水',
+    fallbackLine: () => `扣掉通膨，真正賺到約 **${pct0(inflReal() * 100)}%|coin**`,
+    more: () =>
+      `通膨＝東西變貴，同樣的錢買得比較少。利息 ${pct1(INFL_DEMO.nominal)}，通膨 ${pct1(INFL_DEMO.inflation)}，真正賺到約 ${pct0(inflReal() * 100)}%。真正賺到 ≈ 利息 − 通膨。這是示意，熱浪＝通膨。`,
+    mark: 'illustrative',
+    bigNumber: () => ({
+      value: `約 ${pct0(inflReal() * 100)}%`,
+      label: '扣掉通膨，真正賺到',
+      note: `利息 ${pct1(INFL_DEMO.nominal)}・通膨 ${pct1(INFL_DEMO.inflation)}`,
+      colorKey: 'coin',
+      mark: 'illustrative',
+    }),
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'inflation' }, event: inflHeat(), cityLabels: false },
+  },
+  {
+    // 中階 ETF 章（Plan 7）：每月固定金額，便宜的月份買比較多；🌤 晴天大樹讓塔跟著月份長高。只讓成本平均，不保證賺錢
+    id: 'e-dca',
+    title: '定期定額',
+    line: '拖**經過月數**。便宜時**買比較多|units**',
+    fallbackLine: () => `平均成本約 **${dcaNow(DCA_DEMO.prices.length).result.avgCost.toFixed(1)} 元**`,
+    more: () => {
+      const r = dcaNow(DCA_DEMO.prices.length).result
+      return `定期定額＝每月投入一樣的錢，這是示意。平均成本 ${r.avgCost.toFixed(1)} 元，比平均價格 ${r.avgPrice.toFixed(1)} 元低。這是算術，只是讓成本平均，不一定比一次買完好。不保證賺錢，價格一路跌，一樣會賠。`
+    },
+    mark: 'illustrative',
+    bigNumber: (_c, v) => {
+      const r = dcaNow(v.months).result
+      return { value: `${r.avgCost.toFixed(1)} 元`, label: '平均成本', note: `平均價格 ${r.avgPrice.toFixed(1)} 元`, mark: 'illustrative' }
+    },
+    compare: true,
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'dca' }, event: dcaSunny(), values: { months: 1 }, cityLabels: false },
+    controls: ['months'],
+    ranges: { months: [1, DCA_DEMO.prices.length] },
+    until: { control: 'months', min: DCA_DEMO.prices.length },
+  },
+  {
     id: 'm-0',
     title: '初階口訣複習',
     line: '先複習**初階**的四句話',
@@ -516,10 +617,10 @@ export const COURSE_STEPS: Step[] = [
     more: '恭喜完成中階！自由玩已經解鎖。所有商品都能自由切開、拆開、比較。',
     fallbackMore: '恭喜完成中階！在支援 3D 的瀏覽器上，還可以自由玩。自由玩裡能切開、拆開、比較。',
     recap: [
-      { icon: '🧱', text: '股票看總報酬：方塊＋金幣' },
-      { icon: '📜', text: '越穩的借據，利息通常越少' },
+      { icon: '🧱', text: '股票看總報酬、最大跌幅、本益比' },
+      { icon: '📜', text: '利率漲，舊借據現價跌；通膨吃利息' },
       { icon: '🚜', text: '基金費用：進門、出門、每年' },
-      { icon: '🧩', text: 'ETF 拆開看：重疊、產業、高股息' },
+      { icon: '🧩', text: 'ETF 看重疊；定期定額讓成本平均' },
     ],
     scene: { camera: 'overview', product: null },
   },

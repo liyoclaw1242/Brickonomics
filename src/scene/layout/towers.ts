@@ -23,6 +23,8 @@ export type TowerSpec = {
   coinsSub?: string
   color: string
   focus?: boolean
+  /** 塔頂只寫名稱、不寫數值（f-6：數字太多，總共扣多少已經在大數字；mid-r2） */
+  hideValue?: boolean
 }
 
 const FEE_COLORS = { front: '#5c6bc0', back: '#8a5cf6', etf: '#2bb3a3' } as const
@@ -43,6 +45,7 @@ export function feeTowerSpecs(rows: readonly FeeRaceRow[]): TowerSpec[] {
       lostLabel: T.towers.held,
       ...(door ? { door } : {}),
       color: FEE_COLORS[r.id],
+      hideValue: true,
     }
   })
 }
@@ -50,6 +53,7 @@ export function feeTowerSpecs(rows: readonly FeeRaceRow[]): TowerSpec[] {
 /** 塔頂的標題（名稱＋數值） */
 export function towerTitle(t: TowerSpec): string {
   const v = T.towers.value(t.value)
+  if (t.hideValue && t.name) return t.name
   return t.name ? `${t.name} ${v}` : v
 }
 

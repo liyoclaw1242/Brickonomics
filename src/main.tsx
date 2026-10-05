@@ -27,7 +27,13 @@ useThemeStore.subscribe((s) => {
 
 const baskets = new Set([...universe.values()].filter(isBasket).map((a) => a.id))
 
-if (webgl) {
+/**
+ * DEV 事件預覽頁（?eventPreview=<kind>，見 src/scene/events/preview.ts）：只在 DEV。
+ * 條件直接寫 import.meta.env.DEV，正式版打包時整段（含動態 import）被拿掉；npm run build 之後由 scripts/check-dev-only.mjs 確認。
+ */
+const eventPreview = import.meta.env.DEV && webgl && new URLSearchParams(window.location.search).has('eventPreview')
+
+if (webgl && !eventPreview) {
   const progress = loadProgress()
   useTour.setState({ progress })
   const pinnedQuality = parseQualityParam(window.location.search)
@@ -53,14 +59,20 @@ if (webgl) {
   }
 }
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    {webgl ? (
-      <ErrorBoundary fallback={<FallbackApp />}>
-        <App />
-      </ErrorBoundary>
-    ) : (
-      <FallbackApp />
-    )}
-  </StrictMode>,
-)
+if (import.meta.env.DEV && eventPreview) {
+  void import('./scene/events/EventPreview').then(({ mountEventPreview }) => {
+    if (!mountEventPreview(document.getElementById('root')!)) document.body.textContent = `unknown eventPreview kind`
+  })
+} else {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      {webgl ? (
+        <ErrorBoundary fallback={<FallbackApp />}>
+          <App />
+        </ErrorBoundary>
+      ) : (
+        <FallbackApp />
+      )}
+    </StrictMode>,
+  )
+}

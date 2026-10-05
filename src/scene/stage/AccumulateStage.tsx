@@ -12,8 +12,8 @@ export function AccumulateStage({ quality }: { quality: Quality }) {
       quality={quality}
       base={T.towers.baseDemo}
       towers={[
-        { key: 'acc', label: T.accumulateRows.accumulate, value: r.accumulate.value, color: '#2bb3a3' },
-        { key: 'pay', label: T.accumulateRows.payout, value: r.payout.value, coins: r.payout.cashReceived, color: '#5c6bc0' },
+        { key: 'acc', name: T.accumulateRows.accumulate, label: T.accumulateSubs.accumulate, value: r.accumulate.value, color: '#2bb3a3' },
+        { key: 'pay', name: T.accumulateRows.payout, label: T.accumulateSubs.payout, value: r.payout.value, coins: r.payout.cashReceived, color: '#5c6bc0' },
       ]}
     />
   )

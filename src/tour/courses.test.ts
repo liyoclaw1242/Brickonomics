@@ -9,13 +9,15 @@ const course = (id: CourseId): Course => COURSES.find((c) => c.id === id)!
 const ids = (c: Course): string[] => c.chapters.flatMap((ch) => [...ch.stepIds])
 const OPENING = new Set(['prologue', 'review'])
 const FINISH = 'finish'
+/** Plan 7 新增的中階步驟（課程專用，不在 LEVELS 裡） */
+const PLAN7 = ['s-dd', 's-pe', 'b-rate', 'b-infl', 'e-dca']
 /** 內容章＝扣掉開頭（序章／複習）與結尾的章 */
 const contentChapters = (c: Course) => c.chapters.filter((ch) => !OPENING.has(ch.id) && ch.id !== FINISH)
 
 describe('STEP_POOL', () => {
   it('holds every LEVELS step plus the new recap and finish steps, each id once', () => {
     const levelIds = LEVELS.flatMap((l) => l.steps.map((s) => s.id))
-    expect([...STEP_POOL.keys()]).toEqual([...levelIds, 'm-0', 'm-fin'])
+    expect([...STEP_POOL.keys()]).toEqual([...levelIds, ...PLAN7, 'm-0', 'm-fin'])
     for (const [id, s] of STEP_POOL) expect(s.id).toBe(id)
   })
 })
@@ -72,15 +74,15 @@ describe('COURSES', () => {
     const m = ids(course('intermediate'))
     const b = new Set(ids(course('beginner')))
     const rest = LEVELS.flatMap((l) => l.steps.map((s) => s.id)).filter((id) => !b.has(id) && id !== 'u-6')
-    expect([...m].sort()).toEqual([...rest, 'm-0', 'm-fin'].sort())
+    expect([...m].sort()).toEqual([...rest, 'm-0', 'm-fin', ...PLAN7].sort())
     expect(m[0]).toBe('m-0')
     expect(m.at(-1)).toBe('m-fin')
     expect(course('intermediate').chapters.map((ch) => ch.stepIds)).toEqual([
-      ['m-0', 'p-3'],
-      ['s-4', 's-5', 's-6'],
-      ['b-2'],
+      ['m-0'],
+      ['s-4', 's-dd', 's-5', 's-6', 's-pe'],
+      ['b-2', 'b-rate', 'b-infl'],
       ['f-2', 'f-3', 'f-4', 'f-6', 'f-8'],
-      ['e-4', 'c-3', 'c-4', 'u-1', 'u-2', 'u-3', 'u-4', 'u-5'],
+      ['e-4', 'e-dca', 'c-3', 'u-1', 'u-2', 'u-3', 'u-4', 'u-5'],
       ['m-fin'],
     ])
   })
@@ -135,7 +137,9 @@ describe('course helpers', () => {
   it('courseOfStep finds the one course that holds a step', () => {
     expect(courseOfStep('p-1')).toBe('beginner')
     expect(courseOfStep('u-6')).toBe('beginner')
-    expect(courseOfStep('p-3')).toBe('intermediate')
+    // 使用者測試 mid-r1：p-3（觀光）、c-4（一句話的過場）已刪除
+    expect(courseOfStep('p-3')).toBeUndefined()
+    expect(courseOfStep('c-4')).toBeUndefined()
     expect(courseOfStep('m-0')).toBe('intermediate')
     expect(courseOfStep('m-fin')).toBe('intermediate')
     expect(courseOfStep('f-7')).toBeUndefined()

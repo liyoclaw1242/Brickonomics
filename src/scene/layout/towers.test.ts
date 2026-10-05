@@ -39,9 +39,12 @@ describe('feeTowerSpecs (f-6 進門費、出門費, user test r3)', () => {
     expect(back.lost! - back.door!.amount).toBeGreaterThan(0) // 每年費用還在扣
   })
 
-  it('shows values in 萬 on the 100-萬 base', () => {
+  it('tower tops show only the name (mid-r2: too many numbers; the total fee is the big number), values stay in the readout', () => {
     const [front, back] = specs(10)
-    expect(towerTexts(front!)).toContain('前收 85.7 萬') // 98.5 × 0.9862^10 = 98.5 × 0.870261 = 85.72
-    expect(towerTexts(back!)).toContain('後收 84.4 萬') // 100 × 0.9862^10 × 0.99^3 = 0.870261 × 0.970299 = 84.44
+    expect(towerTexts(front!)).toContain('前收')
+    expect(towerTexts(back!)).toContain('後收')
+    for (const t of [front!, back!]) for (const text of towerTexts(t)) expect(text).not.toMatch(/8[45]\.\d 萬/)
+    expect(front!.value).toBeCloseTo(85.72, 2) // 98.5 × 0.9862^10 = 98.5 × 0.870261
+    expect(back!.value).toBeCloseTo(84.44, 2) // 100 × 0.9862^10 × 0.99^3 = 0.870261 × 0.970299
   })
 })

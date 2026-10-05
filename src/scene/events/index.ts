@@ -1,4 +1,9 @@
+import { BUBBLE_TIMELINE } from './bubble'
+import { FREEZE_TIMELINE } from './freeze'
+import { HEAT_TIMELINE } from './heatwave'
 import { LIGHTNING_TIMELINE } from './lightning'
+import { QUAKE_TIMELINE } from './quake'
+import { SUNNY_TIMELINE } from './sunnyTree'
 import { TORNADO_TIMELINE } from './tornado'
 import type { EventKind, EventSpec, EventTimeline, SpecOf } from './types'
 
@@ -8,23 +13,36 @@ import type { EventKind, EventSpec, EventTimeline, SpecOf } from './types'
  * 只在動畫期間持續繪製；舞台只透過純函式讀事件進度（例如 tornadoHitAt、strikeAt）決定受損程度。
  * 這個檔案只載入各事件的時間軸（只有數字）：讀數（ui/readout）、文字版、城市（Scene）都從這裡問，不直接 import 各事件的模組。
  *
- * 新增一種事件（例如 quake）：
- * 1. types.ts：在 EventSpec 這個 union 加一個分支，例如 `| { kind: 'quake'; depth: number }`。
- *    參數只放在自己的分支裡，tsc 會檢查每一步寫的 scene.event。
- * 2. quake.ts（純 TS，不 import React/R3F，也不載入資料或方塊）：時間軸與數值（t 秒 → 畫面狀態），
- *    匯出 QUAKE_TIMELINE: EventTimeline<SpecOf<'quake'>>（duration、lingers、numberDelay、aftermath），
- *    以及舞台要用的讀取函式（t 為 null＝還沒開始、Infinity＝終點）。quake.test.ts 至少測「t = Infinity ＝ 最終狀態」。
+ * 規則：事件參數（quake 的 depth、freeze 的 amount、heatwave 的 melt…）每一步固定，不跟著拉桿變。
+ * 事件時鐘用 JSON.stringify(spec) 判斷「換了事件」（scene/eventEpoch.ts）：參數一變，風、震動就會從頭重播。
+ * 要跟著拉桿變的東西（柱子多高、翹翹板多斜）由舞台自己從拉桿算；拉桿只能用 scene.eventWhen 把事件「整個開或關」
+ * （engine.activeEvent：條件成立時回傳步驟資料裡同一個 spec），所以條件成立後再拖不會重播（engine.test、eventEpoch.test 有測）。
+ *
+ * 新增一種事件（例如 Plan 8 的 wave）：
+ * 1. types.ts：在 EventSpec 這個 union 加一個分支，例如 `| { kind: 'wave'; hits: number }`。
+ *    參數只放在自己的分支裡，tsc 會檢查每一步寫的 scene.event。需要位置時一律相對廣場中心（像 bubble 的 target、heatwave 的 coins）。
+ * 2. wave.ts（純 TS，不 import React/R3F，也不載入資料或方塊）：時間軸與數值（t 秒 → 畫面狀態），
+ *    匯出 WAVE_TIMELINE: EventTimeline<SpecOf<'wave'>>（duration、lingers、numberDelay、aftermath），
+ *    以及舞台要用的讀取函式（t 為 null＝還沒開始、Infinity＝終點；例如 quakeAt、bubbleAt、freezeTint、coinScaleAt）。
+ *    wave.test.ts 至少測「t = Infinity ＝ 最終狀態」與「閃光 ≤ 1 次」。共用的小工具在 ease.ts。
  *    需要資料或方塊的幾何放另一個檔（像 lightningBolt.ts），不要讓這裡變重。
- * 3. Quake.tsx：元件，props 為 EventProps<SpecOf<'quake'>>；每幀讀 clock.t.current，
- *    clock.reduced 時畫靜止的終點；顏色取主題、低畫質簡化。
- * 4. 註冊：下面的 EVENTS 加 quake: QUAKE_TIMELINE；EventLayer.tsx 的 COMPONENTS 加 quake: Quake。
- *    兩者都是「每種 kind 一個」的對照表，漏了任何一個 tsc 會報錯。
- * 5. 步驟資料寫 scene: { …, event: { kind: 'quake', … } }；需要配合的舞台從 StageView 收到同一個 EventClock。
+ * 3. Wave.tsx：元件，props 為 EventProps<SpecOf<'wave'>>；每幀讀 clock.t.current，
+ *    clock.reduced 時畫靜止的終點；顏色取主題（theme.ts 加一組 token）、低畫質簡化；每種材質一個 InstancedMesh、useFrame 內不配置物件。
+ *    天空、霧要變色用 useSkyTint；太陽用 Sun。
+ * 4. 註冊：下面的 EVENTS 加 wave: WAVE_TIMELINE；EventLayer.tsx 的 COMPONENTS 加 wave: Wave；
+ *    DEV 預覽頁 preview.ts 的 PREVIEW_SPECS 與 PreviewProps.tsx 的 PREVIEW_PROPS 各加一個（都是「每種 kind 一個」的對照表，漏了 tsc 會報錯）。
+ * 5. 先用 DEV 預覽頁單獨截圖驗收：`?eventPreview=wave&t=<秒|end>`（另有 reduced=1、theme=day、quality=low 與各事件自己的參數）。
+ * 6. 步驟資料寫 scene: { …, event: { kind: 'wave', … } }；需要配合的舞台從 StageView 收到同一個 EventClock。
  *    讀數（ui/readout.ts）與城市（Scene.tsx）若要在事件後顯示結果，用 eventAftermath(spec)，不要直接比對 kind。
  */
 export const EVENTS: { [K in EventKind]: EventTimeline<SpecOf<K>> } = {
   tornado: TORNADO_TIMELINE,
   lightning: LIGHTNING_TIMELINE,
+  quake: QUAKE_TIMELINE,
+  bubble: BUBBLE_TIMELINE,
+  freeze: FREEZE_TIMELINE,
+  sunnyTree: SUNNY_TIMELINE,
+  heatwave: HEAT_TIMELINE,
 }
 
 export const EVENT_KINDS = Object.keys(EVENTS) as EventKind[]
@@ -45,4 +63,4 @@ export function bigNumberDelayMs(spec: EventSpec | undefined, reducedMotion: boo
   return !spec || reducedMotion ? 0 : timelineOf(spec).numberDelay(spec) * 1000
 }
 
-export type { EventClock, EventKind, EventProps, EventSpec, EventTimeline, LightningPhase, SpecOf } from './types'
+export type { BubblePhase, EventClock, EventKind, EventProps, EventSpec, EventTarget, EventTimeline, FreezeTarget, LightningPhase, SpecOf } from './types'

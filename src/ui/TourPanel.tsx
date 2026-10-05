@@ -5,7 +5,7 @@ import { prefersReducedMotion, useRevealAfterCamera } from '../scene/useRevealAf
 import { effectiveExplode, useSandbox } from '../store/sandbox'
 import { currentStep, useTour } from '../store/tour'
 import { makeTextContext } from '../tour/context'
-import { chapterOfIndex, courseById, isSatisfied, lineOf, moreOf, nextCourse, nextIndex, prevIndex, titleOf } from '../tour/engine'
+import { activeEvent, chapterOfIndex, numberDelayEvent, stepsOf, courseById, isSatisfied, lineOf, moreOf, nextCourse, nextIndex, prevIndex, titleOf } from '../tour/engine'
 import { BigNumberCard } from './panel/BigNumberCard'
 import { bigNumberDelayMs } from '../scene/events'
 import { MoreSection } from './panel/MoreSection'
@@ -52,7 +52,8 @@ function StepPanel() {
   const more = useMemo(() => moreOf(step, ctx), [step])
   const big = step.bigNumber?.(ctx, values)
   const ok = isSatisfied(step.until, { ...values, slice, explode })
-  const rows = stageReadout(step.scene.stage ?? { kind: 'none' }, { ...values, slice, explode }, universe, productId, step.scene.event)
+  const event = activeEvent(step, { ...values, slice, explode })
+  const rows = stageReadout(step.scene.stage ?? { kind: 'none' }, { ...values, slice, explode }, universe, productId, event)
   const isLast = nextIndex(pos) === null
   const canPrev = prevIndex(pos) !== null
   // 章節編號以目前課程的章為單位
@@ -68,13 +69,17 @@ function StepPanel() {
 
   return (
     <aside className="panel tour">
-      <StepHeader chapter={chapter} number={here} count={chapters.length} title={titleOf(step)} marks={marks} revealed={revealed}>
+      <StepHeader chapter={chapter} number={here} count={chapters.length} step={pos.index + 1} steps={stepsOf(pos.course).length} title={titleOf(step)} marks={marks} revealed={revealed}>
         <OneLine line={line} colorOf={colorOf} />
       </StepHeader>
       {big && (
         <div className={revealed ? 'step-reveal is-revealed' : 'step-reveal'}>
-          <BigNumberCard key={step.id} n={big} color={big.colorKey ? colorOf(big.colorKey) : undefined} run={revealed} instant={instant} titleMarks={marks} delayMs={bigNumberDelayMs(step.scene.event, instant)} />
+          <BigNumberCard key={step.id} n={big} color={big.colorKey ? colorOf(big.colorKey) : undefined} run={revealed} instant={instant} titleMarks={marks} delayMs={bigNumberDelayMs(numberDelayEvent(step, { ...values, slice, explode }), instant)} />
         </div>
+      )}
+      {/* 比較步驟：大數字下面（沒有大數字就在一句話下面）一直留一行提醒，不藏在多說一點 */}
+      {step.compare && (
+        <p className={revealed ? 'compare-note step-reveal is-revealed' : 'compare-note step-reveal'}>{T.compareNote}</p>
       )}
       {step.controls && <StageControls controls={step.controls} />}
       {!ok && step.until && (

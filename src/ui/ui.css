@@ -73,12 +73,14 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .bignum__label { font-size: 14px; color: var(--soft-text); }
 .bignum__note { font-size: 14px; color: var(--soft-text); margin-top: 2px; }
 .bignum__bar { margin-top: 8px; height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
+.compare-note { margin: -4px 0 10px; font-size: 13px; color: var(--soft-text); border-left: 3px solid var(--border); padding-left: 8px; }
 .bignum__bar span { display: block; height: 100%; background: var(--accent); }
 .more { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 8px; font-size: 14px; color: var(--muted); }
 .more summary { cursor: pointer; color: var(--text); }
 
 .step-counter { margin: 0; display: flex; align-items: center; gap: 8px; }
 .step-counter__icon { font-size: 18px; letter-spacing: 0; }
+.step-counter__steps { margin-left: auto; letter-spacing: 0.04em; font-size: 13px; font-weight: 500; }
 /* 標題＋標示：標題字不折行；標示小膠囊成一組，放不下就整組換到下一行 */
 .step-title { display: flex; flex-wrap: wrap; align-items: center; column-gap: 8px; row-gap: 6px; }
 .step-title__text { white-space: nowrap; }

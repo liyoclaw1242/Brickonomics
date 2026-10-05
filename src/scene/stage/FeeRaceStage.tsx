@@ -15,5 +15,5 @@ import { TowerRow } from './TowerRow'
 export function FeeRaceStage({ etf = true, quality }: { etf?: boolean; quality: Quality }) {
   const years = useTour((s) => s.values.years)
   const frontLoad = useTour((s) => s.values.frontLoad)
-  return <TowerRow towers={feeTowerSpecs(feeRaceRows(universe, years, frontLoad, etf))} quality={quality} base={T.towers.base} />
+  return <TowerRow towers={feeTowerSpecs(feeRaceRows(universe, years, frontLoad, etf))} quality={quality} base={T.towers.base} baseSub={T.towers.feesOnly} />
 }

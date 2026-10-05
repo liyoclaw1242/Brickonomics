@@ -57,3 +57,15 @@ describe('TourPanel start card', () => {
     expect(mfin).toContain(T.finish)
   })
 })
+
+describe('step counter inside the course (mid-r1)', () => {
+  it('shows 第 i / n 步 next to the chapter counter, moving on every step', () => {
+    useTour.getState().chooseCourse('intermediate')
+    const n = stepsOf('intermediate').length
+    expect(n).toBe(23)
+    expect(render()).toContain(T.stepCount(1, n))
+    useTour.getState().next()
+    expect(render()).toContain(T.stepCount(2, n))
+    expect(T.stepCount(7, 23)).toBe('第 7 / 23 步')
+  })
+})

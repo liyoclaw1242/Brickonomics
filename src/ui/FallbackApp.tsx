@@ -58,6 +58,7 @@ export function FallbackApp() {
                   ))}
                 </h3>
                 <Line line={s.line} />
+                {s.compare && <p className="compare-note">{T.compareNote}</p>}
                 {/* ？ 資料待更新：放在一句話後面（和 3D 版一致） */}
                 {markPlacement(s.marks).afterLine.length > 0 && (
                   <p className="step-marks-after">
