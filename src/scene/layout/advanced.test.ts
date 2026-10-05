@@ -10,6 +10,8 @@ import { priceChange } from '../../sim/duration'
 import { FEE_TREES, feeTreesNow } from './advanced'
 import { feeDrag } from '../../sim/feeDrag'
 import { universe } from '../../data'
+import { LEV_LAYOUT, levNow, levWave } from './advanced'
+import { waveSteps } from '../events/wave'
 
 describe('a-port portfolio tower (🌪)', () => {
   it('portNow: 100 split by the bond slider; the example storm takes stocks −40%, bonds +5% (sim/portfolio STORM)', () => {
@@ -163,5 +165,27 @@ describe('a-fee30 two trees (🌤)', () => {
       for (const k of ['active', 'passive'] as const) expect(n[k].value + n[k].lost).toBeCloseTo(n.noFee, 9)
     }
     expect(FEE_TREES.unit * feeTreesNow(30, fees).noFee).toBeLessThanOrEqual(12) // 塔頂在鏡頭裡
+  })
+})
+
+describe('a-lev leverage towers in the 🌊 wave', () => {
+  it('levNow: −10%/+10% five times; plain and inverse end at 95.10, the 2× tower at 81.54 (sim/leverage)', () => {
+    const n = levNow()
+    expect(n.plain.at(-1)).toBeCloseTo(95.099, 3)
+    expect(n.double.at(-1)).toBeCloseTo(81.537, 3) // 100 × 0.96^5
+    expect(n.inverse.at(-1)).toBeCloseTo(95.099, 3)
+    expect(n.double[1]).toBeCloseTo(80, 12) // 第一道浪打到：2 倍塔 −20%
+    expect(n.round).toEqual({ plain: expect.any(Number), double: expect.any(Number), inverse: expect.any(Number) })
+    expect(n.round.plain).toBeCloseTo(0.01, 12) // 1 − 0.9 × 1.1
+    expect(n.round.double).toBeCloseTo(0.04, 12) // 1 − 0.8 × 1.2
+    expect(n.round.inverse).toBeCloseTo(0.01, 12) // 1 − 1.1 × 0.9
+  })
+  it('the wave has one swell per round and splashes the three towers; tower heights = path × unit', () => {
+    const w = levWave()
+    expect(w.waves).toBe(5)
+    expect(waveSteps(w)).toBe(levNow().plain.length - 1)
+    expect(w.targets).toHaveLength(3)
+    expect(w.targets!.map((t) => t.at[0])).toEqual([...LEV_LAYOUT.x])
+    expect(LEV_LAYOUT.unit * 120).toBeLessThanOrEqual(9) // 2 倍塔最高（第一道浪退下時 96 → 不會超過 120）
   })
 })

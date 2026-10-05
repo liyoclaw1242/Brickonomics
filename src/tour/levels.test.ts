@@ -40,7 +40,7 @@ const byId = (id: string): Step => steps.find((s) => s.id === id)!
 /** Plan 7 的舉例舞台：一定要標 ≈、多說一點寫「示意」 */
 const PLAN7_STAGES: string[] = ['drawdown', 'pe', 'seesaw', 'dca', 'inflation']
 /** Plan 8 的高階舞台：都是舉例（≈、多說一點寫「示意」） */
-const PLAN8_STAGES: string[] = ['portfolio', 'correlation', 'dayTrade', 'duration', 'feeTrees']
+const PLAN8_STAGES: string[] = ['portfolio', 'correlation', 'dayTrade', 'duration', 'feeTrees', 'leverage']
 /** 大數字跟著即時拉桿值；測試預設用進入該步驟時的值 */
 const bigOf = (s: Step, values: Partial<StageValues> = {}) => s.bigNumber?.(ctx, { ...DEFAULT_VALUES, ...s.scene.values, ...values })
 const resolve = (t: Step['line'] | undefined): string | undefined => (t === undefined ? undefined : typeof t === 'function' ? t(ctx) : t)
@@ -1072,5 +1072,24 @@ describe('Plan 8 高階: 主動 vs 被動 30 年 (a-fee30)', () => {
     expect(moreOf(s(), ctx)).toContain('扣費前誰賺得多不一定')
     expect(stepMarks(s(), universe)).toEqual(['illustrative'])
     expect(stepMarks(s(), unverify(['JH_BALANCED']))).toEqual(['illustrative', 'unverified'])
+  })
+})
+
+describe('Plan 8 高階: 槓桿的耗損 (a-lev)', () => {
+  const s = () => byId('a-lev')
+  it('no drag: 🌊 five waves, each knocks the 2× tower down; generic names only', () => {
+    expect(s().until).toBeUndefined()
+    expect(s().scene.event).toMatchObject({ kind: 'wave', waves: 5 })
+    expect(stripMarkup(lineOf(s(), ctx))).toBe('大盤來回晃，2 倍塔越來越矮')
+    for (const t of [lineOf(s(), ctx), moreOf(s(), ctx)]) expect(t).not.toMatch(/\d{4,5}[LR]?|00631|00632/) // 沒有真實代號
+  })
+  it('big number: the 2× tower falls 18.5% (100 × 0.96^5 = 81.54) while the market falls 4.9% and the inverse tower falls 4.9% too', () => {
+    expect(bigOf(s())).toEqual({ value: '跌 18.5%', label: '5 次來回後 2 倍塔', note: '大盤跌 4.9%；反向塔也跌 4.9%', colorKey: 'double', mark: 'illustrative' })
+    expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('來回 5 次。2 倍塔跌 18.5%')
+  })
+  it('the more text does the one-round arithmetic: market −1%, 2× −4%, inverse −1%', () => {
+    expect(moreOf(s(), ctx)).toContain('跌 10% 再漲 10%，大盤少 1%')
+    expect(moreOf(s(), ctx)).toContain('2 倍塔少 4%，反向塔也少 1%')
+    expect(moreOf(s(), ctx)).toContain('不是真實商品')
   })
 })

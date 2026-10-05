@@ -213,6 +213,14 @@ export const T = {
     lost: (v: string) => `費用吃掉 ${v}`,
     base: (gross: string) => `假設扣費前報酬一樣：每年 ${gross}`,
   },
+  /** a-lev 三座塔（高階；通用名稱，不是真實商品） */
+  lev: {
+    plain: '大盤',
+    double: '2 倍塔',
+    inverse: '反向塔',
+    left: (v: string) => `剩 ${v}`,
+    start: '起點都是 100',
+  },
   /** 基金那一章的錢：投入 100＝100 萬（和計費表同一個底），一位小數、去掉「.0」 */
   wan,
   /** 元（四捨五入、千分位）：18800 → '18,800 元'（r5：有感的錢，像計費表的「已磨掉約 39,073 元」） */
@@ -305,6 +313,9 @@ export const T = {
     fee30Active: (fee: string) => `怪手挑（每年扣 ${fee}）`,
     fee30Passive: (fee: string) => `照藍圖（每年扣 ${fee}）`,
     fee30NoFee: '完全沒費用的話',
+    levPlain: '大盤：來回 5 次後',
+    levDouble: '2 倍塔：來回 5 次後',
+    levInverse: '反向塔：來回 5 次後',
     dtTrades: '進出次數',
     dtCost: '每次進出的交易成本',
     dtCapital: '本金剩',

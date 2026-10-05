@@ -6,7 +6,8 @@ import { T } from '../ui/strings'
 import { DD_DEMO, DD_TROUGH, ddNow, ddQuake, PE_DEMO, peBubble, peYears, RATE_DEMO, rateFreeze, ratePrice, DCA_DEMO, dcaNow, dcaSunny, INFL_DEMO, inflHeat, inflReal } from '../scene/layout/intermediate'
 import { maxDrawdown } from '../sim/drawdown'
 import { STORM } from '../sim/portfolio'
-import { corrLightning, corrNow, dtNow, durFreeze, durNow, feeSunny, feeTreesNow, PORT_LAYOUT, PORT_MAX_BOND, portNow } from '../scene/layout/advanced'
+import { corrLightning, corrNow, dtNow, durFreeze, durNow, feeSunny, feeTreesNow, levNow, levWave, PORT_LAYOUT, PORT_MAX_BOND, portNow } from '../scene/layout/advanced'
+import { LEVERAGE } from '../sim/leverage'
 import { FEE_DRAG } from '../sim/feeDrag'
 import { DURATION } from '../sim/duration'
 import { DAY_TRADE, DAY_TRADE_COST, dayTradeCostVerified } from '../sim/dayTrade'
@@ -787,5 +788,26 @@ export const COURSE_STEPS: Step[] = [
     controls: ['periods'],
     ranges: { periods: [0, FEE_DRAG.years] },
     until: { control: 'periods', min: FEE_DRAG.years },
+  },
+  {
+    // 高階 ETF 章：槓桿的耗損。大盤 −10%／+10% 來回 5 次（示意，通用名稱）；🌊 每道浪把 2 倍塔打矮一截。
+    // 反向塔也一起寫出來：大盤跌了，反向塔也沒賺（下一步的對沖接著講）
+    id: 'a-lev',
+    title: '槓桿的耗損',
+    line: '大盤來回晃，**2 倍塔|double**越來越矮',
+    fallbackLine: () => `來回 ${LEVERAGE.rounds} 次。2 倍塔**${movePct(levNow().double.at(-1)! / 100 - 1)}|loss**`,
+    more: () => {
+      const r = levNow().round
+      const m = pct0(LEVERAGE.move * 100)
+      return `2 倍 ETF＝每天的漲跌放大 2 倍。跌 ${m}% 再漲 ${m}%，大盤少 ${pct0(r.plain * 100)}%。2 倍塔少 ${pct0(r.double * 100)}%，反向塔也少 ${pct0(r.inverse * 100)}%。這是示意，用通用名稱，不是真實商品。`
+    },
+    mark: 'illustrative',
+    // 等第一道浪打到才數（事件的 numberDelay）
+    bigNumber: () => {
+      const l = levNow()
+      const fall = (p: number[]) => movePct(p.at(-1)! / p[0]! - 1)
+      return { value: fall(l.double), label: `${LEVERAGE.rounds} 次來回後 2 倍塔`, note: `大盤${fall(l.plain)}；反向塔也${fall(l.inverse)}`, colorKey: 'double', mark: 'illustrative' }
+    },
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'leverage' }, event: levWave(), cityLabels: false },
   },
 ]

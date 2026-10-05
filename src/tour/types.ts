@@ -48,6 +48,8 @@ export type Stage =
   | { kind: 'duration' }
   /** a-fee30 主動 vs 被動 30 年：兩座塔像兩棵樹（periods 拉桿；天氣是 scene.event sunnyTree）；紅帽子＝費用吃掉的 */
   | { kind: 'feeTrees' }
+  /** a-lev 槓桿的耗損：大盤、2 倍塔、反向塔站在水裡；🌊 大浪（scene.event wave）每道浪一跌一漲 */
+  | { kind: 'leverage' }
   | { kind: 'overlap'; a: string; b: string }
   | { kind: 'underground'; show: 'strata' | 'cores' | 'dig' | 'veins' | 'gold'; cores?: [string, string] }
 

@@ -4,7 +4,7 @@ import { sectorBreakdown } from '../scene/layout/underground'
 import { accumulateVsPayout, exDivTimeline, principalTrap } from '../scene/layout/stages'
 import { feeRaceLeader, feeRaceRows } from '../sim/feeRace'
 import { DCA_DEMO, dcaNow, ddNow, INFL_DEMO, inflReal, PE_DEMO, peYears, ratePrice } from '../scene/layout/intermediate'
-import { corrNow, dtNow, durNow, feeTreesNow, portNow } from '../scene/layout/advanced'
+import { corrNow, dtNow, durNow, feeTreesNow, levNow, portNow } from '../scene/layout/advanced'
 import { FEE_DRAG } from '../sim/feeDrag'
 import { DURATION } from '../sim/duration'
 import { overlap } from '../sim/overlap'
@@ -129,6 +129,15 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
         { label: T.readout.fee30Active(pct(a)), value: T.wan(n.active.value), marks: mark(FEE_DRAG.active) },
         { label: T.readout.fee30Passive(pct(p)), value: T.wan(n.passive.value), marks: mark(FEE_DRAG.passive) },
         { label: T.readout.fee30NoFee, value: T.wan(n.noFee) },
+      ]
+    }
+    case 'leverage': {
+      // 浪是一進來就發生的事件：讀數直接寫走完之後（文字版也一樣）
+      const l = levNow()
+      return [
+        { label: T.readout.levPlain, value: n1(l.plain.at(-1)!), marks: ['illustrative'] },
+        { label: T.readout.levDouble, value: n1(l.double.at(-1)!) },
+        { label: T.readout.levInverse, value: n1(l.inverse.at(-1)!) },
       ]
     }
     case 'duration': {

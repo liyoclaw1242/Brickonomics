@@ -7,6 +7,7 @@ import { PAIRS, combine, volatility } from '../../sim/correlation'
 import { DAY_TRADE, dayTradeDrain } from '../../sim/dayTrade'
 import { DURATION, priceChange } from '../../sim/duration'
 import { FEE_DRAG, grow } from '../../sim/feeDrag'
+import { LEVERAGE, leverageTowers } from '../../sim/leverage'
 import type { Vec3 } from '../camera'
 
 /**
@@ -212,3 +213,34 @@ export function feeTreesNow(years: number, fees: { active: number; passive: numb
 
 /** 晴天：太陽在兩棵樹中間的後上方（手機上也不會被切掉）；一進來就放晴，樹跟著年數拉桿長 */
 export const feeSunny = (): SpecOf<'sunnyTree'> => ({ kind: 'sunnyTree', sun: [0, 9, -20] })
+
+// ───────────── a-lev 槓桿的耗損（🌊 大浪） ─────────────
+
+/** 三座塔站在水裡：大盤、2 倍塔、反向塔（通用名稱）；100＝unit × 100 高；water＝水面寬、深 */
+export const LEV_LAYOUT = { x: [-6.5, 0, 6.5] as readonly number[], w: 3, unit: 0.07, water: [24, 9] as [number, number] } as const
+
+export type LevNow = {
+  plain: number[]
+  double: number[]
+  inverse: number[]
+  /** 跌一次再漲一次（一道浪）之後各少掉多少（比例） */
+  round: { plain: number; double: number; inverse: number }
+}
+
+/** 三座塔每一步的高度（sim/leverage 的 leverageTowers），以及一道浪各磨掉多少 */
+export function levNow(): LevNow {
+  const t = leverageTowers(LEVERAGE)
+  const r = (p: number[]) => 1 - p[2]! / p[0]!
+  return { ...t, round: { plain: r(t.plain), double: r(t.double), inverse: r(t.inverse) } }
+}
+
+/** 大浪：一道浪＝一次跌再漲（LEVERAGE.rounds 道），浪頭打到三座塔時噴浪花；塔高由舞台沿 levNow 的路徑取 */
+export function levWave(): SpecOf<'wave'> {
+  const h = 100 * LEV_LAYOUT.unit
+  return {
+    kind: 'wave',
+    waves: LEVERAGE.rounds,
+    size: LEV_LAYOUT.water,
+    targets: LEV_LAYOUT.x.map((x) => ({ at: [x, 0, 0] as Vec3, size: [LEV_LAYOUT.w, h, LEV_LAYOUT.w] as Vec3 })),
+  }
+}
