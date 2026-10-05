@@ -50,6 +50,28 @@ describe('hedgeExample (start 100; 0050 fee from the data, 0.14%)', () => {
     expect(r.rising.diff).toBeCloseTo(-3.970, 3)
   })
 
+  it('cash comparison (60 in 0050 + 40 cash, same net exposure 80 − 20 = 60): ⚡ 60 × 0.9 + 40 = 94 (same as the hedge); flat 60 × 0.9986 + 40 = 99.916; rising 60 × 1.1 × 0.9986 + 40 = 105.908', () => {
+    expect(r.strike.cash).toBeCloseTo(54 * 0.9986 ** (1 / 250) + 40, 10)
+    expect(r.strike.cash).toBeCloseTo(94, 2)
+    expect(r.flat.cash).toBeCloseTo(99.916, 10)
+    expect(r.rising.cash).toBeCloseTo(105.9076, 10)
+    // 現金在平時都比反向 ETF 好：99.916 > 99.688；105.908 > 105.876
+    expect(r.flat.cash!).toBeGreaterThan(r.flat.hedged)
+    expect(r.rising.cash!).toBeGreaterThan(r.rising.hedged)
+  })
+
+  it('rows for the screen: plain / inverse / cash, with the 100 split and the three scenarios; inverse fee is an assumption', () => {
+    expect(r.inverseFeeAssumed).toBe(true)
+    expect(r.rows.map((x) => x.id)).toEqual(['plain', 'inverse', 'cash'])
+    expect(r.rows.map((x) => [x.basePct, x.inversePct, x.cashPct])).toEqual([
+      [100, 0, 0],
+      [80, 20, 0],
+      [60, 0, 40],
+    ])
+    expect(r.rows[1]).toMatchObject({ strike: r.strike.hedged, flat: r.flat.hedged, rising: r.rising.hedged })
+    expect(r.rows[2]).toMatchObject({ strike: r.strike.cash, flat: r.flat.cash, rising: r.rising.cash })
+  })
+
   it('both sides: the hedge helps only in the strike; in calm or rising days it always costs', () => {
     expect(r.strike.diff).toBeGreaterThan(0)
     expect(r.flat.diff).toBeLessThan(0)
@@ -62,6 +84,10 @@ describe('hedgeRun', () => {
     const z = hedgeRun([100, 90], { hedgePct: 0, baseFee: 0, inverseFee: 0 })
     expect(z.hedged).toBeCloseTo(z.plain, 12)
     expect(hedgeRun([100, 90], { hedgePct: 50, baseFee: 0, inverseFee: 0 }).hedged).toBeCloseTo(100, 10)
+    // hedgePct 50 → 現金對照組 0050 放 0、現金 100：100
+    expect(hedgeRun([100, 90], { hedgePct: 50, baseFee: 0, inverseFee: 0 }).cash).toBe(100)
+    // hedgePct 60 → 淨部位是負的，現金做不到
+    expect(hedgeRun([100, 90], { hedgePct: 60, baseFee: 0, inverseFee: 0 }).cash).toBeNull()
   })
 
   it('rejects bad inputs, naming the parameter', () => {
