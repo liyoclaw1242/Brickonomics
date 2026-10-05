@@ -50,6 +50,11 @@ describe('event preview query', () => {
     expect(parsePreview('?eventPreview=freeze&amount=0.3')?.spec).toMatchObject({ kind: 'freeze', amount: 0.3 })
   })
 
+  it('sunnyTree warmth', () => {
+    expect(parsePreview('?eventPreview=sunnyTree')?.spec).toEqual({ kind: 'sunnyTree', warmth: 1 })
+    expect(parsePreview('?eventPreview=sunnyTree&warmth=0.4')?.spec).toEqual({ kind: 'sunnyTree', warmth: 0.4 })
+  })
+
   it('numParam clamps and falls back', () => {
     const q = new URLSearchParams('a=2&b=x&c=-1&d=')
     expect(numParam(q, 'a', 0.5, 0, 1)).toBe(1)

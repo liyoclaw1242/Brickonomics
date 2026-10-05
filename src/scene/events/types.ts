@@ -41,6 +41,12 @@ export type EventSpec =
    * amount（0–1）＝霜有多厚；每個目標再乘 length ÷ 最長的 length（長的霜更厚）。目標本身由舞台畫，舞台用 freezeTint 往冰藍混色。
    */
   | { kind: 'freeze'; amount: number; targets: readonly FreezeTarget[] }
+  /**
+   * 🌤 晴天＋大樹（長期成長、複利）：雲散開、太陽出來、光線變暖（warmth 0–1，預設 1）；終點維持晴天。
+   * sun：太陽最後停的位置（相對廣場中心；預設 SKY.sun，要在舞台鏡頭的畫面上緣以內）。
+   * 目標像樹一樣長高由舞台負責（高度可跟著拉桿；也可用 treeGrowAt 的時間軸），樹冠用 SunnyTree.tsx 匯出的 TreeCrown。
+   */
+  | { kind: 'sunnyTree'; warmth?: number; sun?: Vec3 }
 
 export type EventKind = EventSpec['kind']
 

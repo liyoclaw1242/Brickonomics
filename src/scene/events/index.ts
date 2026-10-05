@@ -2,6 +2,7 @@ import { BUBBLE_TIMELINE } from './bubble'
 import { FREEZE_TIMELINE } from './freeze'
 import { LIGHTNING_TIMELINE } from './lightning'
 import { QUAKE_TIMELINE } from './quake'
+import { SUNNY_TIMELINE } from './sunnyTree'
 import { TORNADO_TIMELINE } from './tornado'
 import type { EventKind, EventSpec, EventTimeline, SpecOf } from './types'
 
@@ -31,6 +32,7 @@ export const EVENTS: { [K in EventKind]: EventTimeline<SpecOf<K>> } = {
   quake: QUAKE_TIMELINE,
   bubble: BUBBLE_TIMELINE,
   freeze: FREEZE_TIMELINE,
+  sunnyTree: SUNNY_TIMELINE,
 }
 
 export const EVENT_KINDS = Object.keys(EVENTS) as EventKind[]

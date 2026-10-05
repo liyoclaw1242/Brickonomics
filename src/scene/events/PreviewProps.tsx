@@ -1,6 +1,6 @@
-import { type ComponentType, useLayoutEffect, useMemo, useRef } from 'react'
+import { type ComponentType, useCallback, useLayoutEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Color, type InstancedMesh, Object3D } from 'three'
+import { Color, type Group, type InstancedMesh, Object3D } from 'three'
 import { SECTOR_COLORS } from '../palette'
 import type { Quality } from '../quality'
 import { atPlaza } from '../stage/plaza'
@@ -9,6 +9,8 @@ import { useThemeStore } from '../../store/theme'
 import { THEMES } from '../theme'
 import { bubbleAt, bubbleFinal } from './bubble'
 import { freezeTint } from './freeze'
+import { TreeCrown } from './SunnyTree'
+import { treeGrowAt } from './sunnyTree'
 import { quakeAt } from './quake'
 import type { EventClock, EventKind, SpecOf } from './types'
 
@@ -121,10 +123,56 @@ function FreezeProps({ spec, clock }: PreviewPropsOf<'freeze'>) {
   )
 }
 
+/** 晴天＋大樹：一座塔跟著 treeGrowAt 長高、塔頂的樹冠一起長；左邊幾小堆（像每個月買的一小份）當對照 */
+function SunnyTreeProps({ clock, quality }: PreviewPropsOf<'sunnyTree'>) {
+  const { tree, treePiles } = PREVIEW_LAYOUT
+  const ref = useRef<InstancedMesh>(null)
+  const crown = useRef<Group>(null)
+  const dummy = useMemo(() => new Object3D(), [])
+  const grow = useCallback(() => treeGrowAt(clock.reduced ? Infinity : clock.t.current), [clock])
+  const n = treePiles.length + 1
+  useLayoutEffect(() => {
+    const m = ref.current
+    if (!m) return
+    const c = new Color(SECTOR_COLORS.semiconductor)
+    for (let i = 0; i < n; i++) m.setColorAt(i, c)
+    if (m.instanceColor) m.instanceColor.needsUpdate = true
+  }, [n])
+  useFrame(() => {
+    const m = ref.current
+    if (!m) return
+    treePiles.forEach((h, i) => {
+      dummy.position.set(...atPlaza(-12 + i * 2.2, h / 2, 2))
+      dummy.scale.set(1.4, h, 1.4)
+      dummy.updateMatrix()
+      m.setMatrixAt(i, dummy.matrix)
+    })
+    const h = tree.from + (tree.to - tree.from) * grow()
+    dummy.position.set(...atPlaza(tree.at[0], h / 2, tree.at[2]))
+    dummy.scale.set(tree.width, h, tree.width)
+    dummy.updateMatrix()
+    m.setMatrixAt(treePiles.length, dummy.matrix)
+    m.instanceMatrix.needsUpdate = true
+    crown.current?.position.set(...atPlaza(tree.at[0], h - 0.4, tree.at[2]))
+  })
+  return (
+    <>
+      <instancedMesh ref={ref} args={[undefined, undefined, n]} castShadow receiveShadow frustumCulled={false}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial roughness={0.8} />
+      </instancedMesh>
+      <group ref={crown}>
+        <TreeCrown radius={2.4} grow={grow} quality={quality} />
+      </group>
+    </>
+  )
+}
+
 export const PREVIEW_PROPS: { [K in EventKind]: ComponentType<PreviewPropsOf<K>> | null } = {
   tornado: null,
   lightning: null,
   quake: QuakeProps,
   bubble: BubbleProps,
   freeze: FreezeProps,
+  sunnyTree: SunnyTreeProps,
 }

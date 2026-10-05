@@ -4,6 +4,7 @@ import { Bubble } from './Bubble'
 import { Freeze } from './Freeze'
 import { Lightning } from './Lightning'
 import { Quake } from './Quake'
+import { SunnyTree } from './SunnyTree'
 import { Tornado } from './Tornado'
 import type { EventClock, EventKind, EventProps, SpecOf } from './types'
 
@@ -14,6 +15,7 @@ const COMPONENTS: { [K in EventKind]: ComponentType<EventProps<SpecOf<K>>> } = {
   quake: Quake,
   bubble: Bubble,
   freeze: Freeze,
+  sunnyTree: SunnyTree,
 }
 
 /** 畫出目前步驟的事件（沒有事件時什麼都不畫）；clock 由 StageView 的 useEventClock 提供，與舞台共用 */

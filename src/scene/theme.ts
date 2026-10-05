@@ -27,6 +27,25 @@ export type Theme = {
   bubble: { rimA: string; rimB: string; highlight: string; drop: string; shadow: string }
   /** ❄️ 寒流：冰殼與冰柱、積雪與雪花、風絲、冷色天光（顏色與最大強度） */
   frost: { ice: string; snow: string; wind: string; chill: string; chillIntensity: number }
+  /**
+   * 🌤 晴天：放晴後的天空與霧、太陽、散開的雲、暖光（顏色、主光與天光的最大強度、地面反光色）、樹冠的兩種綠
+   */
+  sunny: {
+    sky: string
+    fog: string
+    sun: string
+    /** 光暈與光芒的顏色、強度；glowAdditive＝用加法混色（暗底上才會發光，亮底上會洗白） */
+    glow: string
+    glowOpacity: number
+    glowAdditive: boolean
+    cloud: string
+    lightColor: string
+    light: number
+    ambient: number
+    ground: string
+    leaf: string
+    leafDark: string
+  }
   /** 低飽和方塊：飽和度乘數、亮度位移；鮮豔方塊：亮度乘數 */
   tone: { mutedSaturation: number; mutedLightness: number; vividBoost: number }
 }
@@ -54,6 +73,22 @@ export const THEMES: Record<ThemeId, Theme> = {
     quake: { wall: '#7a5442', floor: '#24181a', crack: '#0d0a10', dust: '#a89a8e', rim: '#4b5164' },
     bubble: { rimA: '#9fe7ff', rimB: '#f3b4ff', highlight: '#ffffff', drop: '#cdefff', shadow: '#05060c' },
     frost: { ice: '#9fdcff', snow: '#eef8ff', wind: '#cfe9ff', chill: '#8fc8ff', chillIntensity: 0.45 },
+    // 黃昏的「放晴」：天空從深紫往暖一點、亮一點的紫橘；太陽是低低的金色
+    sunny: {
+      sky: '#6a4a62',
+      fog: '#4f3e56',
+      sun: '#ffd27a',
+      glow: '#ffc46b',
+      glowOpacity: 0.7,
+      glowAdditive: true,
+      cloud: '#9a98b0',
+      lightColor: '#ffc27a',
+      light: 1.2,
+      ambient: 0.55,
+      ground: '#3a2a20',
+      leaf: '#5fbf5a',
+      leafDark: '#3f9a48',
+    },
     tone: { mutedSaturation: 0.55, mutedLightness: -0.09, vividBoost: 1.15 },
   },
   day: {
@@ -81,6 +116,22 @@ export const THEMES: Record<ThemeId, Theme> = {
     bubble: { rimA: '#2f8fd0', rimB: '#b05ad8', highlight: '#ffffff', drop: '#4aa6e0', shadow: '#4a5568' },
     // 亮底上：風絲用深一點的灰藍才看得到
     frost: { ice: '#8fd3f7', snow: '#ffffff', wind: '#5f8fb5', chill: '#a9d8ff', chillIntensity: 0.35 },
+    // 白天：天空更亮更暖；雲用淺灰（亮底上才看得到）
+    sunny: {
+      sky: '#fff1d6',
+      fog: '#fbefd9',
+      sun: '#ffcc33',
+      glow: '#ffd54f',
+      glowOpacity: 0.75,
+      glowAdditive: false,
+      cloud: '#b8c2cf',
+      lightColor: '#ffe2a8',
+      light: 0.8,
+      ambient: 0.35,
+      ground: '#c9b48a',
+      leaf: '#66bb6a',
+      leafDark: '#43a047',
+    },
     tone: { mutedSaturation: 0.55, mutedLightness: 0.06, vividBoost: 1 },
   },
 }
