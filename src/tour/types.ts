@@ -51,7 +51,7 @@ export type Stage =
   | { kind: 'feeTrees' }
   /** a-lev 槓桿的耗損：大盤、2 倍塔、反向塔站在水裡；🌊 大浪（scene.event wave）每道浪一跌一漲 */
   | { kind: 'leverage' }
-  /** a-hedge 反向來對沖：三座塔（全押、加反向、少買＋現金；hedgeCase 拉桿換情境）；⚡ 情境時閃電（scene.event lightning＋eventWhen） */
+  /** a-hedge 反向來對沖：三座塔（全押、加反向、少買＋現金；hedgeCase 拉桿換情境）；大跌那天 🌋 地震（scene.event quake＋eventWhen） */
   | { kind: 'hedge' }
   /** a-rebal 剪高補低：一座組合塔＋目標線（rebal 拉桿：一開始、股票漲了、剪高補低） */
   | { kind: 'rebalance' }
@@ -64,7 +64,7 @@ export type StageKind = Stage['kind']
 /** tick＝價格路徑上的第幾個點（s-dd）；rate＝市場利率（b-rate）；months＝定期定額買了幾個月（e-dca） */
 /** bondPct：a-port 組合塔裡債券佔幾 %（其餘是股票） */
 /** trades：a-dt 當沖進出了幾次（一次＝買進再賣出） */
-/** hedgeCase：a-hedge 看哪一種情境（0 平穩一年、1 慢慢漲一年、2 ⚡ 打下那天） */
+/** hedgeCase：a-hedge 看哪一種情境（0 來回晃的一年、1 大漲那年、2 🌋 大跌那天） */
 /** rebal：a-rebal 走到哪一步（0 一開始、1 股票漲了一年、2 剪高補低） */
 /** storm：a-port 選哪一種示意風暴（0 股跌債漲、1 股債一起跌） */
 /** feeDiscount：a-dt 券商手續費打幾折（1＝公告費率不打折） */

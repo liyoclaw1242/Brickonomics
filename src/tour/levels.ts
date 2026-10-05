@@ -715,7 +715,7 @@ export const COURSE_STEPS: Step[] = [
     // 等閃電打中才數（事件的 numberDelay）
     bigNumber: () => {
       const n = corrNow()
-      return { value: `${pct0(Math.abs(n.mixTogether) * 100)}% vs ${pct0(Math.abs(n.mixOpposite) * 100)}%`, label: '⚡ 那天，兩顆合起來跌', note: '各放一半。一起不一起動，這叫相關性', colorKey: 'loss', mark: 'illustrative' }
+      return { value: `${pct0(Math.abs(n.mixTogether) * 100)}% vs ${pct0(Math.abs(n.mixOpposite) * 100)}%`, label: 'A 出事那天合起來跌', note: '各放一半。一起不一起動，這叫相關性', colorKey: 'loss', mark: 'illustrative' }
     },
     scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'correlation' }, event: corrLightning(), cityLabels: false },
   },
@@ -737,7 +737,11 @@ export const COURSE_STEPS: Step[] = [
       return {
         value: wan(d.capital),
         label: `進出 ${d.n} 次後的本金`,
-        note: `打平要勝率 ${pct1(d.breakEven)}（每次成本 ${pct3(d.costPerTrade)}）`,
+        // 本金變多時（勝率拉高）一定要說這有多難：要一直贏過打平勝率，研究說能穩定做到的人很少（adv-r1 final review）
+        note:
+          d.capital > 100
+            ? `要一直贏 ${T.pct1(d.breakEven)} 以上；研究：能穩定做到的${researchRow('reliablyProfitable', '').value}`
+            : `打平要勝率 ${T.pct1(d.breakEven)}（每次成本 ${pct3(d.costPerTrade)}）`,
         colorKey: 'stock',
         mark: dayTradeCostVerified() ? 'illustrative' : 'unverified',
       }
@@ -803,8 +807,8 @@ export const COURSE_STEPS: Step[] = [
       return [
         '主動型＝怪手（經理人）挑；指數型＝照藍圖買。',
         ...(a !== undefined && p !== undefined ? [`這檔基金扣 ${pctOf(a)}，0050 扣 ${pctOf(p)}。`] : []),
-        `假設扣費前報酬一樣，每年 ${pct1(FEE_DRAG.grossReturn)}，這是示意。`,
-        '扣費前誰賺得多不一定，費用每年一定扣。',
+        `費用都不含交易成本；假設扣費前每年 ${pct1(FEE_DRAG.grossReturn)}。`,
+        '扣費前誰賺得多不一定，這是示意。',
       ].join('')
     },
     mark: 'illustrative',
@@ -853,7 +857,7 @@ export const COURSE_STEPS: Step[] = [
       return `大跌少賠 ${n0(g.strike.inverse)} 萬。大漲少賺 ${n0(g.boom.inverse)} 萬`
     },
     more: () =>
-      `對沖＝放一點反向 ETF，大盤跌它漲。示意：${HEDGE.hedgePct}% 放反向，${100 - HEDGE.hedgePct}% 放 0050。反向每天重設，來回晃也會磨掉，費用假設一年 ${pct1(HEDGE.inverseFee)}。少買 0050、多留現金，🌋 時也一樣少賠。`,
+      `對沖＝放一點反向 ETF，大盤跌它漲。示意：${HEDGE.hedgePct}% 放反向，費用假設一年 ${pct1(HEDGE.inverseFee)}。來回晃假設每天上下 ${pct1(HEDGE.choppyMove)}，反向每天重設會磨掉。少買 0050、多留現金，🌋 時也一樣少賠。`,
     mark: 'illustrative',
     // 跟著情境：平時的代價、🌋 那天少賠多少；note 一直拿「少買 0050 留現金」來比
     bigNumber: (c, v) => {

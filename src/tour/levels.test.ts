@@ -975,7 +975,7 @@ describe('Plan 8 高階: 一起跌或抵消 (a-corr)', () => {
     expect(stripMarkup(lineOf(s(), ctx))).toBe('一起動的一起跌，一上一下的抵消')
   })
   it('big number: half-half, together falls 6% and opposite 0% that day (−8 − 4) ÷ 2, (−8 + 8) ÷ 2', () => {
-    expect(bigOf(s())).toEqual({ value: '6% vs 0%', label: '⚡ 那天，兩顆合起來跌', note: '各放一半。一起不一起動，這叫相關性', colorKey: 'loss', mark: 'illustrative' })
+    expect(bigOf(s())).toEqual({ value: '6% vs 0%', label: 'A 出事那天合起來跌', note: '各放一半。一起不一起動，這叫相關性', colorKey: 'loss', mark: 'illustrative' })
     expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('一起動跌 6%。一上一下 0%')
   })
   it('the more text is honest: correlation changes and in big falls things often fall together', () => {
@@ -1000,11 +1000,21 @@ describe('Plan 8 高階: 當沖的成本 (a-dt)', () => {
     expect(stripMarkup(lineOf(s(), ctx))).toBe('拖進出次數。看交易成本吃掉多少')
   })
   it('big number follows all three sliders; the note gives the break-even win rate (the sim’s breakEvenWinRate) and the cost per trade', () => {
-    expect(bigOf(s(), { trades: 250 })).toEqual({ value: '33.6 萬', label: '進出 250 次後的本金', note: '打平要勝率 71.75%（每次成本 0.435%）', colorKey: 'stock', mark: 'illustrative' }) // 100 × 0.99565^250；(1% + 0.435%) ÷ 2%
+    expect(bigOf(s(), { trades: 250 })).toEqual({ value: '33.6 萬', label: '進出 250 次後的本金', note: '打平要勝率 71.8%（每次成本 0.435%）', colorKey: 'stock', mark: 'illustrative' }) // 100 × 0.99565^250；(1% + 0.435%) ÷ 2% = 71.75%
     // 2.8 折：0.1425% × 0.28 × 2 + 0.15% = 0.2298%；100 × 0.997702^250 = 56.3；打平 (1% + 0.2298%) ÷ 2% = 61.49%
-    expect(bigOf(s(), { trades: 250, feeDiscount: 0.28 })).toMatchObject({ value: '56.3 萬', note: '打平要勝率 61.49%（每次成本 0.230%）' })
+    expect(bigOf(s(), { trades: 250, feeDiscount: 0.28 })).toMatchObject({ value: '56.3 萬', note: '打平要勝率 61.5%（每次成本 0.230%）' })
     // 勝率 75%、不打折：每次 +0.065% → 100 × 1.00065^250 = 117.6
     expect(bigOf(s(), { trades: 250, winRate: 0.75 })!.value).toBe('117.6 萬')
+  })
+  it('final review: when capital ends above 100 the note says how hard that is — keep winning above the break-even (follows the discount) and the research says < 1% manage it', () => {
+    expect(bigOf(s(), { trades: 250, winRate: 0.75 })!.note).toBe('要一直贏 71.8% 以上；研究：能穩定做到的不到 1%')
+    // 2.8 折、勝率 75%：每次 +0.5% − 0.2298% → 100 × 1.002702^250 ≈ 196；打平 61.5%
+    const cheap = bigOf(s(), { trades: 250, feeDiscount: 0.28, winRate: 0.75 })!
+    expect(parseFloat(cheap.value)).toBeGreaterThan(190)
+    expect(cheap.note).toBe('要一直贏 61.5% 以上；研究：能穩定做到的不到 1%')
+    // 3D 標註：本金多過 100 萬時不說「剩」
+    expect(T.dt.capitalNow('117.6 萬')).toBe('本金 117.6 萬')
+    expect(T.pct1(0.7175)).toBe('71.8%')
     expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('進出 250 次。本金剩 33.6 萬')
   })
   it('the more text calls 0.1425% the posted rate (公告費率, not 上限), the ≈ example, and no 稅', () => {
@@ -1072,10 +1082,12 @@ describe('Plan 8 高階: 主動 vs 被動 30 年 (a-fee30)', () => {
   })
   it('one headline number on screen: the cap label carries no second figure, and the cheap tree is named 0050 with its yearly fee', () => {
     expect(T.fee30.lost).not.toMatch(/\d/)
-    expect(T.fee30.passive('0.14%')).toBe('0050（每年 0.14%）')
+    expect(T.fee30.passive('0.14%')).toBe('0050（內扣每年 0.14%）')
+    expect(moreOf(byId('a-fee30'), ctx)).toContain('不含交易成本')
   })
   it('fees come from the data (1.88% vs 0.14%) and ？ appears if either is unverified', () => {
     expect(moreOf(s(), ctx)).toContain('這檔基金扣 1.88%，0050 扣 0.14%')
+    expect(moreOf(s(), ctx)).toContain('費用都不含交易成本；假設扣費前每年 6%')
     expect(moreOf(s(), ctx)).toContain('扣費前誰賺得多不一定')
     expect(stepMarks(s(), universe)).toEqual(['illustrative'])
     expect(stepMarks(s(), unverify(['JH_BALANCED']))).toEqual(['illustrative', 'unverified'])
@@ -1125,7 +1137,7 @@ describe('Plan 8 高階: 反向來對沖 (a-hedge)', () => {
     expect(stepMarks(s(), universe)).toEqual(['illustrative', 'assumption'])
     expect(stepMarks(s(), unverify(['0050']))).toEqual(['illustrative', 'assumption', 'unverified'])
     expect(moreOf(s(), ctx)).toContain('費用假設一年 1%')
-    expect(moreOf(s(), ctx)).toContain('來回晃也會磨掉')
+    expect(moreOf(s(), ctx)).toContain('來回晃假設每天上下 2%，反向每天重設會磨掉')
     expect(moreOf(s(), ctx)).toContain('少買 0050、多留現金，🌋 時也一樣少賠')
   })
 })

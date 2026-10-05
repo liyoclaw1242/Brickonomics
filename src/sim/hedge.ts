@@ -10,7 +10,7 @@ export const TRADING_DAYS = 250
  * 反向 ETF 對沖的舉例（≈ 示意；反向 ETF 用通用名稱，不放真實代號）：
  * 100 元裡 hedgePct 放反向 ETF（−1 倍、每日重設），其餘放 0050（費率從資料讀）。
  * inverseFee：反向 ETF 一年的費用（1%，✎ 假設；hedgeExample 回傳 inverseFeeAssumed: true）。
- * 對照組（現金）：少買 0050、多留現金也能讓 ⚡ 的損失一樣小，平時還不用付反向 ETF 的代價——反向 ETF 不是特別的工具。
+ * 對照組（現金）：少買 0050、多留現金也能讓大跌那天的損失一樣小，平時還不用付反向 ETF 的代價——反向 ETF 不是特別的工具。
  * strike：某一天大盤跌 strikeDrop；平時：calmDays 天裡大盤平穩地漲 calmRise（另有完全不漲的一年，只看費用）。
  * choppy：來回晃的一年（每天漲 choppyMove 再跌回原處，年底和年初一樣）：反向那邊每日重設，晃一次磨掉一點；
  * boom：大漲那年（calmDays 天裡平穩地漲 boomRise）。
@@ -21,7 +21,7 @@ export type HedgeParams = { hedgePct: number; baseFee: number; inverseFee: numbe
 /**
  * plain：全部放 0050；hedged：一部分放反向 ETF；diff＝hedged − plain（正的＝對沖幫了忙，負的＝付出的代價）。
  * cash：對照組「少買一點 0050、其餘放現金」——0050 放 100 − 2 × hedgePct、現金 2 × hedgePct（現金不計利息，保守），
- * 大盤怎麼動，它和 hedged 動得一樣多（淨部位相同），所以 ⚡ 打下時損失一樣小；hedgePct > 50 時無法用現金做到，為 null。
+ * 大盤怎麼動，它和 hedged 動得一樣多（淨部位相同），所以大跌時損失一樣小；hedgePct > 50 時無法用現金做到，為 null。
  */
 export type HedgeOutcome = { plain: number; hedged: number; diff: number; cash: number | null }
 
@@ -82,7 +82,7 @@ export type HedgeExample = {
   /** 反向 ETF 的費用是假設（✎），沒有資料來源 */
   inverseFeeAssumed: true
   rows: HedgeRow[]
-  /** ⚡ 打下的那一天：對沖讓損失變小 */
+  /** 大跌的那一天（畫面上是 🌋）：對沖讓損失變小 */
   strike: HedgeOutcome
   /** 平時（大盤一整年不動）：反向那邊每天扣費用 */
   flat: HedgeOutcome
@@ -94,7 +94,7 @@ export type HedgeExample = {
   boom: HedgeOutcome
 }
 
-/** 兩邊都算：⚡ 打下時與平時（不動、上漲）。0050 的費率從資料讀；沒有資料時丟 Error */
+/** 兩邊都算：大跌那天與平時（不動、上漲、來回晃、大漲）。0050 的費率從資料讀；沒有資料時丟 Error */
 export function hedgeExample(u: Universe, h: typeof HEDGE = HEDGE): HedgeExample {
   const a = u.get(h.base)
   const baseFee = a?.fees?.expenseRatio

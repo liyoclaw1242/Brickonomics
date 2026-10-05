@@ -177,7 +177,7 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
         { label: T.readout.dtTrades, value: T.controls.tradesValue(d.n), marks: ['illustrative'] },
         { label: T.controls.feeDiscount, value: T.controls.feeDiscountValue(d.discount) },
         { label: T.controls.winRate, value: T.controls.winRateValue(d.winRate) },
-        { label: T.readout.dtBreakEven, value: `${(d.breakEven * 100).toFixed(1)}%` },
+        { label: T.readout.dtBreakEven, value: T.pct1(d.breakEven) },
         { label: T.readout.dtCost, value: `${(d.costPerTrade * 100).toFixed(3)}%` },
         { label: T.readout.dtCapital, value: T.wan(d.capital) },
         { label: T.readout.dtPaid, value: T.wan(d.costPaid) },

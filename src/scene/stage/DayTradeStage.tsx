@@ -91,7 +91,7 @@ export function DayTradeStage() {
         anchor={atPlaza(towerX - W / 2, 0.1, W / 2)}
         offset={[-0.4, -0.3, 2.2]}
         title={T.dt.capital(now.n)}
-        sub={T.dt.left(T.wan(now.capital))}
+        sub={now.capital > 100 ? T.dt.capitalNow(T.wan(now.capital)) : T.dt.left(T.wan(now.capital))}
         color={ACCENT_COLORS.stock}
         persistent
       />
@@ -109,7 +109,7 @@ export function DayTradeStage() {
         anchor={atPlaza(2, 0.2, chipsZ + chipR)}
         offset={[0, -0.3, 2.6]}
         title={T.dt.chips(pct(now.winRate))}
-        sub={T.dt.chipsSub(pct(DAY_TRADE.avgWin), pct(DAY_TRADE.avgLoss), pct(now.breakEven))}
+        sub={T.dt.chipsSub(pct(DAY_TRADE.avgWin), pct(DAY_TRADE.avgLoss), T.pct1(now.breakEven))}
         persistent
       />
     </>

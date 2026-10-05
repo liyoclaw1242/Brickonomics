@@ -38,6 +38,8 @@ export const T = {
   },
   /** 研究數據卡（a-dt）：一手出處的研究數字 */
   research: { title: '研究怎麼說', source: (cite: string) => `出處：${cite}`, refs: '完整出處' },
+  /** 比例 → 一位小數的百分比（打平勝率在卡片、讀數、3D 用同一個格式）：0.7175 → '71.8%' */
+  pct1: (r: number) => `${(r * 100).toFixed(1)}%`,
   /** 大數字卡等事件發生前的佔位（不顯示還沒發生的 0） */
   waiting: '…',
   /** 比較步驟的提醒（mid-r1：比較結果一面倒，被讀成投資建議） */
@@ -214,6 +216,8 @@ export const T = {
     ghost: '原本 100 萬',
     capital: (n: number) => `進出 ${n} 次後的本金`,
     left: (v: string) => `剩 ${v}`,
+    /** 本金比 100 萬多時不說「剩」 */
+    capitalNow: (v: string) => `本金 ${v}`,
     cost: '付掉的交易成本',
     chips: (rate: string) => `勝率 ${rate}`,
     chipsSub: (win: string, loss: string, even: string) => `賺 ${win}、賠 ${loss}・打平要 ${even}`,
@@ -228,7 +232,7 @@ export const T = {
   fee30: {
     /** 樹的名字寫出每年的費用（adv-r1：0.14% 是哪裡的費率？——就是 0050 的） */
     active: (fee: string) => `基金（每年 ${fee}）`,
-    passive: (fee: string) => `0050（每年 ${fee}）`,
+    passive: (fee: string) => `0050（內扣每年 ${fee}）`,
     /** 紅色帽子只說是什麼，不再放第二個數字（adv-r1：225.7 和 249.3 兩個數字打架） */
     lost: '紅色＝費用吃掉的',
     base: (gross: string) => `假設扣費前報酬一樣：每年 ${gross}`,
