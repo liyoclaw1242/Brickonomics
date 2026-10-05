@@ -552,7 +552,7 @@ export const LEVELS: Level[] = [
 
 /**
  * 課程專用的新步驟（不在 LEVELS 裡，只由 courses.ts 排進課程）：
- * m-0＝中階開頭的初階口訣複習；m-fin＝中階結尾的口訣卡；a-0…a-fin＝高階（Plan 8）。
+ * m-0＝中階開頭的初階口訣複習；m-fin＝中階結尾的口訣卡（推薦高階）；a-0…a-fin＝高階（Plan 8，最後推薦自由玩）。
  */
 export const COURSE_STEPS: Step[] = [
   {
@@ -662,10 +662,11 @@ export const COURSE_STEPS: Step[] = [
   {
     id: 'm-fin',
     title: '中階口訣卡',
-    line: '學完中階！按**自由玩**到處看',
+    // Plan 8：高階開放了，結尾推薦下一階（面板上的「下一階：高階」按鈕）
+    line: '學完中階！下一階是**高階**',
     fallbackLine: '中階課程**完成**了',
-    more: '恭喜完成中階！自由玩已經解鎖。所有商品都能自由切開、拆開、比較。',
-    fallbackMore: '恭喜完成中階！在支援 3D 的瀏覽器上，還可以自由玩。自由玩裡能切開、拆開、比較。',
+    more: '恭喜完成中階！自由玩已經解鎖。下一階高階：怎麼組合、怎麼算成本、怎麼控風險。',
+    fallbackMore: '恭喜完成中階！在支援 3D 的瀏覽器上，還可以自由玩。下一階是高階。',
     recap: MID_RECAP,
     scene: { camera: 'overview', product: null },
   },
@@ -869,5 +870,21 @@ export const COURSE_STEPS: Step[] = [
     controls: ['rebal'],
     ranges: { rebal: [0, 2] },
     until: { control: 'rebal', min: 2 },
+  },
+  {
+    // 高階結尾：口訣卡 → 自由玩（最後一門課，沒有下一階）
+    id: 'a-fin',
+    title: '高階口訣卡',
+    line: '學完高階！按**自由玩**到處看',
+    fallbackLine: '高階課程**完成**了',
+    more: '恭喜完成高階！自由玩已經解鎖。所有商品都能自由切開、拆開、比較。',
+    fallbackMore: '恭喜完成高階！在支援 3D 的瀏覽器上，還可以自由玩。自由玩裡能切開、拆開、比較。',
+    recap: [
+      { icon: '🧱', text: '一起動的不算分散；當沖成本磨本金' },
+      { icon: '📜', text: '借據越長，利率一動跌越多' },
+      { icon: '🚜', text: '費用差一點，30 年差很多' },
+      { icon: '🧩', text: '槓桿會耗損；對沖有代價；歪了剪高補低' },
+    ],
+    scene: { camera: 'overview', product: null },
   },
 ]

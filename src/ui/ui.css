@@ -310,6 +310,13 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .course-start__name { font-size: 21px; font-weight: 700; }
 .course-start__note { font-size: 16px; }
 .course-start .hint { font-size: 14px; }
+/* 手機抽屜只有 42dvh：三階（Plan 8 開放高階）要一眼都看得到，順序和名稱排一行 */
+@media (max-width: 720px) {
+  .course-start { gap: 8px; margin-top: 0; }
+  .course-start__choice { padding: 8px 14px; grid-template-columns: auto 1fr; column-gap: 10px; align-items: baseline; }
+  .course-start__name { font-size: 19px; }
+  .course-start__note { grid-column: 1 / -1; font-size: 15px; }
+}
 
 /* 右上換階：膠囊顯示目前階，點開選單 */
 .course-switch { position: relative; }

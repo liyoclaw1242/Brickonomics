@@ -33,7 +33,8 @@ describe('TourPanel start card', () => {
     expect(first).toContain(T.course.startTitle)
     expect(first).toContain('初階')
     expect(first).toContain('中階')
-    expect(first).not.toContain('高階') // 還沒開放
+    expect(first).toContain('高階') // Plan 8 開放
+    expect(first).toContain(T.course.note('自己組合、算成本', stepsOf('advanced').length))
     expect(first).not.toContain(T.next)
     useTour.getState().chooseCourse('beginner')
     const after = render()
@@ -50,11 +51,13 @@ describe('TourPanel start card', () => {
     expect(u6).toContain(T.course.nextTier('中階'))
     expect(u6).not.toContain(T.skipToSandbox)
     useTour.getState().enterStep({ course: 'intermediate', index: stepsOf('intermediate').length - 1 })
-    const mfin = render()
-    expect(mfin).not.toContain('下一階')
-    expect(mfin).not.toContain('去自由玩')
-    expect(mfin).not.toContain(T.skipToSandbox)
-    expect(mfin).toContain(T.finish)
+    expect(render()).toContain(T.course.nextTier('高階')) // 中階結尾推薦高階
+    useTour.getState().enterStep({ course: 'advanced', index: stepsOf('advanced').length - 1 })
+    const afin = render()
+    expect(afin).not.toContain('下一階')
+    expect(afin).not.toContain('去自由玩')
+    expect(afin).not.toContain(T.skipToSandbox)
+    expect(afin).toContain(T.finish)
   })
 })
 

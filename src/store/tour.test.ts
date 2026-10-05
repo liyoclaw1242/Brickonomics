@@ -149,11 +149,19 @@ describe('useTour', () => {
     expect(idOf()).toBe('m-0')
   })
 
-  it('goNextCourse from the 中階 finish (高階 not open) goes to the sandbox', () => {
+  it('goNextCourse from the 中階 finish starts 高階 at a-0 (Plan 8)', () => {
     go('intermediate', 'm-fin')
     useTour.getState().goNextCourse()
-    expect(useTour.getState().mode).toBe('sandbox')
     expect(useTour.getState().progress.finished).toEqual(['intermediate'])
+    expect(useTour.getState().course).toBe('advanced')
+    expect(idOf()).toBe('a-0')
+  })
+
+  it('goNextCourse from the 高階 finish (the last course) goes to the sandbox', () => {
+    go('advanced', 'a-fin')
+    useTour.getState().goNextCourse()
+    expect(useTour.getState().mode).toBe('sandbox')
+    expect(useTour.getState().progress.finished).toEqual(['advanced'])
   })
 
   it('restartCourse starts at the first step of the current course', () => {

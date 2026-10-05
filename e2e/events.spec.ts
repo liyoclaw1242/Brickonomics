@@ -95,8 +95,10 @@ test('event lights: the scene light count never changes across the b-rate gate a
   await setRange(page, '市場利率', 0.03)
   await page.waitForTimeout(500)
   expect(await lights()).toBe(before)
-  for (const step of ['b-infl', 'e-dca']) {
-    await page.goto(`/?quality=high&course=intermediate&step=${step}`)
+  // 閃電的步驟（a-corr、a-hedge）不在這裡：閃光是 ambientLight，不會讓著色器重新編譯（lights.test）
+  for (const step of ['b-infl', 'e-dca', 'a-port', 'a-fee30', 'a-lev']) {
+    const course = step.startsWith('a-') ? 'advanced' : 'intermediate'
+    await page.goto(`/?quality=high&course=${course}&step=${step}`)
     await settled(page)
     await page.waitForTimeout(1500)
     expect(await lights(), step).toBe(before)

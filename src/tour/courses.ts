@@ -50,14 +50,14 @@ export const COURSES: readonly Course[] = [
     id: 'advanced',
     name: '高階',
     tagline: '自己組合、算成本',
-    available: false,
+    available: true,
     chapters: [
       chapter('review', T.courseChapters.review, ['a-0', 'a-port']),
       chapter('stock', STOCK, ['a-corr', 'a-dt']),
       chapter('bond', BOND, ['a-dur']),
       chapter('fund', FUND, ['a-fee30']),
       chapter('etf', ETF, ['a-lev', 'a-hedge', 'a-rebal']),
-      chapter('finish', T.courseChapters.finish, []),
+      chapter('finish', T.courseChapters.finish, ['a-fin']),
     ],
   },
 ]

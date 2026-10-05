@@ -105,11 +105,11 @@ test('first visit: choose 初階, walk its steps to 自由玩, timeline shows th
   await page.goto('/?quality=high')
   await page.evaluate(() => localStorage.clear())
   await page.goto('/?quality=high')
-  // 開場卡：可上的課各一顆大按鈕（高階還沒開放）；還沒選之前沒有時間軸、也沒有下一步
+  // 開場卡：三階各一顆大按鈕（Plan 8 開放高階）；還沒選之前沒有時間軸、也沒有下一步
   const beginnerBtn = page.getByRole('button', { name: /初階.*17 步/ })
   await expect(beginnerBtn).toBeVisible()
   await expect(page.getByRole('button', { name: /中階.*23 步/ })).toBeVisible()
-  await expect(page.getByRole('button', { name: /高階/ })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /高階.*10 步/ })).toBeVisible()
   await expect(page.getByRole('navigation', { name: '章節' })).toHaveCount(0)
   await expect(page.getByRole('button', { name: /下一步/ })).toHaveCount(0)
   await beginnerBtn.click()
@@ -196,4 +196,56 @@ test('an old simple-route save migrates into 初階 without showing the start ca
   await expect(page.getByRole('heading', { name: '從哪一階開始？' })).toHaveCount(0)
   await expect(page.getByRole('navigation', { name: '畫面設定' }).getByRole('button', { name: /初階，換階/ })).toBeVisible()
   await expect(page.locator('.step-counter')).toContainText('02 / 05')
+})
+
+test('walks the whole 高階 course through its gates, from the 中階 finish to 自由玩', async ({ page }) => {
+  test.setTimeout(300_000)
+  const errors: string[] = []
+  page.on('pageerror', (e) => errors.push(String(e)))
+  page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
+  await page.goto('/?quality=high')
+  await page.evaluate(() => localStorage.clear())
+  // 中階結尾推薦高階：按「下一階：高階」進高階第一步（a-0）
+  await page.goto('/?quality=high&course=intermediate&step=m-fin')
+  await settled(page)
+  let before = await cameraSeq(page)
+  await page.getByRole('button', { name: '下一階：高階 →' }).click()
+  await settled(page, before)
+  await expect(page.getByRole('navigation', { name: '畫面設定' }).getByRole('button', { name: /高階，換階/ })).toBeVisible()
+  await expect(page.getByRole('navigation', { name: '章節' }).getByRole('button')).toHaveText(['🔁00 複習', '🧱01 股票', '📜02 債券', '🚜03 基金', '🧩04 ETF', '🎓05 完成'])
+  const next = page.locator('.step-nav button.primary')
+  const ids = await page.evaluate(() => (window as unknown as { __BCI_COURSES__: Record<string, string[]> }).__BCI_COURSES__.advanced!)
+  expect(ids).toEqual(['a-0', 'a-port', 'a-corr', 'a-dt', 'a-dur', 'a-fee30', 'a-lev', 'a-hedge', 'a-rebal', 'a-fin'])
+  const gates = await page.evaluate(() => (window as unknown as { __BCI_STEP_GATES__: { id: string; control: string; min: number }[] }).__BCI_STEP_GATES__)
+  const GATES = new Map(gates.map((g) => [g.id, g]))
+  // 高階的門檻（債券比例、進出次數、市場利率、經過年數、情境、進度）都在這條路上
+  for (const id of ['a-port', 'a-dt', 'a-dur', 'a-fee30', 'a-hedge', 'a-rebal']) expect(GATES.has(id), id).toBe(true)
+  before = 0
+  for (const [i, id] of ids.entries()) {
+    if (i > 0) await settled(page, before)
+    await expect(page.locator('.step-counter')).toContainText(`第 ${i + 1} / ${ids.length} 步`)
+    const gate = GATES.get(id)
+    if (gate) {
+      await expect(next).toBeDisabled()
+      if (id === 'a-dt') await expect(page.locator('.research')).toHaveCount(0) // 研究數據卡：自己拖完才出現
+      await setRange(page, CONTROL_LABEL[gate.control]!, gate.min)
+    }
+    await expect(next).toBeEnabled()
+    if (id === 'a-dt') {
+      await expect(page.locator('.research')).toContainText('不到 1%')
+      await expect(page.locator('.research')).toContainText('97%')
+      await expect(page.locator('.research')).toContainText('Barber 等 2014、2020')
+    }
+    if (id === 'a-hedge') await expect(page.locator('.step-title__marks')).toContainText('假設的數字') // ✎ 反向的費用
+    expect(await page.locator('.panel.tour').innerText(), id).not.toContain('稅') // 只說「交易成本」
+    if (id === ids.at(-1)) {
+      await expect(next).toHaveText('自由玩')
+      await expect(page.locator('.recap li')).toHaveCount(4)
+      await expect(page.getByRole('button', { name: /下一階/ })).toHaveCount(0) // 最後一門：只推薦自由玩
+    }
+    before = await cameraSeq(page)
+    await next.click()
+  }
+  await expect(page.getByRole('navigation', { name: '畫面設定' }).getByRole('button', { name: '↺ 重看導覽' })).toBeVisible()
+  expect(errors).toEqual([])
 })
