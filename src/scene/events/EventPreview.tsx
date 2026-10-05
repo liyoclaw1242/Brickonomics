@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { useQuality } from '../../store/quality'
 import { useThemeStore } from '../../store/theme'
+import { FrameCounter } from '../FrameCounter'
 import { Lighting } from '../Lighting'
 import { QUALITY, parseQualityParam, type Quality } from '../quality'
 import { THEMES } from '../theme'
@@ -86,6 +87,7 @@ function PreviewScene({ options, quality }: { options: PreviewOptions; quality: 
       <Plaza />
       {Props && <Props spec={options.spec} clock={clock} quality={quality} />}
       <EventLayer clock={clock} quality={quality} />
+      <FrameCounter />
     </>
   )
 }
