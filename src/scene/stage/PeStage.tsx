@@ -89,6 +89,7 @@ export function PeStage({ event }: { event: EventClock }) {
           anchor={atPlaza(PE_LAYOUT.x.pricey, liftOf(bubble) + PE_LAYOUT.height / 2 + bubbleRadii(bubble.target.size)[1], 0)}
           offset={[0, 1.2, 0]}
           title={T.pe.bubble}
+          sub={T.pe.bubbleSub}
           persistent
         />
       )}

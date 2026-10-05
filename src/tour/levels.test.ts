@@ -905,3 +905,14 @@ describe('mid-r1: the background city steps back on 中階 teaching steps', () =
     for (const id of ['f-2', 'f-3', 'f-4', 'f-8', 'e-4', 'c-3']) expect(byId(id).scene.cityDim, id).toBe(true)
   })
 })
+
+describe('mid-r2: s-pe says 比較貴, never 泡沫', () => {
+  it('the bubble label is plain and the profit stacks say whose profit they are', () => {
+    expect(T.pe.bubble).toBe('比較貴')
+    expect(T.pe.bubbleSub).toBe('不代表一定會跌')
+    expect(T.pe.years(15)).toBe('15 年的獲利')
+    expect(T.pe.sub(600, 40)).toContain('公司每年賺')
+    for (const t of [T.pe.bubble, T.pe.bubbleSub, lineOf(byId('s-pe'), ctx), moreOf(byId('s-pe'), ctx)]) expect(t).not.toContain('泡沫')
+    expect(byId('s-pe').scene.event).toMatchObject({ kind: 'bubble', phase: 'float' }) // 不破
+  })
+})

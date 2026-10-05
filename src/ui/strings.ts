@@ -130,10 +130,12 @@ export const T = {
   },
   /** s-pe 本益比的 3D 標註：每疊旁邊寫疊了幾年、股價與每年賺多少 */
   pe: {
-    years: (n: number) => `${n} 年`,
-    sub: (price: number, earn: number) => `股價 ${price}・每年賺 ${earn}`,
-    /** 泡泡的意思（mid-r1：透明泡泡是什麼沒標）；不說會跌 */
-    bubble: '泡泡＝年數多，比較貴',
+    /** 綠色薄片＝公司每年賺的錢（mid-r2：綠色疊疊樂沒標、「每年賺」不知道誰賺） */
+    years: (n: number) => `${n} 年的獲利`,
+    sub: (price: number, earn: number) => `股價 ${price}・公司每年賺 ${earn}`,
+    /** 泡泡的意思：只說比較貴（mid-r2：「泡泡」被讀成「泡沫，會破」）；不說會跌 */
+    bubble: '比較貴',
+    bubbleSub: '不代表一定會跌',
   },
   /** b-rate 利率翹翹板的 3D 標註 */
   seesaw: {
