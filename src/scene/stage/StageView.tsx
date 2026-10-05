@@ -7,6 +7,7 @@ import type { Quality } from '../quality'
 import { useEventClock } from '../useEventClock'
 import { AccumulateStage } from './AccumulateStage'
 import { BondShowcase } from './BondShowcase'
+import { DcaStage } from './DcaStage'
 import { DrawdownStage } from './DrawdownStage'
 import { Excavator } from './Excavator'
 import { PeStage } from './PeStage'
@@ -46,6 +47,7 @@ export function StageView({ quality }: { quality: Quality }) {
       {stage.kind === 'drawdown' && <DrawdownStage event={clock} />}
       {stage.kind === 'pe' && <PeStage event={clock} />}
       {stage.kind === 'seesaw' && <SeesawStage event={clock} />}
+      {stage.kind === 'dca' && <DcaStage quality={quality} />}
       {stage.kind === 'overlap' && <OverlapStage a={stage.a} b={stage.b} quality={quality} />}
       {stage.kind === 'underground' && <UndergroundStage show={stage.show} cores={stage.cores} quality={quality} />}
       {stage.kind === 'excavator' && <Excavator other={stage.other} />}

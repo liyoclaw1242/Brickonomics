@@ -34,6 +34,8 @@ export type Stage =
   | { kind: 'pe' }
   /** b-rate 利率翹翹板：市場利率（rate 拉桿）vs 舊借據價格；拉到 5% 時舊借據結霜（scene.event freeze＋eventWhen） */
   | { kind: 'seesaw' }
+  /** e-dca 定期定額：每月一小堆（months 拉桿）＋累積的塔像樹一樣長高；天氣是 scene.event sunnyTree */
+  | { kind: 'dca' }
   | { kind: 'overlap'; a: string; b: string }
   | { kind: 'underground'; show: 'strata' | 'cores' | 'dig' | 'veins' | 'gold'; cores?: [string, string] }
 

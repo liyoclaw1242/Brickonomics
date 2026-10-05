@@ -3,7 +3,7 @@ import { movePct, pct0, SHOCK_2330, signedPct, wan } from './context'
 import { DEFAULT_VALUES } from './values'
 import { EXDIV, exDivTimeline, principalTrap, TRAP_DEMO } from '../scene/layout/stages'
 import { T } from '../ui/strings'
-import { DD_DEMO, DD_TROUGH, ddNow, ddQuake, PE_DEMO, peBubble, peYears, RATE_DEMO, rateFreeze, ratePrice } from '../scene/layout/intermediate'
+import { DD_DEMO, DD_TROUGH, ddNow, ddQuake, PE_DEMO, peBubble, peYears, RATE_DEMO, rateFreeze, ratePrice, DCA_DEMO, dcaNow, dcaSunny } from '../scene/layout/intermediate'
 import { maxDrawdown } from '../sim/drawdown'
 
 /**
@@ -553,6 +553,26 @@ export const COURSE_STEPS: Step[] = [
     controls: ['rate'],
     ranges: { rate: [RATE_DEMO.from, RATE_DEMO.to] },
     until: { control: 'rate', min: RATE_DEMO.to },
+  },
+  {
+    // 中階 ETF 章（Plan 7）：每月固定金額，便宜的月份買比較多；🌤 晴天大樹讓塔跟著月份長高。只讓成本平均，不保證賺錢
+    id: 'e-dca',
+    title: '定期定額',
+    line: '拖**經過月數**。便宜時**買比較多**',
+    fallbackLine: () => `平均成本約 **${dcaNow(DCA_DEMO.prices.length).result.avgCost.toFixed(1)} 元**`,
+    more: () => {
+      const r = dcaNow(DCA_DEMO.prices.length).result
+      return `定期定額＝每個月固定投入一樣的錢。價格低的月份，同樣的錢買到比較多。平均成本 ${r.avgCost.toFixed(1)} 元，比平均價格 ${r.avgPrice.toFixed(1)} 元低。這是示意，不保證賺錢，只是讓成本平均。`
+    },
+    mark: 'illustrative',
+    bigNumber: (_c, v) => {
+      const r = dcaNow(v.months).result
+      return { value: `${r.avgCost.toFixed(1)} 元`, label: '平均成本', note: `平均價格 ${r.avgPrice.toFixed(1)} 元`, mark: 'illustrative' }
+    },
+    scene: { camera: 'plaza', product: null, stage: { kind: 'dca' }, event: dcaSunny(), values: { months: 1 }, cityLabels: false },
+    controls: ['months'],
+    ranges: { months: [1, DCA_DEMO.prices.length] },
+    until: { control: 'months', min: DCA_DEMO.prices.length },
   },
   {
     id: 'm-0',

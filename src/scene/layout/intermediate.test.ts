@@ -4,6 +4,8 @@ import { QUAKE, pitDepthOf } from '../events/quake'
 import { DD_DEMO, DD_LAYOUT, ddBarX, ddHeight, ddNow, ddQuake, PE_DEMO, PE_LAYOUT, peBubble, peSlabs, peYears } from './intermediate'
 import { yearsToPayBack } from '../../sim/valuation'
 import { bondPrice } from '../../sim/bondPrice'
+import { dca } from '../../sim/dca'
+import { DCA_DEMO, DCA_LAYOUT, dcaCheapest, dcaNow, dcaPileHeight, dcaPileX, dcaTowerHeight } from './intermediate'
 import { RATE_DEMO, SEESAW, rateFreeze, ratePrice, seesawPose } from './intermediate'
 import { bubbleRadii } from '../events/bubble'
 
@@ -95,5 +97,33 @@ describe('b-rate seesaw layout', () => {
     expect(f.targets[0]!.at[0]).toBeCloseTo(end[0], 12)
     expect(f.targets[0]!.at[1]).toBeCloseTo(end[1] + SEESAW.thick / 2, 12)
     expect(f.targets[0]!.size).toEqual(SEESAW.bond)
+  })
+})
+
+describe('e-dca layout', () => {
+  it('12 months of 3000: average cost 36000 ÷ 922.92 units ≈ 39.0, below the average price 491 ÷ 12 ≈ 40.9', () => {
+    const r = dcaNow(12)
+    expect(r.months).toBe(12)
+    expect(r.result).toEqual(dca(DCA_DEMO.prices, DCA_DEMO.amount))
+    expect(r.result.totalUnits).toBeCloseTo(DCA_DEMO.prices.reduce((n, p) => n + 3000 / p, 0), 9)
+    expect(r.result.avgCost).toBeCloseTo(36000 / r.result.totalUnits, 9)
+    expect(r.result.avgCost.toFixed(1)).toBe('39.0')
+    expect(r.result.avgPrice.toFixed(1)).toBe('40.9') // 491 ÷ 12
+    expect(r.result.avgCost).toBeLessThan(r.result.avgPrice)
+  })
+  it('the slider picks how many months (1–12, rounded and clamped)', () => {
+    expect(dcaNow(1).result.units).toEqual([60]) // 3000 ÷ 50
+    expect(dcaNow(0).months).toBe(1)
+    expect(dcaNow(5.4).months).toBe(5)
+    expect(dcaNow(99).months).toBe(12)
+  })
+  it('cheap months make taller piles; the tower grows with the total and is full at 12 months', () => {
+    const i = dcaCheapest()
+    expect(DCA_DEMO.prices[i]).toBe(Math.min(...DCA_DEMO.prices))
+    for (let k = 0; k < 12; k++) expect(dcaPileHeight(i)).toBeGreaterThanOrEqual(dcaPileHeight(k))
+    expect(dcaPileHeight(0)).toBeCloseTo((3000 / 50) * DCA_LAYOUT.unitH, 12)
+    expect(dcaTowerHeight(12)).toBeCloseTo(DCA_LAYOUT.towerH, 12)
+    for (let m = 2; m <= 12; m++) expect(dcaTowerHeight(m)).toBeGreaterThan(dcaTowerHeight(m - 1))
+    expect(dcaPileX(11) + DCA_LAYOUT.pileW / 2).toBeLessThan(DCA_LAYOUT.towerX - DCA_LAYOUT.towerW / 2)
   })
 })

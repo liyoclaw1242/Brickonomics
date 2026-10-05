@@ -36,7 +36,7 @@ const unverify = (ids: string[]): Universe => {
 
 const byId = (id: string): Step => steps.find((s) => s.id === id)!
 /** Plan 7 的舉例舞台：一定要標 ≈、多說一點寫「示意」 */
-const PLAN7_STAGES: string[] = ['drawdown', 'pe', 'seesaw']
+const PLAN7_STAGES: string[] = ['drawdown', 'pe', 'seesaw', 'dca']
 /** 大數字跟著即時拉桿值；測試預設用進入該步驟時的值 */
 const bigOf = (s: Step, values: Partial<StageValues> = {}) => s.bigNumber?.(ctx, { ...DEFAULT_VALUES, ...s.scene.values, ...values })
 const resolve = (t: Step['line'] | undefined): string | undefined => (t === undefined ? undefined : typeof t === 'function' ? t(ctx) : t)
@@ -778,5 +778,29 @@ describe('Plan 7 中階: 利率翹翹板 (b-rate)', () => {
     expect(more).toContain('10 年')
     expect(more).toContain('2%')
     expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('利率到 5%，舊借據約 77 元')
+  })
+})
+
+describe('Plan 7 中階: 定期定額 (e-dca)', () => {
+  const s = () => byId('e-dca')
+  it('drag the months 1→12 (gate at 12); the weather is a sunnyTree event with a sun that stays on screen', () => {
+    expect(controlRange(s(), 'months')).toEqual([1, 12])
+    expect(s().until).toEqual({ control: 'months', min: 12 })
+    expect(s().scene.event).toMatchObject({ kind: 'sunnyTree' })
+    expect(s().scene.eventWhen).toBeUndefined()
+  })
+  it('big number = average cost (total ÷ units), with the average price as the note; cost ≤ price', () => {
+    const units = [50, 45, 40, 32, 25, 30, 36, 40, 45, 48, 50, 50].reduce((n, p) => n + 3000 / p, 0) // 922.92
+    expect(bigOf(s(), { months: 12 })).toEqual({ value: `${(36000 / units).toFixed(1)} 元`, label: '平均成本', note: '平均價格 40.9 元', mark: 'illustrative' })
+    expect(bigOf(s(), { months: 12 })!.value).toBe('39.0 元')
+    expect(bigOf(s(), { months: 1 })).toMatchObject({ value: '50.0 元', note: '平均價格 50.0 元' }) // 第一個月：一樣
+    for (let m = 1; m <= 12; m++) {
+      const b = bigOf(s(), { months: m })!
+      expect(parseFloat(b.value), `month ${m}`).toBeLessThanOrEqual(parseFloat(b.note!.replace('平均價格 ', '')))
+    }
+  })
+  it('says it does not guarantee a profit; it only averages the cost', () => {
+    expect(moreOf(s(), ctx)).toContain('不保證賺錢，只是讓成本平均')
+    expect(moreOf(s(), ctx)).toContain('平均成本 39.0 元，比平均價格 40.9 元低')
   })
 })

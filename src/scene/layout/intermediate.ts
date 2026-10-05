@@ -1,6 +1,7 @@
 import { maxDrawdown } from '../../sim/drawdown'
 import { yearsToPayBack } from '../../sim/valuation'
 import { bondPrice, FACE } from '../../sim/bondPrice'
+import { dca, type DcaResult } from '../../sim/dca'
 import type { Vec3 } from '../camera'
 import { QUAKE } from '../events/quake'
 import type { SpecOf } from '../events/types'
@@ -119,3 +120,29 @@ export function rateFreeze(): SpecOf<'freeze'> {
   const [x, y] = seesawPose(RATE_DEMO.to).right
   return { kind: 'freeze', amount: 0.9, targets: [{ at: [x, y + SEESAW.thick / 2, 0], size: SEESAW.bond }] }
 }
+
+// ───────────── e-dca 定期定額（🌤 晴天大樹） ─────────────
+
+/** 舉例：12 個月的價格（先跌後漲回來）、每月固定投入 3000 元。示意，不代表任何真實商品 */
+export const DCA_DEMO = { prices: [50, 45, 40, 32, 25, 30, 36, 40, 45, 48, 50, 50] as readonly number[], amount: 3000 } as const
+
+/** 每月一小堆（高度＝買到的單位 × unitH），右邊一座塔（＝累積的單位；12 個月時高 towerH） */
+export const DCA_LAYOUT = { pileW: 0.95, gap: 1.3, x0: -12, z: 0, unitH: 0.04, towerX: 7.5, towerW: 2.6, towerH: 9, crown: 2.3 } as const
+
+const DCA_FULL = dca(DCA_DEMO.prices, DCA_DEMO.amount)
+
+/** 拉桿值 → 買了幾個月（1..12） */
+export function dcaNow(months: number): { months: number; result: DcaResult } {
+  const n = Math.min(DCA_DEMO.prices.length, Math.max(1, Math.round(Number.isFinite(months) ? months : 1)))
+  return { months: n, result: dca(DCA_DEMO.prices.slice(0, n), DCA_DEMO.amount) }
+}
+
+export const dcaPileX = (i: number): number => DCA_LAYOUT.x0 + i * DCA_LAYOUT.gap
+export const dcaPileHeight = (i: number): number => DCA_FULL.units[i]! * DCA_LAYOUT.unitH
+/** 塔高：累積單位 ÷ 12 個月的總單位 × towerH */
+export const dcaTowerHeight = (months: number): number => (dcaNow(months).result.totalUnits / DCA_FULL.totalUnits) * DCA_LAYOUT.towerH
+/** 最便宜的月份（買最多的那一堆） */
+export const dcaCheapest = (): number => DCA_DEMO.prices.indexOf(Math.min(...DCA_DEMO.prices))
+
+/** 晴天大樹：太陽放在畫面中間偏左上（手機上也不會被切掉）；天氣一進來就放晴，塔跟著月份拉桿長高 */
+export const dcaSunny = (): SpecOf<'sunnyTree'> => ({ kind: 'sunnyTree', sun: [-3, 8, -20] })

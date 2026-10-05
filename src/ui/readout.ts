@@ -3,7 +3,7 @@ import { isVerified } from '../data/verified'
 import { sectorBreakdown } from '../scene/layout/underground'
 import { accumulateVsPayout, exDivTimeline, principalTrap } from '../scene/layout/stages'
 import { feeRaceLeader, feeRaceRows } from '../sim/feeRace'
-import { ddNow, PE_DEMO, peYears, ratePrice } from '../scene/layout/intermediate'
+import { DCA_DEMO, dcaNow, ddNow, PE_DEMO, peYears, ratePrice } from '../scene/layout/intermediate'
 import { overlap } from '../sim/overlap'
 import { shockImpact } from '../sim/scenario'
 import { SHOCK_2330, signedPct } from '../tour/context'
@@ -87,6 +87,15 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
         { label: T.readout.ratePrice, value: n1(ratePrice(v.rate)) },
         { label: T.readout.rateFace, value: '100' },
       ]
+    case 'dca': {
+      const { result: r } = dcaNow(v.months)
+      return [
+        { label: T.readout.dcaAmount, value: T.yuan(DCA_DEMO.amount), marks: ['illustrative'] },
+        { label: T.readout.dcaUnits, value: n1(r.totalUnits) },
+        { label: T.readout.dcaCost, value: `${n1(r.avgCost)} 元` },
+        { label: T.readout.dcaPrice, value: `${n1(r.avgPrice)} 元` },
+      ]
+    }
     case 'overlap': {
       const o = overlap(u, stage.a, stage.b)
       return [

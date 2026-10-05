@@ -133,6 +133,13 @@ export const T = {
     bond: (price: number) => `舊借據 約 ${price} 元`,
     maturity: '放到到期，拿回 100',
   },
+  /** e-dca 定期定額的 3D 標註 */
+  dca: {
+    cheap: (price: number) => `${price} 元那個月`,
+    cheapSub: '同樣的錢，買最多',
+    tower: (months: number) => `買了 ${months} 個月`,
+    cost: (v: string) => `平均成本 ${v} 元`,
+  },
   /** 基金那一章的錢：投入 100＝100 萬（和計費表同一個底），一位小數、去掉「.0」 */
   wan,
   /** 元（四捨五入、千分位）：18800 → '18,800 元'（r5：有感的錢，像計費表的「已磨掉約 39,073 元」） */
@@ -203,6 +210,10 @@ export const T = {
     rateNow: '現在的市場利率',
     ratePrice: '舊借據現在值',
     rateFace: '到期拿回',
+    dcaAmount: '每月投入',
+    dcaUnits: '累積的單位',
+    dcaCost: '平均成本',
+    dcaPrice: '平均價格',
     peYears: (earn: number) => `每年賺 ${earn}：幾年賺回`,
   },
   feeParts: { expenseRatio: '內扣費用', distributionFee: '分銷費', cdsc: '遞延手續費', trading: '交易成本' },
