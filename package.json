@@ -13,6 +13,7 @@
     "dev": "vite",
     "prebuild": "vitest run src/data",
     "build": "tsc --noEmit && vite build",
+    "postbuild": "node scripts/check-dev-only.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
