@@ -39,6 +39,10 @@ export function makeTextContext(u: Universe): TextContext {
       }, 0),
     exitFee: (productId, years) => u.get(productId)?.fees?.cdsc?.[Math.floor(years)] ?? 0,
     fundFeeRows: (years, frontLoad) => feeRaceRows(u, years, frontLoad, false),
+    distributionFee: (productId) => {
+      const f = u.get(productId)?.fees
+      return f?.distributionFee !== undefined && f.distributionFeeYears !== undefined ? { rate: f.distributionFee, years: f.distributionFeeYears } : undefined
+    },
   }
 }
 

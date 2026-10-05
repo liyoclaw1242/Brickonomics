@@ -246,25 +246,27 @@ export const LEVELS: Level[] = [
       {
         id: 'f-6',
         title: '進門費、出門費',
-        line: '拖**持有年數**。前收**進門**扣，後收**早出門|loss**才扣',
-        fallbackLine: '前收**進門**先扣；後收**早出門|loss**才扣',
+        // mid-r2：大數字（出門費 3→0 萬）和重點（10 年後剩多少）說的不是同一件事。改成一個問題：現在賣，兩種收費總共扣了多少
+        line: '拖**持有年數**。看兩種收費**總共扣多少|loss**',
+        fallbackLine: '比兩種收費**總共扣多少|loss**',
         more: (c) =>
-          `兩座都是施羅德環球收息債券，只差收費方式。前收型買時先付進門費，這裡假設 ${pct1(DEFAULT_VALUES.frontLoad)}。後收型未滿 1 年賣，出門費 ${n0(c.exitFee(BACKLOAD, 0) * 100)}%，滿 ${exitFreeYears(c)} 年不收。兩座每年都還在扣費用，後收前幾年扣得更多。`,
+          `兩座都是施羅德環球收息債券，只差收費方式。前收型買時先付進門費，這裡假設 ${pct1(DEFAULT_VALUES.frontLoad)}。後收型未滿 1 年賣，出門費 ${n0(c.exitFee(BACKLOAD, 0) * 100)}%，滿 ${exitFreeYears(c)} 年不收。兩座每年都還在扣費用，誰比較省要看各檔的費用。`,
         mark: 'assumption',
-        // 只放兩座基金塔：0050 等到 ETF 那一章才出場。大數字＝後收「現在賣」要付的出門費（和 3D 的出門費標籤同一個數字）
+        // 只放兩座基金塔：0050 等到 ETF 那一章才出場。大數字＝現在賣，前收、後收各總共扣了多少（進門／出門費＋每年費用；和塔的高度同一件事）
         bigNumber: (c, v) => {
           const rows = c.fundFeeRows(v.years, v.frontLoad)
+          const front = rows.find((r) => r.id === 'front')!
           const back = rows.find((r) => r.id === 'back')!
-          const first = c.fundFeeRows(0, v.frontLoad).find((r) => r.id === 'back')!.exit
+          const dist = c.distributionFee(BACKLOAD)
           return {
-            value: wan(back.exit),
-            label: '後收現在賣的出門費',
-            // mid-r1：「100 萬放 10 年剩 85.7 萬」被讀成基金會虧 15 萬
-            note: '只算費用，沒算漲跌',
-            fraction: first > 0 ? back.exit / first : 0,
+            // 單位只寫一次，大數字才放得進一行
+            value: `${Number(front.lost.toFixed(1))} vs ${wan(back.lost)}`,
+            label: '現在賣：前收 vs 後收',
+            // mid-r1：只算費用；mid-r2：這個例子後收一直多扣一點，直接說為什麼（分銷費），而且要看各檔的費用
+            note: dist ? `只算費用，沒算漲跌。後收前 ${dist.years} 年每年多扣 ${pct1(dist.rate)}（看各檔費用）` : '只算費用，沒算漲跌',
             colorKey: 'loss',
             // 金額用到還沒查證的內扣費用（拆項見多說一點的數字表）
-            ...(back.unverified.length > 0 ? { mark: 'unverified' as const } : {}),
+            ...(front.unverified.length + back.unverified.length > 0 ? { mark: 'unverified' as const } : {}),
           }
         },
         compare: true,

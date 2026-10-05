@@ -92,6 +92,8 @@ export type TextContext = {
   exitFee: (productId: string, years: number) => number
   /** 同一檔基金的前收、後收（投入 100＝100 萬、報酬 0，只比費用）；進門費、出門費另外拆出來 */
   fundFeeRows: (years: number, frontLoad: number) => FeeRaceRow[]
+  /** 每年的分銷費（小數）與收幾年；資料沒有時為 undefined */
+  distributionFee: (productId: string) => { rate: number; years: number } | undefined
 }
 
 /** 大數字卡：value 已格式化；fraction（0–1）畫色條；colorKey 對應物體顏色；note＝標籤下一行白話補充（例如為什麼是「至少」） */

@@ -160,7 +160,7 @@ describe('LEVELS', () => {
     const SOURCES: Record<string, [string, VerifiedKey][]> = {
       'f-4': [['ALLIANZ_INCOME_GROWTH', 'holdings']],
       'f-5': [['JH_BALANCED', 'fees.expenseRatio']],
-      'f-6': [['SCHRODER_GLOBAL_INCOME_BOND', 'fees.expenseRatio'], ['SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD', 'fees.expenseRatio'], ['SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD', 'fees.cdsc']],
+      'f-6': [['SCHRODER_GLOBAL_INCOME_BOND', 'fees.expenseRatio'], ['SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD', 'fees.expenseRatio'], ['SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD', 'fees.cdsc'], ['SCHRODER_GLOBAL_INCOME_BOND_BACKLOAD', 'fees.distributionFee']],
       'e-3': [['0050', 'holdings']],
       'e-5': [['0050', 'fees.expenseRatio'], ['JH_BALANCED', 'fees.expenseRatio']],
       'c-2': [['0050', 'holdings']],
@@ -591,16 +591,19 @@ describe('jargon diet (user test r1)', () => {
     expect(f6.scene.stage).toEqual({ kind: 'feeRace', etf: false })
     expect(f6.scene.values?.years).toBe(0)
     expect(f6.until).toEqual({ control: 'years', min: 3 }) // 出門費滿 3 年歸零
-    const line = stripMarkup(lineOf(f6, ctx))
-    for (const w of ['前收', '進門', '後收', '出門']) expect(line, w).toContain(w)
+    // mid-r2：一個問題——現在賣，兩種收費總共扣多少
+    expect(stripMarkup(lineOf(f6, ctx))).toBe('拖持有年數。看兩種收費總共扣多少')
     expect(stripMarkup(resolve(f6.fallbackLine)!)).not.toMatch(/^拖/) // 文字版沒有拉桿
-    // 大數字＝後收「現在賣」要付的出門費，100 萬為底、單位萬（跟 3D 的出門費標籤同一個數字）
-    expect(bigOf(f6, { years: 0 })).toMatchObject({ value: '3 萬', colorKey: 'loss', fraction: 1 }) // 100 × 3%
-    expect(bigOf(f6, { years: 1 })!.value).toBe('2 萬') // 賣前 97.911 × 2% = 1.958
-    expect(bigOf(f6, { years: 2 })!.value).toBe('1 萬') // 賣前 95.866 × 1% = 0.959
-    expect(bigOf(f6, { years: 3 })).toMatchObject({ value: '0 萬', fraction: 0 })
-    for (let y = 0; y <= 10; y += 0.5) expect(bigOf(f6, { years: y })!.value, `year ${y}`).toBe(wan(ctx.fundFeeRows(y, DEFAULT_VALUES.frontLoad)[1]!.exit))
-    expect(bigOf(f6)!.label).not.toMatch(/0%|免費/)
+    // 大數字＝前收、後收各總共扣了多少（100 萬為底、單位萬；＝ 100 − 塔的價值）
+    expect(bigOf(f6, { years: 0 })).toMatchObject({ value: '1.5 vs 3 萬', label: '現在賣：前收 vs 後收', colorKey: 'loss' }) // 進門 1.5%；出門 3%
+    expect(bigOf(f6, { years: 10 })!.value).toBe('14.3 vs 15.6 萬') // 100 − 85.72；100 − 84.44
+    for (let y = 0; y <= 10; y += 0.5) {
+      const [front, back] = ctx.fundFeeRows(y, DEFAULT_VALUES.frontLoad)
+      expect(bigOf(f6, { years: y })!.value, `year ${y}`).toBe(`${Number(front!.lost.toFixed(1))} vs ${wan(back!.lost)}`)
+    }
+    // 為什麼後收一直多一點：前 3 年每年多扣 1% 分銷費（資料算出來），而且要看各檔費用
+    expect(bigOf(f6)!.note).toBe('只算費用，沒算漲跌。後收前 3 年每年多扣 1%（看各檔費用）')
+    expect(moreOf(f6, ctx)).toContain('誰比較省要看各檔的費用')
     // 多說一點的數字從資料算：出門費 cdsc[0] = 3%、滿 3 年歸零；前收手續費是預設的假設值 1.5%
     expect(moreOf(f6, ctx)).toContain('出門費 3%')
     expect(moreOf(f6, ctx)).toContain('滿 3 年不收')
@@ -881,7 +884,7 @@ describe('mid-r1: comparisons never read as advice', () => {
   })
 
   it('f-6 says on screen that it only counts fees, not market moves', () => {
-    expect(bigOf(byId('f-6'))!.note).toBe('只算費用，沒算漲跌')
+    expect(bigOf(byId('f-6'))!.note).toContain('只算費用，沒算漲跌')
     expect(T.towers.feesOnly).toBe('只算費用，沒算漲跌')
   })
 
