@@ -15,7 +15,7 @@ export const EXCHANGE_POSITION: Vec3 = [0, 0, 14]
 export const PEDESTAL_HEIGHT = 0.6
 
 /** 擺在廣場上的舞台 */
-export const ON_PLAZA: ReadonlySet<Stage['kind']> = new Set<Stage['kind']>(['held', 'exdiv', 'bonds', 'feeRace', 'accumulate', 'principalTrap', 'shock', 'overlap', 'drawdown', 'pe', 'seesaw', 'dca', 'inflation', 'portfolio', 'correlation', 'dayTrade'])
+export const ON_PLAZA: ReadonlySet<Stage['kind']> = new Set<Stage['kind']>(['held', 'exdiv', 'bonds', 'feeRace', 'accumulate', 'principalTrap', 'shock', 'overlap', 'drawdown', 'pe', 'seesaw', 'dca', 'inflation', 'portfolio', 'correlation', 'dayTrade', 'duration'])
 
 /**
  * 廣場舞台時城市只是背景：大樓與島的名稱小字一律收起（少字；也避免遠處名稱擠到工具列底下、和舞台標註互撞）。

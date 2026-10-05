@@ -199,6 +199,12 @@ export const T = {
     chips: '勝率五五波',
     chipsSub: (win: string, loss: string) => `賺 ${win}、賠 ${loss}，各一半`,
   },
+  /** a-dur 長短借據的 3D 標註（高階） */
+  dur: {
+    bond: (years: number) => `${years} 年借據`,
+    drop: (pct: string) => `現在值少 ${pct}`,
+    rate: (v: string) => `市場利率 ${v}`,
+  },
   /** 基金那一章的錢：投入 100＝100 萬（和計費表同一個底），一位小數、去掉「.0」 */
   wan,
   /** 元（四捨五入、千分位）：18800 → '18,800 元'（r5：有感的錢，像計費表的「已磨掉約 39,073 元」） */
@@ -286,6 +292,7 @@ export const T = {
     portStock: '股票那一截',
     portBond: '債券那一截',
     portRemaining: '風暴後整座塔',
+    durBond: (years: number) => `${years} 年借據現在值`,
     dtTrades: '進出次數',
     dtCost: '每次進出的交易成本',
     dtCapital: '本金剩',

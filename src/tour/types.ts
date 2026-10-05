@@ -44,6 +44,8 @@ export type Stage =
   | { kind: 'correlation' }
   /** a-dt 當沖：本金塔＋一堆付掉的交易成本（trades 拉桿）；前面一排賺、賠各一半的小圓片 */
   | { kind: 'dayTrade' }
+  /** a-dur 長短借據：前面 2 年短板、後面 20 年長板（rate 拉桿）；拉到 3% 時 ❄️ 寒流（scene.event freeze＋eventWhen） */
+  | { kind: 'duration' }
   | { kind: 'overlap'; a: string; b: string }
   | { kind: 'underground'; show: 'strata' | 'cores' | 'dig' | 'veins' | 'gold'; cores?: [string, string] }
 

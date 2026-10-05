@@ -6,7 +6,8 @@ import { T } from '../ui/strings'
 import { DD_DEMO, DD_TROUGH, ddNow, ddQuake, PE_DEMO, peBubble, peYears, RATE_DEMO, rateFreeze, ratePrice, DCA_DEMO, dcaNow, dcaSunny, INFL_DEMO, inflHeat, inflReal } from '../scene/layout/intermediate'
 import { maxDrawdown } from '../sim/drawdown'
 import { STORM } from '../sim/portfolio'
-import { corrLightning, corrNow, dtNow, PORT_LAYOUT, PORT_MAX_BOND, portNow } from '../scene/layout/advanced'
+import { corrLightning, corrNow, dtNow, durFreeze, durNow, PORT_LAYOUT, PORT_MAX_BOND, portNow } from '../scene/layout/advanced'
+import { DURATION } from '../sim/duration'
 import { DAY_TRADE, DAY_TRADE_COST, dayTradeCostVerified } from '../sim/dayTrade'
 import { DAY_TRADE_RESEARCH, researchVerified, type ResearchId } from '../data/research'
 import type { ResearchRow } from './types'
@@ -27,6 +28,8 @@ const NICK = T.nick
 /** 0.00435 → '0.435%'；0.001425 → '0.1425%'（交易成本要看到小數） */
 const pct3 = (r: number): string => `${(r * 100).toFixed(3)}%`
 const pct4 = (r: number): string => `${Number((r * 100).toFixed(4))}%`
+/** −0.1488 → '14.9%'（句子已說「跌」，用絕對值） */
+const pctAbs1 = (r: number): string => `${(Math.abs(r) * 100).toFixed(1)}%`
 /** 股票＋借據以外剩下的（現金等）：標註寫出來，加起來才看得到 100（mid-r2：34＋64＝98，剩下的呢） */
 const restPct = (c: TextContext, productId: string): number => Math.max(0, 100 - c.assetClassPct(productId, 'stock') - c.assetClassPct(productId, 'bond'))
 /** f-6 的後收級別（出門費＝遞延手續費 CDSC） */
@@ -716,5 +719,32 @@ export const COURSE_STEPS: Step[] = [
     controls: ['trades'],
     ranges: { trades: [0, DAY_TRADE.trades] },
     until: { control: 'trades', min: DAY_TRADE.trades },
+  },
+  {
+    // 高階債券章：存續期間。同樣的利率變動，長借據（長板）翹得多；拉到 3% 時 ❄️ 寒流，20 年那張霜更厚
+    id: 'a-dur',
+    title: '長短借據',
+    line: '拖**市場利率**。**長借據|long**跌更多',
+    fallbackLine: () => `利率漲 ${pct1(DURATION.rateTo - DURATION.rateFrom)}。長借據跌 **${pctAbs1(durNow(DURATION.rateTo).long)}|loss**`,
+    more: () =>
+      `存續期間＝大約還要多久才拿回錢。越長，利率一動，價格動越多。利率跌時，長借據也漲比較多。示意：${DURATION.short} 年和 ${DURATION.long} 年，利率 ${pct1(DURATION.rateFrom)} 漲到 ${pct1(DURATION.rateTo)}。`,
+    mark: 'illustrative',
+    // 還沒拖時不顯示；note 一直提醒到期還是拿回 100
+    bigNumber: (_c, v) => {
+      const d = durNow(v.rate)
+      if (d.rate <= DURATION.rateFrom) return undefined
+      return {
+        value: `${pctAbs1(d.short)} vs ${pctAbs1(d.long)}`,
+        label: '短借據 vs 長借據跌',
+        note: `利率 ${pct1(DURATION.rateFrom)}→${T.controls.rateValue(d.rate)}；到期都拿回 100`,
+        colorKey: 'loss',
+        mark: 'illustrative',
+      }
+    },
+    compare: true,
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'duration' }, event: durFreeze(), eventWhen: { control: 'rate', min: DURATION.rateTo }, values: { rate: DURATION.rateFrom }, cityLabels: false },
+    controls: ['rate'],
+    ranges: { rate: [DURATION.rateFrom, DURATION.rateTo] },
+    until: { control: 'rate', min: DURATION.rateTo },
   },
 ]

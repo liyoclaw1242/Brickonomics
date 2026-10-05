@@ -40,7 +40,7 @@ const byId = (id: string): Step => steps.find((s) => s.id === id)!
 /** Plan 7 的舉例舞台：一定要標 ≈、多說一點寫「示意」 */
 const PLAN7_STAGES: string[] = ['drawdown', 'pe', 'seesaw', 'dca', 'inflation']
 /** Plan 8 的高階舞台：都是舉例（≈、多說一點寫「示意」） */
-const PLAN8_STAGES: string[] = ['portfolio', 'correlation', 'dayTrade']
+const PLAN8_STAGES: string[] = ['portfolio', 'correlation', 'dayTrade', 'duration']
 /** 大數字跟著即時拉桿值；測試預設用進入該步驟時的值 */
 const bigOf = (s: Step, values: Partial<StageValues> = {}) => s.bigNumber?.(ctx, { ...DEFAULT_VALUES, ...s.scene.values, ...values })
 const resolve = (t: Step['line'] | undefined): string | undefined => (t === undefined ? undefined : typeof t === 'function' ? t(ctx) : t)
@@ -863,12 +863,12 @@ describe('mid-r1: comparisons never read as advice', () => {
     if (!st) return false
     if (st.kind === 'held') return st.items.length >= 2
     if (st.kind === 'underground') return (st.cores ?? []).length >= 2
-    return ['bonds', 'feeRace', 'accumulate', 'overlap', 'shock', 'pe'].includes(st.kind)
+    return ['bonds', 'feeRace', 'accumulate', 'overlap', 'shock', 'pe', 'duration'].includes(st.kind)
   }
 
   it('the compare note sits only where a side-by-side outcome could be read as a pick (mid-r2: on 15 steps it became wallpaper)', () => {
     const flagged = steps.filter((s) => s.compare).map((s) => s.id).sort()
-    expect(flagged).toEqual(['c-3', 'e-dca', 'f-6', 'f-8', 's-pe'])
+    expect(flagged).toEqual(['a-dur', 'c-3', 'e-dca', 'f-6', 'f-8', 's-pe'])
     for (const id of flagged) if (id !== 'e-dca') expect(sideBySide(byId(id)), id).toBe(true)
     expect(T.compareNote).toBe('只是比較，不是叫你買或賣')
     expect(forbiddenWordsIn(T.compareNote)).toEqual([])
@@ -1028,5 +1028,27 @@ describe('Plan 8 高階: 當沖的成本 (a-dt)', () => {
     expect(Array.from(card.cite).length).toBeLessThanOrEqual(28) // 出處一行
     expect(card.rows[0]!.text).toContain('穩定') // 不是「當年有賺的人」
     expect(card.rows[1]!.text).toContain('可能') // 不是「已經賠了」
+  })
+})
+
+describe('Plan 8 高階: 長短借據 (a-dur)', () => {
+  const s = () => byId('a-dur')
+  it('drag the market rate 2% → 3%: the gate and the cold front are both at 3%', () => {
+    expect(controlRange(s(), 'rate')).toEqual([0.02, 0.03])
+    expect(s().scene.values?.rate).toBe(0.02)
+    expect(s().until).toEqual({ control: 'rate', min: 0.03 })
+    expect(s().scene.eventWhen).toEqual(s().until)
+    expect(s().scene.event).toMatchObject({ kind: 'freeze' })
+    expect(stripMarkup(lineOf(s(), ctx))).toBe('拖市場利率。長借據跌更多')
+  })
+  it('big number: 2-year −1.9% vs 20-year −14.9% at 3% (hidden before the drag); held to maturity both return 100', () => {
+    expect(bigOf(s(), { rate: 0.02 })).toBeUndefined()
+    expect(bigOf(s(), { rate: 0.03 })).toEqual({ value: '1.9% vs 14.9%', label: '短借據 vs 長借據跌', note: '利率 2%→3%；到期都拿回 100', colorKey: 'loss', mark: 'illustrative' })
+    expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('利率漲 1%。長借據跌 14.9%')
+  })
+  it('the more text says both directions (rates falling lift the long IOU more) and the example numbers', () => {
+    expect(moreOf(s(), ctx)).toContain('存續期間＝')
+    expect(moreOf(s(), ctx)).toContain('利率跌時，長借據也漲比較多')
+    expect(moreOf(s(), ctx)).toContain('示意：2 年和 20 年，利率 2% 漲到 3%')
   })
 })

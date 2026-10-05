@@ -5,6 +5,8 @@ import { IMPACT_TIME } from '../events/lightning'
 import type { SpecOf } from '../events/types'
 import { PAIRS, combine, volatility } from '../../sim/correlation'
 import { DAY_TRADE, dayTradeDrain } from '../../sim/dayTrade'
+import { DURATION, priceChange } from '../../sim/duration'
+import type { Vec3 } from '../camera'
 
 /**
  * 高階步驟（Plan 8）的舞台幾何與拉桿 → 數值（純 TS；課文 levels.ts、3D 舞台、讀數共用同一份）。
@@ -135,4 +137,50 @@ export function dtTower(trades: number): { capital: number; cost: number } {
   const d = dtNow(trades)
   const k = DT_LAYOUT.height / 100
   return { capital: d.capital * k, cost: d.costPaid * k }
+}
+
+// ───────────── a-dur 長短借據（❄️ 寒流） ─────────────
+
+/**
+ * 兩個翹翹板並排：左邊短板（2 年借據）、右邊長板（20 年借據）。左端一樣高的藍柱＝市場利率，右端坐借據。
+ * half＝板子半長；tilt＝價格每少 100% 斜多少（弧度；放大看得出來，示意）；x、z＝支點的位置。
+ */
+export const DUR_LAYOUT = {
+  pivotY: 2.4,
+  thick: 0.35,
+  width: 2.4,
+  tilt: 2,
+  half: { short: 3.2, long: 9.5 },
+  x: { short: -10.5, long: 6 },
+  z: { short: 0, long: 0 },
+  bond: [2.6, 1.4, 2] as Vec3,
+  rateW: 1.6,
+  rateH: 60,
+} as const
+
+export type DurKey = 'short' | 'long'
+
+/** 拉桿值 → 市場利率（限制在 DURATION.rateFrom..rateTo）與兩張借據的價格變動（比例） */
+export function durNow(rate: number): { rate: number; short: number; long: number } {
+  const r = Math.min(DURATION.rateTo, Math.max(DURATION.rateFrom, Number.isFinite(rate) ? rate : DURATION.rateFrom))
+  return { rate: r, short: priceChange(DURATION.short, DURATION.rateFrom, r), long: priceChange(DURATION.long, DURATION.rateFrom, r) }
+}
+
+/** 某個翹翹板在利率 rate 時的樣子：theta > 0＝右端（借據）往下；left、right＝兩端板子中線的 x、y（相對它自己的支點） */
+export function durPose(k: DurKey, rate: number): { theta: number; left: [number, number]; right: [number, number] } {
+  const change = durNow(rate)[k]
+  const theta = -change * DUR_LAYOUT.tilt || 0 // 不要 −0
+  const half = DUR_LAYOUT.half[k]
+  const c = Math.cos(theta) * half
+  const s = Math.sin(theta) * half
+  return { theta, left: [-c, DUR_LAYOUT.pivotY + s], right: [c, DUR_LAYOUT.pivotY - s] }
+}
+
+/** 寒流：兩張借據在 3% 時坐的位置；length＝年期（20 年那張霜更厚）。參數固定，拉到 3% 才打開（scene.eventWhen） */
+export function durFreeze(): SpecOf<'freeze'> {
+  const target = (k: DurKey) => {
+    const [x, y] = durPose(k, DURATION.rateTo).right
+    return { at: [DUR_LAYOUT.x[k] + x, y + DUR_LAYOUT.thick / 2, DUR_LAYOUT.z[k]] as Vec3, size: DUR_LAYOUT.bond, length: DURATION[k] }
+  }
+  return { kind: 'freeze', amount: 0.9, targets: [target('short'), target('long')] }
 }

@@ -5,6 +5,8 @@ import { CORR_LAYOUT, corrBlocks, corrDropAt, corrLightning, corrNow } from './a
 import { IMPACT_TIME } from '../events/lightning'
 import { PAIRS, combine, volatility } from '../../sim/correlation'
 import { DT_LAYOUT, dtNow, dtTower } from './advanced'
+import { DUR_LAYOUT, durFreeze, durNow, durPose } from './advanced'
+import { priceChange } from '../../sim/duration'
 
 describe('a-port portfolio tower (🌪)', () => {
   it('portNow: 100 split by the bond slider; the example storm takes stocks −40%, bonds +5% (sim/portfolio STORM)', () => {
@@ -101,5 +103,37 @@ describe('a-dt day-trade drain', () => {
       expect(h.capital + h.cost).toBeCloseTo(DT_LAYOUT.height, 9)
     }
     expect(dtTower(0).cost).toBe(0)
+  })
+})
+
+describe('a-dur short vs long seesaw (❄️)', () => {
+  it('durNow: rates 2% → 3% take a 2-year IOU down 1.91% and a 20-year IOU down 14.88% (sim/duration)', () => {
+    expect(durNow(0.02)).toMatchObject({ short: 0, long: 0 })
+    const n = durNow(0.03)
+    expect(n.short).toBeCloseTo(priceChange(2, 0.02, 0.03), 12)
+    expect(n.short).toBeCloseTo(-0.0191, 4)
+    expect(n.long).toBeCloseTo(-0.1488, 4)
+    // 拉桿限制在 2%..3%
+    expect(durNow(0.5).rate).toBe(0.03)
+    expect(durNow(Number.NaN).rate).toBe(0.02)
+  })
+  it('durPose: the plank tilts by the price drop × tilt; the long plank is longer, so its end drops much more', () => {
+    const s = durPose('short', 0.03)
+    const l = durPose('long', 0.03)
+    expect(s.theta).toBeCloseTo(0.0191 * DUR_LAYOUT.tilt, 3)
+    expect(l.theta).toBeCloseTo(0.1488 * DUR_LAYOUT.tilt, 3)
+    const drop = (p: typeof s) => DUR_LAYOUT.pivotY - p.right[1]
+    expect(drop(l) / drop(s)).toBeGreaterThan(20) // 長板 × 更大的角度
+    expect(durPose('long', 0.02).theta).toBe(0)
+  })
+  it('the cold front frosts both IOUs where they sit at 3%, the 20-year one by its length (thicker frost)', () => {
+    const f = durFreeze()
+    expect(f.kind).toBe('freeze')
+    expect(f.targets.map((t) => t.length)).toEqual([2, 20])
+    const [sx, sy] = durPose('short', 0.03).right
+    expect(f.targets[0]!.at[0]).toBeCloseTo(DUR_LAYOUT.x.short + sx, 12)
+    expect(f.targets[0]!.at[1]).toBeCloseTo(sy + DUR_LAYOUT.thick / 2, 12)
+    expect(f.targets[0]!.at[2]).toBe(DUR_LAYOUT.z.short)
+    expect(f.targets[1]!.at[2]).toBe(DUR_LAYOUT.z.long)
   })
 })
