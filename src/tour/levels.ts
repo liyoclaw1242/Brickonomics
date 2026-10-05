@@ -3,6 +3,8 @@ import { movePct, pct0, SHOCK_2330, signedPct, wan } from './context'
 import { DEFAULT_VALUES } from './values'
 import { EXDIV, exDivTimeline, principalTrap, TRAP_DEMO } from '../scene/layout/stages'
 import { T } from '../ui/strings'
+import { DD_DEMO, DD_TROUGH, ddNow, ddQuake } from '../scene/layout/intermediate'
+import { maxDrawdown } from '../sim/drawdown'
 
 /**
  * 課程內文。數字一律由 TextContext 即時計算。
@@ -500,6 +502,28 @@ export const LEVELS: Level[] = [
  * m-0＝中階開頭的初階口訣複習；m-fin＝中階結尾的口訣卡（高階還沒開放，所以推薦自由玩）。
  */
 export const COURSE_STEPS: Step[] = [
+  {
+    // 中階股票章（Plan 7）：一排柱子＝每年的價格；拖到谷底時 🌋 地震，坑深＝最大跌幅
+    id: 's-dd',
+    title: '最大跌幅',
+    line: '拖**時間軸**。看最多**少掉多少|loss**',
+    fallbackLine: () => `最多曾經**少掉 ${pct0(maxDrawdown(DD_DEMO.path).pct * 100)}%|loss**`,
+    more: () => {
+      const d = maxDrawdown(DD_DEMO.path)
+      return `最大跌幅＝從最高點往下，最多少掉多少。舉例價格從 ${DD_DEMO.path[d.peakIndex]} 跌到 ${DD_DEMO.path[d.troughIndex]}，少掉 ${pct0(d.pct * 100)}%。地上的坑越深，跌得越多。數字是示意，不代表任何真實股票。`
+    },
+    mark: 'illustrative',
+    // 跟著時間軸：到目前為止最多曾經少掉多少；還沒跌過時不顯示
+    bigNumber: (_c, v) => {
+      const worst = ddNow(v.tick).worst
+      if (worst <= 0) return undefined
+      return { value: `${pct0(worst * 100)}%`, label: '最多曾經少掉', fraction: worst, colorKey: 'loss', mark: 'illustrative' }
+    },
+    scene: { camera: 'plaza', product: null, stage: { kind: 'drawdown' }, event: ddQuake(), eventWhen: { control: 'tick', min: DD_TROUGH }, values: { tick: 0 }, cityLabels: false },
+    controls: ['tick'],
+    ranges: { tick: [0, DD_DEMO.path.length - 1] },
+    until: { control: 'tick', min: DD_TROUGH },
+  },
   {
     id: 'm-0',
     title: '初階口訣複習',

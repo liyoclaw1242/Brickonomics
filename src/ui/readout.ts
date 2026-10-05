@@ -3,6 +3,7 @@ import { isVerified } from '../data/verified'
 import { sectorBreakdown } from '../scene/layout/underground'
 import { accumulateVsPayout, exDivTimeline, principalTrap } from '../scene/layout/stages'
 import { feeRaceLeader, feeRaceRows } from '../sim/feeRace'
+import { ddNow } from '../scene/layout/intermediate'
 import { overlap } from '../sim/overlap'
 import { shockImpact } from '../sim/scenario'
 import { SHOCK_2330, signedPct } from '../tour/context'
@@ -65,6 +66,16 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
         { label: u.get('0050')!.name, value: signedPct(shockImpact(u, '0050', { ...SHOCK_2330 })) },
         { label: u.get('SPY')!.name, value: signedPct(shockImpact(u, 'SPY', { ...SHOCK_2330 })) },
       ]
+    case 'drawdown': {
+      const d = ddNow(v.tick)
+      const p = (r: number) => `${(r * 100).toFixed(1)}%`
+      return [
+        { label: T.readout.ddPrice, value: String(d.price), marks: ['illustrative'] },
+        { label: T.readout.ddPeak, value: String(d.peak) },
+        { label: T.readout.ddDrop, value: p(d.drop) },
+        { label: T.readout.ddWorst, value: p(d.worst) },
+      ]
+    }
     case 'overlap': {
       const o = overlap(u, stage.a, stage.b)
       return [

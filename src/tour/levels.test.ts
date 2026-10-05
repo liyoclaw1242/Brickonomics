@@ -4,6 +4,9 @@ import { isBasket } from '../data/schema'
 import { overlap } from '../sim/overlap'
 import { EXDIV_AFTER_PHASE, LEVELS } from './levels'
 import { STEP_POOL } from './courses'
+import { maxDrawdown } from '../sim/drawdown'
+import { DD_DEMO, DD_LAYOUT, ddBarX } from '../scene/layout/intermediate'
+import { stageReadout } from '../ui/readout'
 import { exDivTimeline, principalTrap } from '../scene/layout/stages'
 import { towerTexts, trapTowerSpec } from '../scene/layout/towers'
 import { makeTextContext, pct0, wan } from './context'
@@ -32,6 +35,8 @@ const unverify = (ids: string[]): Universe => {
 }
 
 const byId = (id: string): Step => steps.find((s) => s.id === id)!
+/** Plan 7 的舉例舞台：一定要標 ≈、多說一點寫「示意」 */
+const PLAN7_STAGES: string[] = ['drawdown']
 /** 大數字跟著即時拉桿值；測試預設用進入該步驟時的值 */
 const bigOf = (s: Step, values: Partial<StageValues> = {}) => s.bigNumber?.(ctx, { ...DEFAULT_VALUES, ...s.scene.values, ...values })
 const resolve = (t: Step['line'] | undefined): string | undefined => (t === undefined ? undefined : typeof t === 'function' ? t(ctx) : t)
@@ -104,7 +109,7 @@ describe('LEVELS', () => {
   })
 
   it('illustrative stages carry the illustrative mark', () => {
-    const illustrative = new Set(['exdiv', 'bonds', 'accumulate', 'principalTrap', 'ticker'])
+    const illustrative = new Set(['exdiv', 'bonds', 'accumulate', 'principalTrap', 'ticker', ...PLAN7_STAGES])
     for (const s of steps) {
       const st = s.scene.stage
       const needs =
@@ -276,7 +281,7 @@ describe('LEVELS', () => {
   })
 
   it('labels illustrative stages as 示意 in their more text', () => {
-    const illustrative = new Set(['held', 'exdiv', 'bonds', 'accumulate', 'principalTrap', 'ticker'])
+    const illustrative = new Set(['held', 'exdiv', 'bonds', 'accumulate', 'principalTrap', 'ticker', ...PLAN7_STAGES])
     const undergroundIllustrative = new Set(['dig', 'veins', 'gold'])
     for (const s of steps) {
       const st = s.scene.stage
@@ -701,5 +706,31 @@ describe('初階 user test r5', () => {
     for (const s of steps) for (const t of [s.title, lineOf(s, ctx), moreOf(s, ctx), resolve(s.fallbackLine), resolve(s.fallbackMore), ...(s.recap ?? []).map((r) => r.text)]) {
       if (t !== undefined) expect(t.includes('滴'), `${s.id}: ${t}`).toBe(false)
     }
+  })
+})
+
+describe('Plan 7 中階: 最大跌幅 (s-dd)', () => {
+  const s = () => byId('s-dd')
+  it('drag the timeline to the trough: the quake turns on there, the gate is the same point, and the pit depth is the max drawdown', () => {
+    const d = maxDrawdown(DD_DEMO.path)
+    expect(s().until).toEqual({ control: 'tick', min: d.troughIndex })
+    expect(s().scene.eventWhen).toEqual(s().until)
+    expect(s().scene.event).toEqual({ kind: 'quake', depth: d.pct, at: [ddBarX(d.troughIndex), DD_LAYOUT.pitZ], width: DD_LAYOUT.pitWidth })
+    expect(controlRange(s(), 'tick')).toEqual([0, DD_DEMO.path.length - 1])
+    expect(s().scene.values?.tick).toBe(0)
+    expect(stripMarkup(lineOf(s(), ctx)).startsWith('拖')).toBe(true)
+  })
+  it('the big number is the biggest drop so far (hidden before any drop) and stays at 40% after the price grows back', () => {
+    expect(bigOf(s(), { tick: 0 })).toBeUndefined()
+    expect(bigOf(s(), { tick: 4 })).toMatchObject({ value: '20%', label: '最多曾經少掉', colorKey: 'loss', mark: 'illustrative' }) // (140 − 112) ÷ 140
+    expect(bigOf(s(), { tick: 5 })!.value).toBe('40%') // (140 − 84) ÷ 140
+    expect(bigOf(s(), { tick: 5 })!.fraction).toBeCloseTo(0.4, 12)
+    expect(bigOf(s(), { tick: 7 })!.value).toBe('40%')
+    expect(moreOf(s(), ctx)).toContain('從 140 跌到 84，少掉 40%')
+    expect(resolve(s().fallbackLine)).toContain('40%')
+  })
+  it('the fallback (text) version shows the readout at the gate', () => {
+    const rows = stageReadout({ kind: 'drawdown' }, { ...DEFAULT_VALUES, tick: 5, slice: 0, explode: 0 }, universe, null)
+    expect(rows.map((r) => r.value)).toEqual(['84', '140', '40.0%', '40.0%'])
   })
 })

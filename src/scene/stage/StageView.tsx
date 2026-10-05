@@ -7,6 +7,7 @@ import type { Quality } from '../quality'
 import { useEventClock } from '../useEventClock'
 import { AccumulateStage } from './AccumulateStage'
 import { BondShowcase } from './BondShowcase'
+import { DrawdownStage } from './DrawdownStage'
 import { Excavator } from './Excavator'
 import { ExDividendStage } from './ExDividendStage'
 import { FeeMeter } from './FeeMeter'
@@ -40,6 +41,7 @@ export function StageView({ quality }: { quality: Quality }) {
       {stage.kind === 'accumulate' && <AccumulateStage quality={quality} />}
       {stage.kind === 'principalTrap' && <PrincipalTrapStage quality={quality} />}
       {stage.kind === 'shock' && <ShockStage quality={quality} event={clock} />}
+      {stage.kind === 'drawdown' && <DrawdownStage event={clock} />}
       {stage.kind === 'overlap' && <OverlapStage a={stage.a} b={stage.b} quality={quality} />}
       {stage.kind === 'underground' && <UndergroundStage show={stage.show} cores={stage.cores} quality={quality} />}
       {stage.kind === 'excavator' && <Excavator other={stage.other} />}

@@ -12,6 +12,9 @@ export const DEFAULT_RANGES: Record<Control, [number, number]> = {
   periods: [0, 20],
   phase: [0, 1],
   frontLoad: [0, 0.03],
+  tick: [0, 10],
+  rate: [0, 0.1],
+  months: [1, 12],
   slice: [0, 1],
   explode: [0, 1],
 }

@@ -94,6 +94,15 @@ export const T = {
     phaseValue: (v: number) => (v < 0.5 ? '發金幣前' : v < 0.55 ? '發金幣那一刻' : '過了一陣子'),
     frontLoad: '假設的前收手續費',
     frontLoadValue: (v: number) => `${(v * 100).toFixed(2)}%`,
+    /** s-dd：價格路徑走到第幾年（0＝一開始） */
+    tick: '時間軸',
+    tickValue: (v: number) => (v === 0 ? '一開始' : `第 ${v} 年`),
+    /** b-rate：現在的市場利率 */
+    rate: '市場利率',
+    rateValue: (v: number) => `${Number((v * 100).toFixed(1))}%`,
+    /** e-dca：定期定額買了幾個月 */
+    months: '經過月數',
+    monthsValue: (v: number) => `${v} 個月`,
   },
   stage: {
     held: '你手上的方塊',
@@ -106,6 +115,12 @@ export const T = {
     /** b-3 龍捲風上的標籤 */
     storm: '經濟風暴',
     exdiv: { block: '方塊', coins: '金幣', lost: (v: number) => `少了 ${v}` },
+  },
+  /** s-dd 最大跌幅的 3D 標註 */
+  dd: {
+    peak: (price: number) => `最高 ${price}`,
+    drop: (pct: string) => `少 ${pct}`,
+    pit: (pct: string) => `坑深＝最多少掉 ${pct}`,
   },
   /** 基金那一章的錢：投入 100＝100 萬（和計費表同一個底），一位小數、去掉「.0」 */
   wan,
@@ -169,6 +184,10 @@ export const T = {
     atLeast: '（至少）',
     overlapNote: '其餘持股沒有列出，實際重疊更多',
     unverifiedParts: (parts: string) => `資料待更新：${parts}`,
+    ddPrice: '現在的價格',
+    ddPeak: '到目前的最高價',
+    ddDrop: '現在比最高少',
+    ddWorst: '最多曾經少掉',
   },
   feeParts: { expenseRatio: '內扣費用', distributionFee: '分銷費', cdsc: '遞延手續費', trading: '交易成本' },
   qualityNotice: '畫面有點卡，已自動切換成省電畫質。',

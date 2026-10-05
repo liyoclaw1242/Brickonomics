@@ -28,13 +28,16 @@ export type Stage =
   | { kind: 'ticker' }
   /** 台積電跌 30% 的比較；烏雲與閃電由 scene.event（lightning gather／strike）決定 */
   | { kind: 'shock' }
+  /** s-dd 最大跌幅：一排柱子＝每年的價格，跟著 tick 拉桿長；拖到谷底時地震（scene.event quake＋eventWhen） */
+  | { kind: 'drawdown' }
   | { kind: 'overlap'; a: string; b: string }
   | { kind: 'underground'; show: 'strata' | 'cores' | 'dig' | 'veins' | 'gold'; cores?: [string, string] }
 
 export type StageKind = Stage['kind']
 
 /** 舞台用的拉桿值（由導覽 store 持有） */
-export type StageValues = { years: number; periods: number; phase: number; frontLoad: number }
+/** tick＝價格路徑上的第幾個點（s-dd）；rate＝市場利率（b-rate）；months＝定期定額買了幾個月（e-dca） */
+export type StageValues = { years: number; periods: number; phase: number; frontLoad: number; tick: number; rate: number; months: number }
 export type ValueKey = keyof StageValues
 export type Control = 'slice' | 'explode' | ValueKey
 /** 要讓「下一步」可按，control 的值必須 ≥ min */
