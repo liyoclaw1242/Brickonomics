@@ -5,7 +5,7 @@ import { prefersReducedMotion, useRevealAfterCamera } from '../scene/useRevealAf
 import { effectiveExplode, useSandbox } from '../store/sandbox'
 import { currentStep, useTour } from '../store/tour'
 import { makeTextContext } from '../tour/context'
-import { activeEvent, chapterOfIndex, numberDelayEvent, courseById, isSatisfied, lineOf, moreOf, nextCourse, nextIndex, prevIndex, titleOf } from '../tour/engine'
+import { activeEvent, chapterOfIndex, numberDelayEvent, stepsOf, courseById, isSatisfied, lineOf, moreOf, nextCourse, nextIndex, prevIndex, titleOf } from '../tour/engine'
 import { BigNumberCard } from './panel/BigNumberCard'
 import { bigNumberDelayMs } from '../scene/events'
 import { MoreSection } from './panel/MoreSection'
@@ -69,7 +69,7 @@ function StepPanel() {
 
   return (
     <aside className="panel tour">
-      <StepHeader chapter={chapter} number={here} count={chapters.length} title={titleOf(step)} marks={marks} revealed={revealed}>
+      <StepHeader chapter={chapter} number={here} count={chapters.length} step={pos.index + 1} steps={stepsOf(pos.course).length} title={titleOf(step)} marks={marks} revealed={revealed}>
         <OneLine line={line} colorOf={colorOf} />
       </StepHeader>
       {big && (

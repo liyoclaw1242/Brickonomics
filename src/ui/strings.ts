@@ -36,6 +36,8 @@ export const T = {
     /** 文字版選階的群組名 */
     pickLabel: '選擇課程',
   },
+  /** 課內的第幾步（mid-r1：章的編號在同一章裡不動，她以為按壞了） */
+  stepCount: (i: number, n: number) => `第 ${i} / ${n} 步`,
   chapterCounter: (i: number, n: number) => `${String(i).padStart(2, '0')} / ${String(n - 1).padStart(2, '0')}`,
   shock: { stock: '只買台積電', withLegend: (name: string) => `${name}・紅色＝假設跌掉的部分`, struck: '假設：台積電被打中' },
   overlapLabel: (name: string) => `${name}：兩盒都有`,

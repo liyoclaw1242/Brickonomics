@@ -33,8 +33,9 @@ test('walks the whole 中階 course by clicking 下一步 and unlocks the sandbo
     expect(GATES.has(id), id).toBe(true)
   }
   let before = 0
-  for (const id of ids) {
+  for (const [i, id] of ids.entries()) {
     await settled(page, before)
+    await expect(page.locator('.step-counter')).toContainText(`第 ${i + 1} / ${ids.length} 步`) // mid-r1：課內步數每一步都會動
     const gate = GATES.get(id)
     if (gate) {
       await expect(next).toBeDisabled()

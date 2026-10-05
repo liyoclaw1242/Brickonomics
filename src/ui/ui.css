@@ -79,6 +79,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 
 .step-counter { margin: 0; display: flex; align-items: center; gap: 8px; }
 .step-counter__icon { font-size: 18px; letter-spacing: 0; }
+.step-counter__steps { margin-left: auto; letter-spacing: 0.04em; font-size: 13px; font-weight: 500; }
 /* 標題＋標示：標題字不折行；標示小膠囊成一組，放不下就整組換到下一行 */
 .step-title { display: flex; flex-wrap: wrap; align-items: center; column-gap: 8px; row-gap: 6px; }
 .step-title__text { white-space: nowrap; }
