@@ -58,9 +58,9 @@ function PreviewCamera() {
   const invalidate = useThree((s) => s.invalidate)
   useLayoutEffect(() => {
     const target: [number, number, number] = [PLAZA[0], 3, PLAZA[2]]
-    const halfW = aspect < 1 ? 13 : 19
+    const halfW = aspect < 1 ? 12 : 15
     const tanHalf = Math.tan(((45 / 2) * Math.PI) / 180)
-    const dist = Math.max(44, halfW / (tanHalf * aspect))
+    const dist = Math.max(30, halfW / (tanHalf * aspect))
     const dir = [0, 0.62, 1]
     const len = Math.hypot(dir[0]!, dir[1]!, dir[2]!)
     camera.position.set(target[0] + (dir[0]! / len) * dist, target[1] + (dir[1]! / len) * dist, target[2] + (dir[2]! / len) * dist)

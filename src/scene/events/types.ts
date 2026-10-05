@@ -2,7 +2,8 @@ import type { Quality } from '../quality'
 
 /**
  * 事件元件庫的共用型別（純 TS）。新增事件種類的步驟見 ./index.ts。
- * 一種金融事件只對應一種自然現象：tornado＝經濟衰退／金融風暴、lightning＝單一公司出事。
+ * 一種金融事件只對應一種自然現象：tornado＝經濟衰退／金融風暴、lightning＝單一公司出事、quake＝股市崩盤／最大跌幅、
+ * bubble＝泡沫／太貴、freeze＝升息、sunnyTree＝長期成長／複利、heatwave＝通膨。
  */
 
 /** 閃電的階段：gather＝烏雲聚集（還沒打）、strike＝打一次 */
@@ -10,9 +11,16 @@ export type LightningPhase = 'gather' | 'strike'
 
 /**
  * 步驟資料用 `scene.event` 叫用事件。每種事件一個分支（依 kind 區分），各自的參數在自己的分支裡檢查型別。
- * Plan 7/8 會再加 quake、freeze、heatwave、bubble、sunnyTree、wave。
+ * 位置參數一律相對廣場中心（與 lightningBolt 相同；元件再加 atPlaza）。Plan 8 會再加 wave。
  */
-export type EventSpec = { kind: 'tornado' } | { kind: 'lightning'; phase: LightningPhase }
+export type EventSpec =
+  | { kind: 'tornado' }
+  | { kind: 'lightning'; phase: LightningPhase }
+  /**
+   * 🌋 地震＋地裂（股市崩盤、最大跌幅）：地面震一次 → 裂出一個坑，坑深＝depth（0–1，乘 QUAKE.maxDepth）；終點坑保留。
+   * at：坑中心（相對廣場中心的 x、z，預設 [0, 0]）；width：坑的寬度（預設 QUAKE.width）。
+   */
+  | { kind: 'quake'; depth: number; at?: [number, number]; width?: number }
 
 export type EventKind = EventSpec['kind']
 

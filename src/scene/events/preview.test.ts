@@ -32,6 +32,12 @@ describe('event preview query', () => {
     expect(parsePreview('?eventPreview=lightning&phase=gather')?.spec).toEqual({ kind: 'lightning', phase: 'gather' })
   })
 
+  it('quake depth', () => {
+    expect(parsePreview('?eventPreview=quake')?.spec).toMatchObject({ kind: 'quake', depth: 0.4 })
+    expect(parsePreview('?eventPreview=quake&depth=0.8')?.spec).toMatchObject({ kind: 'quake', depth: 0.8 })
+    expect(parsePreview('?eventPreview=quake&depth=3')?.spec).toMatchObject({ kind: 'quake', depth: 1 })
+  })
+
   it('numParam clamps and falls back', () => {
     const q = new URLSearchParams('a=2&b=x&c=-1&d=')
     expect(numParam(q, 'a', 0.5, 0, 1)).toBe(1)

@@ -18,6 +18,13 @@ export type PreviewOptions = {
   reduced: boolean
 }
 
+/** 預覽場景的假方塊與事件目標（相對廣場中心） */
+export const PREVIEW_LAYOUT = {
+  /** 地震：坑在前面，後面一排高低不同的柱子（像價格時間線） */
+  quakePit: [0, 3.5] as [number, number],
+  quakeBars: [3, 5, 7, 4.5, 2.5, 4] as readonly number[],
+} as const
+
 /** 讀一個數字參數並限制範圍；沒給或不是數字時用預設值 */
 export function numParam(q: URLSearchParams, key: string, def: number, min: number, max: number): number {
   const raw = q.get(key)
@@ -29,6 +36,8 @@ export function numParam(q: URLSearchParams, key: string, def: number, min: numb
 export const PREVIEW_SPECS: { [K in EventKind]: (q: URLSearchParams) => SpecOf<K> } = {
   tornado: () => ({ kind: 'tornado' }),
   lightning: (q) => ({ kind: 'lightning', phase: q.get('phase') === 'gather' ? 'gather' : 'strike' }),
+  // depth＝跌幅（0–1），例如 0.4＝最多少掉 40%
+  quake: (q) => ({ kind: 'quake', depth: numParam(q, 'depth', 0.4, 0, 1), at: PREVIEW_LAYOUT.quakePit, width: 9 }),
 }
 
 const isKind = (k: string | null): k is EventKind => k !== null && Object.hasOwn(PREVIEW_SPECS, k)

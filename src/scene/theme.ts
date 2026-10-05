@@ -21,6 +21,8 @@ export type Theme = {
   storm: { funnel: string; dust: string; cloud: string; streak: string }
   /** c-2 閃電：白色芯、外圈光暈；flash＝打中那一刻全場補光的最大強度（只一次、很輕） */
   bolt: { core: string; glow: string; flash: number }
+  /** 🌋 地震：坑壁、坑底、地面裂痕、塵土、坑邊翹起的地磚 */
+  quake: { wall: string; floor: string; crack: string; dust: string; rim: string }
   /** 低飽和方塊：飽和度乘數、亮度位移；鮮豔方塊：亮度乘數 */
   tone: { mutedSaturation: number; mutedLightness: number; vividBoost: number }
 }
@@ -44,6 +46,8 @@ export const THEMES: Record<ThemeId, Theme> = {
     // 暗底上要讀得出來：漏斗用偏亮的灰藍，烏雲比天空亮一階
     storm: { funnel: '#9aabc4', dust: '#c3cedd', cloud: '#5a6378', streak: '#a9b8cc' },
     bolt: { core: '#ffffff', glow: '#8fd3ff', flash: 0.45 },
+    // 暗廣場上：坑壁用暖褐（比廣場亮、讀得出是土），坑底更暗；翹起的地磚比廣場亮一階
+    quake: { wall: '#7a5442', floor: '#24181a', crack: '#0d0a10', dust: '#a89a8e', rim: '#4b5164' },
     tone: { mutedSaturation: 0.55, mutedLightness: -0.09, vividBoost: 1.15 },
   },
   day: {
@@ -65,6 +69,8 @@ export const THEMES: Record<ThemeId, Theme> = {
     storm: { funnel: '#56657d', dust: '#7b889b', cloud: '#3a4252', streak: '#6b7a90' },
     // 亮底上白色會不見：芯用淡黃白，外圈用深一點的電紫藍勾邊
     bolt: { core: '#fffbe0', glow: '#5b4bff', flash: 0.35 },
+    // 亮廣場上：坑壁中褐、坑底深褐，裂痕深咖啡；地磚比廣場暗一階才分得出來
+    quake: { wall: '#9a7058', floor: '#4a3128', crack: '#3e2723', dust: '#c9b8aa', rim: '#ddd6c6' },
     tone: { mutedSaturation: 0.55, mutedLightness: 0.06, vividBoost: 1 },
   },
 }
