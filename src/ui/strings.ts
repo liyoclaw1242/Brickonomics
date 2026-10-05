@@ -205,7 +205,9 @@ export const T = {
     mix: (move: string) => `各一半，合起來 ${move}`,
     /** 方塊頭上的名字；打中之後加上漲跌 */
     a: (move: string) => (move ? `A ${move}` : 'A'),
-    b: (move: string) => (move ? `B ${move}` : 'B'),
+    /** 夥伴是誰：原因看得到（同產業一起受影響、對手反而接到生意；示意） */
+    bTogether: (move: string) => (move ? `同產業 B ${move}` : '同產業 B'),
+    bOpposite: (move: string) => (move ? `對手 B ${move}` : '對手 B'),
   },
   /** a-dt 當沖的 3D 標註（高階）：只說「交易成本」 */
   dt: {

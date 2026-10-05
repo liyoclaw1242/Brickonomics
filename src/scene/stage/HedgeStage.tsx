@@ -50,6 +50,9 @@ export function HedgeStage({ event }: { event: EventClock }) {
     if (m.instanceColor) m.instanceColor.needsUpdate = true
   }, [])
 
+  // 起點與終點各算一次；每幀只做內插（useFrame 裡不配置物件）
+  const from = useMemo(() => hedgeTowers(ex, caseIdx, 0), [ex, caseIdx])
+  const to = useMemo(() => hedgeTowers(ex, caseIdx, 1), [ex, caseIdx])
   useFrame(() => {
     // 塔跟著地面震一次（和 s-dd 的柱子一樣）
     const g = group.current
@@ -59,10 +62,12 @@ export function HedgeStage({ event }: { event: EventClock }) {
     }
     const m = ref.current
     if (!m) return
-    hedgeTowers(ex, caseIdx, dropAt(event.t.current)).forEach((t, ti) => {
+    const k = dropAt(event.t.current)
+    to.forEach((t, ti) => {
       let y = 0
       PARTS.forEach((p, pi) => {
-        const h = t[p] * unit
+        const a = from[ti]![p]
+        const h = (a + (t[p] - a) * k) * unit
         dummy.position.set(...atPlaza(HEDGE_LAYOUT.x[ti]!, y + h / 2, 0))
         dummy.scale.set(h > 1e-3 ? W : 0.001, Math.max(0.001, h), h > 1e-3 ? W : 0.001)
         dummy.updateMatrix()

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Edges } from '@react-three/drei'
 import type { Mesh } from 'three'
@@ -35,19 +35,24 @@ export function PortfolioStage({ event }: { event: EventClock }) {
   // 塔被掃完了才寫風暴後的數字（標註不跟著每一幀變）
   const hit = useEventValue(event, (t) => damageAt(t) >= 1)
 
+  // 風暴前、後各算一次；每幀只做內插
+  const before = useMemo(() => portTower(now.bondPct, 0, now.storm), [now.bondPct, now.storm])
+  const afterT = useMemo(() => portTower(now.bondPct, 1, now.storm), [now.bondPct, now.storm])
   useFrame(() => {
-    const tw = portTower(now.bondPct, damageAt(event.t.current), now.storm)
+    const d = damageAt(event.t.current)
+    const stockH = before.stock + (afterT.stock - before.stock) * d
+    const bondH = before.bond + (afterT.bond - before.bond) * d
     const s = stock.current
     if (s) {
-      s.visible = tw.stock > 1e-3
-      s.scale.set(W, Math.max(0.001, tw.stock), W)
-      s.position.set(...atPlaza(X, tw.stock / 2, 0))
+      s.visible = stockH > 1e-3
+      s.scale.set(W, Math.max(0.001, stockH), W)
+      s.position.set(...atPlaza(X, stockH / 2, 0))
     }
     const b = bond.current
     if (b) {
-      b.visible = tw.bond > 1e-3
-      b.scale.set(W, Math.max(0.001, tw.bond), W)
-      b.position.set(...atPlaza(X, tw.stock + tw.bond / 2, 0))
+      b.visible = bondH > 1e-3
+      b.scale.set(W, Math.max(0.001, bondH), W)
+      b.position.set(...atPlaza(X, stockH + bondH / 2, 0))
     }
   })
 

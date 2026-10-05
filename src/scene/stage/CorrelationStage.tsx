@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Edges } from '@react-three/drei'
 import { Color, Curve, type InstancedMesh, type Mesh, Object3D, Quaternion, TubeGeometry, Vector3 } from 'three'
@@ -48,6 +48,7 @@ export function CorrelationStage({ event, quality }: { event: EventClock; qualit
   const dummy = useMemo(() => new Object3D(), [])
   const v = useMemo(() => ({ a: new Vector3(), b: new Vector3(), d: new Vector3(), q: new Quaternion() }), [])
   const tube = useMemo(() => new TubeGeometry(new Helix(), SEGMENTS[quality], WIRE, 6, false), [quality])
+  useEffect(() => () => tube.dispose(), [tube])
   const n = corrNow()
   const struck = useEventValue(event, (t) => event.reduced || strikeAt(event.spec, t))
   const dropAt = (t: number | null) => (event.spec?.kind !== 'lightning' ? 0 : event.reduced ? 1 : corrDropAt(t))
@@ -149,8 +150,8 @@ export function CorrelationStage({ event, quality }: { event: EventClock; qualit
         <Callout
           key={b.id}
           anchor={atPlaza(b.x, Math.max(b.h, H) + 0.1, 0)}
-          offset={i % 2 === 0 ? [-1.2, 1.4, 0] : [1.2, 2.8, 0]}
-          title={i % 2 === 0 ? T.corr.a(struck ? move0(b.move) : '') : T.corr.b(struck ? move0(b.move) : '')}
+          offset={i % 2 === 0 ? [-1.2, 1.4, 0] : i === 3 ? [-0.4, 3, 0] : [1.2, 2.8, 0]}
+          title={i % 2 === 0 ? T.corr.a(struck ? move0(b.move) : '') : (i === 1 ? T.corr.bTogether : T.corr.bOpposite)(struck ? move0(b.move) : '')}
           compact
           persistent
         />
