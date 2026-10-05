@@ -1,3 +1,4 @@
+import type { Vec3 } from '../camera'
 import type { Quality } from '../quality'
 
 /**
@@ -8,6 +9,12 @@ import type { Quality } from '../quality'
 
 /** 閃電的階段：gather＝烏雲聚集（還沒打）、strike＝打一次 */
 export type LightningPhase = 'gather' | 'strike'
+
+/** 泡泡的階段：float＝被泡泡包住浮起（停在空中）、pop＝泡泡破掉一次、目標落回地面 */
+export type BubblePhase = 'float' | 'pop'
+
+/** 事件作用的目標（舞台上的方塊）：at＝底部中心（相對廣場中心）、size＝寬（x）、高（y）、深（z） */
+export type EventTarget = { at: Vec3; size: Vec3 }
 
 /**
  * 步驟資料用 `scene.event` 叫用事件。每種事件一個分支（依 kind 區分），各自的參數在自己的分支裡檢查型別。
@@ -21,6 +28,11 @@ export type EventSpec =
    * at：坑中心（相對廣場中心的 x、z，預設 [0, 0]）；width：坑的寬度（預設 QUAKE.width）。
    */
   | { kind: 'quake'; depth: number; at?: [number, number]; width?: number }
+  /**
+   * 🫧 泡泡（泡沫、太貴）：float＝目標被半透明泡泡包住、浮起 lift（預設 BUBBLE.lift）後停在空中；
+   * pop＝（接在 float 後面）泡泡破一次、目標落回地面（不閃）。目標本身由舞台畫，舞台用 bubbleAt 讀浮起高度。
+   */
+  | { kind: 'bubble'; phase: BubblePhase; target: EventTarget; lift?: number }
 
 export type EventKind = EventSpec['kind']
 

@@ -5,6 +5,7 @@ import { SECTOR_COLORS } from '../palette'
 import type { Quality } from '../quality'
 import { atPlaza } from '../stage/plaza'
 import { PREVIEW_LAYOUT } from './preview'
+import { bubbleAt, bubbleFinal } from './bubble'
 import { quakeAt } from './quake'
 import type { EventClock, EventKind, SpecOf } from './types'
 
@@ -50,8 +51,43 @@ function QuakeProps({ spec, clock }: PreviewPropsOf<'quake'>) {
   )
 }
 
+/** 泡泡：兩棟一樣大的樓；右邊那棟（目標）跟著泡泡浮起、落回 */
+function BubbleProps({ spec, clock }: PreviewPropsOf<'bubble'>) {
+  const ref = useRef<InstancedMesh>(null)
+  const dummy = useMemo(() => new Object3D(), [])
+  const boxes = [PREVIEW_LAYOUT.bubbleOther, spec.target]
+  useLayoutEffect(() => {
+    const m = ref.current
+    if (!m) return
+    m.setColorAt(0, new Color(SECTOR_COLORS.electronics))
+    m.setColorAt(1, new Color(SECTOR_COLORS.internet))
+    if (m.instanceColor) m.instanceColor.needsUpdate = true
+  }, [])
+  useFrame(() => {
+    const m = ref.current
+    if (!m) return
+    const s = clock.reduced ? bubbleFinal(spec) : bubbleAt(spec, clock.t.current)
+    boxes.forEach((b, i) => {
+      const lift = i === 1 ? s.lift : 0
+      const sy = i === 1 ? s.squash : 1
+      dummy.position.set(...atPlaza(b.at[0], b.at[1] + lift + (b.size[1] * sy) / 2, b.at[2]))
+      dummy.scale.set(b.size[0], b.size[1] * sy, b.size[2])
+      dummy.updateMatrix()
+      m.setMatrixAt(i, dummy.matrix)
+    })
+    m.instanceMatrix.needsUpdate = true
+  })
+  return (
+    <instancedMesh ref={ref} args={[undefined, undefined, 2]} castShadow receiveShadow frustumCulled={false}>
+      <boxGeometry args={[1, 1, 1]} />
+      <meshStandardMaterial roughness={0.8} />
+    </instancedMesh>
+  )
+}
+
 export const PREVIEW_PROPS: { [K in EventKind]: ComponentType<PreviewPropsOf<K>> | null } = {
   tornado: null,
   lightning: null,
   quake: QuakeProps,
+  bubble: BubbleProps,
 }

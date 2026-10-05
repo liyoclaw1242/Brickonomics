@@ -23,6 +23,8 @@ export type Theme = {
   bolt: { core: string; glow: string; flash: number }
   /** 🌋 地震：坑壁、坑底、地面裂痕、塵土、坑邊翹起的地磚 */
   quake: { wall: string; floor: string; crack: string; dust: string; rim: string }
+  /** 🫧 泡泡：膜邊緣的兩個顏色（像肥皂泡的彩虹）、亮點、破掉的水滴、浮起時地上的影子 */
+  bubble: { rimA: string; rimB: string; highlight: string; drop: string; shadow: string }
   /** 低飽和方塊：飽和度乘數、亮度位移；鮮豔方塊：亮度乘數 */
   tone: { mutedSaturation: number; mutedLightness: number; vividBoost: number }
 }
@@ -48,6 +50,7 @@ export const THEMES: Record<ThemeId, Theme> = {
     bolt: { core: '#ffffff', glow: '#8fd3ff', flash: 0.45 },
     // 暗廣場上：坑壁用暖褐（比廣場亮、讀得出是土），坑底更暗；翹起的地磚比廣場亮一階
     quake: { wall: '#7a5442', floor: '#24181a', crack: '#0d0a10', dust: '#a89a8e', rim: '#4b5164' },
+    bubble: { rimA: '#9fe7ff', rimB: '#f3b4ff', highlight: '#ffffff', drop: '#cdefff', shadow: '#05060c' },
     tone: { mutedSaturation: 0.55, mutedLightness: -0.09, vividBoost: 1.15 },
   },
   day: {
@@ -71,6 +74,8 @@ export const THEMES: Record<ThemeId, Theme> = {
     bolt: { core: '#fffbe0', glow: '#5b4bff', flash: 0.35 },
     // 亮廣場上：坑壁中褐、坑底深褐，裂痕深咖啡；地磚比廣場暗一階才分得出來
     quake: { wall: '#9a7058', floor: '#4a3128', crack: '#3e2723', dust: '#c9b8aa', rim: '#ddd6c6' },
+    // 亮底上：膜邊緣要深一點才看得到
+    bubble: { rimA: '#2f8fd0', rimB: '#b05ad8', highlight: '#ffffff', drop: '#4aa6e0', shadow: '#4a5568' },
     tone: { mutedSaturation: 0.55, mutedLightness: 0.06, vividBoost: 1 },
   },
 }

@@ -1,3 +1,4 @@
+import { BUBBLE_TIMELINE } from './bubble'
 import { LIGHTNING_TIMELINE } from './lightning'
 import { QUAKE_TIMELINE } from './quake'
 import { TORNADO_TIMELINE } from './tornado'
@@ -27,6 +28,7 @@ export const EVENTS: { [K in EventKind]: EventTimeline<SpecOf<K>> } = {
   tornado: TORNADO_TIMELINE,
   lightning: LIGHTNING_TIMELINE,
   quake: QUAKE_TIMELINE,
+  bubble: BUBBLE_TIMELINE,
 }
 
 export const EVENT_KINDS = Object.keys(EVENTS) as EventKind[]
@@ -47,4 +49,4 @@ export function bigNumberDelayMs(spec: EventSpec | undefined, reducedMotion: boo
   return !spec || reducedMotion ? 0 : timelineOf(spec).numberDelay(spec) * 1000
 }
 
-export type { EventClock, EventKind, EventProps, EventSpec, EventTimeline, LightningPhase, SpecOf } from './types'
+export type { BubblePhase, EventClock, EventKind, EventProps, EventSpec, EventTarget, EventTimeline, LightningPhase, SpecOf } from './types'

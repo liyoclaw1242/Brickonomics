@@ -38,6 +38,13 @@ describe('event preview query', () => {
     expect(parsePreview('?eventPreview=quake&depth=3')?.spec).toMatchObject({ kind: 'quake', depth: 1 })
   })
 
+  it('bubble phase and lift', () => {
+    expect(parsePreview('?eventPreview=bubble')?.spec).toMatchObject({ kind: 'bubble', phase: 'float' })
+    expect(parsePreview('?eventPreview=bubble&phase=pop')?.spec).toMatchObject({ kind: 'bubble', phase: 'pop' })
+    expect(parsePreview('?eventPreview=bubble')?.spec).not.toHaveProperty('lift')
+    expect(parsePreview('?eventPreview=bubble&lift=5')?.spec).toMatchObject({ lift: 5 })
+  })
+
   it('numParam clamps and falls back', () => {
     const q = new URLSearchParams('a=2&b=x&c=-1&d=')
     expect(numParam(q, 'a', 0.5, 0, 1)).toBe(1)

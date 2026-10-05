@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react'
 import type { Quality } from '../quality'
+import { Bubble } from './Bubble'
 import { Lightning } from './Lightning'
 import { Quake } from './Quake'
 import { Tornado } from './Tornado'
@@ -10,6 +11,7 @@ const COMPONENTS: { [K in EventKind]: ComponentType<EventProps<SpecOf<K>>> } = {
   tornado: Tornado,
   lightning: Lightning,
   quake: Quake,
+  bubble: Bubble,
 }
 
 /** 畫出目前步驟的事件（沒有事件時什麼都不畫）；clock 由 StageView 的 useEventClock 提供，與舞台共用 */
