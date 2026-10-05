@@ -39,6 +39,8 @@ const unverify = (ids: string[]): Universe => {
 const byId = (id: string): Step => steps.find((s) => s.id === id)!
 /** Plan 7 的舉例舞台：一定要標 ≈、多說一點寫「示意」 */
 const PLAN7_STAGES: string[] = ['drawdown', 'pe', 'seesaw', 'dca', 'inflation']
+/** Plan 8 的高階舞台：都是舉例（≈、多說一點寫「示意」） */
+const PLAN8_STAGES: string[] = ['portfolio']
 /** 大數字跟著即時拉桿值；測試預設用進入該步驟時的值 */
 const bigOf = (s: Step, values: Partial<StageValues> = {}) => s.bigNumber?.(ctx, { ...DEFAULT_VALUES, ...s.scene.values, ...values })
 const resolve = (t: Step['line'] | undefined): string | undefined => (t === undefined ? undefined : typeof t === 'function' ? t(ctx) : t)
@@ -111,7 +113,7 @@ describe('LEVELS', () => {
   })
 
   it('illustrative stages carry the illustrative mark', () => {
-    const illustrative = new Set(['exdiv', 'bonds', 'accumulate', 'principalTrap', 'ticker', ...PLAN7_STAGES])
+    const illustrative = new Set(['exdiv', 'bonds', 'accumulate', 'principalTrap', 'ticker', ...PLAN7_STAGES, ...PLAN8_STAGES])
     for (const s of steps) {
       const st = s.scene.stage
       const needs =
@@ -283,7 +285,7 @@ describe('LEVELS', () => {
   })
 
   it('labels illustrative stages as 示意 in their more text', () => {
-    const illustrative = new Set(['held', 'exdiv', 'bonds', 'accumulate', 'principalTrap', 'ticker', ...PLAN7_STAGES])
+    const illustrative = new Set(['held', 'exdiv', 'bonds', 'accumulate', 'principalTrap', 'ticker', ...PLAN7_STAGES, ...PLAN8_STAGES])
     const undergroundIllustrative = new Set(['dig', 'veins', 'gold'])
     for (const s of steps) {
       const st = s.scene.stage
@@ -926,5 +928,37 @@ describe('mid-r2: 總報酬 is named where it is taught (s-6), before the m-fin 
     const ids = courseSteps(COURSES.find((c) => c.id === 'intermediate')!).map((s) => s.id)
     const first = ids.find((id) => { const s = byId(id); return [s.title, stripMarkup(lineOf(s, ctx)), bigOf(s)?.label ?? ''].some((t) => t.includes('總報酬')) })
     expect(first).toBe('s-6')
+  })
+})
+
+describe('mid-r1 carried into 高階: the city steps back on prop steps', () => {
+  it('every 高階 step with a plaza stage dims the city; recap steps on the overview do not', () => {
+    const adv = courseSteps(COURSES.find((c) => c.id === 'advanced')!)
+    for (const s of adv) expect(!!s.scene.cityDim, s.id).toBe(!!s.scene.stage && ON_PLAZA.has(s.scene.stage.kind))
+  })
+})
+
+describe('Plan 8 高階: 自己蓋組合塔 (a-port)', () => {
+  const s = () => byId('a-port')
+  it('drag the bond share 0 → 40% (gate); the 🌪 storm sweeps on entry and the card waits until it reaches the tower', () => {
+    expect(s().controls).toEqual(['bondPct'])
+    expect(s().scene.values?.bondPct).toBe(0)
+    expect(controlRange(s(), 'bondPct')).toEqual([0, 80])
+    expect(s().until).toEqual({ control: 'bondPct', min: 40 })
+    expect(s().scene.event).toEqual({ kind: 'tornado', numberAtX: 0 })
+    expect(s().scene.eventWhen).toBeUndefined()
+    expect(stripMarkup(lineOf(s(), ctx))).toBe('拖債券比例。看風暴後少多少')
+  })
+  it('big number: how much this tower lost in the example storm (stocks −40%, bonds +5%), following the slider', () => {
+    expect(bigOf(s(), { bondPct: 0 })).toMatchObject({ value: '40%', label: '這座塔在風暴裡少掉', fraction: 1, colorKey: 'loss', mark: 'illustrative' }) // 100 × 0.4
+    expect(bigOf(s(), { bondPct: 40 })!.value).toBe('22%') // 100 − (60 × 0.6 + 40 × 1.05) = 100 − 78
+    expect(bigOf(s(), { bondPct: 40 })!.fraction).toBeCloseTo(22 / 40, 12)
+    expect(bigOf(s(), { bondPct: 80 })!.value).toBe('4%') // 100 − (12 + 84)
+    expect(bigOf(s())!.note).toBe('整條＝全放股票少掉 40%')
+    expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('四成債券，風暴後少掉 22%')
+  })
+  it('says the storm is an example and bonds are not guaranteed to rise', () => {
+    expect(moreOf(s(), ctx)).toContain('股票跌 40%，債券漲 5%')
+    expect(moreOf(s(), ctx)).toContain('債券不保證漲')
   })
 })

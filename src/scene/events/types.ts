@@ -24,7 +24,8 @@ export type FreezeTarget = EventTarget & { length?: number }
  * 位置參數一律相對廣場中心（與 lightningBolt 相同；元件再加 atPlaza）。
  */
 export type EventSpec =
-  | { kind: 'tornado' }
+  /** 🌪 龍捲風（經濟衰退、金融風暴）：numberAtX＝面板大數字等龍捲風掃到這個 x（相對廣場中心）才數（a-port）；沒給＝一進來就數（b-3） */
+  | { kind: 'tornado'; numberAtX?: number }
   | { kind: 'lightning'; phase: LightningPhase }
   /**
    * 🌋 地震＋地裂（股市崩盤、最大跌幅）：地面震一次 → 裂出一個坑，坑深＝depth（0–1，乘 QUAKE.maxDepth）；終點坑保留。

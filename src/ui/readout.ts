@@ -4,6 +4,7 @@ import { sectorBreakdown } from '../scene/layout/underground'
 import { accumulateVsPayout, exDivTimeline, principalTrap } from '../scene/layout/stages'
 import { feeRaceLeader, feeRaceRows } from '../sim/feeRace'
 import { DCA_DEMO, dcaNow, ddNow, INFL_DEMO, inflReal, PE_DEMO, peYears, ratePrice } from '../scene/layout/intermediate'
+import { portNow } from '../scene/layout/advanced'
 import { overlap } from '../sim/overlap'
 import { shockImpact } from '../sim/scenario'
 import { SHOCK_2330, signedPct } from '../tour/context'
@@ -102,6 +103,15 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
         { label: T.readout.inflNominal, value: p(INFL_DEMO.nominal), marks: ['illustrative'] },
         { label: T.readout.inflInflation, value: p(INFL_DEMO.inflation) },
         { label: T.readout.inflReal, value: p(inflReal()) },
+      ]
+    }
+    case 'portfolio': {
+      // 風暴是這一步一進來就發生的事件：讀數直接寫風暴後（文字版也一樣）
+      const n = portNow(v.bondPct)
+      return [
+        { label: T.readout.portStock, value: `${T.wan(n.before.stock)} → ${T.wan(n.after.stock)}`, marks: ['illustrative'] },
+        { label: T.readout.portBond, value: `${T.wan(n.before.bond)} → ${T.wan(n.after.bond)}` },
+        { label: T.readout.portRemaining, value: T.wan(n.after.remaining) },
       ]
     }
     case 'overlap': {

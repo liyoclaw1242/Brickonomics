@@ -5,6 +5,8 @@ import { accumulateVsPayout, EXDIV, exDivTimeline, principalTrap, TRAP_DEMO } fr
 import { T } from '../ui/strings'
 import { DD_DEMO, DD_TROUGH, ddNow, ddQuake, PE_DEMO, peBubble, peYears, RATE_DEMO, rateFreeze, ratePrice, DCA_DEMO, dcaNow, dcaSunny, INFL_DEMO, inflHeat, inflReal } from '../scene/layout/intermediate'
 import { maxDrawdown } from '../sim/drawdown'
+import { STORM } from '../sim/portfolio'
+import { PORT_LAYOUT, PORT_MAX_BOND, portNow } from '../scene/layout/advanced'
 
 /**
  * 課程內文。數字一律由 TextContext 即時計算。
@@ -635,5 +637,24 @@ export const COURSE_STEPS: Step[] = [
     more: '這四句是中階學到的重點。高階教怎麼組合、怎麼算成本、怎麼控風險。',
     recap: MID_RECAP,
     scene: { camera: 'overview', product: null },
+  },
+  {
+    // 高階開頭：自己蓋組合塔。🌪 一進來就掃過（大數字等它掃到塔才數）；拖債券比例，塔直接畫風暴後的樣子
+    id: 'a-port',
+    title: '自己蓋組合塔',
+    line: '拖**債券比例|bond**。看風暴後**少多少|loss**',
+    fallbackLine: () => `四成債券，風暴後**少掉 ${pct0(portNow(40).after.lossPct)}%|loss**`,
+    more: () =>
+      `組合塔＝股票加債券疊在一起。這場風暴是示意：股票跌 ${pct0(-STORM.stock * 100)}%，債券漲 ${pct0(STORM.bond * 100)}%。債券多，少掉的通常比較少。也有股債一起跌的風暴，債券不保證漲。`,
+    mark: 'illustrative',
+    bigNumber: (_c, v) => {
+      const n = portNow(v.bondPct)
+      const all = portNow(0).after.lossPct
+      return { value: `${pct0(n.after.lossPct)}%`, label: '這座塔在風暴裡少掉', fraction: n.after.lossPct / all, note: `整條＝全放股票少掉 ${pct0(all)}%`, colorKey: 'loss', mark: 'illustrative' }
+    },
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'portfolio' }, event: { kind: 'tornado', numberAtX: PORT_LAYOUT.x }, values: { bondPct: 0 }, cityLabels: false },
+    controls: ['bondPct'],
+    ranges: { bondPct: [0, PORT_MAX_BOND] },
+    until: { control: 'bondPct', min: 40 },
   },
 ]

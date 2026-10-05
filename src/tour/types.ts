@@ -38,6 +38,8 @@ export type Stage =
   | { kind: 'dca' }
   /** b-infl 通膨：借據＋一排利息金幣；熱浪讓金幣融化變小（scene.event heatwave） */
   | { kind: 'inflation' }
+  /** a-port 組合塔：股票＋債券疊成一座塔（bondPct 拉桿）；🌪 龍捲風（scene.event tornado）掃過時股票那截縮掉 */
+  | { kind: 'portfolio' }
   | { kind: 'overlap'; a: string; b: string }
   | { kind: 'underground'; show: 'strata' | 'cores' | 'dig' | 'veins' | 'gold'; cores?: [string, string] }
 
@@ -45,7 +47,8 @@ export type StageKind = Stage['kind']
 
 /** 舞台用的拉桿值（由導覽 store 持有） */
 /** tick＝價格路徑上的第幾個點（s-dd）；rate＝市場利率（b-rate）；months＝定期定額買了幾個月（e-dca） */
-export type StageValues = { years: number; periods: number; phase: number; frontLoad: number; tick: number; rate: number; months: number }
+/** bondPct：a-port 組合塔裡債券佔幾 %（其餘是股票） */
+export type StageValues = { years: number; periods: number; phase: number; frontLoad: number; tick: number; rate: number; months: number; bondPct: number }
 export type ValueKey = keyof StageValues
 export type Control = 'slice' | 'explode' | ValueKey
 /** 要讓「下一步」可按，control 的值必須 ≥ min */

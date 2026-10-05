@@ -12,6 +12,7 @@ const CONTROL_LABEL: Record<string, string> = {
   tick: '時間軸',
   rate: '市場利率',
   months: '經過月數',
+  bondPct: '債券比例',
 }
 
 test('walks the whole 中階 course by clicking 下一步 and unlocks the sandbox', async ({ page }) => {

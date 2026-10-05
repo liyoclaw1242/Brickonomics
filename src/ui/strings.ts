@@ -107,6 +107,9 @@ export const T = {
     /** e-dca：定期定額買了幾個月 */
     months: '經過月數',
     monthsValue: (v: number) => `${v} 個月`,
+    /** a-port 組合塔裡債券佔幾 %（其餘是股票） */
+    bondPct: '債券比例',
+    bondPctValue: (v: number) => `${v}%`,
   },
   stage: {
     held: '你手上的方塊',
@@ -163,6 +166,14 @@ export const T = {
     coins: (pct: string) => `利息 ${pct}`,
     real: (pct: string) => `真正賺到約 ${pct}`,
     eaten: (pct: string) => `通膨 ${pct} 融掉了`,
+  },
+  /** a-port 組合塔的 3D 標註（高階） */
+  port: {
+    stock: (pct: number) => `股票 ${pct}%`,
+    bond: (pct: number) => `債券 ${pct}%`,
+    after: (v: string) => `風暴後 ${v}`,
+    ghost: '原本 100 萬',
+    lost: (pct: string) => `少掉 ${pct}`,
   },
   /** 基金那一章的錢：投入 100＝100 萬（和計費表同一個底），一位小數、去掉「.0」 */
   wan,
@@ -248,6 +259,9 @@ export const T = {
     dcaCost: '平均成本',
     dcaPrice: '平均價格',
     peYears: (earn: number) => `每年賺 ${earn}：幾年賺回`,
+    portStock: '股票那一截',
+    portBond: '債券那一截',
+    portRemaining: '風暴後整座塔',
   },
   feeParts: { expenseRatio: '內扣費用', distributionFee: '分銷費', cdsc: '遞延手續費', trading: '交易成本' },
   qualityNotice: '畫面有點卡，已自動切換成省電畫質。',

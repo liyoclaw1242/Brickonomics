@@ -114,3 +114,12 @@ describe('funnel shape and quality', () => {
     expect(STORM_COUNTS.low.streaks).toBe(0)
   })
 })
+
+describe('numberAtX (a-port: the big number waits until the storm reaches the tower)', () => {
+  it('without it the card counts at once (b-3); with it the card waits for the hit at that x', async () => {
+    const { TORNADO_TIMELINE, timeAtX } = await import('./tornado')
+    expect(TORNADO_TIMELINE.numberDelay({ kind: 'tornado' })).toBe(0)
+    expect(TORNADO_TIMELINE.numberDelay({ kind: 'tornado', numberAtX: 0 })).toBeCloseTo(timeAtX(0) + STORM.damage, 12)
+    expect(timeAtX(0)).toBeGreaterThan(0)
+  })
+})

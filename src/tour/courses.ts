@@ -52,7 +52,7 @@ export const COURSES: readonly Course[] = [
     tagline: '自己組合、算成本',
     available: false,
     chapters: [
-      chapter('review', T.courseChapters.review, ['a-0']),
+      chapter('review', T.courseChapters.review, ['a-0', 'a-port']),
       chapter('stock', STOCK, []),
       chapter('bond', BOND, []),
       chapter('fund', FUND, []),
