@@ -83,6 +83,9 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .research__value { flex: none; min-width: 4.2em; font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; display: inline-flex; gap: 6px; align-items: center; }
 .research__text { font-size: 14px; line-height: 1.35; }
 .research__cite { margin: 6px 0 0; font-size: 12px; color: var(--soft-text); }
+.research__source { display: block; font-size: 12px; color: var(--soft-text); }
+.more__refs { margin: 8px 0 0; padding-left: 18px; font-size: 12px; color: var(--soft-text); }
+.more__refs a { color: var(--soft-text); word-break: break-all; }
 .more { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 8px; font-size: 14px; color: var(--muted); }
 .more summary { cursor: pointer; color: var(--text); }
 

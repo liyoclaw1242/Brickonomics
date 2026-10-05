@@ -69,6 +69,15 @@ export function FallbackApp() {
                   </p>
                 )}
                 {s.research && <ResearchCardView card={s.research} />}
+                {s.research?.refs && (
+                  <div className="more__refs" role="list" aria-label={T.research.refs}>
+                    {s.research.refs.map((r) => (
+                      <p key={r.doi} role="listitem">
+                        {r.citation} {r.doi}
+                      </p>
+                    ))}
+                  </div>
+                )}
                 {/* 回顧不用 li：e2e 以 li 數步驟 */}
                 {s.recap && (
                   <div className="recap" role="list" aria-label={T.recapLabel}>

@@ -67,7 +67,9 @@ export type StageKind = Stage['kind']
 /** hedgeCase：a-hedge 看哪一種情境（0 平穩一年、1 慢慢漲一年、2 ⚡ 打下那天） */
 /** rebal：a-rebal 走到哪一步（0 一開始、1 股票漲了一年、2 剪高補低） */
 /** storm：a-port 選哪一種示意風暴（0 股跌債漲、1 股債一起跌） */
-export type StageValues = { years: number; periods: number; phase: number; frontLoad: number; tick: number; rate: number; months: number; bondPct: number; trades: number; hedgeCase: number; rebal: number; storm: number }
+/** feeDiscount：a-dt 券商手續費打幾折（1＝公告費率不打折） */
+/** winRate：a-dt 每次進出賺錢的機率（示意） */
+export type StageValues = { years: number; periods: number; phase: number; frontLoad: number; tick: number; rate: number; months: number; bondPct: number; trades: number; hedgeCase: number; rebal: number; storm: number; feeDiscount: number; winRate: number }
 export type ValueKey = keyof StageValues
 export type Control = 'slice' | 'explode' | ValueKey
 /** 要讓「下一步」可按，control 的值必須 ≥ min */
@@ -133,8 +135,9 @@ export type CalloutSpec = {
 }
 
 /** 研究數據卡（a-dt）：一手出處的研究數字；mark 'unverified'＝這個數字沒查證（？，從資料推出來） */
-export type ResearchRow = { value: string; text: string; mark?: Mark }
-export type ResearchCard = { rows: ResearchRow[]; cite: string }
+export type ResearchRow = { value: string; text: string; mark?: Mark; /** 這一列的短出處（作者、年份、樣本） */ source?: string }
+/** refs＝完整出處（論文原文名稱＋DOI），放在多說一點與文字版 */
+export type ResearchCard = { rows: ResearchRow[]; cite: string; refs?: { citation: string; doi: string }[] }
 
 /** 課程最後的回顧：一個圖示＋一句短話 */
 export type RecapLine = { icon: string; text: string }

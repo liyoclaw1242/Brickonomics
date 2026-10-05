@@ -37,7 +37,7 @@ export const T = {
     pickLabel: '選擇課程',
   },
   /** 研究數據卡（a-dt）：一手出處的研究數字 */
-  research: { title: '研究怎麼說', source: (cite: string) => `出處：${cite}` },
+  research: { title: '研究怎麼說', source: (cite: string) => `出處：${cite}`, refs: '完整出處' },
   /** 大數字卡等事件發生前的佔位（不顯示還沒發生的 0） */
   waiting: '…',
   /** 比較步驟的提醒（mid-r1：比較結果一面倒，被讀成投資建議） */
@@ -111,6 +111,12 @@ export const T = {
     /** e-dca：定期定額買了幾個月 */
     months: '經過月數',
     monthsValue: (v: number) => `${v} 個月`,
+    /** a-dt 每次進出賺錢的機率（示意） */
+    winRate: '勝率',
+    winRateValue: (v: number) => `${Math.round(v * 100)}%`,
+    /** a-dt 券商手續費打幾折（1＝公告費率不打折） */
+    feeDiscount: '手續費折數',
+    feeDiscountValue: (v: number) => (v >= 0.995 ? '不打折' : `${Number((v * 10).toFixed(1))} 折`),
     /** a-port 選哪一種示意風暴（0 股跌債漲、1 股債一起跌） */
     storm: '風暴種類',
     stormValue: (v: number) => (['股跌、債漲', '股債一起跌'] as const)[Math.round(v)] ?? '',
@@ -207,8 +213,8 @@ export const T = {
     capital: (n: number) => `進出 ${n} 次後的本金`,
     left: (v: string) => `剩 ${v}`,
     cost: '付掉的交易成本',
-    chips: '勝率五五波',
-    chipsSub: (win: string, loss: string) => `賺 ${win}、賠 ${loss}，各一半`,
+    chips: (rate: string) => `勝率 ${rate}`,
+    chipsSub: (win: string, loss: string, even: string) => `賺 ${win}、賠 ${loss}・打平要 ${even}`,
   },
   /** a-dur 長短借據的 3D 標註（高階） */
   dur: {
@@ -351,6 +357,7 @@ export const T = {
     dtCost: '每次進出的交易成本',
     dtCapital: '本金剩',
     dtPaid: '付掉的交易成本',
+    dtBreakEven: '打平要的勝率',
     corrAlone: '只放 A：平常晃多大',
     corrTogether: 'A＋一起動的，各一半',
     corrOpposite: 'A＋一上一下的，各一半',

@@ -4,7 +4,7 @@ import { clamp01, ramp, smooth } from '../events/ease'
 import { IMPACT_TIME } from '../events/lightning'
 import type { SpecOf } from '../events/types'
 import { PAIRS, combine, volatility } from '../../sim/correlation'
-import { DAY_TRADE, dayTradeDrain } from '../../sim/dayTrade'
+import { DAY_TRADE, breakEvenWinRate, dayTradeCostPerTrade, dayTradeDrain } from '../../sim/dayTrade'
 import { DURATION, priceChange } from '../../sim/duration'
 import { FEE_DRAG, grow } from '../../sim/feeDrag'
 import { LEVERAGE, leverageTowers } from '../../sim/leverage'
@@ -130,20 +130,31 @@ export function corrBlocks(drop: number): CorrBlock[] {
 // ───────────── a-dt 當沖的成本 ─────────────
 
 /** 左邊一座塔＝本金（100 萬＝height 高）；右邊一堆紅色＝一路付掉的交易成本；前面一排小圓片＝賺、賠各一半 */
-export const DT_LAYOUT = { towerX: -3.6, pileX: 3.6, w: 4, height: 10, chipsZ: 4.2, chips: 10, chipR: 0.5, chipGap: 1.3 } as const
+/** 100 萬＝height 高（勝率拉到 75%、手續費打折時本金會長到約兩倍，塔要放得進畫面） */
+export const DT_LAYOUT = { towerX: -3.6, pileX: 3.6, w: 4, height: 7, chipsZ: 4.2, chips: 10, chipR: 0.5, chipGap: 1.3 } as const
+/** 折數、勝率拉桿的範圍（和步驟的 ranges 一致） */
+export const DT_RANGE = { discount: [0.28, 1], winRate: [0.5, 0.75] } as const
 
-export type DtNow = { n: number; capital: number; costPaid: number; costPerTrade: number }
+export type DtNow = { n: number; discount: number; winRate: number; capital: number; costPaid: number; costPerTrade: number; breakEven: number }
 
-/** 拉桿值 → 進出幾次（10 的倍數、0..DAY_TRADE.trades）與期望的本金、付掉的成本（起點 100） */
-export function dtNow(trades: number): DtNow {
+const clampTo = (v: number, [lo, hi]: readonly [number, number], def: number) => Math.min(hi, Math.max(lo, Number.isFinite(v) ? v : def))
+
+/**
+ * 拉桿值 → 進出幾次（10 的倍數、0..DAY_TRADE.trades）、手續費折數、勝率（皆限制在拉桿範圍），
+ * 與期望的本金、付掉的成本（起點 100）、打平需要的勝率（sim/dayTrade breakEvenWinRate）。
+ */
+export function dtNow(trades: number, discount = 1, winRate: number = DAY_TRADE.winRate): DtNow {
   const n = Math.min(DAY_TRADE.trades, Math.max(0, Math.round((Number.isFinite(trades) ? trades : 0) / 10) * 10))
-  const r = dayTradeDrain({ ...DAY_TRADE, trades: n })
-  return { n, capital: r.capitalAfter, costPaid: r.costPaid, costPerTrade: DAY_TRADE.costPerTrade }
+  const d = clampTo(discount, DT_RANGE.discount, 1)
+  const w = clampTo(winRate, DT_RANGE.winRate, DAY_TRADE.winRate)
+  const costPerTrade = dayTradeCostPerTrade(d)
+  const r = dayTradeDrain({ ...DAY_TRADE, trades: n, costPerTrade, winRate: w })
+  return { n, discount: d, winRate: w, capital: r.capitalAfter, costPaid: r.costPaid, costPerTrade, breakEven: breakEvenWinRate({ ...DAY_TRADE, costPerTrade }) }
 }
 
-/** 塔高與紅色那堆的高度（世界單位）：兩個加起來永遠＝原本的高度 */
-export function dtTower(trades: number): { capital: number; cost: number } {
-  const d = dtNow(trades)
+/** 塔高與紅色那堆的高度（世界單位）：勝率 50% 時兩個加起來永遠＝原本的高度 */
+export function dtTower(trades: number, discount = 1, winRate: number = DAY_TRADE.winRate): { capital: number; cost: number } {
+  const d = dtNow(trades, discount, winRate)
   const k = DT_LAYOUT.height / 100
   return { capital: d.capital * k, cost: d.costPaid * k }
 }

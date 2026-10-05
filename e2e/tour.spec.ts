@@ -12,6 +12,8 @@ const CONTROL_LABEL: Record<string, string> = {
   tick: '時間軸',
   rate: '市場利率',
   months: '經過月數',
+  winRate: '勝率',
+  feeDiscount: '手續費折數',
   storm: '風暴種類',
   rebal: '進度',
   hedgeCase: '情境',
@@ -235,7 +237,8 @@ test('walks the whole 高階 course through its gates, from the 中階 finish to
     if (id === 'a-dt') {
       await expect(page.locator('.research')).toContainText('不到 1%')
       await expect(page.locator('.research')).toContainText('97%')
-      await expect(page.locator('.research')).toContainText('Barber 等 2014、2020')
+      await expect(page.locator('.research')).toContainText('Barber 等 2014・台灣 1992–2006')
+      await expect(page.locator('.research')).toContainText('Barber 等 2020')
     }
     if (id === 'a-hedge') await expect(page.locator('.step-title__marks')).toContainText('假設的數字') // ✎ 反向的費用
     expect(await page.locator('.panel.tour').innerText(), id).not.toContain('稅') // 只說「交易成本」

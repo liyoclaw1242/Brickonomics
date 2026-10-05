@@ -115,7 +115,18 @@ describe('a-dt day-trade drain', () => {
     expect(dtNow(999).n).toBe(250)
     expect(dtNow(Number.NaN).n).toBe(0)
   })
-  it('dtTower: the capital tower and the red cost pile always add up to the original height', () => {
+  it('discount and win rate sliders: 2.8 折 at 50% leaves 100 × (1 − 0.2298%)^250 ≈ 56.3; the break-even win rate moves with the cost (71.75% → 61.49%)', () => {
+    const d = dtNow(250, 0.28)
+    expect(d.costPerTrade).toBeCloseTo(0.001425 * 0.28 * 2 + 0.0015, 12)
+    expect(d.capital).toBeCloseTo(100 * (1 - d.costPerTrade) ** 250, 9)
+    expect(d.capital).toBeCloseTo(56.3, 1)
+    expect(dtNow(250).breakEven).toBeCloseTo(0.7175, 12)
+    expect(d.breakEven).toBeCloseTo((0.01 + d.costPerTrade) / 0.02, 12)
+    // 勝率 75%、不打折：每次 +0.75% − 0.25% − 0.435% = +0.065% → 100 × 1.00065^250
+    expect(dtNow(250, 1, 0.75).capital).toBeCloseTo(100 * 1.00065 ** 250, 9)
+    expect(dtNow(250, 0.1, 0.4)).toMatchObject({ discount: 0.28, winRate: 0.5 }) // 限制在拉桿範圍
+  })
+  it('dtTower: the capital tower and the red cost pile always add up to the original height (at a 50% win rate)', () => {
     for (const t of [0, 50, 250]) {
       const h = dtTower(t)
       expect(h.capital + h.cost).toBeCloseTo(DT_LAYOUT.height, 9)

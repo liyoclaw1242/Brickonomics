@@ -15,7 +15,10 @@ export function ResearchCardView({ card }: { card: ResearchCard }) {
               {r.value}
               {r.mark && <MarkIcon kind={r.mark} />}
             </span>
-            <span className="research__text">{r.text}</span>
+            <span className="research__text">
+              {r.text}
+              {r.source && <small className="research__source">{r.source}</small>}
+            </span>
           </div>
         ))}
       </div>

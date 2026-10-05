@@ -78,8 +78,6 @@ function StepPanel() {
           <BigNumberCard key={step.id} n={big} color={big.colorKey ? colorOf(big.colorKey) : undefined} run={revealed} instant={instant} titleMarks={marks} delayMs={bigNumberDelayMs(numberDelayEvent(step, { ...values, slice, explode }), instant)} />
         </div>
       )}
-      {/* 研究數據卡：過了門檻（先自己拖、看到成本磨掉本金）才出現 */}
-      {step.research && ok && <ResearchCardView card={step.research(ctx)} />}
       {/* 比較步驟：大數字下面（沒有大數字就在一句話下面）一直留一行提醒，不藏在多說一點 */}
       {step.compare && (
         <p className={revealed ? 'compare-note step-reveal is-revealed' : 'compare-note step-reveal'}>{T.compareNote}</p>
@@ -109,7 +107,9 @@ function StepPanel() {
         </button>
       )}
       <StepNav onPrev={prev} onNext={next} canPrev={canPrev} canNext={ok} isLast={isLast} hintId={HINT_ID} />
-      <MoreSection key={step.id} more={more} rows={rows} />
+      {/* 研究數據卡：過了門檻（先自己拖、看到成本磨掉本金）才出現；放在按鈕下面，拉桿不會被它推下去 */}
+      {step.research && ok && <ResearchCardView card={step.research(ctx)} />}
+      <MoreSection key={step.id} more={more} rows={rows} refs={step.research?.(ctx).refs} />
       {/* 結尾步本來就是去自由玩，不再另外放「跳過導覽」 */}
       {unlocked && !isLast && (
         <button className="link" onClick={enterSandbox}>

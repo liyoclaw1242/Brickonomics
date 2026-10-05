@@ -34,6 +34,8 @@ export const VALUE_RANGES: Record<ValueKey, [number, number]> = {
   tick: DEFAULT_RANGES.tick,
   rate: DEFAULT_RANGES.rate,
   months: DEFAULT_RANGES.months,
+  winRate: DEFAULT_RANGES.winRate,
+  feeDiscount: DEFAULT_RANGES.feeDiscount,
   storm: DEFAULT_RANGES.storm,
   rebal: DEFAULT_RANGES.rebal,
   hedgeCase: DEFAULT_RANGES.hedgeCase,

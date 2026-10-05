@@ -990,47 +990,46 @@ describe('Plan 8 高階: 一起跌或抵消 (a-corr)', () => {
 
 describe('Plan 8 高階: 當沖的成本 (a-dt)', () => {
   const s = () => byId('a-dt')
-  it('drag the trades 0 → 250 (gate); the card is hidden before the drag', () => {
-    expect(s().controls).toEqual(['trades'])
+  it('drag the trades 0 → 250 (gate); two more sliders: fee discount (2.8 折–不打折) and win rate (50%–75%); the card is hidden before the drag', () => {
+    expect(s().controls).toEqual(['trades', 'feeDiscount', 'winRate'])
     expect(controlRange(s(), 'trades')).toEqual([0, 250])
+    expect(controlRange(s(), 'feeDiscount')).toEqual([0.28, 1])
+    expect(controlRange(s(), 'winRate')).toEqual([0.5, 0.75])
     expect(s().until).toEqual({ control: 'trades', min: 250 })
     expect(bigOf(s(), { trades: 0 })).toBeUndefined()
     expect(stripMarkup(lineOf(s(), ctx))).toBe('拖進出次數。看交易成本吃掉多少')
   })
-  it('big number: 100 × (1 − 0.435%)^250 ≈ 33.6 left; the note names the cost per trade and that the broker fee is the cap', () => {
-    expect(bigOf(s(), { trades: 250 })).toEqual({
-      value: '剩 33.6 萬',
-      label: '進出 250 次後的本金',
-      fraction: (100 * (1 - 0.00435) ** 250) / 100,
-      note: '每次 0.435%・手續費按上限算',
-      colorKey: 'stock',
-      mark: 'illustrative',
-    })
-    expect(bigOf(s(), { trades: 20 })!.value).toBe('剩 91.7 萬') // 100 × 0.99565^20 = 91.65
+  it('big number follows all three sliders; the note gives the break-even win rate (the sim’s breakEvenWinRate) and the cost per trade', () => {
+    expect(bigOf(s(), { trades: 250 })).toEqual({ value: '33.6 萬', label: '進出 250 次後的本金', note: '打平要勝率 71.75%（每次成本 0.435%）', colorKey: 'stock', mark: 'illustrative' }) // 100 × 0.99565^250；(1% + 0.435%) ÷ 2%
+    // 2.8 折：0.1425% × 0.28 × 2 + 0.15% = 0.2298%；100 × 0.997702^250 = 56.3；打平 (1% + 0.2298%) ÷ 2% = 61.49%
+    expect(bigOf(s(), { trades: 250, feeDiscount: 0.28 })).toMatchObject({ value: '56.3 萬', note: '打平要勝率 61.49%（每次成本 0.230%）' })
+    // 勝率 75%、不打折：每次 +0.065% → 100 × 1.00065^250 = 117.6
+    expect(bigOf(s(), { trades: 250, winRate: 0.75 })!.value).toBe('117.6 萬')
     expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('進出 250 次。本金剩 33.6 萬')
   })
-  it('the more text: cost per round trip from the data, the posted cap, the ≈ example, and no 稅', () => {
+  it('the more text calls 0.1425% the posted rate (公告費率, not 上限), the ≈ example, and no 稅', () => {
     const more = moreOf(s(), ctx)
-    expect(more).toContain('每次進出共付 0.435% 的交易成本') // 0.1425% × 2 + 0.15%
-    expect(more).toContain('手續費用公告上限 0.1425%，常打折')
+    expect(more).toContain('手續費公告費率 0.1425%，可拉折數看看')
     expect(more).toContain('賺賠各 1%、一年 250 次是示意')
+    expect(more).not.toContain('上限')
     expect(more).not.toContain('稅')
   })
-  it('the research card: < 1% reliably profitable, 97% likely to lose, cited with the years; no ？ while verified; no 稅', () => {
+  it('the research card: < 1% beat the market reliably after costs (2014, Taiwan 1992–2006), 97% likely to lose in future day trading (2020); full citations + DOI for 多說一點', () => {
     const card = s().research!(ctx)
     expect(card.rows.map((r) => r.value)).toEqual(['不到 1%', '97%'])
+    expect(card.rows.map((r) => r.source)).toEqual(['Barber 等 2014・台灣 1992–2006', 'Barber 等 2020'])
     expect(card.rows.every((r) => r.mark === undefined)).toBe(true)
-    expect(card.cite).toBe('Barber 等 2014、2020・台灣當沖客')
+    expect(card.refs!.map((r) => r.doi)).toEqual(['https://doi.org/10.1016/j.finmar.2013.05.006', 'https://doi.org/10.1093/rapstu/raz006'])
+    expect(card.refs![0]!.citation).toContain('Journal of Financial Markets')
     expect(stepMarks(s(), universe)).toEqual(['illustrative'])
-    for (const t of [...card.rows.flatMap((r) => [r.value, r.text]), card.cite]) {
+    for (const t of [...card.rows.flatMap((r) => [r.value, r.text, r.source ?? '']), card.cite]) {
       expect(t).not.toContain('稅')
       expect(t.includes('被')).toBe(false)
       expect(forbiddenWordsIn(t)).toEqual([])
     }
     for (const r of card.rows) expect(Array.from(r.text).length, r.text).toBeLessThanOrEqual(18)
-    expect(Array.from(card.cite).length).toBeLessThanOrEqual(28) // 出處一行
     expect(card.rows[0]!.text).toContain('穩定') // 不是「當年有賺的人」
-    expect(card.rows[1]!.text).toContain('可能') // 不是「已經賠了」
+    expect(card.rows[1]!.text).toContain('很可能') // 不是「已經賠了」
   })
 })
 

@@ -1,13 +1,13 @@
 /**
  * 台股交易成本（教學用）。本專案不談稅：證券交易稅只當作「賣出時的交易成本」。
- * 券商手續費 0.1425% 為公告費率上限（brokerFeeIsCap；買、賣各收一次），實務上常有折扣。
+ * 券商手續費 0.1425% 為公告費率（brokerFeeIsPosted；買、賣各收一次），實務上常有折扣；是否為現行法定上限未能從官方條文確認。
  * dayTradeSellCost：同一天買進又賣出同一檔股票（現股當沖）時，賣出那一次的交易成本 0.15%（一般股票為 0.3%）；
  * 只適用到 dayTradeSellCostUntil（之後依當時規定）。
  */
 export const TW_TRADING = {
   brokerFee: 0.001425,
-  /** brokerFee 是公告的上限，不是實收費率 */
-  brokerFeeIsCap: true,
+  /** brokerFee 是公告費率，不是實收費率（實收常打折；「法定上限」未確認，不這樣稱呼） */
+  brokerFeeIsPosted: true,
   etfSellCost: 0.001,
   dayTradeSellCost: 0.0015,
   dayTradeSellCostUntil: '2027-12-31',

@@ -6,7 +6,7 @@ import { T } from '../ui/strings'
 import { DD_DEMO, DD_TROUGH, ddNow, ddQuake, PE_DEMO, peBubble, peYears, RATE_DEMO, rateFreeze, ratePrice, DCA_DEMO, dcaNow, dcaSunny, INFL_DEMO, inflHeat, inflReal } from '../scene/layout/intermediate'
 import { maxDrawdown } from '../sim/drawdown'
 import { STORMS } from '../sim/portfolio'
-import { corrLightning, corrNow, dtNow, durFreeze, durNow, feeSunny, feeTreesNow, HEDGE_CASES, hedgeCaseIndex, hedgeQuake, levNow, levWave, PORT_LAYOUT, PORT_MAX_BOND, portNow, rebalNow } from '../scene/layout/advanced'
+import { corrLightning, corrNow, DT_RANGE, dtNow, durFreeze, durNow, feeSunny, feeTreesNow, HEDGE_CASES, hedgeCaseIndex, hedgeQuake, levNow, levWave, PORT_LAYOUT, PORT_MAX_BOND, portNow, rebalNow } from '../scene/layout/advanced'
 import { LEVERAGE } from '../sim/leverage'
 import { HEDGE } from '../sim/hedge'
 import { REBALANCE } from '../sim/rebalance'
@@ -719,35 +719,43 @@ export const COURSE_STEPS: Step[] = [
     scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'correlation' }, event: corrLightning(), cityLabels: false },
   },
   {
-    // 高階股票章：當沖的成本。勝率五五波、賺賠都 1%（示意）：不算成本是公平的遊戲；
-    // 每次進出付兩次手續費（公告上限）＋賣出的交易成本（TW_TRADING），本金一路磨掉。不教怎麼當沖，只說為什麼多數人賠
+    // 高階股票章：當沖的成本。賺賠都 1%（示意）：勝率五五波時不算成本是公平的遊戲；每次進出付兩次手續費（公告費率，
+    // 可拉折數）＋賣出的交易成本（TW_TRADING），本金一路磨掉。可拉勝率，卡片寫打平要多少勝率（adv-r1：不讓人覺得是拿牌告價嚇人）。
+    // 不教怎麼當沖，只說為什麼多數人賠
     id: 'a-dt',
     title: '當沖的成本',
     line: '拖**進出次數**。看**交易成本|loss**吃掉多少',
     fallbackLine: () => `進出 ${DAY_TRADE.trades} 次。本金剩 **${wan(dtNow(DAY_TRADE.trades).capital)}**`,
     more: () =>
-      `每次進出共付 ${pct3(DAY_TRADE.costPerTrade)} 的交易成本。手續費用公告上限 ${pct4(DAY_TRADE_COST.buyFee)}，常打折。賺賠各 ${pct1(DAY_TRADE.avgWin)}、一年 ${DAY_TRADE.trades} 次是示意。勝率五五波，成本照樣把本金磨掉。`,
+      `每次進出付兩次手續費，加上賣出的交易成本。手續費公告費率 ${pct4(DAY_TRADE_COST.buyFee)}，可拉折數看看。賺賠各 ${pct1(DAY_TRADE.avgWin)}、一年 ${DAY_TRADE.trades} 次是示意。勝率沒高過打平那條線，成本就把本金磨掉。`,
     mark: 'illustrative',
-    // 還沒拖時不顯示；成本有一項沒查證就標 ？
+    // 還沒拖時不顯示；成本有一項沒查證（或過了適用期限）就標 ？
     bigNumber: (_c, v) => {
-      const d = dtNow(v.trades)
+      const d = dtNow(v.trades, v.feeDiscount, v.winRate)
       if (d.n === 0) return undefined
       return {
-        value: `剩 ${wan(d.capital)}`,
+        value: wan(d.capital),
         label: `進出 ${d.n} 次後的本金`,
-        fraction: d.capital / 100,
-        note: `每次 ${pct3(d.costPerTrade)}・手續費按上限算`,
+        note: `打平要勝率 ${pct1(d.breakEven)}（每次成本 ${pct3(d.costPerTrade)}）`,
         colorKey: 'stock',
         mark: dayTradeCostVerified() ? 'illustrative' : 'unverified',
       }
     },
-    research: () => ({
-      rows: [researchRow('reliablyProfitable', '能穩定賺錢的人（扣掉交易成本後）'), researchRow('likelyToLose', '未來可能賠錢的人')],
-      cite: `Barber 等 ${DAY_TRADE_RESEARCH.reliablyProfitable.year}、${DAY_TRADE_RESEARCH.likelyToLose.year}・台灣當沖客`,
-    }),
-    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'dayTrade' }, values: { trades: 0 }, cityLabels: false },
-    controls: ['trades'],
-    ranges: { trades: [0, DAY_TRADE.trades] },
+    research: () => {
+      const a = DAY_TRADE_RESEARCH.reliablyProfitable
+      const b = DAY_TRADE_RESEARCH.likelyToLose
+      return {
+        rows: [
+          { ...researchRow('reliablyProfitable', '扣掉交易成本後，能穩定贏過大盤的人'), source: `Barber 等 ${a.year}・台灣 ${a.sample}` },
+          { ...researchRow('likelyToLose', '當沖客：之後當沖很可能賠錢'), source: `Barber 等 ${b.year}` },
+        ],
+        cite: '兩篇研究，同一組作者・台灣當沖客',
+        refs: [a, b].map((f) => ({ citation: f.citation, doi: f.doi })),
+      }
+    },
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'dayTrade' }, values: { trades: 0, feeDiscount: 1, winRate: DAY_TRADE.winRate }, cityLabels: false },
+    controls: ['trades', 'feeDiscount', 'winRate'],
+    ranges: { trades: [0, DAY_TRADE.trades], feeDiscount: [DT_RANGE.discount[0], DT_RANGE.discount[1]], winRate: [DT_RANGE.winRate[0], DT_RANGE.winRate[1]] },
     until: { control: 'trades', min: DAY_TRADE.trades },
   },
   {

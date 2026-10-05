@@ -24,7 +24,7 @@ describe('day-trade example (why most lose: costs at a 50% win rate)', () => {
   it('example: 250 trades, win 50% of the time, +1% / −1% — all illustrative (≈), only the cost comes from data', () => {
     expect(DAY_TRADE).toMatchObject({ trades: 250, winRate: 0.5, avgWin: 0.01, avgLoss: 0.01 })
     expect(DAY_TRADE.illustrative).toEqual(['trades', 'winRate', 'avgWin', 'avgLoss'])
-    expect(TW_TRADING.brokerFeeIsCap).toBe(true) // 手續費是公告的上限
+    expect(TW_TRADING.brokerFeeIsPosted).toBe(true) // 手續費是公告費率（是否為法定上限未確認），實收常有折扣
   })
 })
 
@@ -69,5 +69,25 @@ describe('dayTradeDrain (expected value; whole capital each trade; start 100)', 
     expect(() => dayTradeDrain({ ...DAY_TRADE, avgWin: -0.01 })).toThrow(/avgWin/)
     expect(() => dayTradeDrain({ ...DAY_TRADE, avgLoss: 1 })).toThrow(/avgLoss/)
     expect(() => breakEvenWinRate({ avgWin: 0, avgLoss: 0, costPerTrade: 0 })).toThrow(/avgWin/)
+  })
+})
+
+describe('fix round: discount, break-even and the cost expiry date', () => {
+  it('dayTradeCostPerTrade(discount): broker fee × discount on both sides + the sell-side cost; 2.8 折 → 0.1425% × 0.28 × 2 + 0.15% = 0.2298%', async () => {
+    const { dayTradeCostPerTrade } = await import('./dayTrade')
+    expect(dayTradeCostPerTrade(1)).toBeCloseTo(0.00435, 12)
+    expect(dayTradeCostPerTrade(0.28)).toBeCloseTo(0.001425 * 0.28 * 2 + 0.0015, 12)
+    expect(() => dayTradeCostPerTrade(0)).toThrow(RangeError)
+    expect(() => dayTradeCostPerTrade(1.5)).toThrow(RangeError)
+  })
+  it('break-even win rate: (1% + cost) ÷ 2% → 71.75% at the posted fee, 61.49% at 2.8 折', async () => {
+    const { dayTradeCostPerTrade } = await import('./dayTrade')
+    expect(breakEvenWinRate({ avgWin: 0.01, avgLoss: 0.01, costPerTrade: dayTradeCostPerTrade(1) })).toBeCloseTo(0.7175, 12)
+    expect(breakEvenWinRate({ avgWin: 0.01, avgLoss: 0.01, costPerTrade: dayTradeCostPerTrade(0.28) })).toBeCloseTo((0.01 + 0.002298) / 0.02, 12)
+  })
+  it('after dayTradeSellCostUntil the sell-side cost is no longer known, so the cost counts as unverified (？ instead of a stale number)', () => {
+    expect(dayTradeCostVerified(new Date('2026-10-05'))).toBe(true)
+    expect(dayTradeCostVerified(new Date('2027-12-31T12:00:00'))).toBe(true)
+    expect(dayTradeCostVerified(new Date('2028-01-01T00:00:01'))).toBe(false)
   })
 })

@@ -3,7 +3,7 @@ import { finite, inRange, nonNegInt, rate } from './guard'
 
 /**
  * 當沖一進一出（買進＋同一天賣出）的成本，占成交金額的比例；全部從 data/trading（TW_TRADING）讀：
- * buyFee、sellFee：券商手續費的公告費率上限（實務常有折扣，所以這是「最多」的成本）；
+ * buyFee、sellFee：券商手續費的公告費率（實務常有折扣；畫面可拉折數，dayTradeCostPerTrade）；
  * sellCost：現股當沖賣出那一次的交易成本（TW_TRADING.dayTradeSellCost，適用至 dayTradeSellCostUntil）。
  * verified：各項的查證狀態（Task 4 依此自動標 ？）。三項直接相加（買、賣的成交金額都約等於本金）。
  */
@@ -19,8 +19,21 @@ export const DAY_TRADE_COST = {
   },
 } as const
 
-/** 成本三項都查證過（畫面不用標 ？） */
-export const dayTradeCostVerified = (): boolean => Object.values(DAY_TRADE_COST.verified).every(Boolean)
+/**
+ * 成本三項都查證過、而且賣出交易成本還在適用期間內（畫面不用標 ？）。
+ * 過了 sellCostUntil（之後依當時規定）就不知道現在的數字，回傳 false，畫面改標 ？ 而不是顯示過期的數字。
+ */
+export function dayTradeCostVerified(today: Date = new Date()): boolean {
+  const until = new Date(`${DAY_TRADE_COST.sellCostUntil}T23:59:59`)
+  return Object.values(DAY_TRADE_COST.verified).every(Boolean) && today.getTime() <= until.getTime()
+}
+
+/** 一進一出的成本（占本金的比例）：手續費 × 折數（買、賣各一次）＋賣出交易成本。discount 在 (0, 1]（1＝不打折），否則丟 RangeError */
+export function dayTradeCostPerTrade(discount: number): number {
+  finite('discount', discount)
+  if (!(discount > 0 && discount <= 1)) throw new RangeError(`discount must be in (0, 1]: ${discount}`)
+  return (DAY_TRADE_COST.buyFee + DAY_TRADE_COST.sellFee) * discount + DAY_TRADE_COST.sellCost
+}
 
 export type DayTradeParams = {
   /** 進出幾次（一次＝買進再賣出） */
