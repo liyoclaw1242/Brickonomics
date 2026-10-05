@@ -47,7 +47,7 @@ export function Scene({ quality }: { quality: Quality }) {
         <meshStandardMaterial color={t.sea} />
       </mesh>
       <ViewFraming />
-      <City labels={labels} islandLabels={mode !== 'tour' || tourNames} shrink={shrink} />
+      <City labels={labels} islandLabels={mode !== 'tour' || tourNames} shrink={shrink} dim={mode === 'tour' && tourScene.cityDim === true} />
       {showPedestal(mode, productId) && <Pedestal />}
       <StageView quality={quality} />
       {productId && (

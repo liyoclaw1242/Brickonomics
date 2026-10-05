@@ -4,7 +4,8 @@ import { isBasket } from '../data/schema'
 import { overlap } from '../sim/overlap'
 import { EXDIV_AFTER_PHASE, LEVELS } from './levels'
 import { accumulateVsPayout } from '../scene/layout/stages'
-import { STEP_POOL } from './courses'
+import { COURSES, courseSteps, STEP_POOL } from './courses'
+import { ON_PLAZA } from '../scene/stage/plaza'
 import { maxDrawdown } from '../sim/drawdown'
 import { DD_DEMO, DD_LAYOUT, ddBarX, peYears } from '../scene/layout/intermediate'
 import { stageReadout } from '../ui/readout'
@@ -883,5 +884,17 @@ describe('mid-r1: comparisons never read as advice', () => {
   it('s-dd answers "is 40% a lot?" honestly on the card, and its line no longer reads 最多少掉多少', () => {
     expect(bigOf(byId('s-dd'), { tick: 5 })!.note).toBe('股票常見；跌完不一定很快長回來')
     expect(stripMarkup(lineOf(byId('s-dd'), ctx))).toBe('拖時間軸。找出跌最深那次')
+  })
+})
+
+describe('mid-r1: the background city steps back on 中階 teaching steps', () => {
+  it('every 中階 step with a plaza stage or an exchange product dims the city; city-subject steps do not', () => {
+    const mid = new Set(courseSteps(COURSES.find((c) => c.id === 'intermediate')!).map((s) => s.id))
+    for (const s of steps) {
+      if (!mid.has(s.id)) continue
+      const prop = (s.scene.stage && ON_PLAZA.has(s.scene.stage.kind)) || !!s.scene.product
+      expect(!!s.scene.cityDim, s.id).toBe(prop)
+    }
+    for (const id of ['f-2', 'f-3', 'f-4', 'f-8', 'e-4', 'c-3']) expect(byId(id).scene.cityDim, id).toBe(true)
   })
 })

@@ -101,7 +101,7 @@ export const LEVELS: Level[] = [
         more: '左邊是台積電，右邊是特斯拉。波動＝價格常常上上下下。有些公司晃得特別厲害。晃動幅度是示意，不是真實數字。',
         mark: 'illustrative',
         compare: true,
-        scene: {
+        scene: { cityDim: true,
           camera: 'plazaNear',
           product: null,
           stage: { kind: 'held', items: [{ assetId: '2330', motion: 'shake', amplitude: 0.12 }, { assetId: 'TSLA', motion: 'shake', amplitude: 0.45 }] },
@@ -119,7 +119,7 @@ export const LEVELS: Level[] = [
           const e = exDivTimeline(Math.min(v.phase, EXDIV_AFTER_PHASE), 'fill')
           return { value: n0(e.blockValue + e.cash), label: `方塊 ${n0(e.blockValue)}＋金幣 ${n0(e.cash)}`, mark: 'illustrative' }
         },
-        scene: { camera: 'plazaNear', product: null, stage: { kind: 'exdiv', outcome: 'fill' }, values: { phase: 0 } },
+        scene: { cityDim: true, camera: 'plazaNear', product: null, stage: { kind: 'exdiv', outcome: 'fill' }, values: { phase: 0 } },
         controls: ['phase'],
         // 時間軸停在配發那一刻：方塊不會「長回來」，卡片和 3D 標籤永遠一致；要拉到那一刻才能下一步
         ranges: { phase: [0, EXDIV_AFTER_PHASE] },
@@ -140,7 +140,7 @@ export const LEVELS: Level[] = [
           const e = exDivTimeline(Math.max(v.phase, EXDIV_AFTER_PHASE), 'gap')
           return { value: `少 ${n0(EXDIV.price - (e.blockValue + e.cash))}`, label: '方塊＋金幣，合起來變少', colorKey: 'loss', mark: 'illustrative' }
         },
-        scene: { camera: 'plazaNear', product: null, stage: { kind: 'exdiv', outcome: 'gap' }, values: { phase: 1 } },
+        scene: { cityDim: true, camera: 'plazaNear', product: null, stage: { kind: 'exdiv', outcome: 'gap' }, values: { phase: 1 } },
       },
     ],
   },
@@ -165,7 +165,7 @@ export const LEVELS: Level[] = [
         more: '國家債＝借給政府，像鑽石一樣堅固，利息通常最少。公司債＝借給體質好的公司，金屬材質。高收益債＝借給體質弱的公司，玻璃材質。它利息通常較多，也較容易裂（利息快慢是示意）。',
         mark: 'illustrative',
         compare: true,
-        scene: { camera: 'plaza', product: null, stage: { kind: 'bonds', ranks: true } },
+        scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'bonds', ranks: true } },
       },
       {
         id: 'b-3',
@@ -202,7 +202,7 @@ export const LEVELS: Level[] = [
           { anchor: { kind: 'holding', holdingId: 'OTHER_US_STOCK' }, title: '股票方塊', sub: (c) => `約 ${pct0(c.assetClassPct('JH_BALANCED', 'stock'))}%・含輝達等`, when: { control: 'explode', min: 0.6 } },
           { anchor: { kind: 'holding', holdingId: 'BOND_MIXED_US' }, title: '借據', sub: (c) => `約 ${pct0(c.assetClassPct('JH_BALANCED', 'bond'))}%`, when: { control: 'explode', min: 0.6 } },
         ],
-        scene: { camera: 'exchangeWide', product: 'JH_BALANCED', stage: { kind: 'excavator', meter: false }, cityLabels: false },
+        scene: { cityDim: true, camera: 'exchangeWide', product: 'JH_BALANCED', stage: { kind: 'excavator', meter: false }, cityLabels: false },
         controls: ['explode'],
         until: { control: 'explode', min: 0.6 },
       },
@@ -216,7 +216,7 @@ export const LEVELS: Level[] = [
           { anchor: { kind: 'holding', holdingId: 'NVDA' }, title: '輝達' },
           { anchor: { kind: 'holding', holdingId: 'US_TREASURY' }, title: '美國公債', sub: '借錢給美國政府' },
         ],
-        scene: { camera: 'exchangeWide', product: 'JH_BALANCED', explode: 1, stage: { kind: 'excavator', meter: false }, cityLabels: false },
+        scene: { cityDim: true, camera: 'exchangeWide', product: 'JH_BALANCED', explode: 1, stage: { kind: 'excavator', meter: false }, cityLabels: false },
       },
       {
         id: 'f-4',
@@ -232,7 +232,7 @@ export const LEVELS: Level[] = [
           { anchor: { kind: 'holding', holdingId: 'CONVERTIBLE_US' }, title: '借據', sub: (c) => `約 ${pct0(c.assetClassPct('ALLIANZ_INCOME_GROWTH', 'bond'))}%` },
         ],
         // 另一位經理人：怪手換一個顏色（r3：一模一樣的怪手，他不信是「另一台」）
-        scene: { camera: 'exchangeWide', product: 'ALLIANZ_INCOME_GROWTH', explode: 1, stage: { kind: 'excavator', meter: false, other: true }, cityLabels: false },
+        scene: { cityDim: true, camera: 'exchangeWide', product: 'ALLIANZ_INCOME_GROWTH', explode: 1, stage: { kind: 'excavator', meter: false, other: true }, cityLabels: false },
       },
       {
         id: 'f-5',
@@ -271,7 +271,7 @@ export const LEVELS: Level[] = [
           }
         },
         compare: true,
-        scene: { camera: 'plaza', product: null, stage: { kind: 'feeRace', etf: false }, values: { years: 0 } },
+        scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'feeRace', etf: false }, values: { years: 0 } },
         controls: ['years'],
         // 拉到出門費歸零（滿 3 年）才能下一步
         until: { control: 'years', min: 3 },
@@ -289,7 +289,7 @@ export const LEVELS: Level[] = [
           return { value: wan(r.payout.total), label: '配息型：塔＋金幣', note: `塔 ${wan(r.payout.value)}＋金幣 ${wan(r.payout.cashReceived)}`, mark: 'illustrative' }
         },
         compare: true,
-        scene: { camera: 'plaza', product: null, stage: { kind: 'accumulate' }, values: { periods: 0 } },
+        scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'accumulate' }, values: { periods: 0 } },
         controls: ['periods'],
         until: { control: 'periods', min: 8 },
       },
@@ -370,7 +370,7 @@ export const LEVELS: Level[] = [
         line: 'ETF 像股票，**隨時能買賣**',
         more: 'ETF 開盤時隨時有成交價，可以像股票一樣買賣。一般基金每天收盤後才算出一個價錢，叫淨值。價格跳動是示意。',
         mark: 'illustrative',
-        scene: { camera: 'exchange', product: '0050', stage: { kind: 'ticker' }, cityLabels: false },
+        scene: { cityDim: true, camera: 'exchange', product: '0050', stage: { kind: 'ticker' }, cityLabels: false },
       },
       {
         id: 'e-5',
@@ -435,7 +435,7 @@ export const LEVELS: Level[] = [
           return { value: `至少 ${(o * 100).toFixed(1)}%`, label: '兩盒一樣的部分', fraction: o, note: '只算前幾大公司，實際更多' }
         },
         compare: true,
-        scene: { camera: 'plaza', product: null, stage: { kind: 'overlap', a: 'QQQ', b: 'SPY' }, cityLabels: false },
+        scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'overlap', a: 'QQQ', b: 'SPY' }, cityLabels: false },
       },
     ],
   },
@@ -525,7 +525,7 @@ export const COURSE_STEPS: Step[] = [
       return { value: `${pct0(worst * 100)}%`, label: '最多曾經少掉', note: '股票常見；跌完不一定很快長回來', fraction: worst, colorKey: 'loss', mark: 'illustrative' }
     },
     compare: true,
-    scene: { camera: 'plaza', product: null, stage: { kind: 'drawdown' }, event: ddQuake(), eventWhen: { control: 'tick', min: DD_TROUGH }, values: { tick: 0 }, cityLabels: false },
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'drawdown' }, event: ddQuake(), eventWhen: { control: 'tick', min: DD_TROUGH }, values: { tick: 0 }, cityLabels: false },
     controls: ['tick'],
     ranges: { tick: [0, DD_DEMO.path.length - 1] },
     until: { control: 'tick', min: DD_TROUGH },
@@ -542,7 +542,7 @@ export const COURSE_STEPS: Step[] = [
     bigNumber: (_c, v) =>
       v.periods < peYears('pricey') ? undefined : { value: `${peYears('cheap')} 年 vs ${peYears('pricey')} 年`, label: '幾年賺回股價', note: `股價都是 ${PE_DEMO.price}，年數多＝較貴`, mark: 'illustrative' },
     compare: true,
-    scene: { camera: 'plaza', product: null, stage: { kind: 'pe' }, event: peBubble(), eventWhen: { control: 'periods', min: peYears('pricey') }, values: { periods: 0 }, cityLabels: false },
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'pe' }, event: peBubble(), eventWhen: { control: 'periods', min: peYears('pricey') }, values: { periods: 0 }, cityLabels: false },
     controls: ['periods'],
     ranges: { periods: [0, peYears('pricey')] },
     until: { control: 'periods', min: peYears('pricey') },
@@ -559,7 +559,7 @@ export const COURSE_STEPS: Step[] = [
     // 跟著拉桿：舊借據現在值多少（面額 100）；note 一直提醒到期還是拿回 100
     bigNumber: (_c, v) => ({ value: `約 ${n0(ratePrice(v.rate))} 元`, label: '舊借據現在值', note: '借的人沒出問題，到期拿回 100 元', mark: 'illustrative' }),
     compare: true,
-    scene: { camera: 'plaza', product: null, stage: { kind: 'seesaw' }, event: rateFreeze(), eventWhen: { control: 'rate', min: RATE_DEMO.to }, values: { rate: RATE_DEMO.from }, cityLabels: false },
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'seesaw' }, event: rateFreeze(), eventWhen: { control: 'rate', min: RATE_DEMO.to }, values: { rate: RATE_DEMO.from }, cityLabels: false },
     controls: ['rate'],
     ranges: { rate: [RATE_DEMO.from, RATE_DEMO.to] },
     until: { control: 'rate', min: RATE_DEMO.to },
@@ -580,7 +580,7 @@ export const COURSE_STEPS: Step[] = [
       colorKey: 'coin',
       mark: 'illustrative',
     }),
-    scene: { camera: 'plaza', product: null, stage: { kind: 'inflation' }, event: inflHeat(), cityLabels: false },
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'inflation' }, event: inflHeat(), cityLabels: false },
   },
   {
     // 中階 ETF 章（Plan 7）：每月固定金額，便宜的月份買比較多；🌤 晴天大樹讓塔跟著月份長高。只讓成本平均，不保證賺錢
@@ -598,7 +598,7 @@ export const COURSE_STEPS: Step[] = [
       return { value: `${r.avgCost.toFixed(1)} 元`, label: '平均成本', note: `平均價格 ${r.avgPrice.toFixed(1)} 元`, mark: 'illustrative' }
     },
     compare: true,
-    scene: { camera: 'plaza', product: null, stage: { kind: 'dca' }, event: dcaSunny(), values: { months: 1 }, cityLabels: false },
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'dca' }, event: dcaSunny(), values: { months: 1 }, cityLabels: false },
     controls: ['months'],
     ranges: { months: [1, DCA_DEMO.prices.length] },
     until: { control: 'months', min: DCA_DEMO.prices.length },

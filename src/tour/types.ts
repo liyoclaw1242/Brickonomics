@@ -73,6 +73,8 @@ export type SceneDirective = {
   values?: Partial<StageValues>
   /** 城市大樓名稱標籤，預設 true */
   cityLabels?: boolean
+  /** 背景城市淡到接近背景色（教具在廣場或交易所、城市不是主角時；mid-r1） */
+  cityDim?: boolean
 }
 
 /** 課程文字需要的資料查詢；數字一律即時計算，不寫死 */
