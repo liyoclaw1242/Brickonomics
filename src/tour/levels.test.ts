@@ -867,14 +867,17 @@ describe('mid-r1: comparisons never read as advice', () => {
     expect(forbiddenWordsIn(T.compareNote)).toEqual([])
   })
 
-  it('f-8 shows the whole 配息型 total (tower + coins received), computed and hidden before the drag', () => {
+  it('f-8 shows what the gap is (coins that keep growing), computed and hidden before the drag', () => {
     const f8 = byId('f-8')
     expect(bigOf(f8, { periods: 0 })).toBeUndefined()
     const r = accumulateVsPayout(20)
     expect(r.payout.total).toBeCloseTo(r.payout.value + r.payout.cashReceived, 9)
-    expect(bigOf(f8, { periods: 20 })).toEqual({ value: wan(r.payout.total), label: '配息型：塔＋金幣', note: `塔 ${wan(r.payout.value)}＋金幣 ${wan(r.payout.cashReceived)}`, mark: 'illustrative' })
-    expect(bigOf(f8, { periods: 20 })!.value).toBe('288.1 萬') // 180.6 + 107.5
-    expect(moreOf(f8, ctx)).toContain('領到的金幣自己再投入，結果就差不多')
+    // mid-r2：大數字＝差多少（金幣再滾出來的），不是「誰比較多」：387.0 − (180.6 + 107.5) = 98.9
+    expect(bigOf(f8, { periods: 20 })).toEqual({ value: wan(r.accumulate.value - r.payout.total), label: '差別＝金幣再滾出來的', note: '配息型：金幣能先用；累積型：讓它繼續滾', colorKey: 'coin', mark: 'illustrative' })
+    expect(bigOf(f8, { periods: 20 })!.value).toBe('98.9 萬')
+    expect(stripMarkup(lineOf(f8, ctx))).toBe('拖經過年數。差別：金幣有沒有繼續滾')
+    expect(moreOf(f8, ctx)).toContain('發的那一刻總數不變') // 和 s-5 接起來
+    expect(moreOf(f8, ctx)).toContain('能拿去用')
   })
 
   it('f-6 says on screen that it only counts fees, not market moves', () => {

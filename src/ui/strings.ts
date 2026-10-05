@@ -192,6 +192,8 @@ export const T = {
     etf: 'ETF（0050）',
   },
   accumulateRows: { accumulate: '累積型', payout: '配息型' },
+  /** f-8 塔的副標：講機制，不講好壞（mid-r2） */
+  accumulateSubs: { accumulate: '金幣滾回塔裡', payout: '金幣在你手上' },
   trapRow: '高配息基金',
   excavator: '經理人（怪手）',
   excavatorOther: '另一位經理人（怪手）',

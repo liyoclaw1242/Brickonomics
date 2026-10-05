@@ -276,14 +276,16 @@ export const LEVELS: Level[] = [
       {
         id: 'f-8',
         title: '配息或累積',
-        line: '拖**經過年數**。看**金幣滾回去**的塔',
-        more: '同一檔基金常有兩種級別，這是示意參數。配息型把金幣放進你的口袋。累積型把金幣熔回方塊，繼續投資。領到的金幣自己再投入，結果就差不多。',
+        // mid-r2：「387 vs 288」被讀成「配息型選錯了」，也和 s-5「總數不變」打架。講真正的差別：金幣有沒有繼續滾
+        line: '拖**經過年數**。差別：金幣有沒有**繼續滾|coin**',
+        more: '同一檔基金常有兩種級別，這是示意參數。配息型的金幣在你手上，能拿去用，但不再長。累積型把金幣熔回方塊，跟著一起長。發的那一刻總數不變，差在之後有沒有繼續滾。',
         mark: 'illustrative',
         // mid-r1：她只看到 387 vs 180。配息型要算「塔＋領到的金幣」才是全部；拉了才出現
         bigNumber: (_c, v) => {
           const r = accumulateVsPayout(v.periods)
           if (v.periods <= 0) return undefined
-          return { value: wan(r.payout.total), label: '配息型：塔＋金幣', note: `塔 ${wan(r.payout.value)}＋金幣 ${wan(r.payout.cashReceived)}`, mark: 'illustrative' }
+          // 差多少＝金幣再滾出來的（累積型 − 配息型的塔＋金幣）；兩種是不同需要的選擇
+          return { value: wan(r.accumulate.value - r.payout.total), label: '差別＝金幣再滾出來的', note: '配息型：金幣能先用；累積型：讓它繼續滾', colorKey: 'coin', mark: 'illustrative' }
         },
         compare: true,
         scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'accumulate' }, values: { periods: 0 } },
