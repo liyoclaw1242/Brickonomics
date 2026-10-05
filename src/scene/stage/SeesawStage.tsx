@@ -73,11 +73,18 @@ export function SeesawStage({ event }: { event: EventClock }) {
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial ref={bondMat} color={BOND_COLOR} roughness={0.45} metalness={0.3} />
       </mesh>
-      <Callout anchor={atPlaza(pose.left[0], pose.left[1] + half + rateH, 0)} offset={[1.4, 1.8, 0]} title={T.seesaw.rate(T.controls.rateValue(rate))} color={RATE_COLOR} persistent />
+      {/* 市場利率在上方、舊借據在前方地上（mid-r1 09-a：兩個字塊在同一高度互相蓋住）；寒流來了說明它是什麼 */}
       <Callout
-        anchor={atPlaza(pose.right[0], pose.right[1] + half + SEESAW.bond[1], 0)}
-        // 兩個字塊都往內（翹翹板中間）長：手機上不會超出畫面
-        offset={[-1.4, 2.2, 0]}
+        anchor={atPlaza(pose.left[0], pose.left[1] + half + rateH, 0)}
+        offset={[1.4, 1.8, 0]}
+        title={T.seesaw.rate(T.controls.rateValue(rate))}
+        sub={freeze ? T.seesaw.cold : undefined}
+        color={RATE_COLOR}
+        persistent
+      />
+      <Callout
+        anchor={atPlaza(pose.right[0], 0.1, SEESAW.bond[2] / 2)}
+        offset={[-1.2, -0.3, 2.6]}
         title={T.seesaw.bond(Math.round(pose.price))}
         sub={T.seesaw.maturity}
         color={BOND_COLOR}

@@ -140,6 +140,8 @@ export const T = {
     rate: (v: string) => `市場利率 ${v}`,
     bond: (price: number) => `舊借據 約 ${price} 元`,
     maturity: '借的人沒出問題，到期拿回 100',
+    /** 寒流（結霜）的意思（mid-r1：借據變白不知道是什麼） */
+    cold: '寒流＝利率漲，舊借據變便宜',
   },
   /** e-dca 定期定額的 3D 標註 */
   dca: {
