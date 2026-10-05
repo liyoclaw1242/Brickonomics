@@ -6,7 +6,8 @@ import { yearsToPayBack } from '../../sim/valuation'
 import { bondPrice } from '../../sim/bondPrice'
 import { dca } from '../../sim/dca'
 import { realReturn } from '../../sim/inflation'
-import { INFL_DEMO, INFL_LAYOUT, inflHeat, inflReal } from './intermediate'
+import { INFL_DEMO, INFL_LAYOUT, inflHeat, inflReal, inflStack } from './intermediate'
+import { coinScaleAt } from '../events/heatwave'
 import { DCA_DEMO, DCA_LAYOUT, dcaCheapest, dcaNow, dcaPileHeight, dcaPileX, dcaTowerHeight } from './intermediate'
 import { RATE_DEMO, SEESAW, rateFreeze, ratePrice, seesawPose } from './intermediate'
 import { bubbleRadii } from '../events/bubble'
@@ -141,5 +142,16 @@ describe('b-infl layout', () => {
     expect(h.melt).toBeCloseTo(1 - inflReal() / INFL_DEMO.nominal, 12) // 0.612
     expect(h.coinRadius).toBe(INFL_LAYOUT.coinR)
     for (const c of h.coins!) expect(c[0]).toBeGreaterThan(INFL_LAYOUT.bondX + 2)
+  })
+})
+
+describe('b-infl melts honestly (Tasks 2–4 review)', () => {
+  it('only the stack height shrinks: what is left at the end reads as real ÷ nominal ≈ 39% of the interest', () => {
+    const h = inflHeat()
+    const full = inflStack(coinScaleAt(h, null))
+    const end = inflStack(coinScaleAt(h, Infinity))
+    expect(end.radius).toBe(full.radius)
+    expect(end.height / full.height).toBeCloseTo(inflReal() / INFL_DEMO.nominal, 12) // 0.0194 ÷ 0.05 = 0.388
+    expect(end.height / full.height).toBeCloseTo(0.39, 2)
   })
 })

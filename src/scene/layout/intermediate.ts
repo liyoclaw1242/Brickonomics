@@ -159,6 +159,12 @@ export const INFL_LAYOUT = { bondX: -8, bond: [3.6, 1.8, 2.6] as Vec3, coinX0: -
 /** 扣掉通膨後真正賺到的比例 */
 export const inflReal = (): number => realReturn(INFL_DEMO.nominal, INFL_DEMO.inflation)
 
+/**
+ * 一疊金幣在熱浪中的樣子（k＝coinScaleAt，1 → 1 − melt）：半徑不變、只有高度乘 k。
+ * 高度＝剩下的利息，所以終點時剩下的高度÷原本的高度＝真正賺到÷利息（約 39%）。半徑也縮的話體積只剩約 6%，誇大了損失
+ */
+export const inflStack = (k: number): { radius: number; height: number } => ({ radius: INFL_LAYOUT.coinR, height: INFL_LAYOUT.perStack * INFL_LAYOUT.coinH * Math.max(0, k) })
+
 /** 熱浪：每 1% 利息一疊金幣；融掉的比例＝通膨吃掉的那部分（1 − 真正賺到 ÷ 利息） */
 export function inflHeat(): SpecOf<'heatwave'> {
   const n = Math.round(INFL_DEMO.nominal * 100)

@@ -1,12 +1,12 @@
 import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { type InstancedMesh, Object3D } from 'three'
+import { DoubleSide, type InstancedMesh, Object3D } from 'three'
 import { T } from '../../ui/strings'
 import { Callout } from '../Callout'
 import { CoinMaterial } from '../CoinDrip'
 import { coinScaleAt, HEAT_END } from '../events/heatwave'
 import type { EventClock } from '../events/types'
-import { INFL_DEMO, INFL_LAYOUT, inflReal } from '../layout/intermediate'
+import { INFL_DEMO, INFL_LAYOUT, inflReal, inflStack } from '../layout/intermediate'
 import { ACCENT_COLORS } from '../palette'
 import { useEventValue } from '../useEventClock'
 import { atPlaza } from './plaza'
@@ -22,6 +22,7 @@ export function InflationStage({ event }: { event: EventClock }) {
   const heat = event.spec?.kind === 'heatwave' ? event.spec : undefined
   const coins = heat?.coins ?? []
   const ref = useRef<InstancedMesh>(null)
+  const ghost = useRef<InstancedMesh>(null)
   const dummy = useMemo(() => new Object3D(), [])
   const n = coins.length * INFL_LAYOUT.perStack
   const melted = useEventValue(event, (t) => !!heat && t !== null && t >= HEAT_END)
@@ -29,18 +30,33 @@ export function InflationStage({ event }: { event: EventClock }) {
   useFrame(() => {
     const m = ref.current
     if (!m || !heat) return
+    // 半徑不變、只有高度變矮：剩下的高度＝剩下的利息（約 39%）
     const k = Math.max(0.001, coinScaleAt(heat, event.reduced ? Infinity : event.t.current))
-    const r = INFL_LAYOUT.coinR
+    const r = inflStack(k).radius
     coins.forEach((c, i) => {
       for (let j = 0; j < INFL_LAYOUT.perStack; j++) {
         dummy.position.set(...atPlaza(c[0], c[1] + (j + 0.5) * INFL_LAYOUT.coinH * k, c[2]))
         dummy.rotation.set(0, j * 0.4, 0)
-        dummy.scale.set(r * k, k, r * k)
+        dummy.scale.set(r, k, r)
         dummy.updateMatrix()
         m.setMatrixAt(i * INFL_LAYOUT.perStack + j, dummy.matrix)
       }
     })
     m.instanceMatrix.needsUpdate = true
+    // 原本的高度留一個淡淡的外框：一眼看出「剩下約 4 成」
+    const g = ghost.current
+    if (g) {
+      const full = inflStack(1).height
+      coins.forEach((c, i) => {
+        dummy.position.set(...atPlaza(c[0], c[1] + full / 2, c[2]))
+        dummy.rotation.set(0, 0, 0)
+        dummy.scale.set(r * 1.02, full, r * 1.02)
+        dummy.updateMatrix()
+        g.setMatrixAt(i, dummy.matrix)
+      })
+      g.instanceMatrix.needsUpdate = true
+      g.visible = k < 0.98
+    }
   })
 
   const [bw, bh, bd] = INFL_LAYOUT.bond
@@ -55,6 +71,12 @@ export function InflationStage({ event }: { event: EventClock }) {
         <instancedMesh ref={ref} args={[undefined, undefined, n]} castShadow frustumCulled={false}>
           <cylinderGeometry args={[1, 1, INFL_LAYOUT.coinH * 0.9, 24]} />
           <CoinMaterial />
+        </instancedMesh>
+      )}
+      {coins.length > 0 && (
+        <instancedMesh ref={ghost} args={[undefined, undefined, coins.length]} frustumCulled={false} visible={false}>
+          <cylinderGeometry args={[1, 1, 1, 24, 1, true]} />
+          <meshBasicMaterial color={ACCENT_COLORS.coin} transparent opacity={0.16} depthWrite={false} side={DoubleSide} />
         </instancedMesh>
       )}
       <Callout anchor={atPlaza(INFL_LAYOUT.bondX, bh, 0)} offset={[0, 1.6, 0]} title={T.infl.bond(pct0(INFL_DEMO.nominal))} persistent />
