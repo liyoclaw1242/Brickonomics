@@ -128,7 +128,10 @@ export function rateFreeze(): SpecOf<'freeze'> {
 export const DCA_DEMO = { prices: [50, 45, 40, 32, 25, 30, 36, 40, 45, 48, 50, 50] as readonly number[], amount: 3000 } as const
 
 /** 每月一小堆（高度＝買到的單位 × unitH），右邊一座塔（＝累積的單位；12 個月時高 towerH） */
-export const DCA_LAYOUT = { pileW: 0.95, gap: 1.3, x0: -12, z: 0, unitH: 0.04, towerX: 7.5, towerW: 2.6, towerH: 9, crown: 2.3 } as const
+export const DCA_LAYOUT = { pileW: 0.95, gap: 1.3, x0: -12, z: 0, unitH: 0.04, towerX: 7.5, towerW: 2.6, towerH: 9, crown: 2.3, priceZ: 1.5, priceW: 0.2, priceH: 0.05 } as const
+
+/** 每月價格的細線（在小堆前面一排，不被小堆擋住）：高度＝價格 × priceH。便宜的月份細線最矮、小堆最高（mid-r2：「越高＝越便宜」反直覺，價格另外畫） */
+export const dcaPriceHeight = (i: number): number => DCA_DEMO.prices[i]! * DCA_LAYOUT.priceH
 
 const DCA_FULL = dca(DCA_DEMO.prices, DCA_DEMO.amount)
 

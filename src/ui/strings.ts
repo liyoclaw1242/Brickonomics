@@ -149,8 +149,11 @@ export const T = {
   },
   /** e-dca 定期定額的 3D 標註 */
   dca: {
-    cheap: (price: number) => `${price} 元那個月`,
-    cheapSub: '最便宜：同樣的錢買最多',
+    /** 最高那根小堆（mid-r2：「越高＝越便宜」反直覺，直接寫在上面） */
+    cheap: '便宜的月份買到比較多',
+    cheapSub: (price: number) => `${price} 元那個月`,
+    piles: '粗柱＝那個月買到的單位',
+    prices: '細線＝那個月的價格',
     tower: (months: number) => `買了 ${months} 個月`,
     cost: (v: string) => `平均成本 ${v} 元`,
   },

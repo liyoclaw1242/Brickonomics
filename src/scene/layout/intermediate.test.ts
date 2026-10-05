@@ -8,7 +8,7 @@ import { dca } from '../../sim/dca'
 import { realReturn } from '../../sim/inflation'
 import { INFL_DEMO, INFL_LAYOUT, inflHeat, inflReal, inflStack } from './intermediate'
 import { coinScaleAt } from '../events/heatwave'
-import { DCA_DEMO, DCA_LAYOUT, dcaCheapest, dcaNow, dcaPileHeight, dcaPileX, dcaTowerHeight } from './intermediate'
+import { DCA_DEMO, DCA_LAYOUT, dcaCheapest, dcaNow, dcaPileHeight, dcaPileX, dcaPriceHeight, dcaTowerHeight } from './intermediate'
 import { RATE_DEMO, SEESAW, rateFreeze, ratePrice, seesawPose } from './intermediate'
 import { bubbleRadii } from '../events/bubble'
 
@@ -153,5 +153,16 @@ describe('b-infl melts honestly (Tasks 2–4 review)', () => {
     expect(end.radius).toBe(full.radius)
     expect(end.height / full.height).toBeCloseTo(inflReal() / INFL_DEMO.nominal, 12) // 0.0194 ÷ 0.05 = 0.388
     expect(end.height / full.height).toBeCloseTo(0.39, 2)
+  })
+})
+
+describe('e-dca price line (mid-r2)', () => {
+  it('price is drawn separately: the cheapest month has the shortest price line and the tallest pile', () => {
+    const i = dcaCheapest()
+    for (let k = 0; k < DCA_DEMO.prices.length; k++) {
+      expect(dcaPriceHeight(i)).toBeLessThanOrEqual(dcaPriceHeight(k))
+      expect(dcaPriceHeight(k)).toBeCloseTo(DCA_DEMO.prices[k]! * DCA_LAYOUT.priceH, 12)
+    }
+    expect(DCA_LAYOUT.priceZ).toBeGreaterThan(DCA_LAYOUT.z) // 在小堆前面（鏡頭那一側），不被擋住
   })
 })
