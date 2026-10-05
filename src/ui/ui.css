@@ -73,6 +73,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .bignum__label { font-size: 14px; color: var(--soft-text); }
 .bignum__note { font-size: 14px; color: var(--soft-text); margin-top: 2px; }
 .bignum__bar { margin-top: 8px; height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
+.compare-note { margin: -4px 0 10px; font-size: 13px; color: var(--soft-text); border-left: 3px solid var(--border); padding-left: 8px; }
 .bignum__bar span { display: block; height: 100%; background: var(--accent); }
 .more { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 8px; font-size: 14px; color: var(--muted); }
 .more summary { cursor: pointer; color: var(--text); }

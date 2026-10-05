@@ -8,7 +8,7 @@ import { stepMarks, type Mark } from './marks'
 import { T } from './strings'
 
 /** line 保留 `**…**` 強調標記；more 是多說一點 */
-export type FallbackStep = { id: string; title: string; line: string; more: string; marks: Mark[]; rows: ReadoutRow[]; recap?: RecapLine[] }
+export type FallbackStep = { id: string; title: string; line: string; more: string; marks: Mark[]; rows: ReadoutRow[]; recap?: RecapLine[]; compare?: boolean }
 export type FallbackLevel = { label: string; steps: FallbackStep[] }
 
 const resolve = (t: LessonText, ctx: TextContext): string => (typeof t === 'function' ? t(ctx) : t)
@@ -40,5 +40,6 @@ function fallbackStep(step: Step, ctx: TextContext, u: Universe): FallbackStep {
     marks: stepMarks(step, u),
     rows: stageReadout(step.scene.stage ?? { kind: 'none' }, values, u, productId, activeEvent(step, values)),
     ...(step.recap ? { recap: step.recap } : {}),
+    ...(step.compare ? { compare: true } : {}),
   }
 }

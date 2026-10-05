@@ -1,7 +1,7 @@
 import type { BigNumber, Level, RecapLine, Step, TextContext } from './types'
 import { movePct, pct0, SHOCK_2330, signedPct, wan } from './context'
 import { DEFAULT_VALUES } from './values'
-import { EXDIV, exDivTimeline, principalTrap, TRAP_DEMO } from '../scene/layout/stages'
+import { accumulateVsPayout, EXDIV, exDivTimeline, principalTrap, TRAP_DEMO } from '../scene/layout/stages'
 import { T } from '../ui/strings'
 import { DD_DEMO, DD_TROUGH, ddNow, ddQuake, PE_DEMO, peBubble, peYears, RATE_DEMO, rateFreeze, ratePrice, DCA_DEMO, dcaNow, dcaSunny, INFL_DEMO, inflHeat, inflReal } from '../scene/layout/intermediate'
 import { maxDrawdown } from '../sim/drawdown'
@@ -100,6 +100,7 @@ export const LEVELS: Level[] = [
         line: '有些股票晃得**特別兇**',
         more: '左邊是台積電，右邊是特斯拉。波動＝價格常常上上下下。有些公司晃得特別厲害。晃動幅度是示意，不是真實數字。',
         mark: 'illustrative',
+        compare: true,
         scene: {
           camera: 'plazaNear',
           product: null,
@@ -154,6 +155,7 @@ export const LEVELS: Level[] = [
         line: '債券＝**借據**，固定給**金幣|coin**',
         more: '債券＝借錢給別人，換一張借據方塊。它不跟著大樓長高，只固定給你利息。到期時，本金還給你。金幣快慢是示意。',
         mark: 'illustrative',
+        compare: true,
         scene: { camera: 'plaza', product: null, stage: { kind: 'bonds' } },
       },
       {
@@ -162,6 +164,7 @@ export const LEVELS: Level[] = [
         line: '越**穩**的，利息通常**越少**',
         more: '國家債＝借給政府，像鑽石一樣堅固，利息通常最少。公司債＝借給體質好的公司，金屬材質。高收益債＝借給體質弱的公司，玻璃材質。它利息通常較多，也較容易裂（利息快慢是示意）。',
         mark: 'illustrative',
+        compare: true,
         scene: { camera: 'plaza', product: null, stage: { kind: 'bonds', ranks: true } },
       },
       {
@@ -171,6 +174,7 @@ export const LEVELS: Level[] = [
         // 初階沒有 b-2（三種借據，在中階），所以這裡自己說高收益債是什麼
         more: '高收益債＝借給體質弱的公司，利息較多。假設遇上一場經濟風暴。股票方塊大幅縮水，高收益債裂開、停付利息（紅色）。國家債通常比較穩，這是示意。',
         mark: 'illustrative',
+        compare: true,
         scene: { camera: 'plaza', product: null, stage: { kind: 'bonds' }, event: { kind: 'tornado' } },
       },
     ],
@@ -258,12 +262,15 @@ export const LEVELS: Level[] = [
           return {
             value: wan(back.exit),
             label: '後收現在賣的出門費',
+            // mid-r1：「100 萬放 10 年剩 85.7 萬」被讀成基金會虧 15 萬
+            note: '只算費用，沒算漲跌',
             fraction: first > 0 ? back.exit / first : 0,
             colorKey: 'loss',
             // 金額用到還沒查證的內扣費用（拆項見多說一點的數字表）
             ...(back.unverified.length > 0 ? { mark: 'unverified' as const } : {}),
           }
         },
+        compare: true,
         scene: { camera: 'plaza', product: null, stage: { kind: 'feeRace', etf: false }, values: { years: 0 } },
         controls: ['years'],
         // 拉到出門費歸零（滿 3 年）才能下一步
@@ -273,8 +280,15 @@ export const LEVELS: Level[] = [
         id: 'f-8',
         title: '配息或累積',
         line: '拖**經過年數**。看**金幣滾回去**的塔',
-        more: '同一檔基金常有兩種級別。配息型把金幣放進你的口袋。累積型把金幣熔回方塊，繼續投資。拖經過年數，看差距怎麼長出來（示意參數）。',
+        more: '同一檔基金常有兩種級別，這是示意參數。配息型把金幣放進你的口袋。累積型把金幣熔回方塊，繼續投資。領到的金幣自己再投入，結果就差不多。',
         mark: 'illustrative',
+        // mid-r1：她只看到 387 vs 180。配息型要算「塔＋領到的金幣」才是全部；拉了才出現
+        bigNumber: (_c, v) => {
+          const r = accumulateVsPayout(v.periods)
+          if (v.periods <= 0) return undefined
+          return { value: wan(r.payout.total), label: '配息型：塔＋金幣', note: `塔 ${wan(r.payout.value)}＋金幣 ${wan(r.payout.cashReceived)}`, mark: 'illustrative' }
+        },
+        compare: true,
         scene: { camera: 'plaza', product: null, stage: { kind: 'accumulate' }, values: { periods: 0 } },
         controls: ['periods'],
         until: { control: 'periods', min: 8 },
@@ -381,6 +395,7 @@ export const LEVELS: Level[] = [
           const er = c.expenseRatio('0050')
           return er === undefined ? undefined : { value: perMillion(er), label: '0050 一年約扣', note: '費用低，不代表比較好' }
         },
+        compare: true,
         scene: { camera: 'exchange', product: '0050', cityLabels: false },
       },
     ],
@@ -394,6 +409,7 @@ export const LEVELS: Level[] = [
         title: '假設台積電跌',
         line: () => `假設台積電跌 **${pct0(SHOCK_PCT * 100)}%**`,
         more: () => `來做個假設：台積電跌 ${pct0(SHOCK_PCT * 100)}%。左邊只買台積電，中間是 0050（台灣50大）。右邊是 SPY（美國500大）。`,
+        compare: true,
         scene: { camera: 'plaza', product: null, stage: { kind: 'shock' }, event: { kind: 'lightning', phase: 'gather' } },
       },
       {
@@ -406,6 +422,7 @@ export const LEVELS: Level[] = [
           const s = c.shock('0050')
           return { value: movePct(s), label: '假設下的 0050', fraction: Math.abs(s) / SHOCK_PCT, note: `整條＝只買台積電跌 ${pct0(SHOCK_PCT * 100)}%` }
         },
+        compare: true,
         scene: { camera: 'plaza', product: null, stage: { kind: 'shock' }, event: { kind: 'lightning', phase: 'strike' } },
       },
       {
@@ -417,6 +434,7 @@ export const LEVELS: Level[] = [
           const o = c.overlapShared('QQQ', 'SPY')
           return { value: `至少 ${(o * 100).toFixed(1)}%`, label: '兩盒一樣的部分', fraction: o, note: '只算前幾大公司，實際更多' }
         },
+        compare: true,
         scene: { camera: 'plaza', product: null, stage: { kind: 'overlap', a: 'QQQ', b: 'SPY' }, cityLabels: false },
       },
     ],
@@ -442,6 +460,7 @@ export const LEVELS: Level[] = [
           const sp = c.sectorPct('0050', 'semiconductor')
           return { value: `至少 ${pct0(sp)}%`, label: '0050 的半導體', fraction: sp / 100, colorKey: 'semiconductor', note: '只算列出的公司，實際更多' }
         },
+        compare: true,
         scene: { camera: 'underground', product: null, stage: { kind: 'underground', show: 'cores', cores: ['0050', 'QQQ'] }, cityLabels: false },
       },
       {
@@ -491,7 +510,7 @@ export const COURSE_STEPS: Step[] = [
     // 中階股票章（Plan 7）：一排柱子＝每年的價格；拖到谷底時 🌋 地震，坑深＝最大跌幅
     id: 's-dd',
     title: '最大跌幅',
-    line: '拖**時間軸**。看最多**少掉多少|loss**',
+    line: '拖**時間軸**。找出**跌最深|loss**那次',
     fallbackLine: () => `最多曾經**少掉 ${pct0(maxDrawdown(DD_DEMO.path).pct * 100)}%|loss**`,
     more: () => {
       const d = maxDrawdown(DD_DEMO.path)
@@ -502,8 +521,10 @@ export const COURSE_STEPS: Step[] = [
     bigNumber: (_c, v) => {
       const worst = ddNow(v.tick).worst
       if (worst <= 0) return undefined
-      return { value: `${pct0(worst * 100)}%`, label: '最多曾經少掉', fraction: worst, colorKey: 'loss', mark: 'illustrative' }
+      // mid-r1：「40% 算嚴重嗎？」——誠實的一句：股票常有這種跌法，跌完不一定很快長回來（不是建議）
+      return { value: `${pct0(worst * 100)}%`, label: '最多曾經少掉', note: '股票常見；跌完不一定很快長回來', fraction: worst, colorKey: 'loss', mark: 'illustrative' }
     },
+    compare: true,
     scene: { camera: 'plaza', product: null, stage: { kind: 'drawdown' }, event: ddQuake(), eventWhen: { control: 'tick', min: DD_TROUGH }, values: { tick: 0 }, cityLabels: false },
     controls: ['tick'],
     ranges: { tick: [0, DD_DEMO.path.length - 1] },
@@ -517,7 +538,10 @@ export const COURSE_STEPS: Step[] = [
     fallbackLine: () => `**${peYears('cheap')} 年**和 **${peYears('pricey')} 年**才賺回股價`,
     more: '本益比＝股價÷每股盈餘，就是幾年賺回股價。這裡假設每年賺的錢不變，年數越多越貴。本益比高，不代表一定會跌。泡泡＝太貴，數字是示意。',
     mark: 'illustrative',
-    bigNumber: () => ({ value: `${peYears('cheap')} 年 vs ${peYears('pricey')} 年`, label: '幾年賺回股價', note: `股價都是 ${PE_DEMO.price}，年數多＝較貴`, mark: 'illustrative' }),
+    // mid-r1：答案一開始就寫在卡片上，拉桿變多餘。數到 60 年（門檻）才出現
+    bigNumber: (_c, v) =>
+      v.periods < peYears('pricey') ? undefined : { value: `${peYears('cheap')} 年 vs ${peYears('pricey')} 年`, label: '幾年賺回股價', note: `股價都是 ${PE_DEMO.price}，年數多＝較貴`, mark: 'illustrative' },
+    compare: true,
     scene: { camera: 'plaza', product: null, stage: { kind: 'pe' }, event: peBubble(), eventWhen: { control: 'periods', min: peYears('pricey') }, values: { periods: 0 }, cityLabels: false },
     controls: ['periods'],
     ranges: { periods: [0, peYears('pricey')] },
@@ -534,6 +558,7 @@ export const COURSE_STEPS: Step[] = [
     mark: 'illustrative',
     // 跟著拉桿：舊借據現在值多少（面額 100）；note 一直提醒到期還是拿回 100
     bigNumber: (_c, v) => ({ value: `約 ${n0(ratePrice(v.rate))} 元`, label: '舊借據現在值', note: '借的人沒出問題，到期拿回 100 元', mark: 'illustrative' }),
+    compare: true,
     scene: { camera: 'plaza', product: null, stage: { kind: 'seesaw' }, event: rateFreeze(), eventWhen: { control: 'rate', min: RATE_DEMO.to }, values: { rate: RATE_DEMO.from }, cityLabels: false },
     controls: ['rate'],
     ranges: { rate: [RATE_DEMO.from, RATE_DEMO.to] },
@@ -572,6 +597,7 @@ export const COURSE_STEPS: Step[] = [
       const r = dcaNow(v.months).result
       return { value: `${r.avgCost.toFixed(1)} 元`, label: '平均成本', note: `平均價格 ${r.avgPrice.toFixed(1)} 元`, mark: 'illustrative' }
     },
+    compare: true,
     scene: { camera: 'plaza', product: null, stage: { kind: 'dca' }, event: dcaSunny(), values: { months: 1 }, cityLabels: false },
     controls: ['months'],
     ranges: { months: [1, DCA_DEMO.prices.length] },

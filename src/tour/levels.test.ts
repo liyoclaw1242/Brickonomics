@@ -3,6 +3,7 @@ import { universe } from '../data'
 import { isBasket } from '../data/schema'
 import { overlap } from '../sim/overlap'
 import { EXDIV_AFTER_PHASE, LEVELS } from './levels'
+import { accumulateVsPayout } from '../scene/layout/stages'
 import { STEP_POOL } from './courses'
 import { maxDrawdown } from '../sim/drawdown'
 import { DD_DEMO, DD_LAYOUT, ddBarX, peYears } from '../scene/layout/intermediate'
@@ -746,8 +747,11 @@ describe('Plan 7 中階: 本益比 (s-pe)', () => {
     expect(controlRange(s(), 'periods')).toEqual([0, 60])
   })
   it('big number 15 年 vs 60 年; the more text says a high P/E does not mean it will fall', () => {
-    expect(bigOf(s())).toMatchObject({ value: '15 年 vs 60 年', label: '幾年賺回股價', mark: 'illustrative' })
-    expect(bigOf(s())!.note).toContain('600')
+    // mid-r1：答案等拉到 60 年才出現
+    expect(bigOf(s())).toBeUndefined()
+    expect(bigOf(s(), { periods: 59 })).toBeUndefined()
+    expect(bigOf(s(), { periods: 60 })).toMatchObject({ value: '15 年 vs 60 年', label: '幾年賺回股價', mark: 'illustrative' })
+    expect(bigOf(s(), { periods: 60 })!.note).toContain('600')
     expect(moreOf(s(), ctx)).toContain('本益比＝股價÷每股盈餘')
     expect(moreOf(s(), ctx)).toContain('不代表一定會跌')
     expect(moreOf(s(), ctx)).toContain('假設每年賺的錢不變') // 年數的前提
@@ -840,5 +844,44 @@ describe('e-dca readout formats 元 through strings.ts (whole-branch review)', (
     const rows = stageReadout({ kind: 'dca' }, { ...DEFAULT_VALUES, months: 12, slice: 0, explode: 0 }, universe, null)
     expect(rows.map((r) => r.value)).toEqual(['3,000 元', '922.9', '39.0 元', '40.9 元'])
     expect(T.yuan1(39.03)).toBe('39.0 元')
+  })
+})
+
+describe('mid-r1: comparisons never read as advice', () => {
+  /** 兩種以上的商品或做法並排的舞台 */
+  const sideBySide = (s: Step): boolean => {
+    const st = s.scene.stage
+    if (!st) return false
+    if (st.kind === 'held') return st.items.length >= 2
+    if (st.kind === 'underground') return (st.cores ?? []).length >= 2
+    return ['bonds', 'feeRace', 'accumulate', 'overlap', 'shock', 'pe'].includes(st.kind)
+  }
+
+  it('every side-by-side step and every step the review named carries the compare flag', () => {
+    const flagged = steps.filter((s) => s.compare).map((s) => s.id)
+    for (const s of steps) if (sideBySide(s)) expect(s.compare, `${s.id} shows things side by side`).toBe(true)
+    for (const id of ['s-pe', 'f-6', 'f-8', 'e-dca', 'c-3', 'u-2', 's-dd', 'b-rate']) expect(flagged, id).toContain(id)
+    expect(T.compareNote).toBe('只是比較，不是叫你買或賣')
+    expect(forbiddenWordsIn(T.compareNote)).toEqual([])
+  })
+
+  it('f-8 shows the whole 配息型 total (tower + coins received), computed and hidden before the drag', () => {
+    const f8 = byId('f-8')
+    expect(bigOf(f8, { periods: 0 })).toBeUndefined()
+    const r = accumulateVsPayout(20)
+    expect(r.payout.total).toBeCloseTo(r.payout.value + r.payout.cashReceived, 9)
+    expect(bigOf(f8, { periods: 20 })).toEqual({ value: wan(r.payout.total), label: '配息型：塔＋金幣', note: `塔 ${wan(r.payout.value)}＋金幣 ${wan(r.payout.cashReceived)}`, mark: 'illustrative' })
+    expect(bigOf(f8, { periods: 20 })!.value).toBe('288.1 萬') // 180.6 + 107.5
+    expect(moreOf(f8, ctx)).toContain('領到的金幣自己再投入，結果就差不多')
+  })
+
+  it('f-6 says on screen that it only counts fees, not market moves', () => {
+    expect(bigOf(byId('f-6'))!.note).toBe('只算費用，沒算漲跌')
+    expect(T.towers.feesOnly).toBe('只算費用，沒算漲跌')
+  })
+
+  it('s-dd answers "is 40% a lot?" honestly on the card, and its line no longer reads 最多少掉多少', () => {
+    expect(bigOf(byId('s-dd'), { tick: 5 })!.note).toBe('股票常見；跌完不一定很快長回來')
+    expect(stripMarkup(lineOf(byId('s-dd'), ctx))).toBe('拖時間軸。找出跌最深那次')
   })
 })

@@ -35,7 +35,8 @@ export function TowerRow({ towers, quality, base, baseSub }: { towers: TowerSpec
   const stagger = layoutModel(size.width, size.height).mobile ? 2.5 : 0
   const anyFocus = towers.some((t) => t.focus)
   // 手機上進門／出門費和每年費用兩個標註會撞在一起：門的那個往前（往下）錯開一排
-  const doorDrop = stagger > 0 ? 2.4 : 0
+  // 桌機也錯開（mid-r1 14-b：進門費、每年費用、出門費、每年費用四個標註擠成一排）
+  const doorDrop = stagger > 0 ? 2.4 : 1.8
   return (
     <>
       {/* 手機上門費標註往前錯開了一排：前提說明再往前一點，免得疊在一起 */}

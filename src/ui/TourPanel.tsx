@@ -77,6 +77,10 @@ function StepPanel() {
           <BigNumberCard key={step.id} n={big} color={big.colorKey ? colorOf(big.colorKey) : undefined} run={revealed} instant={instant} titleMarks={marks} delayMs={bigNumberDelayMs(numberDelayEvent(step, { ...values, slice, explode }), instant)} />
         </div>
       )}
+      {/* 比較步驟：大數字下面（沒有大數字就在一句話下面）一直留一行提醒，不藏在多說一點 */}
+      {step.compare && (
+        <p className={revealed ? 'compare-note step-reveal is-revealed' : 'compare-note step-reveal'}>{T.compareNote}</p>
+      )}
       {step.controls && <StageControls controls={step.controls} />}
       {!ok && step.until && (
         <p className="hint hint--try" id={HINT_ID}>

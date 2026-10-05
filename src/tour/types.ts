@@ -122,6 +122,11 @@ export type Step = {
   /** 文字版（沒有 3D）專用的多說一點；未填則沿用 more */
   fallbackMore?: LessonText
   mark?: 'illustrative' | 'assumption'
+  /**
+   * 比較步驟（兩種商品／做法並排、或一面倒的數字）：面板一直顯示一行「只是比較，不是叫你買或賣」（T.compareNote），
+   * 不藏在多說一點（mid-r1：她把 387 萬 vs 180 萬讀成「選累積型」）
+   */
+  compare?: boolean
   /** 回傳 undefined 時不顯示大數字（例如資料沒有內扣費用）；values＝導覽目前的拉桿值（跟著拉桿即時變） */
   bigNumber?: (c: TextContext, values: Readonly<StageValues>) => BigNumber | undefined
   focus?: { holdings?: string[] }

@@ -4,7 +4,8 @@ import { Color, type InstancedMesh, Object3D } from 'three'
 import { useTour } from '../../store/tour'
 import { T } from '../../ui/strings'
 import { Callout } from '../Callout'
-import { bubbleAt, bubbleFinal } from '../events/bubble'
+import { BUBBLE, bubbleAt, bubbleFinal, bubbleRadii, liftOf } from '../events/bubble'
+import { useEventValue } from '../useEventClock'
 import type { EventClock } from '../events/types'
 import { PE_DEMO, PE_LAYOUT, peSlabs, peYears, type PeKey } from '../layout/intermediate'
 import { ACCENT_COLORS, SECTOR_COLORS } from '../palette'
@@ -31,6 +32,8 @@ export function PeStage({ event }: { event: EventClock }) {
   const invalidate = useThree((s) => s.invalidate)
   useEffect(() => invalidate(), [counts.cheap, counts.pricey, invalidate])
   const bubble = event.spec?.kind === 'bubble' ? event.spec : undefined
+  // 泡泡開始浮起才標出它的意思（mid-r1：透明泡泡是什麼沒標）
+  const floating = useEventValue(event, (t) => !!bubble && t !== null && t >= BUBBLE.liftAt)
 
   useLayoutEffect(() => {
     const m = towers.current
@@ -81,6 +84,14 @@ export function PeStage({ event }: { event: EventClock }) {
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial color={PROFIT} roughness={0.6} />
       </instancedMesh>
+      {floating && bubble && (
+        <Callout
+          anchor={atPlaza(PE_LAYOUT.x.pricey, liftOf(bubble) + PE_LAYOUT.height / 2 + bubbleRadii(bubble.target.size)[1], 0)}
+          offset={[0, 1.2, 0]}
+          title={T.pe.bubble}
+          persistent
+        />
+      )}
       {KEYS.map((k) => (
         <Callout
           key={k}

@@ -36,6 +36,8 @@ export const T = {
     /** 文字版選階的群組名 */
     pickLabel: '選擇課程',
   },
+  /** 比較步驟的提醒（mid-r1：比較結果一面倒，被讀成投資建議） */
+  compareNote: '只是比較，不是叫你買或賣',
   /** 課內的第幾步（mid-r1：章的編號在同一章裡不動，她以為按壞了） */
   stepCount: (i: number, n: number) => `第 ${i} / ${n} 步`,
   chapterCounter: (i: number, n: number) => `${String(i).padStart(2, '0')} / ${String(n - 1).padStart(2, '0')}`,
@@ -121,13 +123,15 @@ export const T = {
   /** s-dd 最大跌幅的 3D 標註 */
   dd: {
     peak: (price: number) => `最高 ${price}`,
-    drop: (pct: string) => `少 ${pct}`,
+    drop: (pct: string) => `現在比最高少 ${pct}`,
     pit: (pct: string) => `坑深＝最多少掉 ${pct}`,
   },
   /** s-pe 本益比的 3D 標註：每疊旁邊寫疊了幾年、股價與每年賺多少 */
   pe: {
     years: (n: number) => `${n} 年`,
     sub: (price: number, earn: number) => `股價 ${price}・每年賺 ${earn}`,
+    /** 泡泡的意思（mid-r1：透明泡泡是什麼沒標）；不說會跌 */
+    bubble: '泡泡＝年數多，比較貴',
   },
   /** b-rate 利率翹翹板的 3D 標註 */
   seesaw: {
@@ -138,7 +142,7 @@ export const T = {
   /** e-dca 定期定額的 3D 標註 */
   dca: {
     cheap: (price: number) => `${price} 元那個月`,
-    cheapSub: '同樣的錢，買最多',
+    cheapSub: '最便宜：同樣的錢買最多',
     tower: (months: number) => `買了 ${months} 個月`,
     cost: (v: string) => `平均成本 ${v} 元`,
   },
@@ -169,6 +173,8 @@ export const T = {
     held: '每年費用（一直在扣）',
     base: '假設投入 100 萬',
     baseDemo: '假設投入 100 萬（舉例的數字）',
+    /** f-6：只算費用（mid-r1：85.7 萬被讀成基金會虧） */
+    feesOnly: '只算費用，沒算漲跌',
     value: (v: number) => wan(v),
   },
   feeRaceCaveat: '三者投資內容與風險不同，費用低不代表比較好',
