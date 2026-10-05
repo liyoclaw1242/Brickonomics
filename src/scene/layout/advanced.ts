@@ -303,7 +303,7 @@ export function hedgeDropAt(spec: SpecOf<'quake'>, t: number | null): number {
 // ───────────── a-rebal 剪高補低（再平衡） ─────────────
 
 /** 一座組合塔（股票在下、債券在上）；unit＝每 1 萬多高；一條目標線在股票該到的高度 */
-export const REBAL_LAYOUT = { x: 0, w: 5.5, unit: 0.1 } as const
+export const REBAL_LAYOUT = { x: 0, w: 5.5, unit: 0.1, leanPerPct: 0.03 } as const
 
 export type RebalNow = { stage: number; stock: number; bond: number; total: number; stockPct: number; moved: number }
 
@@ -318,9 +318,10 @@ export function rebalNow(v: number): RebalNow {
   return { stage, stock: r.stock, bond: r.bond, total: r.total, stockPct: r.stockPct, moved: r.moved }
 }
 
-/** 塔的兩截高度與目標線的高度（世界單位） */
-export function rebalTower(v: number): { stock: number; bond: number; target: number } {
+/** 塔的兩截高度、目標線的高度（世界單位）與塔斜幾度（弧度；股票比例偏離目標越多越斜＝塔長歪了，示意） */
+export function rebalTower(v: number): { stock: number; bond: number; target: number; lean: number } {
   const n = rebalNow(v)
   const k = REBAL_LAYOUT.unit
-  return { stock: n.stock * k, bond: n.bond * k, target: ((n.total * REBALANCE.targetStockPct) / 100) * k }
+  const lean = (n.stockPct - REBALANCE.targetStockPct) * REBAL_LAYOUT.leanPerPct
+  return { stock: n.stock * k, bond: n.bond * k, target: ((n.total * REBALANCE.targetStockPct) / 100) * k, lean: Math.abs(lean) < 1e-9 ? 0 : lean }
 }

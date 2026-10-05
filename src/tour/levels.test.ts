@@ -1131,10 +1131,12 @@ describe('Plan 8 高階: 剪高補低 (a-rebal)', () => {
     expect(s().until).toEqual({ control: 'rebal', min: 2 })
     expect(stripMarkup(lineOf(s(), ctx))).toBe('拖進度。塔歪了就剪高補低')
   })
-  it('big number = the stock share: 60% → 66% (78 ÷ 118) → back to 60% after moving 7.2 萬', () => {
+  it('one clear change per position: 股票 60% → 股票 66% (78 ÷ 118, the tower leans) → 搬了 7.2 萬 (back to 60%, total 118 unchanged)', () => {
     expect(bigOf(s(), { rebal: 0 })).toMatchObject({ value: '股票 60%', label: '組合裡的股票比例', note: '目標：股票 60%', colorKey: 'stock', mark: 'illustrative' })
-    expect(bigOf(s(), { rebal: 1 })).toMatchObject({ value: '股票 66%', note: '股票漲了 30%，比例跑掉了' })
-    expect(bigOf(s(), { rebal: 2 })).toMatchObject({ value: '股票 60%', note: '剪掉 7.2 萬股票，補到債券' })
+    expect(bigOf(s(), { rebal: 1 })).toMatchObject({ value: '股票 66%', note: '一年後股票漲 30%，塔歪了' })
+    expect(bigOf(s(), { rebal: 2 })).toMatchObject({ value: '搬了 7.2 萬', label: '從股票搬到債券', note: '股票回到 60%；總數 118 萬不變' })
+    const values = [0, 1, 2].map((r) => bigOf(s(), { rebal: r })!.value)
+    expect(new Set(values).size).toBe(3) // 每一格都不一樣
     expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('股票漲到 66%。剪 7.2 萬補債券')
   })
   it('honest: rebalancing does not promise more profit, and moving money has trading costs', () => {

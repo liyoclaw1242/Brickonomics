@@ -867,9 +867,11 @@ export const COURSE_STEPS: Step[] = [
     fallbackLine: () => `股票漲到 ${pct0(rebalNow(1).stockPct)}%。剪 ${wan(rebalNow(2).moved)}補債券`,
     more: '再平衡＝把比例搬回目標。股票漲多了，賣一點股票、補一點債券。目的是讓風險回到原本，不保證賺比較多。這是示意，搬的時候也有交易成本。',
     mark: 'illustrative',
+    // 一次只變一件事（adv-r1：前後都是「股票 60%」像壞掉）：一年後→股票 66%、塔歪；剪高補低→「搬了 7.2 萬」、站直
     bigNumber: (_c, v) => {
       const r = rebalNow(v.rebal)
-      const note = r.stage === 0 ? `目標：股票 ${REBALANCE.targetStockPct}%` : r.stage === 1 ? `股票漲了 ${pct0(REBALANCE.stockReturn * 100)}%，比例跑掉了` : `剪掉 ${wan(r.moved)}股票，補到債券`
+      if (r.stage === 2) return { value: `搬了 ${wan(r.moved)}`, label: '從股票搬到債券', note: `股票回到 ${REBALANCE.targetStockPct}%；總數 ${wan(r.total)}不變`, colorKey: 'stock', mark: 'illustrative' }
+      const note = r.stage === 0 ? `目標：股票 ${REBALANCE.targetStockPct}%` : `一年後股票漲 ${pct0(REBALANCE.stockReturn * 100)}%，塔歪了`
       return { value: `股票 ${pct0(r.stockPct)}%`, label: '組合裡的股票比例', fraction: r.stockPct / 100, note, colorKey: 'stock', mark: 'illustrative' }
     },
     scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'rebalance' }, values: { rebal: 0 }, cityLabels: false },

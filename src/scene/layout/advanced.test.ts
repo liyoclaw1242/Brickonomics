@@ -264,4 +264,10 @@ describe('a-rebal trim the tall side, top up the short side', () => {
     expect(t.stock).toBeGreaterThan(t.target) // 長歪了：股票超過目標線
     expect(rebalTower(2).stock).toBeCloseTo(rebalTower(2).target, 12)
   })
+  it('the tower leans while it is off target (塔長歪了) and stands straight again after the trim', () => {
+    expect(rebalTower(0).lean).toBe(0)
+    expect(rebalTower(1).lean).toBeCloseTo((66.1017 - 60) * REBAL_LAYOUT.leanPerPct, 4)
+    expect(rebalTower(1).lean).toBeGreaterThan(0.1) // 看得出來
+    expect(rebalTower(2).lean).toBeCloseTo(0, 12)
+  })
 })

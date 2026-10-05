@@ -116,7 +116,7 @@ export const T = {
     stormValue: (v: number) => (['股跌、債漲', '股債一起跌'] as const)[Math.round(v)] ?? '',
     /** a-rebal 走到哪一步（0 一開始、1 股票漲了一年、2 剪高補低） */
     rebal: '進度',
-    rebalValue: (v: number) => (['一開始', '股票漲了一年', '剪高補低'] as const)[Math.round(v)] ?? '',
+    rebalValue: (v: number) => (['一開始', '一年後', '剪高補低'] as const)[Math.round(v)] ?? '',
     /** a-hedge 看哪一種情境（0 平穩一年、1 慢慢漲一年、2 ⚡ 打下那天） */
     hedgeCase: '情境',
     hedgeCaseValue: (v: number) => (['來回晃的一年', '大漲那年', '🌋 大跌那天'] as const)[Math.round(v)] ?? '',
@@ -244,6 +244,7 @@ export const T = {
     bond: (v: string) => `債券 ${v}`,
     target: (pct: number) => `目標線：股票 ${pct}%`,
     moved: (v: string) => `剪 ${v}，補到債券`,
+    over: '股票超過線：塔歪了',
   },
   /** 基金那一章的錢：投入 100＝100 萬（和計費表同一個底），一位小數、去掉「.0」 */
   wan,
