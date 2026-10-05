@@ -163,9 +163,9 @@ export function Quake({ spec, clock, quality }: EventProps<SpecOf<'quake'>>) {
     }
   })
 
-  const [px, , pz] = atPlaza(cx, 0, cz)
+  const [px, py, pz] = atPlaza(cx, 0, cz)
   return (
-    <group ref={root} position={[px, 0, pz]} visible={false}>
+    <group ref={root} position={[px, py, pz]} visible={false}>
       <group ref={ground}>
         <mesh ref={pitMesh} geometry={pit} rotation-x={-Math.PI / 2} renderOrder={-2} receiveShadow>
           {/* 只畫內側（坑壁與坑底）；顏色是頂點色 */}
