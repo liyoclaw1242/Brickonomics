@@ -1,4 +1,6 @@
 import { currentStep, useTour } from '../../store/tour'
+import { effectiveExplode, useSandbox } from '../../store/sandbox'
+import { activeEvent } from '../../tour/engine'
 import type { Stage } from '../../tour/types'
 import { EventLayer } from '../events/EventLayer'
 import type { Quality } from '../quality'
@@ -23,7 +25,10 @@ const NONE: Stage = { kind: 'none' }
 /** 依目前步驟顯示教學視覺與事件（scene.event）；沙盒模式不顯示。事件時鐘只有一個，事件元件與舞台共用 */
 export function StageView({ quality }: { quality: Quality }) {
   const stage = useTour((s) => (s.mode === 'tour' ? (currentStep(s).scene.stage ?? NONE) : NONE))
-  const event = useTour((s) => (s.mode === 'tour' ? currentStep(s).scene.event : undefined))
+  const slice = useSandbox((s) => s.slice)
+  const explode = useSandbox(effectiveExplode)
+  // scene.eventWhen：拉桿到了才有事件（同一個 spec，參數不跟著拉桿變）
+  const event = useTour((s) => (s.mode === 'tour' ? activeEvent(currentStep(s), { ...s.values, slice, explode }) : undefined))
   const clock = useEventClock(event)
   return (
     <>

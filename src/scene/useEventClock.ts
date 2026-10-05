@@ -2,14 +2,13 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { currentStep, useTour } from '../store/tour'
 import { eventDuration, eventLingers } from './events'
+import { eventEpoch } from './eventEpoch'
 import type { EventClock, EventSpec } from './events/types'
 import { useContinuousRender } from './useContinuousRender'
 import { prefersReducedMotion, useRevealAfterCamera } from './useRevealAfterCamera'
 
 /** 時鐘比其他 useFrame 早跑（負的 priority 不會接管繪製）：舞台與事件元件同一幀讀到同一個 t */
 const CLOCK_PRIORITY = -1
-
-const specKey = (spec: EventSpec | undefined): string => (spec ? JSON.stringify(spec) : '')
 
 /**
  * 事件共用時鐘：鏡頭停下才開始；prefers-reduced-motion 或靜態事件（duration 0）直接在終點（t = Infinity）；
@@ -27,7 +26,7 @@ export function useEventClock(spec: EventSpec | undefined): EventClock {
   const lingers = spec ? eventLingers(spec) : false
   const instant = !spec || reduced || (duration <= 0 && !lingers)
   const revealed = useRevealAfterCamera(stepId, instant)
-  const epoch = `${stepId}|${specKey(spec)}|${instant}|${revealed}`
+  const epoch = eventEpoch(stepId, spec, instant, revealed)
 
   const start = spec && instant ? Infinity : null
   const t = useRef<number | null>(start)

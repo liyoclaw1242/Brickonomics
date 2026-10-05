@@ -13,6 +13,11 @@ import type { EventKind, EventSpec, EventTimeline, SpecOf } from './types'
  * 只在動畫期間持續繪製；舞台只透過純函式讀事件進度（例如 tornadoHitAt、strikeAt）決定受損程度。
  * 這個檔案只載入各事件的時間軸（只有數字）：讀數（ui/readout）、文字版、城市（Scene）都從這裡問，不直接 import 各事件的模組。
  *
+ * 規則：事件參數（quake 的 depth、freeze 的 amount、heatwave 的 melt…）每一步固定，不跟著拉桿變。
+ * 事件時鐘用 JSON.stringify(spec) 判斷「換了事件」（scene/eventEpoch.ts）：參數一變，風、震動就會從頭重播。
+ * 要跟著拉桿變的東西（柱子多高、翹翹板多斜）由舞台自己從拉桿算；拉桿只能用 scene.eventWhen 把事件「整個開或關」
+ * （engine.activeEvent：條件成立時回傳步驟資料裡同一個 spec），所以條件成立後再拖不會重播（engine.test、eventEpoch.test 有測）。
+ *
  * 新增一種事件（例如 Plan 8 的 wave）：
  * 1. types.ts：在 EventSpec 這個 union 加一個分支，例如 `| { kind: 'wave'; hits: number }`。
  *    參數只放在自己的分支裡，tsc 會檢查每一步寫的 scene.event。需要位置時一律相對廣場中心（像 bubble 的 target、heatwave 的 coins）。

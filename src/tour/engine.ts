@@ -1,4 +1,5 @@
 import type { SandboxPatch } from '../store/sandbox'
+import type { EventSpec } from '../scene/events/types'
 import type { Condition, Control, CourseId, CoursePosition, Level, Position, Progress, SceneDirective, Step, TextContext, TourValues } from './types'
 import { COURSES, courseOfStep, courseSteps } from './courses'
 import { LEVELS } from './levels'
@@ -66,6 +67,16 @@ export function positionOf(levels: readonly Level[], stepId: string): Position {
 
 export function isSatisfied(c: Condition | undefined, v: TourValues): boolean {
   return !c || v[c.control] >= c.min
+}
+
+/**
+ * 這一步此刻的事件：有 scene.eventWhen 時只在條件成立時才有（拉桿還沒到 → undefined）。
+ * 回傳的永遠是步驟資料裡同一個 spec（參數不跟著拉桿變），事件時鐘才不會因為拖拉桿而重播。
+ */
+export function activeEvent(step: Pick<Step, 'scene'>, v: TourValues): EventSpec | undefined {
+  const e = step.scene.event
+  if (!e) return undefined
+  return isSatisfied(step.scene.eventWhen, v) ? e : undefined
 }
 
 export function sandboxPatchFor(d: SceneDirective): SandboxPatch {

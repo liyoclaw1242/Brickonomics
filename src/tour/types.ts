@@ -54,6 +54,11 @@ export type SceneDirective = {
   stage?: Stage
   /** 這一步發生的事件（龍捲風、閃電…；src/scene/events）：鏡頭停下後才發生，舞台讀它的進度 */
   event?: EventSpec
+  /**
+   * 事件只在這個條件成立時發生（例如 s-dd 拖到谷底才地震、b-rate 拖到 5% 才寒流）：不成立時當作沒有事件，成立的那一刻事件從頭播一次。
+   * 事件參數仍然固定（不跟著拉桿變），所以條件成立後再拖拉桿不會重播；見 src/scene/events/index.ts 的規則。
+   */
+  eventWhen?: Condition
   values?: Partial<StageValues>
   /** 城市大樓名稱標籤，預設 true */
   cityLabels?: boolean

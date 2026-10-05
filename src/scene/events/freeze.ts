@@ -65,6 +65,28 @@ export const frostLevel = (spec: SpecOf<'freeze'>, i: number, t: number | null):
 /** 舞台用：第 i 個目標的顏色往冰藍混多少 */
 export const freezeTint = (spec: SpecOf<'freeze'>, i: number, t: number | null): number => FREEZE.tint * frostLevel(spec, i, t)
 
+/** 冷色天光的強度比例 0..1（amount 先限制在 0..1，天光不會變成負的）；t 為 null＝還沒開始 */
+export const chillLevel = (spec: SpecOf<'freeze'>, t: number | null): number => (t === null ? 0 : clamp01(spec.amount) * frostProgress(t))
+
+type Rgb = readonly [number, number, number]
+
+/**
+ * 舞台用：目標的顏色（線性 0..1 的 rgb）結霜後的樣子；k＝freezeTint。
+ * 直接往冰藍線性混，金色會先變成橄欖綠（黃＋藍）。所以先褪色變亮（往淺灰），再往冰藍混：一路都是冷、亮的顏色。
+ */
+export function frostMix(base: Rgb, ice: Rgb, k: number): [number, number, number] {
+  const u = clamp01(k)
+  const lum = 0.2126 * base[0] + 0.7152 * base[1] + 0.0722 * base[2]
+  const g = Math.max(lum, 0.8)
+  const d = Math.min(1, u * 1.5)
+  const out = [0, 0, 0] as [number, number, number]
+  for (let i = 0; i < 3; i++) {
+    const pale = base[i]! + (g - base[i]!) * d
+    out[i] = pale + (ice[i]! - pale) * u
+  }
+  return out
+}
+
 /** 時間軸：跑一次就停；大數字等開始結霜才數；終點有後果（結霜） */
 export const FREEZE_TIMELINE: EventTimeline<SpecOf<'freeze'>> = {
   duration: () => FREEZE_END,
@@ -81,6 +103,19 @@ export const FREEZE_DETAIL: Record<Quality, { streaks: number; flakes: number; i
 
 /** 長 len 的目標掛幾根冰柱（沿著長邊等距） */
 export const icicleCount = (len: number, quality: Quality): number => Math.max(1, Math.floor(len / FREEZE_DETAIL[quality].icicleGap))
+
+/**
+ * 每個目標掛幾根冰柱：照 icicleCount；總數超過上限時按比例分（每個目標至少 1 根），
+ * 不會因為從頭截斷而讓後面的目標一根都沒有。
+ */
+export function icicleSlots(targets: readonly FreezeTarget[], quality: Quality): number[] {
+  const want = targets.map((tg) => icicleCount(tg.size[0], quality))
+  const total = want.reduce((a, b) => a + b, 0)
+  const max = FREEZE_DETAIL[quality].maxIcicles
+  if (total <= max) return want
+  const spare = Math.max(0, max - targets.length)
+  return want.map((w) => 1 + Math.floor(((w - 1) / Math.max(1, total - targets.length)) * spare))
+}
 
 /** 風吹過的範圍（相對廣場中心）：x 從 −span 到 +span，y 0..height，z ±depth */
 export const WIND_FIELD = { span: 22, height: 7, depth: 7 } as const

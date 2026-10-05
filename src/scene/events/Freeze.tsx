@@ -5,7 +5,7 @@ import { useThemeStore } from '../../store/theme'
 import { THEMES } from '../theme'
 import { PLAZA } from '../stage/plaza'
 import { rand } from './ease'
-import { FREEZE, FREEZE_DETAIL, WIND_FIELD, frostLevel, frostOf, frostProgress, icicleCount, windLevel } from './freeze'
+import { FREEZE, FREEZE_DETAIL, WIND_FIELD, chillLevel, frostLevel, frostOf, frostProgress, icicleSlots, windLevel } from './freeze'
 import type { EventProps, SpecOf } from './types'
 
 const STREAK_LEN = 2.6
@@ -30,12 +30,12 @@ export function Freeze({ spec, clock, quality }: EventProps<SpecOf<'freeze'>>) {
   const targets = spec.targets
   const icicles = useMemo(() => {
     const out: Icicle[] = []
-    targets.forEach((tg, i) => {
-      const n = icicleCount(tg.size[0], quality)
+    // 超過上限時每個目標按比例分（每個至少 1 根）：後面的目標不會被截掉
+    icicleSlots(targets, quality).forEach((n, i) => {
       for (let k = 0; k < n; k++) out.push({ target: i, u: (k + 0.5) / n, r: rand(i * 31 + k, 4) })
     })
-    return out.slice(0, detail.maxIcicles)
-  }, [targets, quality, detail.maxIcicles])
+    return out
+  }, [targets, quality])
 
   const root = useRef<Group>(null)
   const shells = useRef<InstancedMesh>(null)
@@ -58,7 +58,7 @@ export function Freeze({ spec, clock, quality }: EventProps<SpecOf<'freeze'>>) {
     g.visible = true
     const te = clock.reduced ? Infinity : t
     const wind = windLevel(te)
-    if (chill.current) chill.current.intensity = theme.chillIntensity * Math.min(1, spec.amount) * frostProgress(te)
+    if (chill.current) chill.current.intensity = theme.chillIntensity * chillLevel(spec, te)
 
     // 外殼與積雪（每個目標一個）
     const sh = shells.current

@@ -8,7 +8,7 @@ import { PREVIEW_LAYOUT } from './preview'
 import { useThemeStore } from '../../store/theme'
 import { THEMES } from '../theme'
 import { bubbleAt, bubbleFinal } from './bubble'
-import { freezeTint } from './freeze'
+import { freezeTint, frostMix } from './freeze'
 import { coinScaleAt } from './heatwave'
 import { TreeCrown } from './SunnyTree'
 import { treeGrowAt } from './sunnyTree'
@@ -113,7 +113,12 @@ function FreezeProps({ spec, clock }: PreviewPropsOf<'freeze'>) {
     if (!m) return
     colors.ice.set(ice)
     const t = clock.reduced ? Infinity : clock.t.current
-    for (let i = 0; i < spec.targets.length; i++) m.setColorAt(i, colors.c.copy(colors.base).lerp(colors.ice, freezeTint(spec, i, t)))
+    const { base, ice: ic, c } = colors
+    for (let i = 0; i < spec.targets.length; i++) {
+      // 先褪色變亮再往冰藍混（直接線性混，金色會變橄欖綠）
+      const [r, g, b] = frostMix([base.r, base.g, base.b], [ic.r, ic.g, ic.b], freezeTint(spec, i, t))
+      m.setColorAt(i, c.setRGB(r, g, b))
+    }
     if (m.instanceColor) m.instanceColor.needsUpdate = true
   })
   return (

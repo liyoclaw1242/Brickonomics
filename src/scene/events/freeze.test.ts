@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { bigNumberDelayMs, eventAftermath, eventDuration, eventLingers } from './index'
-import { FREEZE, FREEZE_DETAIL, FREEZE_END, frostLevel, frostOf, frostProgress, frostWeights, freezeTint, icicleCount, windLevel } from './freeze'
+import { FREEZE, FREEZE_DETAIL, FREEZE_END, chillLevel, frostLevel, frostMix, frostOf, frostProgress, frostWeights, freezeTint, icicleCount, icicleSlots, windLevel } from './freeze'
 import type { SpecOf } from './types'
 
 const board = (len: number, z: number) => ({ at: [0, 0, z] as [number, number, number], size: [len, 1.2, 1.2] as [number, number, number] })
@@ -74,5 +74,36 @@ describe('freeze detail', () => {
     expect(icicleCount(12, 'high')).toBeGreaterThan(icicleCount(3, 'high'))
     expect(icicleCount(12, 'low')).toBeLessThan(icicleCount(12, 'high'))
     expect(FREEZE_DETAIL.low.streaks).toBeLessThan(FREEZE_DETAIL.high.streaks)
+  })
+})
+
+describe('freeze review fixes (Plan 7 Task 1 review)', () => {
+  it('icicles are shared out per target: every target keeps some, the longest gets the most, the total stays within the cap', () => {
+    const many: SpecOf<'freeze'>['targets'] = [board(30, 0), board(30, 2), board(3, 4)]
+    for (const q of ['high', 'low'] as const) {
+      const n = icicleSlots(many, q)
+      expect(n.reduce((a, b) => a + b, 0)).toBeLessThanOrEqual(FREEZE_DETAIL[q].maxIcicles)
+      for (const k of n) expect(k).toBeGreaterThanOrEqual(1) // 後面的短板子不會被截掉
+      expect(n[0]!).toBeGreaterThanOrEqual(n[2]!)
+    }
+    // 沒超過上限時照原本的數量
+    expect(icicleSlots(spec.targets, 'high')).toEqual(spec.targets.map((t) => icicleCount(t.size[0], 'high')))
+  })
+
+  it('the cold light uses amount clamped to 0..1 (never negative)', () => {
+    expect(chillLevel({ ...spec, amount: -2 }, Infinity)).toBe(0)
+    expect(chillLevel({ ...spec, amount: 5 }, Infinity)).toBe(1)
+    expect(chillLevel(spec, null)).toBe(0)
+  })
+
+  it('frost on gold mixes toward a cool, light ice (not olive): blue ≥ red and lighter than the base', () => {
+    const gold: [number, number, number] = [0.79, 0.64, 0.15]
+    const ice: [number, number, number] = [0.62, 0.86, 1]
+    const out = frostMix(gold, ice, FREEZE.tint)
+    expect(out[2]).toBeGreaterThanOrEqual(out[0])
+    expect(out[2]).toBeGreaterThan(out[1] - 0.05)
+    const lum = (c: readonly number[]) => 0.2126 * c[0]! + 0.7152 * c[1]! + 0.0722 * c[2]!
+    expect(lum(out)).toBeGreaterThan(lum(gold))
+    expect(frostMix(gold, ice, 0)).toEqual(gold)
   })
 })

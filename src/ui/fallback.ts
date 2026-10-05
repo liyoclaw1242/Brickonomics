@@ -1,6 +1,6 @@
 import type { Universe } from '../data/universe'
 import { makeTextContext } from '../tour/context'
-import { DEFAULT_VALUES, sandboxPatchFor } from '../tour/engine'
+import { activeEvent, DEFAULT_VALUES, sandboxPatchFor } from '../tour/engine'
 import { courseSteps } from '../tour/courses'
 import type { Course, LessonText, RecapLine, Step, TextContext } from '../tour/types'
 import { stageReadout, type ReadoutRow } from './readout'
@@ -38,7 +38,7 @@ function fallbackStep(step: Step, ctx: TextContext, u: Universe): FallbackStep {
     line: resolve(step.fallbackLine ?? step.line, ctx),
     more: resolve(step.fallbackMore ?? step.more, ctx),
     marks: stepMarks(step, u),
-    rows: stageReadout(step.scene.stage ?? { kind: 'none' }, values, u, productId, step.scene.event),
+    rows: stageReadout(step.scene.stage ?? { kind: 'none' }, values, u, productId, activeEvent(step, values)),
     ...(step.recap ? { recap: step.recap } : {}),
   }
 }
