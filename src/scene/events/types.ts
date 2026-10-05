@@ -54,7 +54,7 @@ export type EventSpec =
   | { kind: 'heatwave'; melt: number; coins?: readonly Vec3[]; coinRadius?: number }
   /**
    * 🌊 大浪（劇烈來回震盪）：一片水圍住目標的底部，浪湧起再退下 waves 次（一上一下）；終點水面平靜。
-   * 浪頭打到＝漲一步、退下＝跌一步，舞台用 waveStepAt 讀走到第幾步，塔高沿自己算的 leveragedPath 取（事件不知道數值）。
+   * 浪頭打到＝跌一步（槓桿塔被打矮一截）、退下＝漲一步，舞台用 waveStepAt 讀走到第幾步，塔高沿自己算的 leveragedPath 取（事件不知道數值）。
    * at：水面中心（相對廣場中心的 x、z，預設 [0, 0]）；size：水面寬（x）、深（z）（預設 WAVE.width、WAVE.depth）；
    * targets：浪頭打到時在這些目標旁噴浪花（不閃）。
    */

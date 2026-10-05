@@ -213,8 +213,8 @@ function HeatwaveProps({ spec, clock }: PreviewPropsOf<'heatwave'>) {
 const WAVE_UNIT = 0.06
 
 /**
- * 大浪：三座塔（一般、2 倍、反向），像舞台一樣沿 leveragedPath 取高度（+10%／−10% 來回、次數＝浪的次數）：
- * 每次浪頭打到漲一步、退下跌一步（waveStepAt）；2 倍塔每道浪後都更矮。
+ * 大浪：三座塔（一般、2 倍、反向），像舞台一樣沿 leveragedPath 取高度（−10%／+10% 來回、次數＝浪的次數）：
+ * 每次浪頭打到跌一步（2 倍塔被打矮一截）、退下漲一步（waveStepAt）；2 倍塔每道浪後都更矮。
  */
 function WaveProps({ spec, clock }: PreviewPropsOf<'wave'>) {
   const boxes = spec.targets ?? []

@@ -5,7 +5,7 @@ import type { EventTimeline, SpecOf } from './types'
 /**
  * 🌊 大浪（劇烈來回震盪）的時間軸（純 TS）。
  * 一片水圍住目標（塔）的底部；每一道浪＝水面湧起一次再退下（一上一下），次數＝spec.waves。
- * 浪頭打到目標的那一刻（湧到最高）算「漲」一步，退到最低算「跌」一步：舞台用 waveStepAt 讀走到第幾步，
+ * 浪頭打到目標的那一刻（湧到最高）算「跌」一步（槓桿塔被打矮一截），退到最低算「漲」一步：舞台用 waveStepAt 讀走到第幾步，
  * 塔高由舞台自己沿 leveragedPath 算出的路徑取（heightOnPath）。事件參數固定；數值由舞台映射（events/index.ts 的規則）。
  * 不閃光。時間 t 以秒計，從鏡頭停下起算；t = Infinity＝終點（浪退了、水面平靜、走完 2 × waves 步）。
  * 座標相對水面中心（元件再加 spec.at 與 atPlaza）。
@@ -38,7 +38,7 @@ export const WAVE = {
 /** 浪的次數：限制在 0..WAVE.maxWaves 的整數 */
 export const waveCount = (spec: SpecOf<'wave'>): number => Math.min(WAVE.maxWaves, Math.max(0, Math.round(spec.waves)))
 
-/** 總步數（每道浪一漲一跌）＝2 × 浪的次數 */
+/** 總步數（每道浪一跌一漲）＝2 × 浪的次數 */
 export const waveSteps = (spec: SpecOf<'wave'>): number => 2 * waveCount(spec)
 
 /** 第 k 道浪（0 起算）打到目標（湧到最高）的時間 */
@@ -46,7 +46,7 @@ export const crestTime = (k: number): number => WAVE.delay + (k + 0.5) * WAVE.pe
 /** 第 k 道浪退到最低的時間 */
 export const troughTime = (k: number): number => WAVE.delay + (k + 1) * WAVE.period
 
-/** 第 i 步（0 起算；偶數＝浪頭打到、奇數＝退下）發生的時間 */
+/** 第 i 步（0 起算；偶數＝浪頭打到＝跌、奇數＝退下＝漲）發生的時間 */
 export const stepTime = (i: number): number => (i % 2 === 0 ? crestTime(i / 2) : troughTime((i - 1) / 2))
 
 /** 動畫全部結束：最後一道浪退下、塔變到最後的高度 */

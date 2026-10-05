@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { LEVERAGE, choppyPath, leverageTowers, leveragedPath } from './leverage'
 
-describe('choppyPath (+move then −move, repeated)', () => {
-  it('100, +10%, −10%: 100 → 110 → 99 → 108.9 → 98.01', () => {
+describe('choppyPath (−move then +move, repeated)', () => {
+  it('100, −10%, +10%: 100 → 90 → 99 → 89.1 → 98.01', () => {
     const p = choppyPath(100, 0.1, 2)
     expect(p).toHaveLength(5)
-    ;[100, 110, 99, 108.9, 98.01].forEach((v, i) => expect(p[i]).toBeCloseTo(v, 10))
+    ;[100, 90, 99, 89.1, 98.01].forEach((v, i) => expect(p[i]).toBeCloseTo(v, 10))
   })
 })
 
@@ -48,12 +48,16 @@ describe('leveragedPath (daily reset: each step the tower moves k × that step�
   })
 })
 
-describe('leverage example: +10% / −10% five times (≈ illustrative); plain vs 2× vs inverse', () => {
+describe('leverage example: −10% / +10% five times (≈ illustrative); plain vs 2× vs inverse', () => {
   it('example constant', () => {
     expect(LEVERAGE).toEqual({ start: 100, move: 0.1, rounds: 5, double: 2, inverse: -1 })
   })
 
-  it('plain: 100 × (1.1 × 0.9)^5 = 100 × 0.99^5 = 95.10; 2×: 100 × (1.2 × 0.8)^5 = 100 × 0.96^5 = 81.54; inverse: 100 × (0.9 × 1.1)^5 = 95.10', () => {
+  it('plain: 100 × (0.9 × 1.1)^5 = 100 × 0.99^5 = 95.10; 2×: 100 × (0.8 × 1.2)^5 = 100 × 0.96^5 = 81.54; inverse: 100 × (1.1 × 0.9)^5 = 95.10', () => {
+    // 第一步（浪頭打到）：大盤 100 → 90、2 倍塔 100 → 80（被打矮一截）、反向塔 100 → 110
+    expect(leverageTowers().plain[1]).toBeCloseTo(90, 10)
+    expect(leverageTowers().double[1]).toBeCloseTo(80, 10)
+    expect(leverageTowers().inverse[1]).toBeCloseTo(110, 10)
     const t = leverageTowers()
     expect(t.plain).toHaveLength(11)
     expect(t.plain.at(-1)).toBeCloseTo(95.099, 3)

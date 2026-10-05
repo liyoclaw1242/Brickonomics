@@ -76,7 +76,7 @@ export const PREVIEW_SPECS: { [K in EventKind]: (q: URLSearchParams) => SpecOf<K
   sunnyTree: (q) => ({ kind: 'sunnyTree', warmth: numParam(q, 'warmth', 1, 0, 1) }),
   // melt＝最後融掉的比例（0–1），例如 0.3＝剩 70%
   heatwave: (q) => ({ kind: 'heatwave', melt: numParam(q, 'melt', 0.5, 0, 1), coins: PREVIEW_LAYOUT.heatCoins, coinRadius: 1.1 }),
-  // waves＝浪的次數（0–8；每道浪一漲一跌）
+  // waves＝浪的次數（0–8；每道浪一跌一漲）
   wave: (q) => ({ kind: 'wave', waves: Math.round(numParam(q, 'waves', 5, 0, 8)), size: PREVIEW_LAYOUT.waveSize, targets: PREVIEW_LAYOUT.waveTowers }),
 }
 

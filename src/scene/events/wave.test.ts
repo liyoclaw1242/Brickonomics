@@ -56,7 +56,7 @@ describe('wave timeline', () => {
     }
   })
 
-  it('crest = the wave hits (up step), trough = it falls back (down step); steps alternate and only increase', () => {
+  it('crest = the wave hits (down step), trough = it falls back (up step); steps alternate and only increase', () => {
     expect(stepTime(0)).toBe(crestTime(0))
     expect(stepTime(1)).toBe(troughTime(0))
     expect(stepTime(2)).toBe(crestTime(1))
@@ -113,11 +113,23 @@ describe('stage mapping: heights along a leveraged path', () => {
     expect(heightOnPath([], 1)).toBe(0)
   })
 
-  it('5 waves on +10% / −10%: the 2× tower ends at 100 × 0.96^5 = 81.54; after the first hit it is 120, after the first fall 96', () => {
+  it('5 waves on −10% / +10%: the hit knocks the 2× tower down (100 → 80 = 100 × (1 − 2 × 0.1)), the recede lifts it to 80 × 1.2 = 96; it ends at 100 × 0.96^5 = 81.54', () => {
     const towers = leveragedPath(choppyPath(100, 0.1, 5), 2)
     expect(heightOnPath(towers, waveStepAt(spec, Infinity))).toBeCloseTo(81.537, 3)
-    expect(heightOnPath(towers, waveStepAt(spec, crestTime(0) + WAVE.settle))).toBeCloseTo(120, 9)
+    expect(heightOnPath(towers, waveStepAt(spec, crestTime(0) + WAVE.settle))).toBeCloseTo(80, 9)
     expect(heightOnPath(towers, waveStepAt(spec, troughTime(0) + WAVE.settle))).toBeCloseTo(96, 9)
+  })
+})
+
+describe('every hit knocks the 2× tower down (槓桿塔每次被打矮一截)', () => {
+  it('for each wave k: height just after the crest < height just before it', () => {
+    const towers = leveragedPath(choppyPath(100, 0.1, 5), 2)
+    for (let k = 0; k < 5; k++) {
+      const before = heightOnPath(towers, waveStepAt(spec, crestTime(k) - 0.01))
+      const after = heightOnPath(towers, waveStepAt(spec, crestTime(k) + WAVE.settle))
+      expect(after).toBeLessThan(before)
+      expect(after / before).toBeCloseTo(0.8, 9) // 2 × (−10%) = −20%
+    }
   })
 })
 
