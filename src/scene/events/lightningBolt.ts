@@ -94,7 +94,8 @@ export function jagged(from: Vec3, to: Vec3, segments: number, jitter: number, s
 
 /** 一段閃電：起點、終點、粗細（0..1）、出現的時間比例（0..1，配合 boltReveal） */
 export type BoltSegment = { a: Vec3; b: Vec3; width: number; appear: number }
-export type BoltBranch = { target: ShockKey | null; width: number; points: Vec3[] }
+/** target：c-2 打到的那一組（台積電）；hit：舞台自己給的目標點（高階，spec.targets） */
+export type BoltBranch = { target: ShockKey | null; hit?: Vec3; width: number; points: Vec3[] }
 
 /** 各畫質：每條分支的段數、要不要小分岔（低畫質更簡單） */
 export const BOLT_DETAIL: Record<Quality, { segments: number; twigs: boolean; glow: boolean }> = {
@@ -126,14 +127,33 @@ export function jaggedPath(way: readonly Vec3[], segments: number, jitter: numbe
   return out
 }
 
-/** 主幹＋打到台積電的分岔（越多台積電越粗）＋（高畫質）兩條打不到地面的小分岔 */
-export function boltBranches(quality: Quality): BoltBranch[] {
+/** 自訂目標（spec.targets）時的分岔點：在目標 x 的平均正上方（高度、深度同 BOLT_FORK） */
+export function customFork(targets: readonly Vec3[]): Vec3 {
+  const mx = targets.reduce((s, p) => s + p[0], 0) / Math.max(1, targets.length)
+  return [mx, BOLT_FORK[1], BOLT_FORK[2]]
+}
+
+/**
+ * 主幹＋打到台積電的分岔（越多台積電越粗）＋（高畫質）兩條打不到地面的小分岔。
+ * targets（相對廣場中心）：改打舞台自己的方塊（高階 a-corr、a-hedge），每個目標一條一樣粗的分岔；主幹在目標正上方。
+ */
+export function boltBranches(quality: Quality, targets?: readonly Vec3[]): BoltBranch[] {
   const { segments, twigs } = BOLT_DETAIL[quality]
-  const out: BoltBranch[] = [{ target: null, width: 1, points: jagged(BOLT_ORIGIN, BOLT_FORK, Math.max(2, Math.round(segments / 3)), 0.5, 3) }]
-  SHOCK_SUBJECTS.forEach((s, i) => {
-    const way = branchWaypoints(s.key)
-    if (way) out.push({ target: s.key, width: tsmcExposure(s.key), points: jaggedPath(way, segments, 0.9, 11 + i * 7) })
-  })
+  const custom = targets && targets.length > 0 ? targets : undefined
+  const fork = custom ? customFork(custom) : BOLT_FORK
+  const origin: Vec3 = custom ? [fork[0] + 0.3, BOLT_ORIGIN[1], BOLT_ORIGIN[2]] : BOLT_ORIGIN
+  const out: BoltBranch[] = [{ target: null, width: 1, points: jagged(origin, fork, Math.max(2, Math.round(segments / 3)), 0.5, 3) }]
+  if (custom) {
+    custom.forEach((to, i) => {
+      const way: Vec3[] = [fork, [to[0] - 0.5, to[1] + 2.4, to[2] + 0.3], to]
+      out.push({ target: null, hit: to, width: 1, points: jaggedPath(way, segments, 0.9, 11 + i * 7) })
+    })
+  } else {
+    SHOCK_SUBJECTS.forEach((s, i) => {
+      const way = branchWaypoints(s.key)
+      if (way) out.push({ target: s.key, width: tsmcExposure(s.key), points: jaggedPath(way, segments, 0.9, 11 + i * 7) })
+    })
+  }
   if (twigs) {
     for (const [k, dir] of [[1, 1], [2, -1]] as const) {
       const p = out[k]?.points
@@ -146,12 +166,12 @@ export function boltBranches(quality: Quality): BoltBranch[] {
 }
 
 /** 攤平成一段一段（依出現時間排序：主幹先、分岔後；InstancedMesh 只要調 count 就能逐段長出來） */
-export function boltSegments(quality: Quality): BoltSegment[] {
-  const branches = boltBranches(quality)
+export function boltSegments(quality: Quality, targets?: readonly Vec3[]): BoltSegment[] {
+  const branches = boltBranches(quality, targets)
   const segs: BoltSegment[] = []
   branches.forEach((br, bi) => {
     // 主幹佔前 40%，分岔佔後 60%；小分岔從它掛的地方開始
-    const [s0, s1] = bi === 0 ? [0, 0.4] : br.target ? [0.4, 1] : [0.6, 1]
+    const [s0, s1] = bi === 0 ? [0, 0.4] : br.target || br.hit ? [0.4, 1] : [0.6, 1]
     const n = br.points.length - 1
     for (let i = 0; i < n; i++) segs.push({ a: br.points[i]!, b: br.points[i + 1]!, width: br.width, appear: s0 + ((s1 - s0) * i) / n })
   })

@@ -26,7 +26,11 @@ export type FreezeTarget = EventTarget & { length?: number }
 export type EventSpec =
   /** 🌪 龍捲風（經濟衰退、金融風暴）：numberAtX＝面板大數字等龍捲風掃到這個 x（相對廣場中心）才數（a-port）；沒給＝一進來就數（b-3） */
   | { kind: 'tornado'; numberAtX?: number }
-  | { kind: 'lightning'; phase: LightningPhase }
+  /**
+   * ⚡ 閃電（單一公司出事）：gather＝烏雲、strike＝打一次。
+   * targets（相對廣場中心）：打舞台自己的方塊（高階）；沒給＝c-1／c-2 的台積電三組，雲底寫「假設：台積電被打中」。
+   */
+  | { kind: 'lightning'; phase: LightningPhase; targets?: readonly Vec3[] }
   /**
    * 🌋 地震＋地裂（股市崩盤、最大跌幅）：地面震一次 → 裂出一個坑，坑深＝depth（0–1，乘 QUAKE.maxDepth）；終點坑保留。
    * at：坑中心（相對廣場中心的 x、z，預設 [0, 0]）；width：坑的寬度（預設 QUAKE.width）。

@@ -40,6 +40,8 @@ export type Stage =
   | { kind: 'inflation' }
   /** a-port 組合塔：股票＋債券疊成一座塔（bondPct 拉桿）；🌪 龍捲風（scene.event tornado）掃過時股票那截縮掉 */
   | { kind: 'portfolio' }
+  /** a-corr 兩組用彈簧連著的方塊（一起動、一上一下）；⚡ 閃電（scene.event lightning＋targets）打兩組的 A */
+  | { kind: 'correlation' }
   | { kind: 'overlap'; a: string; b: string }
   | { kind: 'underground'; show: 'strata' | 'cores' | 'dig' | 'veins' | 'gold'; cores?: [string, string] }
 

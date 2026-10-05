@@ -147,3 +147,24 @@ describe('bolt comes down from above', () => {
     }
   })
 })
+
+describe('custom targets (高階 a-corr, a-hedge: the bolt hits the stage’s own blocks)', () => {
+  const to: [number, number, number][] = [[-8, 3, 0], [6, 2, 1]]
+  it('one branch per target, each ending exactly on it; no TSMC branches; trunk ends at the fork above the targets', async () => {
+    const { customFork } = await import('./lightningBolt')
+    const br = boltBranches('high', to)
+    const hits = br.filter((b) => b.hit)
+    expect(hits.map((b) => b.points.at(-1))).toEqual(to)
+    expect(hits.every((b) => b.width === 1)).toBe(true)
+    expect(br.some((b) => b.target)).toBe(false)
+    const fork = customFork(to)
+    expect(fork[0]).toBeCloseTo(-1, 12) // 目標 x 的平均
+    expect(br[0]!.points.at(-1)).toEqual(fork)
+    for (const b of hits) expect(b.points[0]).toEqual(fork)
+  })
+  it('low quality: trunk + one branch per target; segments still reveal fully', () => {
+    expect(boltBranches('low', to)).toHaveLength(3)
+    const segs = boltSegments('low', to)
+    expect(visibleSegments(segs, 1)).toBe(segs.length)
+  })
+})

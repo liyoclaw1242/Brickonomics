@@ -22,6 +22,8 @@ const SPARK_TIME = 0.5
 const UP = new Vector3(0, 1, 0)
 
 type BoltProps = {
+  /** 打到的點（已加 atPlaza 之前、相對廣場中心）；沒給＝台積電三組 */
+  hits?: readonly Vec3[]
   /** 閃電時間（秒，c-2 鏡頭停下後起算）；null＝還沒開始 */
   time: { readonly current: number | null }
   quality: Quality
@@ -34,13 +36,13 @@ type BoltProps = {
  * 每段是一個細長方塊（白色芯＋外圈光暈各一個 InstancedMesh），調 count 逐段長出來；
  * 打中那一刻全場補光一次（ambientLight 脈衝）、打中點各一團光，之後退掉。持續繪製由事件時鐘（useEventClock）負責。
  */
-function Bolt({ time, quality, still }: BoltProps) {
+function Bolt({ hits, time, quality, still }: BoltProps) {
   const theme = THEMES[useThemeStore((s) => s.theme)].bolt
   const detail = BOLT_DETAIL[quality]
-  const segs = useMemo(() => boltSegments(quality), [quality])
+  const segs = useMemo(() => boltSegments(quality, hits), [quality, hits])
   const targets = useMemo(
-    () => SHOCK_SUBJECTS.map((s) => strikeTarget(s.key)).filter((p): p is Vec3 => p !== null).map((p) => atPlaza(...p)),
-    [],
+    () => (hits && hits.length > 0 ? hits : SHOCK_SUBJECTS.map((s) => strikeTarget(s.key)).filter((p): p is Vec3 => p !== null)).map((p) => atPlaza(...p)),
+    [hits],
   )
   const root = useRef<Group>(null)
   const core = useRef<InstancedMesh>(null)
@@ -146,8 +148,9 @@ export function Lightning({ spec, clock, quality }: EventProps<SpecOf<'lightning
   return (
     <>
       <StormCloud quality={quality} position={atPlaza(...CLOUD.center)} spread={CLOUD.spread} size={CLOUD.size} />
-      {spec.phase === 'strike' && <Bolt time={clock.t} quality={quality} still={clock.reduced} />}
-      {struck && <Callout anchor={atPlaza(...CLOUD_LABEL_ANCHOR)} offset={[2.2, -0.8, 0]} title={T.shock.struck} persistent />}
+      {spec.phase === 'strike' && <Bolt hits={spec.targets} time={clock.t} quality={quality} still={clock.reduced} />}
+      {/* 自訂目標（高階）：被打中的是什麼由舞台自己標，雲底不寫台積電 */}
+      {struck && !spec.targets && <Callout anchor={atPlaza(...CLOUD_LABEL_ANCHOR)} offset={[2.2, -0.8, 0]} title={T.shock.struck} persistent />}
     </>
   )
 }

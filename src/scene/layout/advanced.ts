@@ -1,6 +1,9 @@
 import { STORM, stressTest, type StressResult } from '../../sim/portfolio'
 import { STORM as TORNADO, timeAtX } from '../events/tornado'
-import { clamp01, smooth } from '../events/ease'
+import { clamp01, ramp, smooth } from '../events/ease'
+import { IMPACT_TIME } from '../events/lightning'
+import type { SpecOf } from '../events/types'
+import { PAIRS, combine, volatility } from '../../sim/correlation'
 
 /**
  * 高階步驟（Plan 8）的舞台幾何與拉桿 → 數值（純 TS；課文 levels.ts、3D 舞台、讀數共用同一份）。
@@ -38,4 +41,76 @@ export function portTower(bondPct: number, damage: number): { stock: number; bon
   const stock = (n.before.stock + (n.after.stock - n.before.stock) * damage) * k
   const bond = (n.before.bond + (n.after.bond - n.before.bond) * damage) * k
   return { stock, bond, top: stock + bond }
+}
+
+// ───────────── a-corr 一起跌或抵消（⚡ 閃電） ─────────────
+
+/** ⚡ 打下的那一天＝舉例路徑 PAIRS 的第幾期（a 跌 8% 的那期） */
+export const CORR_DAY = 1
+
+/**
+ * 兩組，各兩顆方塊用彈簧連著：左邊「一起動」（a＋same）、右邊「一上一下」（a＋opposite）。
+ * pairs＝每組中心的 x；每組裡 A 在中心 − half、夥伴在中心 + half；方塊寬 w、100＝height 高。
+ */
+export const CORR_LAYOUT = { pairs: { together: -9, opposite: 9 }, half: 2.6, w: 2.8, height: 9 } as const
+
+export type CorrNow = {
+  /** ⚡ 那天各自漲跌多少（比例） */
+  a: number
+  together: number
+  opposite: number
+  /** 各放一半，合起來漲跌多少 */
+  mixTogether: number
+  mixOpposite: number
+  /** 整段舉例裡平常晃多大（各期報酬率的標準差） */
+  swing: { alone: number; together: number; opposite: number }
+}
+
+/** ⚡ 那天的漲跌與整段的晃動，全部從 sim/correlation 算 */
+export function corrNow(): CorrNow {
+  const mixT = combine(PAIRS.a, PAIRS.same, 0.5)
+  const mixO = combine(PAIRS.a, PAIRS.opposite, 0.5)
+  return {
+    a: PAIRS.a[CORR_DAY]!,
+    together: PAIRS.same[CORR_DAY]!,
+    opposite: PAIRS.opposite[CORR_DAY]!,
+    mixTogether: mixT[CORR_DAY]!,
+    mixOpposite: mixO[CORR_DAY]!,
+    swing: { alone: volatility(PAIRS.a), together: volatility(mixT), opposite: volatility(mixO) },
+  }
+}
+
+/** 閃電打兩組裡的 A（同一家公司）：落點在 A 的頂面（還沒跌之前的高度） */
+export const corrLightning = (): SpecOf<'lightning'> => ({
+  kind: 'lightning',
+  phase: 'strike',
+  targets: [
+    [CORR_LAYOUT.pairs.together - CORR_LAYOUT.half, CORR_LAYOUT.height, 0],
+    [CORR_LAYOUT.pairs.opposite - CORR_LAYOUT.half, CORR_LAYOUT.height, 0],
+  ],
+})
+
+/** 打中之後，方塊花多久變到新的高度（秒） */
+const CORR_SETTLE = 0.5
+
+/** 打中之後的進度 0..1（t＝事件時間；null＝還沒開始） */
+export function corrDropAt(t: number | null): number {
+  if (t === null) return 0
+  if (t === Infinity) return 1
+  return ramp(t, IMPACT_TIME, CORR_SETTLE)
+}
+
+export type CorrBlock = { id: 'togetherA' | 'togetherB' | 'oppositeA' | 'oppositeB'; x: number; move: number; h: number }
+
+/** 四顆方塊的位置與高度（drop＝corrDropAt；高度＝height × (1 + 漲跌 × drop)） */
+export function corrBlocks(drop: number): CorrBlock[] {
+  const n = corrNow()
+  const { pairs, half, height } = CORR_LAYOUT
+  const b = (id: CorrBlock['id'], x: number, move: number): CorrBlock => ({ id, x, move, h: height * (1 + move * drop) })
+  return [
+    b('togetherA', pairs.together - half, n.a),
+    b('togetherB', pairs.together + half, n.together),
+    b('oppositeA', pairs.opposite - half, n.a),
+    b('oppositeB', pairs.opposite + half, n.opposite),
+  ]
 }

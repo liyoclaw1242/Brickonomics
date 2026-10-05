@@ -175,6 +175,16 @@ export const T = {
     ghost: '原本 100 萬',
     lost: (pct: string) => `少掉 ${pct}`,
   },
+  /** a-corr 兩組用彈簧連著的方塊（高階） */
+  corr: {
+    together: '一起動',
+    opposite: '一上一下',
+    /** 各放一半，⚡ 那天合起來 */
+    mix: (move: string) => `各一半，合起來 ${move}`,
+    /** 方塊頭上的名字；打中之後加上漲跌 */
+    a: (move: string) => (move ? `A ${move}` : 'A'),
+    b: (move: string) => (move ? `B ${move}` : 'B'),
+  },
   /** 基金那一章的錢：投入 100＝100 萬（和計費表同一個底），一位小數、去掉「.0」 */
   wan,
   /** 元（四捨五入、千分位）：18800 → '18,800 元'（r5：有感的錢，像計費表的「已磨掉約 39,073 元」） */
@@ -262,6 +272,9 @@ export const T = {
     portStock: '股票那一截',
     portBond: '債券那一截',
     portRemaining: '風暴後整座塔',
+    corrAlone: '只放 A：平常晃多大',
+    corrTogether: 'A＋一起動的，各一半',
+    corrOpposite: 'A＋一上一下的，各一半',
   },
   feeParts: { expenseRatio: '內扣費用', distributionFee: '分銷費', cdsc: '遞延手續費', trading: '交易成本' },
   qualityNotice: '畫面有點卡，已自動切換成省電畫質。',

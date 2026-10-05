@@ -4,7 +4,7 @@ import { sectorBreakdown } from '../scene/layout/underground'
 import { accumulateVsPayout, exDivTimeline, principalTrap } from '../scene/layout/stages'
 import { feeRaceLeader, feeRaceRows } from '../sim/feeRace'
 import { DCA_DEMO, dcaNow, ddNow, INFL_DEMO, inflReal, PE_DEMO, peYears, ratePrice } from '../scene/layout/intermediate'
-import { portNow } from '../scene/layout/advanced'
+import { corrNow, portNow } from '../scene/layout/advanced'
 import { overlap } from '../sim/overlap'
 import { shockImpact } from '../sim/scenario'
 import { SHOCK_2330, signedPct } from '../tour/context'
@@ -112,6 +112,16 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
         { label: T.readout.portStock, value: `${T.wan(n.before.stock)} → ${T.wan(n.after.stock)}`, marks: ['illustrative'] },
         { label: T.readout.portBond, value: `${T.wan(n.before.bond)} → ${T.wan(n.after.bond)}` },
         { label: T.readout.portRemaining, value: T.wan(n.after.remaining) },
+      ]
+    }
+    case 'correlation': {
+      // 整段舉例裡平常晃多大（各期報酬率的標準差）
+      const s = corrNow().swing
+      const p = (r: number) => `${(r * 100).toFixed(1)}%`
+      return [
+        { label: T.readout.corrAlone, value: p(s.alone), marks: ['illustrative'] },
+        { label: T.readout.corrTogether, value: p(s.together) },
+        { label: T.readout.corrOpposite, value: p(s.opposite) },
       ]
     }
     case 'overlap': {

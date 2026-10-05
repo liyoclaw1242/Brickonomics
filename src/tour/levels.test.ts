@@ -40,7 +40,7 @@ const byId = (id: string): Step => steps.find((s) => s.id === id)!
 /** Plan 7 的舉例舞台：一定要標 ≈、多說一點寫「示意」 */
 const PLAN7_STAGES: string[] = ['drawdown', 'pe', 'seesaw', 'dca', 'inflation']
 /** Plan 8 的高階舞台：都是舉例（≈、多說一點寫「示意」） */
-const PLAN8_STAGES: string[] = ['portfolio']
+const PLAN8_STAGES: string[] = ['portfolio', 'correlation']
 /** 大數字跟著即時拉桿值；測試預設用進入該步驟時的值 */
 const bigOf = (s: Step, values: Partial<StageValues> = {}) => s.bigNumber?.(ctx, { ...DEFAULT_VALUES, ...s.scene.values, ...values })
 const resolve = (t: Step['line'] | undefined): string | undefined => (t === undefined ? undefined : typeof t === 'function' ? t(ctx) : t)
@@ -960,5 +960,27 @@ describe('Plan 8 高階: 自己蓋組合塔 (a-port)', () => {
   it('says the storm is an example and bonds are not guaranteed to rise', () => {
     expect(moreOf(s(), ctx)).toContain('股票跌 40%，債券漲 5%')
     expect(moreOf(s(), ctx)).toContain('債券不保證漲')
+  })
+})
+
+describe('Plan 8 高階: 一起跌或抵消 (a-corr)', () => {
+  const s = () => byId('a-corr')
+  it('no drag: ⚡ strikes A in both pairs when the camera stops (targets = the A blocks)', () => {
+    expect(s().until).toBeUndefined()
+    expect(s().scene.event).toMatchObject({ kind: 'lightning', phase: 'strike' })
+    expect((s().scene.event as { targets: readonly unknown[] }).targets).toHaveLength(2)
+    expect(stripMarkup(lineOf(s(), ctx))).toBe('一起動的一起跌，一上一下的抵消')
+  })
+  it('big number: half-half, together falls 6% and opposite 0% that day (−8 − 4) ÷ 2, (−8 + 8) ÷ 2', () => {
+    expect(bigOf(s())).toEqual({ value: '6% vs 0%', label: '⚡ 那天，兩顆合起來跌', note: '一起動 vs 一上一下；各放一半', colorKey: 'loss', mark: 'illustrative' })
+    expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('一起動跌 6%。一上一下 0%')
+  })
+  it('the more text is honest: correlation changes and in big falls things often fall together', () => {
+    expect(moreOf(s(), ctx)).toContain('相關性＝')
+    expect(moreOf(s(), ctx)).toContain('大跌時常一起跌')
+  })
+  it('the readout gives how much each one swings over the example: 10%, 8%, 2%', () => {
+    const rows = stageReadout({ kind: 'correlation' }, { ...DEFAULT_VALUES, slice: 0, explode: 0 }, universe, null)
+    expect(rows.map((r) => r.value)).toEqual(['10.0%', '8.0%', '2.0%'])
   })
 })

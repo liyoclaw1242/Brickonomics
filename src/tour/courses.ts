@@ -53,7 +53,7 @@ export const COURSES: readonly Course[] = [
     available: false,
     chapters: [
       chapter('review', T.courseChapters.review, ['a-0', 'a-port']),
-      chapter('stock', STOCK, []),
+      chapter('stock', STOCK, ['a-corr']),
       chapter('bond', BOND, []),
       chapter('fund', FUND, []),
       chapter('etf', ETF, []),

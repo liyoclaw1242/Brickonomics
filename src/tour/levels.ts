@@ -6,7 +6,7 @@ import { T } from '../ui/strings'
 import { DD_DEMO, DD_TROUGH, ddNow, ddQuake, PE_DEMO, peBubble, peYears, RATE_DEMO, rateFreeze, ratePrice, DCA_DEMO, dcaNow, dcaSunny, INFL_DEMO, inflHeat, inflReal } from '../scene/layout/intermediate'
 import { maxDrawdown } from '../sim/drawdown'
 import { STORM } from '../sim/portfolio'
-import { PORT_LAYOUT, PORT_MAX_BOND, portNow } from '../scene/layout/advanced'
+import { corrLightning, corrNow, PORT_LAYOUT, PORT_MAX_BOND, portNow } from '../scene/layout/advanced'
 
 /**
  * 課程內文。數字一律由 TextContext 即時計算。
@@ -656,5 +656,20 @@ export const COURSE_STEPS: Step[] = [
     controls: ['bondPct'],
     ranges: { bondPct: [0, PORT_MAX_BOND] },
     until: { control: 'bondPct', min: 40 },
+  },
+  {
+    // 高階股票章：相關性。兩組用彈簧連著的方塊；⚡ 打中兩組裡的 A（同一家），一起動的夥伴跟著跌，一上一下的夥伴漲
+    id: 'a-corr',
+    title: '一起跌或抵消',
+    line: '**一起動|together**的一起跌，**一上一下|opposite**的抵消',
+    fallbackLine: () => `一起動跌 ${pct0(-corrNow().mixTogether * 100)}%。一上一下 ${pct0(Math.abs(corrNow().mixOpposite) * 100)}%`,
+    more: '相關性＝兩顆是不是一起漲跌。一起動的，⚡ 打一顆，兩顆一起跌。一上一下的，一顆跌、一顆漲，合起來晃得小。這是示意，真實的相關性會變，大跌時常一起跌。',
+    mark: 'illustrative',
+    // 等閃電打中才數（事件的 numberDelay）
+    bigNumber: () => {
+      const n = corrNow()
+      return { value: `${pct0(Math.abs(n.mixTogether) * 100)}% vs ${pct0(Math.abs(n.mixOpposite) * 100)}%`, label: '⚡ 那天，兩顆合起來跌', note: '一起動 vs 一上一下；各放一半', colorKey: 'loss', mark: 'illustrative' }
+    },
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'correlation' }, event: corrLightning(), cityLabels: false },
   },
 ]

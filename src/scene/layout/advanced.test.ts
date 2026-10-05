@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { STORM as TORNADO, timeAtX } from '../events/tornado'
 import { PORT_LAYOUT, PORT_MAX_BOND, portDamageAt, portNow, portTower } from './advanced'
+import { CORR_LAYOUT, corrBlocks, corrDropAt, corrLightning, corrNow } from './advanced'
+import { IMPACT_TIME } from '../events/lightning'
+import { PAIRS, combine, volatility } from '../../sim/correlation'
 
 describe('a-port portfolio tower (🌪)', () => {
   it('portNow: 100 split by the bond slider; the example storm takes stocks −40%, bonds +5% (sim/portfolio STORM)', () => {
@@ -35,5 +38,45 @@ describe('a-port portfolio tower (🌪)', () => {
     expect(after.top).toBeCloseTo(PORT_LAYOUT.height * 0.78, 12) // 少掉的那一截＝22%
     const mid = portTower(40, 0.5)
     expect(mid.top).toBeCloseTo(PORT_LAYOUT.height * 0.89, 12) // 線性內插
+  })
+})
+
+describe('a-corr two linked pairs (⚡)', () => {
+  it('corrNow: the strike day is the period where a falls 8%; together partner −4%, opposite partner +8% (sim/correlation PAIRS)', () => {
+    const n = corrNow()
+    expect(n.a).toBeCloseTo(-0.08, 12)
+    expect(n.together).toBeCloseTo(-0.04, 12)
+    expect(n.opposite).toBeCloseTo(0.08, 12)
+    expect(n.mixTogether).toBeCloseTo(-0.06, 12) // (−8 − 4) ÷ 2
+    expect(n.mixOpposite).toBeCloseTo(0, 12) // (−8 + 8) ÷ 2
+    expect(n.mixTogether).toBeCloseTo(combine(PAIRS.a, PAIRS.same, 0.5)[1]!, 12)
+  })
+  it('how much each one swings over the whole example: a 10%, half-half together 8%, half-half opposite 2%', () => {
+    const v = corrNow().swing
+    expect(v.alone).toBeCloseTo(volatility(PAIRS.a), 12)
+    expect(v.alone).toBeCloseTo(0.1, 12)
+    expect(v.together).toBeCloseTo(0.08, 12)
+    expect(v.opposite).toBeCloseTo(0.02, 12)
+  })
+  it('the bolt lands on top of the struck block in each pair; the drop eases in after the impact', () => {
+    const l = corrLightning()
+    expect(l.kind).toBe('lightning')
+    expect(l.phase).toBe('strike')
+    expect(l.targets).toEqual([
+      [CORR_LAYOUT.pairs.together - CORR_LAYOUT.half, CORR_LAYOUT.height, 0],
+      [CORR_LAYOUT.pairs.opposite - CORR_LAYOUT.half, CORR_LAYOUT.height, 0],
+    ])
+    expect(corrDropAt(null)).toBe(0)
+    expect(corrDropAt(IMPACT_TIME - 0.01)).toBe(0)
+    expect(corrDropAt(Infinity)).toBe(1)
+  })
+  it('corrBlocks: heights from 100 = CORR_LAYOUT.height, scaled by (1 + move × drop)', () => {
+    const b0 = corrBlocks(0)
+    for (const x of b0) expect(x.h).toBeCloseTo(CORR_LAYOUT.height, 12)
+    const b1 = corrBlocks(1)
+    expect(b1.map((x) => x.id)).toEqual(['togetherA', 'togetherB', 'oppositeA', 'oppositeB'])
+    expect(b1[0]!.h).toBeCloseTo(CORR_LAYOUT.height * 0.92, 12)
+    expect(b1[1]!.h).toBeCloseTo(CORR_LAYOUT.height * 0.96, 12)
+    expect(b1[3]!.h).toBeCloseTo(CORR_LAYOUT.height * 1.08, 12)
   })
 })

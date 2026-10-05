@@ -12,7 +12,7 @@ const FINISH = 'finish'
 /** Plan 7 新增的中階步驟（課程專用，不在 LEVELS 裡） */
 const PLAN7 = ['s-dd', 's-pe', 'b-rate', 'b-infl', 'e-dca']
 /** Plan 8 的高階步驟（課程專用；照課程順序） */
-const PLAN8 = ['a-0', 'a-port']
+const PLAN8 = ['a-0', 'a-port', 'a-corr']
 /** 內容章＝扣掉開頭（序章／複習）與結尾的章 */
 const contentChapters = (c: Course) => c.chapters.filter((ch) => !OPENING.has(ch.id) && ch.id !== FINISH)
 
