@@ -1,3 +1,4 @@
+import { eventDuration, eventLingers } from './events'
 import type { EventSpec } from './events/types'
 
 /**
@@ -7,4 +8,19 @@ import type { EventSpec } from './events/types'
  */
 export function eventEpoch(stepId: string, spec: EventSpec | undefined, instant: boolean, revealed: boolean): string {
   return `${stepId}|${spec ? JSON.stringify(spec) : ''}|${instant}|${revealed}`
+}
+
+/** 這個 spec 是不是「直接在終點」：沒有事件、減少動態、或靜態事件（duration 0 且不 linger） */
+export function isInstant(spec: EventSpec | undefined, reduced: boolean): boolean {
+  return !spec || reduced || (eventDuration(spec) <= 0 && !eventLingers(spec))
+}
+
+/**
+ * 事件時鐘的兩種「直接到終點」：
+ * - revealInstant：要不要等鏡頭停下（「先看再命名」）。看的是步驟資料本身有沒有事件（stepEvent），
+ *   不看 eventWhen 有沒有成立：拉桿過門檻時鏡頭早就停了，不能因為 instant 從 true 變 false 又重新等一次鏡頭（Plan 7 review：晚 1.5 秒才開始）。
+ * - instant：此刻的事件（spec，eventWhen 成立才有）要不要直接畫終點。
+ */
+export function clockMode(stepEvent: EventSpec | undefined, spec: EventSpec | undefined, reduced: boolean): { revealInstant: boolean; instant: boolean } {
+  return { revealInstant: isInstant(stepEvent, reduced), instant: isInstant(spec, reduced) }
 }

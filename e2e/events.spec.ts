@@ -52,3 +52,30 @@ test('c-1 → c-2: the strike label waits for the strike, never carries over fro
   for (const e of struck) expect(e.at, `${e.what} committed before the c-2 reveal`).toBeGreaterThan(ev.revealAt!)
   expect(errors).toEqual([])
 })
+
+// Plan 7 review：過 eventWhen 門檻的事件要立刻開始（不能再等 1.5 秒的鏡頭備援）。
+// 門檻之前事件不存在；拖到谷底的那一刻地震的時鐘就開始走（DEV 記錄 clock-start）。
+test('s-dd: crossing the trough gate starts the quake clock right away (no second camera wait)', async ({ page }) => {
+  test.setTimeout(120_000)
+  await page.goto('/?quality=high&course=intermediate&step=s-dd')
+  await settled(page)
+  await expect(page.locator('.step-reveal.is-revealed').first()).toBeAttached()
+  await page.waitForTimeout(500)
+  const log = () => page.evaluate(() => (window as unknown as { __BCI_EVENT_LOG__?: { what: string; at: number }[] }).__BCI_EVENT_LOG__ ?? [])
+  expect((await log()).filter((e) => e.what === 'clock-start:quake')).toEqual([]) // 門檻之前沒有地震
+  const [gateAt, framesAt] = await page.getByLabel('時間軸', { exact: false }).first().evaluate((el) => {
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!
+    setter.call(el, '5')
+    const t = performance.now()
+    el.dispatchEvent(new Event('input', { bubbles: true }))
+    return [t, (window as unknown as { __BCI_FRAMES__?: number }).__BCI_FRAMES__ ?? 0]
+  })
+  await expect.poll(async () => (await log()).filter((e) => e.what === 'clock-start:quake').length, { timeout: 10_000 }).toBe(1)
+  const start = (await log()).find((e) => e.what === 'clock-start:quake')!
+  const frames = await page.evaluate(() => (window as unknown as { __BCI_FRAMES__?: number }).__BCI_FRAMES__ ?? 0)
+  console.log(`quake clock started ${Math.round(start.at - gateAt)} ms after the gate (${frames - framesAt} frames so far)`)
+  expect(start.at - gateAt).toBeLessThan(500) // 舊的寫法要等 1500 ms 的鏡頭備援
+  // 而且只開始一次：舊的寫法先偷跑一幀、又收回，1.5 秒後才真正重新開始（第二筆 clock-start）
+  await page.waitForTimeout(2500)
+  expect((await log()).filter((e) => e.what === 'clock-start:quake')).toHaveLength(1)
+})

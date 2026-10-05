@@ -34,7 +34,8 @@ export function StageView({ quality }: { quality: Quality }) {
   const explode = useSandbox(effectiveExplode)
   // scene.eventWhen：拉桿到了才有事件（同一個 spec，參數不跟著拉桿變）
   const event = useTour((s) => (s.mode === 'tour' ? activeEvent(currentStep(s), { ...s.values, slice, explode }) : undefined))
-  const clock = useEventClock(event)
+  const stepEvent = useTour((s) => (s.mode === 'tour' ? currentStep(s).scene.event : undefined))
+  const clock = useEventClock(event, stepEvent)
   return (
     <>
       {ON_PLAZA.has(stage.kind) && <Plaza />}

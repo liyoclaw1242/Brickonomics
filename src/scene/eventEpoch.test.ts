@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { eventEpoch } from './eventEpoch'
+import { clockMode, eventEpoch } from './eventEpoch'
 import { activeEvent, controlRange, DEFAULT_VALUES } from '../tour/engine'
 import { STEP_POOL } from '../tour/courses'
 import type { Step, TourValues } from '../tour/types'
@@ -46,5 +46,41 @@ describe('event clock restarts only when the event itself changes (Task 1 review
       }
       expect(epochs.size, s.id).toBe(1)
     }
+  })
+})
+
+describe('gate-triggered events start right away (Tasks 2–4 review)', () => {
+  const quake = { kind: 'quake', depth: 0.4 } as const
+
+  it('the camera wait (revealInstant) depends on the step having an event, not on the gate being crossed', () => {
+    const before = clockMode(quake, undefined, false)
+    const after = clockMode(quake, quake, false)
+    expect(before.revealInstant).toBe(false)
+    expect(after.revealInstant).toBe(before.revealInstant) // 過門檻不會重新等鏡頭
+    expect(before.instant).toBe(true) // 門檻之前：沒有事件
+    expect(after.instant).toBe(false) // 門檻之後：事件要跑
+    // 沒有事件的步驟、減少動態、靜態事件：照舊直接到終點
+    expect(clockMode(undefined, undefined, false)).toEqual({ revealInstant: true, instant: true })
+    expect(clockMode(quake, quake, true)).toEqual({ revealInstant: true, instant: true })
+    expect(clockMode({ kind: 'lightning', phase: 'gather' }, { kind: 'lightning', phase: 'gather' }, false)).toEqual({ revealInstant: true, instant: true })
+  })
+
+  it('every eventWhen step in the pool keeps the same revealInstant on both sides of the gate', () => {
+    for (const s of STEP_POOL.values()) {
+      if (!s.scene.eventWhen) continue
+      const { control, min } = s.scene.eventWhen
+      const [lo] = controlRange(s, control)
+      const off = activeEvent(s, V({ ...s.scene.values, [control]: lo }))
+      const on = activeEvent(s, V({ ...s.scene.values, [control]: min }))
+      expect(off, s.id).toBeUndefined()
+      expect(on, s.id).toBeDefined()
+      expect(clockMode(s.scene.event, off, false).revealInstant, s.id).toBe(clockMode(s.scene.event, on, false).revealInstant)
+    }
+  })
+
+  it('revealed toggling (camera settles) changes the epoch: the event restarts once the camera stops, not before', () => {
+    expect(eventEpoch('x', quake, false, false)).not.toBe(eventEpoch('x', quake, false, true))
+    // 過門檻的那一刻 revealed 已經是 true：epoch 只因為 spec 出現而變一次
+    expect(eventEpoch('x', undefined, true, true)).not.toBe(eventEpoch('x', quake, false, true))
   })
 })

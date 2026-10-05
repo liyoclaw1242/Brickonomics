@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { currentStep, useTour } from '../store/tour'
 import { eventDuration, eventLingers } from './events'
-import { eventEpoch } from './eventEpoch'
+import { clockMode, eventEpoch } from './eventEpoch'
 import type { EventClock, EventSpec } from './events/types'
 import { useContinuousRender } from './useContinuousRender'
 import { prefersReducedMotion, useRevealAfterCamera } from './useRevealAfterCamera'
@@ -18,14 +18,15 @@ const CLOCK_PRIORITY = -1
  * 重新開始是在 render 當中同步做的（不是 effect）：StageView 先 render、子元件後 render，
  * 所以換步驟的那一次 render，舞台與事件元件讀到的就已經是新的 t（例如 c-1 的 Infinity 不會被 c-2 的 strikeAt 看到）。
  */
-export function useEventClock(spec: EventSpec | undefined): EventClock {
+export function useEventClock(spec: EventSpec | undefined, stepEvent: EventSpec | undefined = spec): EventClock {
   const stepId = useTour((s) => currentStep(s).id)
   const [reduced] = useState(prefersReducedMotion)
   const invalidate = useThree((s) => s.invalidate)
   const duration = spec ? eventDuration(spec) : 0
   const lingers = spec ? eventLingers(spec) : false
-  const instant = !spec || reduced || (duration <= 0 && !lingers)
-  const revealed = useRevealAfterCamera(stepId, instant)
+  // 等不等鏡頭看的是步驟本身有沒有事件（stepEvent）；拉桿過 eventWhen 門檻時 revealed 已經是 true，事件立刻開始
+  const { revealInstant, instant } = clockMode(stepEvent, spec, reduced)
+  const revealed = useRevealAfterCamera(stepId, revealInstant)
   const epoch = eventEpoch(stepId, spec, instant, revealed)
 
   const start = spec && instant ? Infinity : null
@@ -50,7 +51,14 @@ export function useEventClock(spec: EventSpec | undefined): EventClock {
 
   useFrame(({ clock }) => {
     if (!running) return
-    if (t0.current === null) t0.current = clock.elapsedTime
+    if (t0.current === null) {
+      t0.current = clock.elapsedTime
+      // 開發／測試用：記下事件時鐘真正開始走的那一刻（e2e 檢查過 eventWhen 門檻後立刻開始）
+      if (import.meta.env.DEV) {
+        const w = window as unknown as DevWindow
+        ;(w.__BCI_EVENT_LOG__ ??= []).push({ what: `clock-start:${spec?.kind ?? ''}`, at: performance.now() })
+      }
+    }
     const now = clock.elapsedTime - t0.current
     t.current = now
     if (!done && now > duration) {
