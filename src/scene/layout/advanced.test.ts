@@ -32,6 +32,15 @@ describe('a-port portfolio tower (🌪)', () => {
     expect(portNow(Number.NaN).bondPct).toBe(0)
   })
 
+  it('second storm (stocks and bonds fall together, −25% / −15%): bonds no longer save much — 25% → 21% at 40% bonds → 17% at 80%', () => {
+    expect(portNow(0, 1).after.lossPct).toBeCloseTo(25, 12)
+    expect(portNow(40, 1).after.lossPct).toBeCloseTo(21, 12)
+    expect(portNow(80, 1).after.lossPct).toBeCloseTo(17, 12)
+    expect(portNow(40, 7).storm).toBe(1) // 限制在 0..1
+    expect(portNow(40).storm).toBe(0)
+    expect(portTower(40, 1, 1).top).toBeCloseTo(PORT_LAYOUT.height * 0.79, 12)
+  })
+
   it('the tornado reaches the tower at timeAtX(x) and the damage eases in over STORM.damage', () => {
     expect(portDamageAt(null)).toBe(0)
     expect(portDamageAt(timeAtX(PORT_LAYOUT.x) - 0.01)).toBe(0)

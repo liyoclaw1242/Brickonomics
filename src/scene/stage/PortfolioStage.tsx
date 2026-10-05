@@ -19,23 +19,24 @@ const pct0 = (v: number) => `${Math.round(v)}%`
 /**
  * a-port 自己蓋組合塔：一座塔，下面一截股票（藍）、上面一截債券（銀），合起來＝100 萬（虛線框＝原本的高度）。
  * 拖債券比例：兩截的比例跟著變。龍捲風（scene.event tornado，鏡頭停下就來）掃到塔時，股票那截縮掉 40%、債券那截長 5%
- * （sim/portfolio 的示意風暴），塔頂往下掉，虛線框和塔頂之間的空隙＝少掉的那一截。風暴過後再拖，塔直接畫風暴後的樣子。
+ * （sim/portfolio 的示意風暴；風暴種類拉桿可換成股債一起跌），塔頂往下掉，虛線框和塔頂之間的空隙＝少掉的那一截。風暴過後再拖，塔直接畫風暴後的樣子。
  */
 export function PortfolioStage({ event }: { event: EventClock }) {
   const bondPct = useTour((s) => s.values.bondPct)
-  const now = portNow(bondPct)
+  const storm = useTour((s) => s.values.storm)
+  const now = portNow(bondPct, storm)
   const line = THEMES[useThemeStore((s) => s.theme)].calloutLine
   const stock = useRef<Mesh>(null)
   const bond = useRef<Mesh>(null)
   const invalidate = useThree((s) => s.invalidate)
-  useEffect(() => invalidate(), [now.bondPct, invalidate])
+  useEffect(() => invalidate(), [now.bondPct, now.storm, invalidate])
   const tornado = event.spec?.kind === 'tornado'
   const damageAt = (t: number | null) => (!tornado ? 0 : event.reduced ? 1 : portDamageAt(t))
   // 塔被掃完了才寫風暴後的數字（標註不跟著每一幀變）
   const hit = useEventValue(event, (t) => damageAt(t) >= 1)
 
   useFrame(() => {
-    const tw = portTower(now.bondPct, damageAt(event.t.current))
+    const tw = portTower(now.bondPct, damageAt(event.t.current), now.storm)
     const s = stock.current
     if (s) {
       s.visible = tw.stock > 1e-3
@@ -50,8 +51,8 @@ export function PortfolioStage({ event }: { event: EventClock }) {
     }
   })
 
-  const after = portTower(now.bondPct, 1)
-  const shown = hit ? after : portTower(now.bondPct, 0)
+  const after = portTower(now.bondPct, 1, now.storm)
+  const shown = hit ? after : portTower(now.bondPct, 0, now.storm)
   return (
     <>
       {/* 原本 100 萬的高度：只畫框線 */}

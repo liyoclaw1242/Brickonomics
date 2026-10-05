@@ -110,7 +110,7 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
     }
     case 'portfolio': {
       // 風暴是這一步一進來就發生的事件：讀數直接寫風暴後（文字版也一樣）
-      const n = portNow(v.bondPct)
+      const n = portNow(v.bondPct, v.storm)
       return [
         { label: T.readout.portStock, value: `${T.wan(n.before.stock)} → ${T.wan(n.after.stock)}`, marks: ['illustrative'] },
         { label: T.readout.portBond, value: `${T.wan(n.before.bond)} → ${T.wan(n.after.bond)}` },

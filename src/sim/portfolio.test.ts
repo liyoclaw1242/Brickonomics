@@ -37,3 +37,12 @@ describe('stressTest (portfolio tower in a storm; start 100)', () => {
     expect(() => stressTest({ stockPct: 50, scenario: { stock: 0, bond: NaN } })).toThrow(/bond/)
   })
 })
+
+describe('fix round: a storm where stocks and bonds fall together (like 2022, example numbers)', () => {
+  it('STORMS lists the two example storms; 60/40 in the both-fall storm: 60 × 0.75 + 40 × 0.85 = 79 (loses 21)', async () => {
+    const { STORMS, stressTest: st } = await import('./portfolio')
+    expect(STORMS).toEqual([{ stock: -0.4, bond: 0.05 }, { stock: -0.25, bond: -0.15 }])
+    expect(st({ stockPct: 60, scenario: STORMS[1]! }).remaining).toBeCloseTo(79, 12)
+    expect(st({ stockPct: 20, scenario: STORMS[1]! }).lossPct).toBeCloseTo(17, 12) // 15 + 68 = 83
+  })
+})

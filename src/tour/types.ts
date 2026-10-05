@@ -66,7 +66,8 @@ export type StageKind = Stage['kind']
 /** trades：a-dt 當沖進出了幾次（一次＝買進再賣出） */
 /** hedgeCase：a-hedge 看哪一種情境（0 平穩一年、1 慢慢漲一年、2 ⚡ 打下那天） */
 /** rebal：a-rebal 走到哪一步（0 一開始、1 股票漲了一年、2 剪高補低） */
-export type StageValues = { years: number; periods: number; phase: number; frontLoad: number; tick: number; rate: number; months: number; bondPct: number; trades: number; hedgeCase: number; rebal: number }
+/** storm：a-port 選哪一種示意風暴（0 股跌債漲、1 股債一起跌） */
+export type StageValues = { years: number; periods: number; phase: number; frontLoad: number; tick: number; rate: number; months: number; bondPct: number; trades: number; hedgeCase: number; rebal: number; storm: number }
 export type ValueKey = keyof StageValues
 export type Control = 'slice' | 'explode' | ValueKey
 /** 要讓「下一步」可按，control 的值必須 ≥ min */

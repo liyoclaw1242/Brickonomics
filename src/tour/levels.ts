@@ -5,7 +5,7 @@ import { accumulateVsPayout, EXDIV, exDivTimeline, principalTrap, TRAP_DEMO } fr
 import { T } from '../ui/strings'
 import { DD_DEMO, DD_TROUGH, ddNow, ddQuake, PE_DEMO, peBubble, peYears, RATE_DEMO, rateFreeze, ratePrice, DCA_DEMO, dcaNow, dcaSunny, INFL_DEMO, inflHeat, inflReal } from '../scene/layout/intermediate'
 import { maxDrawdown } from '../sim/drawdown'
-import { STORM } from '../sim/portfolio'
+import { STORMS } from '../sim/portfolio'
 import { corrLightning, corrNow, dtNow, durFreeze, durNow, feeSunny, feeTreesNow, HEDGE_CASES, hedgeCaseIndex, hedgeQuake, levNow, levWave, PORT_LAYOUT, PORT_MAX_BOND, portNow, rebalNow } from '../scene/layout/advanced'
 import { LEVERAGE } from '../sim/leverage'
 import { HEDGE } from '../sim/hedge'
@@ -33,6 +33,8 @@ const NICK = T.nick
 const pct3 = (r: number): string => `${(r * 100).toFixed(3)}%`
 const pct4 = (r: number): string => `${Number((r * 100).toFixed(4))}%`
 /** −0.1488 → '14.9%'（句子已說「跌」，用絕對值） */
+/** −0.4 → '跌 40%'；0.05 → '漲 5%'（整數，示意的假設） */
+const movePct0 = (r: number): string => `${r < 0 ? T.move.down : T.move.up} ${pct0(Math.abs(r) * 100)}%`
 const pctAbs1 = (r: number): string => `${(Math.abs(r) * 100).toFixed(1)}%`
 /** 股票＋借據以外剩下的（現金等）：標註寫出來，加起來才看得到 100（mid-r2：34＋64＝98，剩下的呢） */
 const restPct = (c: TextContext, productId: string): number => Math.max(0, 100 - c.assetClassPct(productId, 'stock') - c.assetClassPct(productId, 'bond'))
@@ -686,15 +688,18 @@ export const COURSE_STEPS: Step[] = [
     line: '拖**債券比例|bond**。看風暴後**少多少|loss**',
     fallbackLine: () => `四成債券，風暴後**少掉 ${pct0(portNow(40).after.lossPct)}%|loss**`,
     more: () =>
-      `組合塔＝股票加債券疊在一起。這場風暴是示意：股票跌 ${pct0(-STORM.stock * 100)}%，債券漲 ${pct0(STORM.bond * 100)}%。債券多，少掉的通常比較少。也有股債一起跌的風暴，債券不保證漲。`,
+      `組合塔＝股票加債券疊在一起。這裡的風暴是示意，數字是假設的。債券多，通常少掉的比較少。像 2022 年那樣，股債也會一起跌。`,
+    fallbackMore: () =>
+      `組合塔＝股票加債券疊在一起。示意風暴：股票跌 ${pct0(-STORMS[0]!.stock * 100)}%，債券漲 ${pct0(STORMS[0]!.bond * 100)}%。股債一起跌時，四成債券也少掉 ${pct0(portNow(40, 1).after.lossPct)}%。像 2022 年那樣，股債也會一起跌。`,
     mark: 'illustrative',
+    // 大數字等龍捲風掃到塔才數（之前顯示「…」，不顯示還沒發生的 0%）；note 寫出這場風暴的假設
     bigNumber: (_c, v) => {
-      const n = portNow(v.bondPct)
-      const all = portNow(0).after.lossPct
-      return { value: `${pct0(n.after.lossPct)}%`, label: '這座塔在風暴裡少掉', fraction: n.after.lossPct / all, note: `整條＝全放股票少掉 ${pct0(all)}%`, colorKey: 'loss', mark: 'illustrative' }
+      const n = portNow(v.bondPct, v.storm)
+      const s = STORMS[n.storm]!
+      return { value: `${pct0(n.after.lossPct)}%`, label: '這座塔在風暴裡少掉', note: `假設：股票${movePct0(s.stock)}、債券${movePct0(s.bond)}`, colorKey: 'loss', mark: 'illustrative' }
     },
-    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'portfolio' }, event: { kind: 'tornado', numberAtX: PORT_LAYOUT.x }, values: { bondPct: 0 }, cityLabels: false },
-    controls: ['bondPct'],
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'portfolio' }, event: { kind: 'tornado', numberAtX: PORT_LAYOUT.x }, values: { bondPct: 0, storm: 0 }, cityLabels: false },
+    controls: ['bondPct', 'storm'],
     ranges: { bondPct: [0, PORT_MAX_BOND] },
     until: { control: 'bondPct', min: 40 },
   },

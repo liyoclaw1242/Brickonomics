@@ -38,6 +38,8 @@ export const T = {
   },
   /** 研究數據卡（a-dt）：一手出處的研究數字 */
   research: { title: '研究怎麼說', source: (cite: string) => `出處：${cite}` },
+  /** 大數字卡等事件發生前的佔位（不顯示還沒發生的 0） */
+  waiting: '…',
   /** 比較步驟的提醒（mid-r1：比較結果一面倒，被讀成投資建議） */
   compareNote: '只是比較，不是叫你買或賣',
   /** 課內的第幾步（mid-r1：章的編號在同一章裡不動，她以為按壞了） */
@@ -109,6 +111,9 @@ export const T = {
     /** e-dca：定期定額買了幾個月 */
     months: '經過月數',
     monthsValue: (v: number) => `${v} 個月`,
+    /** a-port 選哪一種示意風暴（0 股跌債漲、1 股債一起跌） */
+    storm: '風暴種類',
+    stormValue: (v: number) => (['股跌、債漲', '股債一起跌'] as const)[Math.round(v)] ?? '',
     /** a-rebal 走到哪一步（0 一開始、1 股票漲了一年、2 剪高補低） */
     rebal: '進度',
     rebalValue: (v: number) => (['一開始', '股票漲了一年', '剪高補低'] as const)[Math.round(v)] ?? '',

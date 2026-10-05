@@ -940,26 +940,29 @@ describe('mid-r1 carried into 高階: the city steps back on prop steps', () => 
 
 describe('Plan 8 高階: 自己蓋組合塔 (a-port)', () => {
   const s = () => byId('a-port')
-  it('drag the bond share 0 → 40% (gate); the 🌪 storm sweeps on entry and the card waits until it reaches the tower', () => {
-    expect(s().controls).toEqual(['bondPct'])
-    expect(s().scene.values?.bondPct).toBe(0)
+  it('drag the bond share 0 → 40% (gate); a second slider picks the storm; the 🌪 storm sweeps on entry and the card waits until it reaches the tower', () => {
+    expect(s().controls).toEqual(['bondPct', 'storm'])
+    expect(s().scene.values).toMatchObject({ bondPct: 0, storm: 0 })
     expect(controlRange(s(), 'bondPct')).toEqual([0, 80])
+    expect(controlRange(s(), 'storm')).toEqual([0, 1])
     expect(s().until).toEqual({ control: 'bondPct', min: 40 })
     expect(s().scene.event).toEqual({ kind: 'tornado', numberAtX: 0 })
     expect(s().scene.eventWhen).toBeUndefined()
     expect(stripMarkup(lineOf(s(), ctx))).toBe('拖債券比例。看風暴後少多少')
   })
-  it('big number: how much this tower lost in the example storm (stocks −40%, bonds +5%), following the slider', () => {
-    expect(bigOf(s(), { bondPct: 0 })).toMatchObject({ value: '40%', label: '這座塔在風暴裡少掉', fraction: 1, colorKey: 'loss', mark: 'illustrative' }) // 100 × 0.4
+  it('big number: how much this tower lost, with the storm assumption on the card (adv-r1: bonds +5% must be visible as an assumption)', () => {
+    expect(bigOf(s(), { bondPct: 0 })).toEqual({ value: '40%', label: '這座塔在風暴裡少掉', note: '假設：股票跌 40%、債券漲 5%', colorKey: 'loss', mark: 'illustrative' }) // 100 × 0.4
     expect(bigOf(s(), { bondPct: 40 })!.value).toBe('22%') // 100 − (60 × 0.6 + 40 × 1.05) = 100 − 78
-    expect(bigOf(s(), { bondPct: 40 })!.fraction).toBeCloseTo(22 / 40, 12)
     expect(bigOf(s(), { bondPct: 80 })!.value).toBe('4%') // 100 − (12 + 84)
-    expect(bigOf(s())!.note).toBe('整條＝全放股票少掉 40%')
+    // 股債一起跌（像 2022 年；示意）：60 × 0.75 + 40 × 0.85 = 79 → 少 21%
+    expect(bigOf(s(), { bondPct: 40, storm: 1 })).toMatchObject({ value: '21%', note: '假設：股票跌 25%、債券跌 15%' })
     expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('四成債券，風暴後少掉 22%')
   })
-  it('says the storm is an example and bonds are not guaranteed to rise', () => {
-    expect(moreOf(s(), ctx)).toContain('股票跌 40%，債券漲 5%')
-    expect(moreOf(s(), ctx)).toContain('債券不保證漲')
+  it('says the storm is an example, numbers are assumed, and stocks and bonds can fall together (like 2022) — no specific historical figures', () => {
+    expect(moreOf(s(), ctx)).toContain('數字是假設的')
+    expect(moreOf(s(), ctx)).toContain('像 2022 年那樣，股債也會一起跌')
+    expect(moreOf(s(), ctx)).not.toMatch(/2022 年[^，。]*\d+%/)
+    expect(resolve(s().fallbackMore)).toContain('四成債券也少掉 21%')
   })
 })
 

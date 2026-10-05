@@ -1,4 +1,4 @@
-import { STORM, stressTest, type StressResult } from '../../sim/portfolio'
+import { STORMS, stressTest, type StressResult } from '../../sim/portfolio'
 import { STORM as TORNADO, timeAtX } from '../events/tornado'
 import { clamp01, ramp, smooth } from '../events/ease'
 import { IMPACT_TIME } from '../events/lightning'
@@ -26,13 +26,17 @@ export const PORT_MAX_BOND = 80
 /** 一座塔在廣場中間：寬 w；100 萬＝height 高 */
 export const PORT_LAYOUT = { x: 0, w: 5, height: 12 } as const
 
-export type PortNow = { bondPct: number; stockPct: number; before: { stock: number; bond: number }; after: StressResult }
+export type PortNow = { bondPct: number; stockPct: number; storm: number; before: { stock: number; bond: number }; after: StressResult }
+
+/** 風暴種類拉桿 → 第幾種（0 股跌債漲、1 股債一起跌；sim/portfolio STORMS） */
+export const portStormIndex = (v: number): number => Math.min(STORMS.length - 1, Math.max(0, Math.round(Number.isFinite(v) ? v : 0)))
 
 /** 拉桿值 → 債券比例（取到 10 的倍數、限制在 0..PORT_MAX_BOND）與風暴前後各一截多少（投入 100） */
-export function portNow(bondPct: number): PortNow {
+export function portNow(bondPct: number, storm = 0): PortNow {
   const b = Math.min(PORT_MAX_BOND, Math.max(0, Math.round((Number.isFinite(bondPct) ? bondPct : 0) / 10) * 10))
   const stockPct = 100 - b
-  return { bondPct: b, stockPct, before: { stock: stockPct, bond: b }, after: stressTest({ stockPct, scenario: STORM }) }
+  const s = portStormIndex(storm)
+  return { bondPct: b, stockPct, storm: s, before: { stock: stockPct, bond: b }, after: stressTest({ stockPct, scenario: STORMS[s]! }) }
 }
 
 /** 龍捲風掃到塔的進度 0..1（t＝事件時間；null＝還沒來） */
@@ -43,8 +47,8 @@ export function portDamageAt(t: number | null): number {
 }
 
 /** 塔的兩截高度（世界單位）：damage 0＝風暴前、1＝風暴後，中間線性內插；top＝塔頂 */
-export function portTower(bondPct: number, damage: number): { stock: number; bond: number; top: number } {
-  const n = portNow(bondPct)
+export function portTower(bondPct: number, damage: number, storm = 0): { stock: number; bond: number; top: number } {
+  const n = portNow(bondPct, storm)
   const k = PORT_LAYOUT.height / 100
   const stock = (n.before.stock + (n.after.stock - n.before.stock) * damage) * k
   const bond = (n.before.bond + (n.after.bond - n.before.bond) * damage) * k

@@ -6,6 +6,10 @@ export type StormScenario = { stock: number; bond: number }
 /** 舉例的風暴（≈ 示意，不是預測）：股票跌 40%、債券漲 5% */
 export const STORM: StormScenario = { stock: -0.4, bond: 0.05 }
 
+/** 第二種舉例風暴（≈ 示意，不是歷史數字）：股債一起跌（像 2022 年那種）。STORMS＝畫面可選的兩種 */
+export const STORM_BOTH: StormScenario = { stock: -0.25, bond: -0.15 }
+export const STORMS: readonly StormScenario[] = [STORM, STORM_BOTH]
+
 export type StressResult = {
   /** 風暴後股票那一截、債券那一截（起點合計 100） */
   stock: number
