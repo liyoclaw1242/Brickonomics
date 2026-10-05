@@ -1,0 +1,134 @@
+import { describe, expect, it } from 'vitest'
+import { universe } from '../data'
+import { HEDGE, TRADING_DAYS, calmPath, hedgeExample, hedgeRun } from './hedge'
+
+describe('hedge example constant (≈ illustrative; generic inverse ETF, no real ticker)', () => {
+  it('0050 with 20 of 100 moved into an inverse ETF; inverse ETF yearly cost 1% is an assumption (✎)', () => {
+    expect(HEDGE).toEqual({ base: '0050', hedgePct: 20, inverseFee: 0.01, strikeDrop: 0.1, calmDays: 250, calmRise: 0.1, choppyMove: 0.02, boomRise: 0.3 })
+    expect(TRADING_DAYS).toBe(250)
+  })
+})
+
+describe('calmPath (a steady move spread evenly over the days)', () => {
+  it('rise 10% over 250 days: day i = 100 × 1.1^(i ÷ 250); ends at 110', () => {
+    const p = calmPath(250, 0.1)
+    expect(p).toHaveLength(251)
+    expect(p[125]).toBeCloseTo(100 * Math.sqrt(1.1), 10)
+    expect(p.at(-1)).toBeCloseTo(110, 10)
+    expect(calmPath(3, 0)).toEqual([100, 100, 100, 100])
+  })
+})
+
+describe('hedgeExample (start 100; 0050 fee from the data, 0.14%)', () => {
+  const r = hedgeExample(universe)
+
+  it('uses the verified 0050 expense ratio', () => {
+    expect(r.baseFee).toBe(0.0014)
+    expect(r.baseFeeVerified).toBe(true)
+  })
+
+  it('⚡ strike (one day −10%): plain 100 × 0.9 = 90; hedged 80 × 0.9 + 20 × 1.1 = 72 + 22 = 94 (one day of fees is tiny: × 0.9986^(1/250), × 0.99^(1/250))', () => {
+    expect(r.strike.plain).toBeCloseTo(90 * 0.9986 ** (1 / 250), 10)
+    expect(r.strike.hedged).toBeCloseTo(72 * 0.9986 ** (1 / 250) + 22 * 0.99 ** (1 / 250), 10)
+    expect(r.strike.plain).toBeCloseTo(90, 2)
+    expect(r.strike.hedged).toBeCloseTo(94, 2)
+    // 損失變小：少掉 10 → 少掉 6
+    expect(r.strike.diff).toBeCloseTo(4, 2)
+  })
+
+  it('calm flat year (market 0%): plain 100 × 0.9986 = 99.86; hedged 80 × 0.9986 + 20 × 0.99 = 79.888 + 19.8 = 99.688 → costs 0.172 a year', () => {
+    expect(r.flat.plain).toBeCloseTo(99.86, 10)
+    expect(r.flat.hedged).toBeCloseTo(99.688, 10)
+    expect(r.flat.diff).toBeCloseTo(-0.172, 10)
+  })
+
+  it('calm rising year (+10% over 250 days): plain 110 × 0.9986 = 109.846; inverse side 20 × (1 − r)^250 × 0.99 with r = 1.1^(1/250) − 1 ≈ 0.00038131 → 20 × 0.909058 × 0.99 = 17.999; hedged 87.877 + 17.999 = 105.876 → costs 3.97', () => {
+    const daily = 1.1 ** (1 / 250) - 1
+    expect(r.rising.plain).toBeCloseTo(109.846, 10)
+    expect(r.rising.hedged).toBeCloseTo(80 * 1.1 * 0.9986 + 20 * (1 - daily) ** 250 * 0.99, 9)
+    expect(r.rising.hedged).toBeCloseTo(105.876, 3)
+    expect(r.rising.diff).toBeCloseTo(-3.970, 3)
+  })
+
+  it('cash comparison (60 in 0050 + 40 cash, same net exposure 80 − 20 = 60): ⚡ 60 × 0.9 + 40 = 94 (same as the hedge); flat 60 × 0.9986 + 40 = 99.916; rising 60 × 1.1 × 0.9986 + 40 = 105.908', () => {
+    expect(r.strike.cash).toBeCloseTo(54 * 0.9986 ** (1 / 250) + 40, 10)
+    expect(r.strike.cash).toBeCloseTo(94, 2)
+    expect(r.flat.cash).toBeCloseTo(99.916, 10)
+    expect(r.rising.cash).toBeCloseTo(105.9076, 10)
+    // 現金在平時都比反向 ETF 好：99.916 > 99.688；105.908 > 105.876
+    expect(r.flat.cash!).toBeGreaterThan(r.flat.hedged)
+    expect(r.rising.cash!).toBeGreaterThan(r.rising.hedged)
+  })
+
+  it('rows for the screen: plain / inverse / cash, with the 100 split and the three scenarios; inverse fee is an assumption', () => {
+    expect(r.inverseFeeAssumed).toBe(true)
+    expect(r.rows.map((x) => x.id)).toEqual(['plain', 'inverse', 'cash'])
+    expect(r.rows.map((x) => [x.basePct, x.inversePct, x.cashPct])).toEqual([
+      [100, 0, 0],
+      [80, 20, 0],
+      [60, 0, 40],
+    ])
+    expect(r.rows[1]).toMatchObject({ strike: r.strike.hedged, flat: r.flat.hedged, rising: r.rising.hedged })
+    expect(r.rows[2]).toMatchObject({ strike: r.strike.cash, flat: r.flat.cash, rising: r.rising.cash })
+  })
+
+  it('both sides: the hedge helps only in the strike; in calm or rising days it always costs', () => {
+    expect(r.strike.diff).toBeGreaterThan(0)
+    expect(r.flat.diff).toBeLessThan(0)
+    expect(r.rising.diff).toBeLessThan(r.flat.diff)
+  })
+})
+
+describe('hedgeRun', () => {
+  it('hedgePct 0 is the plain tower; hedgePct 50 on a −10% day with no fees: 50 × 0.9 + 50 × 1.1 = 100', () => {
+    const z = hedgeRun([100, 90], { hedgePct: 0, baseFee: 0, inverseFee: 0 })
+    expect(z.hedged).toBeCloseTo(z.plain, 12)
+    expect(hedgeRun([100, 90], { hedgePct: 50, baseFee: 0, inverseFee: 0 }).hedged).toBeCloseTo(100, 10)
+    // hedgePct 50 → 現金對照組 0050 放 0、現金 100：100
+    expect(hedgeRun([100, 90], { hedgePct: 50, baseFee: 0, inverseFee: 0 }).cash).toBe(100)
+    // hedgePct 60 → 淨部位是負的，現金做不到
+    expect(hedgeRun([100, 90], { hedgePct: 60, baseFee: 0, inverseFee: 0 }).cash).toBeNull()
+  })
+
+  it('rejects bad inputs, naming the parameter', () => {
+    expect(() => hedgeRun([100, 90], { hedgePct: 120, baseFee: 0, inverseFee: 0 })).toThrow(/hedgePct/)
+    expect(() => hedgeRun([100, 90], { hedgePct: 20, baseFee: -0.1, inverseFee: 0 })).toThrow(/baseFee/)
+    expect(() => hedgeRun([100, 90], { hedgePct: 20, baseFee: 0, inverseFee: 1 })).toThrow(/inverseFee/)
+    expect(() => hedgeRun([], { hedgePct: 20, baseFee: 0, inverseFee: 0 })).toThrow(/path/)
+    expect(() => calmPath(1.5, 0.1)).toThrow(/days/)
+    expect(() => calmPath(10, -1)).toThrow(/rise/)
+  })
+})
+
+describe('fix round: a choppy flat-ending year and a big-rise year (the hedge costs more than the fee)', () => {
+  it('choppyFlatPath: up m, then back to where it was; an even number of days ends exactly where it started', async () => {
+    const { choppyFlatPath } = await import('./hedge')
+    const p = choppyFlatPath(4, 0.02)
+    expect(p).toHaveLength(5)
+    expect(p[1]).toBeCloseTo(102, 12)
+    expect(p[2]).toBeCloseTo(100, 12)
+    expect(p[4]).toBeCloseTo(100, 12)
+    expect(choppyFlatPath(250, 0.02).at(-1)).toBeCloseTo(100, 9)
+  })
+  it('choppy year (±2% a day, flat at the end): plain 100 × 0.9986 = 99.86; the inverse part decays by (1 − m)(1 + m/(1+m)) every two days → hedge costs ≈ 2.02', async () => {
+    const { hedgeExample } = await import('./hedge')
+    const { universe } = await import('../data')
+    const r = hedgeExample(universe)
+    const pair = (1 - 0.02) * (1 + 0.02 / 1.02) // 0.999216
+    expect(r.choppy.plain).toBeCloseTo(99.86, 9)
+    expect(r.choppy.hedged).toBeCloseTo(80 * 0.9986 + 20 * pair ** 125 * 0.99, 9)
+    expect(r.choppy.plain - r.choppy.hedged).toBeCloseTo(2.02, 2) // 99.86 − (79.888 + 20 × 0.9066 × 0.99 = 17.95)
+    expect(r.choppy.cash).toBeCloseTo(60 * 0.9986 + 40, 9) // 現金：不扣費、不耗損
+  })
+  it('big-rise year (+30% over 250 days): plain 130 × 0.9986 = 129.818; hedged costs ≈ 10.9, and cash ≈ 11.8 (steady rise: cash costs a bit more)', async () => {
+    const { hedgeExample } = await import('./hedge')
+    const { universe } = await import('../data')
+    const r = hedgeExample(universe)
+    const d = 1.3 ** (1 / 250) - 1
+    expect(r.boom.plain).toBeCloseTo(129.818, 3)
+    expect(r.boom.hedged).toBeCloseTo(80 * 1.3 * 0.9986 + 20 * (1 - d) ** 250 * 0.99, 6)
+    expect(r.boom.cash).toBeCloseTo(60 * 1.3 * 0.9986 + 40, 9)
+    expect(r.boom.plain - r.boom.hedged).toBeGreaterThan(10)
+    expect(r.rows.map((x) => [x.choppy, x.boom])).toEqual([[r.choppy.plain, r.boom.plain], [r.choppy.hedged, r.boom.hedged], [r.choppy.cash, r.boom.cash]])
+  })
+})

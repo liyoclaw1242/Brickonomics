@@ -5,6 +5,16 @@ import { accumulateVsPayout, EXDIV, exDivTimeline, principalTrap, TRAP_DEMO } fr
 import { T } from '../ui/strings'
 import { DD_DEMO, DD_TROUGH, ddNow, ddQuake, PE_DEMO, peBubble, peYears, RATE_DEMO, rateFreeze, ratePrice, DCA_DEMO, dcaNow, dcaSunny, INFL_DEMO, inflHeat, inflReal } from '../scene/layout/intermediate'
 import { maxDrawdown } from '../sim/drawdown'
+import { STORMS } from '../sim/portfolio'
+import { corrLightning, corrNow, DT_RANGE, DUR_LAYOUT, dtNow, durFreeze, durNow, feeSunny, feeTreesNow, HEDGE_CASES, hedgeCaseIndex, hedgeQuake, levNow, levWave, PORT_LAYOUT, PORT_MAX_BOND, portNow, rebalNow } from '../scene/layout/advanced'
+import { LEVERAGE } from '../sim/leverage'
+import { HEDGE } from '../sim/hedge'
+import { REBALANCE } from '../sim/rebalance'
+import { FEE_DRAG } from '../sim/feeDrag'
+import { DURATION } from '../sim/duration'
+import { DAY_TRADE, DAY_TRADE_COST, dayTradeCostVerified } from '../sim/dayTrade'
+import { DAY_TRADE_RESEARCH, researchVerified, type ResearchId } from '../data/research'
+import type { ResearchRow } from './types'
 
 /**
  * 課程內文。數字一律由 TextContext 即時計算。
@@ -19,6 +29,13 @@ const n0 = (v: number): string => v.toFixed(0)
 /** 0.015 → '1.5%' */
 const pct1 = (r: number): string => `${Number((r * 100).toFixed(2))}%`
 const NICK = T.nick
+/** 0.00435 → '0.435%'；0.001425 → '0.1425%'（交易成本要看到小數） */
+const pct3 = (r: number): string => `${(r * 100).toFixed(3)}%`
+const pct4 = (r: number): string => `${Number((r * 100).toFixed(4))}%`
+/** −0.1488 → '14.9%'（句子已說「跌」，用絕對值） */
+/** −0.4 → '跌 40%'；0.05 → '漲 5%'（整數，示意的假設） */
+const movePct0 = (r: number): string => `${r < 0 ? T.move.down : T.move.up} ${pct0(Math.abs(r) * 100)}%`
+const pctAbs1 = (r: number): string => `${(Math.abs(r) * 100).toFixed(1)}%`
 /** 股票＋借據以外剩下的（現金等）：標註寫出來，加起來才看得到 100（mid-r2：34＋64＝98，剩下的呢） */
 const restPct = (c: TextContext, productId: string): number => Math.max(0, 100 - c.assetClassPct(productId, 'stock') - c.assetClassPct(productId, 'bond'))
 /** f-6 的後收級別（出門費＝遞延手續費 CDSC） */
@@ -38,12 +55,47 @@ const perMillion = (er: number): string => T.yuan(er * 1_000_000)
 /** 時間軸上「發金幣那一刻」的位置；s-5 拉到這裡為止（大數字只算到這一刻，合計永遠不變） */
 export const EXDIV_AFTER_PHASE = 0.5
 
+/** 研究數據卡的一列：數字從資料（不到／剛好），沒查證就標 ？ */
+const researchRow = (id: ResearchId, text: string): ResearchRow => {
+  const f = DAY_TRADE_RESEARCH[id]
+  const v = `${pct0(f.value * 100)}%`
+  return { value: f.bound === 'lessThan' ? `不到 ${v}` : v, text, ...(researchVerified(id) ? {} : { mark: 'unverified' as const }) }
+}
+
+/** a-fee30：兩檔的內扣費用從資料讀；資料沒有時 undefined（不顯示數字） */
+const fee30Now = (c: TextContext, years: number) => {
+  const active = c.expenseRatio(FEE_DRAG.active)
+  const passive = c.expenseRatio(FEE_DRAG.passive)
+  return active === undefined || passive === undefined ? undefined : feeTreesNow(years, { active, passive })
+}
+
+/** a-hedge：三種做法在三種情境的差（萬）。正的＝少賠或多的；cost＝加反向少賺／付掉的 */
+const hedgeGaps = (c: TextContext) => {
+  const ex = c.hedge()
+  const row = (id: 'plain' | 'inverse' | 'cash') => ex.rows.find((r) => r.id === id)!
+  const [p, i, k] = [row('plain'), row('inverse'), row('cash')]
+  return {
+    choppy: { inverse: p.choppy - i.choppy, cash: p.choppy - k.choppy },
+    boom: { inverse: p.boom - i.boom, cash: p.boom - k.boom },
+    strike: { inverse: i.strike - p.strike, cash: k.strike - p.strike },
+  }
+}
+const n1 = (v: number): string => v.toFixed(1)
+
 /** 初階口訣：初階結尾（u-6）與中階開頭的複習（m-0）用同一份 */
 const BEGINNER_RECAP: RecapLine[] = [
   { icon: '🧱', text: '股票＝拿一顆方塊' },
   { icon: '📜', text: '債券＝借據，固定給金幣' },
   { icon: '🚜', text: '基金＝怪手幫你挑（要收費）' },
   { icon: '🧩', text: 'ETF＝照藍圖挑（通常較便宜）' },
+]
+
+/** 中階口訣：中階結尾（m-fin）與高階開頭的複習（a-0）用同一份 */
+const MID_RECAP: RecapLine[] = [
+  { icon: '🧱', text: '股票看總報酬、最大跌幅、本益比' },
+  { icon: '📜', text: '利率漲，舊借據現價跌；通膨吃利息' },
+  { icon: '🚜', text: '基金費用：進門、出門、每年' },
+  { icon: '🧩', text: 'ETF 看重疊；定期定額讓成本平均' },
 ]
 
 export const LEVELS: Level[] = [
@@ -502,7 +554,7 @@ export const LEVELS: Level[] = [
 
 /**
  * 課程專用的新步驟（不在 LEVELS 裡，只由 courses.ts 排進課程）：
- * m-0＝中階開頭的初階口訣複習；m-fin＝中階結尾的口訣卡（高階還沒開放，所以推薦自由玩）。
+ * m-0＝中階開頭的初階口訣複習；m-fin＝中階結尾的口訣卡（推薦高階）；a-0…a-fin＝高階（Plan 8，最後推薦自由玩）。
  */
 export const COURSE_STEPS: Step[] = [
   {
@@ -612,15 +664,248 @@ export const COURSE_STEPS: Step[] = [
   {
     id: 'm-fin',
     title: '中階口訣卡',
-    line: '學完中階！按**自由玩**到處看',
+    // Plan 8：高階開放了，結尾推薦下一階（面板上的「下一階：高階」按鈕）
+    line: '學完中階！下一階是**高階**',
     fallbackLine: '中階課程**完成**了',
-    more: '恭喜完成中階！自由玩已經解鎖。所有商品都能自由切開、拆開、比較。',
-    fallbackMore: '恭喜完成中階！在支援 3D 的瀏覽器上，還可以自由玩。自由玩裡能切開、拆開、比較。',
+    more: '恭喜完成中階！自由玩已經解鎖。下一階高階：怎麼組合、怎麼算成本、怎麼控風險。',
+    fallbackMore: '恭喜完成中階！在支援 3D 的瀏覽器上，還可以自由玩。下一階是高階。',
+    recap: MID_RECAP,
+    scene: { camera: 'overview', product: null },
+  },
+  // ───────────── 高階（Plan 8）：怎麼組合、怎麼控風險 ─────────────
+  {
+    id: 'a-0',
+    // adv-r1：選了高階卻先被複習，像被當新手。改成 10 秒暖身，會了就跳過
+    title: '中階暖身',
+    line: '10 秒暖身。會了就按**下一步**',
+    more: '這四句是中階學到的重點，已經會就直接往下。高階教怎麼組合、怎麼算成本、怎麼控風險。',
+    recap: MID_RECAP,
+    scene: { camera: 'overview', product: null },
+  },
+  {
+    // 高階開頭：自己蓋組合塔。🌪 一進來就掃過（大數字等它掃到塔才數）；拖債券比例，塔直接畫風暴後的樣子
+    id: 'a-port',
+    title: '自己蓋組合塔',
+    line: '拖**債券比例|bond**。看風暴後**少多少|loss**',
+    fallbackLine: () => `四成債券，風暴後**少掉 ${pct0(portNow(40).after.lossPct)}%|loss**`,
+    more: () =>
+      `組合塔＝股票加債券疊在一起。這裡的風暴是示意，數字是假設的。債券多，通常少掉的比較少。像 2022 年那樣，股債也會一起跌。`,
+    fallbackMore: () =>
+      `組合塔＝股票加債券疊在一起。示意風暴：股票跌 ${pct0(-STORMS[0]!.stock * 100)}%，債券漲 ${pct0(STORMS[0]!.bond * 100)}%。股債一起跌時，四成債券也少掉 ${pct0(portNow(40, 1).after.lossPct)}%。像 2022 年那樣，股債也會一起跌。`,
+    mark: 'illustrative',
+    // 大數字等龍捲風掃到塔才數（之前顯示「…」，不顯示還沒發生的 0%）；note 寫出這場風暴的假設
+    bigNumber: (_c, v) => {
+      const n = portNow(v.bondPct, v.storm)
+      const s = STORMS[n.storm]!
+      return { value: `${pct0(n.after.lossPct)}%`, label: '這座塔在風暴裡少掉', note: `假設：股票${movePct0(s.stock)}、債券${movePct0(s.bond)}`, colorKey: 'loss', mark: 'illustrative' }
+    },
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'portfolio' }, event: { kind: 'tornado', numberAtX: PORT_LAYOUT.x }, values: { bondPct: 0, storm: 0 }, cityLabels: false },
+    controls: ['bondPct', 'storm'],
+    ranges: { bondPct: [0, PORT_MAX_BOND] },
+    until: { control: 'bondPct', min: 40 },
+  },
+  {
+    // 高階股票章：相關性。兩組用彈簧連著的方塊；⚡ 打中兩組裡的 A（同一家），一起動的夥伴跟著跌，一上一下的夥伴漲
+    id: 'a-corr',
+    title: '一起跌或抵消',
+    line: '**一起動|together**的一起跌，**一上一下|opposite**的抵消',
+    fallbackLine: () => `一起動跌 ${pct0(-corrNow().mixTogether * 100)}%。一上一下 ${pct0(Math.abs(corrNow().mixOpposite) * 100)}%`,
+    more: '相關性＝兩顆是不是一起漲跌。一起動的，⚡ 打一顆，兩顆一起跌。一上一下的，一顆跌、一顆漲，合起來晃得小。這是示意，真實的相關性會變，大跌時常一起跌。',
+    mark: 'illustrative',
+    // 等閃電打中才數（事件的 numberDelay）
+    bigNumber: () => {
+      const n = corrNow()
+      return { value: `${pct0(Math.abs(n.mixTogether) * 100)}% vs ${pct0(Math.abs(n.mixOpposite) * 100)}%`, label: 'A 出事那天合起來跌', note: '各放一半。一起不一起動，這叫相關性', colorKey: 'loss', mark: 'illustrative' }
+    },
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'correlation' }, event: corrLightning(), cityLabels: false },
+  },
+  {
+    // 高階股票章：當沖的成本。賺賠都 1%（示意）：勝率五五波時不算成本是公平的遊戲；每次進出付兩次手續費（公告費率，
+    // 可拉折數）＋賣出的交易成本（TW_TRADING），本金一路磨掉。可拉勝率，卡片寫打平要多少勝率（adv-r1：不讓人覺得是拿牌告價嚇人）。
+    // 不教怎麼當沖，只說為什麼多數人賠
+    id: 'a-dt',
+    title: '當沖的成本',
+    line: '拖**進出次數**。看**交易成本|loss**吃掉多少',
+    fallbackLine: () => `進出 ${DAY_TRADE.trades} 次。本金剩 **${wan(dtNow(DAY_TRADE.trades).capital)}**`,
+    more: () =>
+      `每次進出付兩次手續費，加上賣出的交易成本。手續費公告費率 ${pct4(DAY_TRADE_COST.buyFee)}，可拉折數看看。賺賠各 ${pct1(DAY_TRADE.avgWin)}、一年 ${DAY_TRADE.trades} 次是示意。勝率沒高過打平那條線，成本就把本金磨掉。`,
+    mark: 'illustrative',
+    // 還沒拖時不顯示；成本有一項沒查證（或過了適用期限）就標 ？
+    bigNumber: (_c, v) => {
+      const d = dtNow(v.trades, v.feeDiscount, v.winRate)
+      if (d.n === 0) return undefined
+      return {
+        value: wan(d.capital),
+        label: `進出 ${d.n} 次後的本金`,
+        // 本金變多時（勝率拉高）一定要說這有多難：要一直贏過打平勝率，研究說能穩定做到的人很少（adv-r1 final review）
+        note:
+          d.capital > 100
+            ? `要一直贏 ${T.pct1(d.breakEven)} 以上；研究：能穩定做到的${researchRow('reliablyProfitable', '').value}`
+            : `打平要勝率 ${T.pct1(d.breakEven)}（每次成本 ${pct3(d.costPerTrade)}）`,
+        colorKey: 'stock',
+        mark: dayTradeCostVerified() ? 'illustrative' : 'unverified',
+      }
+    },
+    research: () => {
+      const a = DAY_TRADE_RESEARCH.reliablyProfitable
+      const b = DAY_TRADE_RESEARCH.likelyToLose
+      return {
+        rows: [
+          { ...researchRow('reliablyProfitable', '扣掉交易成本後，能穩定贏過大盤的人'), source: `Barber 等 ${a.year}・台灣 ${a.sample}` },
+          { ...researchRow('likelyToLose', '當沖客：之後當沖很可能賠錢'), source: `Barber 等 ${b.year}` },
+        ],
+        cite: '兩篇研究，同一組作者・台灣當沖客',
+        refs: [a, b].map((f) => ({ citation: f.citation, doi: f.doi })),
+      }
+    },
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'dayTrade' }, values: { trades: 0, feeDiscount: 1, winRate: DAY_TRADE.winRate }, cityLabels: false },
+    controls: ['trades', 'feeDiscount', 'winRate'],
+    ranges: { trades: [0, DAY_TRADE.trades], feeDiscount: [DT_RANGE.discount[0], DT_RANGE.discount[1]], winRate: [DT_RANGE.winRate[0], DT_RANGE.winRate[1]] },
+    until: { control: 'trades', min: DAY_TRADE.trades },
+  },
+  {
+    // 高階債券章：存續期間。同樣的利率變動，長借據（長板）翹得多；拉到 3% 時 ❄️ 寒流，20 年那張霜更厚
+    id: 'a-dur',
+    title: '長短借據',
+    line: '拖**市場利率**。**長借據|long**跌更多',
+    fallbackLine: () => `利率漲 ${pct1(DUR_LAYOUT.rateMax - DURATION.rateFrom)}。長借據跌 **${pctAbs1(durNow(DUR_LAYOUT.rateMax).long)}|loss**`,
+    more: () =>
+      `存續期間＝大約還要多久才拿回錢。越長，利率一動，價格動越多。利率跌時，長借據也漲比較多。示意：${DURATION.short} 年和 ${DURATION.long} 年，利率從 ${pct1(DURATION.rateFrom)} 漲上去。`,
+    mark: 'illustrative',
+    // 還沒拖時不顯示；note 一直提醒到期還是拿回 100
+    bigNumber: (_c, v) => {
+      const d = durNow(v.rate)
+      if (d.rate <= DURATION.rateFrom) return undefined
+      return {
+        value: `${pctAbs1(d.short)} vs ${pctAbs1(d.long)}`,
+        label: '短借據 vs 長借據跌',
+        // adv-r1：「存續期間」這個詞要在畫面上接起來（先看到翹翹板，再命名）
+        note: `越長晃越大，這叫存續期間。到期都拿回 100`,
+        colorKey: 'loss',
+        mark: 'illustrative',
+      }
+    },
+    compare: true,
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'duration' }, event: durFreeze(), eventWhen: { control: 'rate', min: DUR_LAYOUT.rateMax }, values: { rate: DURATION.rateFrom }, cityLabels: false },
+    controls: ['rate'],
+    ranges: { rate: [DURATION.rateFrom, DUR_LAYOUT.rateMax] },
+    until: { control: 'rate', min: DUR_LAYOUT.rateMax },
+  },
+  {
+    // 高階基金章：主動 vs 被動 30 年。扣費前報酬假設一樣（示意 6%），只差每年的內扣費用（資料：1.88% vs 0.14%）；
+    // 🌤 兩棵樹跟著年數長高，紅帽子＝費用吃掉的（塔＋帽子一樣高＝扣費前一樣）
+    id: 'a-fee30',
+    title: '怪手 vs 藍圖',
+    line: '拖**經過年數**。**費用|loss**差一點，樹差很多',
+    fallbackLine: (c) => {
+      const n = fee30Now(c, FEE_DRAG.years)
+      return n ? `${n.years} 年後。兩棵樹差 **${wan(n.gap)}**` : '費用差一點，樹差很多'
+    },
+    more: (c) => {
+      const a = c.expenseRatio(FEE_DRAG.active)
+      const p = c.expenseRatio(FEE_DRAG.passive)
+      return [
+        '主動型＝怪手（經理人）挑；指數型＝照藍圖買。',
+        ...(a !== undefined && p !== undefined ? [`這檔基金扣 ${pctOf(a)}，0050 扣 ${pctOf(p)}。`] : []),
+        `費用都不含交易成本；假設扣費前每年 ${pct1(FEE_DRAG.grossReturn)}。`,
+        '扣費前誰賺得多不一定，這是示意。',
+      ].join('')
+    },
+    mark: 'illustrative',
+    // 還沒拖時不顯示；扣費前報酬一樣是假設，寫在卡片上（不藏在多說一點）
+    bigNumber: (c, v) => {
+      const n = fee30Now(c, v.periods)
+      if (!n || n.years === 0) return undefined
+      return { value: `差 ${wan(n.gap)}`, label: `${n.years} 年後，兩棵樹差`, note: `假設扣費前報酬一樣，每年 ${pct1(FEE_DRAG.grossReturn)}`, mark: 'illustrative' }
+    },
+    compare: true,
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'feeTrees' }, event: feeSunny(), values: { periods: 0 }, cityLabels: false },
+    controls: ['periods'],
+    ranges: { periods: [0, FEE_DRAG.years] },
+    until: { control: 'periods', min: FEE_DRAG.years },
+  },
+  {
+    // 高階 ETF 章：槓桿的耗損。大盤 −10%／+10% 來回 5 次（示意，通用名稱）；🌊 每道浪把 2 倍塔打矮一截。
+    // 反向塔也一起寫出來：大盤跌了，反向塔也沒賺（下一步的對沖接著講）
+    id: 'a-lev',
+    title: '槓桿的耗損',
+    line: '大盤來回晃，**2 倍塔|double**越來越矮',
+    fallbackLine: () => `來回 ${LEVERAGE.rounds} 次。2 倍塔**${movePct(levNow().double.at(-1)! / 100 - 1)}|loss**`,
+    more: () => {
+      const r = levNow().round
+      const m = pct0(LEVERAGE.move * 100)
+      return `2 倍 ETF＝每天的漲跌放大 2 倍。跌 ${m}% 再漲 ${m}%，大盤也少 ${pct0(r.plain * 100)}%。2 倍塔少 ${pct0(r.double * 100)}%，反向塔也少 ${pct0(r.inverse * 100)}%。這是示意，用通用名稱，不是真實商品。`
+    },
+    mark: 'illustrative',
+    // 等浪全部退了才數（wave numberAtEnd）；note 直接寫「以為的 2 倍」和實際（adv-r1：要自己心算 9.8）
+    bigNumber: () => {
+      const l = levNow()
+      const naive = pctAbs1(l.naiveDouble / 100 - 1)
+      return { value: movePct(l.double.at(-1)! / 100 - 1), label: `${LEVERAGE.rounds} 次來回後 2 倍塔`, note: `以為 2 倍會跌 ${naive}，實際跌 ${pctAbs1(l.double.at(-1)! / 100 - 1)}`, colorKey: 'double', mark: 'illustrative' }
+    },
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'leverage' }, event: levWave(), cityLabels: false },
+  },
+  {
+    // 高階 ETF 章：反向 ETF 對沖。兩邊都畫：平時（來回晃、大漲）反向那邊一直付代價，🌋 大跌那天少賠；
+    // 少買 0050 留現金一樣少賠、平時不付反向的費用與耗損。大盤崩跌＝🌋（規格 §4；⚡ 只用在單一公司）。
+    // 反向的費用 1% 是假設（✎，stepMarks 從 sim/hedge 推出來）
+    id: 'a-hedge',
+    title: '反向來對沖',
+    line: '拖**情境**。🌋 時少賠，平時**少賺|loss**',
+    fallbackLine: (c) => {
+      const g = hedgeGaps(c)
+      return `大跌少賠 ${n0(g.strike.inverse)} 萬。大漲少賺 ${n0(g.boom.inverse)} 萬`
+    },
+    more: () =>
+      `對沖＝放一點反向 ETF，大盤跌它漲。示意：${HEDGE.hedgePct}% 放反向，費用假設一年 ${pct1(HEDGE.inverseFee)}。來回晃假設每天上下 ${pct1(HEDGE.choppyMove)}，反向每天重設會磨掉。少買 0050、多留現金，🌋 時也一樣少賠。`,
+    mark: 'illustrative',
+    // 跟著情境：平時的代價、🌋 那天少賠多少；note 一直拿「少買 0050 留現金」來比
+    bigNumber: (c, v) => {
+      const g = hedgeGaps(c)
+      const which = HEDGE_CASES[hedgeCaseIndex(v.hedgeCase)]!
+      if (which === 'choppy') return { value: `${n1(g.choppy.inverse)} 萬`, label: '來回晃一年：加反向的代價', note: g.choppy.cash <= 0 ? '少買 0050 改留現金：不用付' : `少買 0050 改留現金：${n1(g.choppy.cash)} 萬`, colorKey: 'loss', mark: 'illustrative' }
+      if (which === 'boom') return { value: `少賺 ${n1(g.boom.inverse)} 萬`, label: '大漲那年：加反向少賺', note: `少買 0050 改留現金：少賺 ${n1(g.boom.cash)} 萬`, colorKey: 'loss', mark: 'illustrative' }
+      return { value: `少賠 ${n1(g.strike.inverse)} 萬`, label: '🌋 大跌那天：加反向少賠', note: `少買 0050 改留現金：一樣少賠 ${n1(g.strike.cash)} 萬`, mark: 'illustrative' }
+    },
+    compare: true,
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'hedge' }, event: hedgeQuake(), eventWhen: { control: 'hedgeCase', min: 2 }, values: { hedgeCase: 0 }, cityLabels: false },
+    controls: ['hedgeCase'],
+    ranges: { hedgeCase: [0, HEDGE_CASES.length - 1] },
+    until: { control: 'hedgeCase', min: HEDGE_CASES.length - 1 },
+  },
+  {
+    // 高階 ETF 章：再平衡。60/40 的塔，股票漲 30%（示意）後長歪（66%）；剪高補低，總數不變、比例回到 60%
+    id: 'a-rebal',
+    title: '剪高補低',
+    line: '拖**進度**。塔歪了就**剪高補低|stock**',
+    fallbackLine: () => `股票漲到 ${pct0(rebalNow(1).stockPct)}%。剪 ${wan(rebalNow(2).moved)}補債券`,
+    more: '再平衡＝把比例搬回目標。股票漲多了，賣一點股票、補一點債券。目的是讓風險回到原本，不保證賺比較多。這是示意，搬的時候也有交易成本。',
+    mark: 'illustrative',
+    // 一次只變一件事（adv-r1：前後都是「股票 60%」像壞掉）：一年後→股票 66%、塔歪；剪高補低→「搬了 7.2 萬」、站直
+    bigNumber: (_c, v) => {
+      const r = rebalNow(v.rebal)
+      if (r.stage === 2) return { value: `搬了 ${wan(r.moved)}`, label: '從股票搬到債券', note: `股票回到 ${REBALANCE.targetStockPct}%；總數 ${wan(r.total)}不變`, colorKey: 'stock', mark: 'illustrative' }
+      const note = r.stage === 0 ? `目標：股票 ${REBALANCE.targetStockPct}%` : `一年後股票漲 ${pct0(REBALANCE.stockReturn * 100)}%，塔歪了`
+      return { value: `股票 ${pct0(r.stockPct)}%`, label: '組合裡的股票比例', fraction: r.stockPct / 100, note, colorKey: 'stock', mark: 'illustrative' }
+    },
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'rebalance' }, values: { rebal: 0 }, cityLabels: false },
+    controls: ['rebal'],
+    ranges: { rebal: [0, 2] },
+    until: { control: 'rebal', min: 2 },
+  },
+  {
+    // 高階結尾：口訣卡 → 自由玩（最後一門課，沒有下一階）
+    id: 'a-fin',
+    title: '高階口訣卡',
+    line: '學完高階！按**自由玩**到處看',
+    fallbackLine: '高階課程**完成**了',
+    more: '恭喜完成高階！自由玩已經解鎖。所有商品都能自由切開、拆開、比較。',
+    fallbackMore: '恭喜完成高階！在支援 3D 的瀏覽器上，還可以自由玩。自由玩裡能切開、拆開、比較。',
     recap: [
-      { icon: '🧱', text: '股票看總報酬、最大跌幅、本益比' },
-      { icon: '📜', text: '利率漲，舊借據現價跌；通膨吃利息' },
-      { icon: '🚜', text: '基金費用：進門、出門、每年' },
-      { icon: '🧩', text: 'ETF 看重疊；定期定額讓成本平均' },
+      { icon: '🧱', text: '一起動的不算分散；當沖成本磨本金' },
+      { icon: '📜', text: '借據越長，利率一動跌越多' },
+      { icon: '🚜', text: '費用差一點，30 年差很多' },
+      { icon: '🧩', text: '槓桿會耗損；對沖有代價；歪了剪高補低' },
     ],
     scene: { camera: 'overview', product: null },
   },

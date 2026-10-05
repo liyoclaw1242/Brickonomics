@@ -133,7 +133,7 @@ export const STORM_DONE = Math.max(HIT_TIME.hy + STORM.damage, HIT_TIME.corp + S
 export const TORNADO_TIMELINE: EventTimeline<SpecOf<'tornado'>> = {
   duration: () => STORM_DONE,
   lingers: () => true,
-  numberDelay: () => 0,
+  numberDelay: (spec) => (spec.numberAtX === undefined ? 0 : timeAtX(spec.numberAtX) + STORM.damage),
   aftermath: () => true,
 }
 

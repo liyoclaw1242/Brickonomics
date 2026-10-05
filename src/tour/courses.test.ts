@@ -11,22 +11,24 @@ const OPENING = new Set(['prologue', 'review'])
 const FINISH = 'finish'
 /** Plan 7 新增的中階步驟（課程專用，不在 LEVELS 裡） */
 const PLAN7 = ['s-dd', 's-pe', 'b-rate', 'b-infl', 'e-dca']
+/** Plan 8 的高階步驟（課程專用；照課程順序） */
+const PLAN8 = ['a-0', 'a-port', 'a-corr', 'a-dt', 'a-dur', 'a-fee30', 'a-lev', 'a-hedge', 'a-rebal', 'a-fin']
 /** 內容章＝扣掉開頭（序章／複習）與結尾的章 */
 const contentChapters = (c: Course) => c.chapters.filter((ch) => !OPENING.has(ch.id) && ch.id !== FINISH)
 
 describe('STEP_POOL', () => {
   it('holds every LEVELS step plus the new recap and finish steps, each id once', () => {
     const levelIds = LEVELS.flatMap((l) => l.steps.map((s) => s.id))
-    expect([...STEP_POOL.keys()]).toEqual([...levelIds, ...PLAN7, 'm-0', 'm-fin'])
+    expect([...STEP_POOL.keys()]).toEqual([...levelIds, ...PLAN7, 'm-0', 'm-fin', ...PLAN8])
     for (const [id, s] of STEP_POOL) expect(s.id).toBe(id)
   })
 })
 
 describe('COURSES', () => {
-  it('lists 初、中、高 in order; 高階 is not available yet', () => {
+  it('lists 初、中、高 in order; all three are open (Plan 8 opened 高階)', () => {
     expect(COURSES.map((c) => c.id)).toEqual(['beginner', 'intermediate', 'advanced'])
-    expect(course('advanced').available).toBe(false)
-    expect(availableCourses().map((c) => c.id)).toEqual(['beginner', 'intermediate'])
+    expect(course('advanced').available).toBe(true)
+    expect(availableCourses().map((c) => c.id)).toEqual(['beginner', 'intermediate', 'advanced'])
   })
 
   it('every step id exists in STEP_POOL', () => {
@@ -94,6 +96,34 @@ describe('COURSES', () => {
     }
   })
 
+  it('a-fin recaps 高階 in four lines with the words its steps use, and is the last course (no next tier)', () => {
+    const fin = STEP_POOL.get('a-fin')!
+    expect(fin.recap!.map((r) => r.icon)).toEqual(['🧱', '📜', '🚜', '🧩'])
+    const text = fin.recap!.map((r) => r.text).join('')
+    for (const [id, w] of [['a-corr', '一起'], ['a-dt', '當沖'], ['a-lev', '耗損'], ['a-hedge', '對沖'], ['a-rebal', '剪高補低']] as const) {
+      expect(text, w).toContain(w)
+      const s = STEP_POOL.get(id)!
+      expect(`${s.title}${typeof s.line === 'string' ? s.line : ''}`, `${id}: ${w}`).toContain(w)
+    }
+    expect(typeof fin.line === 'string' ? fin.line : '').toContain(T.finish)
+  })
+
+  it('高階 (Plan 8) opens with a-0, which repeats the 中階 recap (m-fin)', () => {
+    expect(ids(course('advanced'))).toEqual(PLAN8)
+    expect(course('advanced').chapters.map((ch) => ch.id)).toEqual(['review', 'stock', 'bond', 'fund', 'etf', 'finish'])
+    expect(course('advanced').chapters.map((ch) => ch.stepIds)).toEqual([
+      ['a-0', 'a-port'],
+      ['a-corr', 'a-dt'],
+      ['a-dur'],
+      ['a-fee30'],
+      ['a-lev', 'a-hedge', 'a-rebal'],
+      ['a-fin'],
+    ])
+    const a0 = STEP_POOL.get('a-0')!
+    expect(a0.recap).toEqual(STEP_POOL.get('m-fin')!.recap)
+    expect(a0.scene.camera).toBe('overview')
+  })
+
   it('every available course ends with a four-line recap card', () => {
     for (const c of availableCourses()) {
       const last = courseSteps(c).at(-1)!
@@ -107,12 +137,13 @@ describe('COURSES', () => {
     expect(m0.scene.camera).toBe('overview')
   })
 
-  it('m-fin recaps 中階 with its own four lines and sends the learner to 自由玩 (高階 is not open yet)', () => {
+  it('m-fin recaps 中階 with its own four lines and points to 高階 (the next-tier button)', () => {
     const fin = STEP_POOL.get('m-fin')!
     const u6 = STEP_POOL.get('u-6')!.recap!.map((r) => r.text)
     expect(fin.recap!.map((r) => r.icon)).toEqual(['🧱', '📜', '🚜', '🧩'])
     for (const r of fin.recap!) expect(u6).not.toContain(r.text)
-    expect(typeof fin.line === 'string' ? fin.line : '').toContain(T.finish)
+    expect(typeof fin.line === 'string' ? fin.line : '').toContain('高階')
+    expect(typeof fin.more === 'string' ? fin.more : '').toContain('自由玩已經解鎖')
   })
 
   it('names and taglines are short, follow the glossary and avoid 被', () => {
@@ -142,6 +173,8 @@ describe('course helpers', () => {
     expect(courseOfStep('c-4')).toBeUndefined()
     expect(courseOfStep('m-0')).toBe('intermediate')
     expect(courseOfStep('m-fin')).toBe('intermediate')
+    expect(courseOfStep('a-0')).toBe('advanced')
+    expect(courseOfStep('a-fin')).toBe('advanced')
     expect(courseOfStep('f-7')).toBeUndefined()
     expect(courseOfStep('')).toBeUndefined()
   })

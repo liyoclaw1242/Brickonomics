@@ -2,18 +2,18 @@ import { describe, it, expect } from 'vitest'
 import { stepMarks } from './marks'
 import { universe } from '../data'
 import { makeTextContext } from '../tour/context'
-import { availableCourses, courseSteps, STEP_POOL } from '../tour/courses'
+import { COURSES, courseSteps, STEP_POOL } from '../tour/courses'
 import { lineOf, moreOf } from '../tour/engine'
 import { fallbackCourse } from './fallback'
 
 const POOL = [...STEP_POOL.values()]
 
 describe('fallbackCourse', () => {
-  // 所有可上的課接起來＝步驟池裡的每一步
-  const out = availableCourses().flatMap((c) => fallbackCourse(c, universe))
+  // 所有課接起來＝步驟池裡的每一步
+  const out = COURSES.flatMap((c) => fallbackCourse(c, universe))
 
   it('lists each course by its chapters, every step with rendered text', () => {
-    for (const c of availableCourses()) {
+    for (const c of COURSES) {
       const chapters = fallbackCourse(c, universe)
       expect(chapters.map((l) => l.label), c.id).toEqual(c.chapters.map((ch, i) => `${String(i).padStart(2, '0')} ${ch.name}`))
       expect(chapters.flatMap((l) => l.steps.map((s) => s.id)), c.id).toEqual(courseSteps(c).map((s) => s.id))

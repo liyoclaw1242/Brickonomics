@@ -15,6 +15,13 @@ export const DEFAULT_RANGES: Record<Control, [number, number]> = {
   tick: [0, 10],
   rate: [0, 0.1],
   months: [1, 12],
+  winRate: [0.5, 0.75],
+  feeDiscount: [0.28, 1],
+  storm: [0, 1],
+  rebal: [0, 2],
+  hedgeCase: [0, 2],
+  trades: [0, 250],
+  bondPct: [0, 100],
   slice: [0, 1],
   explode: [0, 1],
 }

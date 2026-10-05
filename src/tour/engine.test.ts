@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import type { Level } from './types'
+import type { CourseId, Level } from './types'
 import { LEVELS as REAL } from './levels'
 import { COURSES, courseSteps } from './courses'
 import {
@@ -83,7 +83,7 @@ describe('sandboxPatchFor', () => {
 
 describe('titleOf / lineOf / moreOf', () => {
   it('returns static text or calls the template with the context', () => {
-    const ctx = { weightPct: () => 57.35, shock: () => -0.17, sectorPct: () => 0, expenseRatio: () => 0.002, overlapShared: () => 0.3, exitFee: () => 0, assetClassPct: () => 0, fundFeeRows: () => [], distributionFee: () => undefined }
+    const ctx = { weightPct: () => 57.35, shock: () => -0.17, sectorPct: () => 0, expenseRatio: () => 0.002, overlapShared: () => 0.3, exitFee: () => 0, assetClassPct: () => 0, fundFeeRows: () => [], distributionFee: () => undefined, hedge: () => { throw new Error('unused') } }
     expect(titleOf(L[0]!.steps[0]!)).toBe('T1')
     expect(lineOf(L[0]!.steps[0]!, ctx)).toBe('x')
     expect(moreOf(L[0]!.steps[0]!, ctx)).toBe('mx')
@@ -135,7 +135,7 @@ describe('resumePosition (saved progress after the lesson changed)', () => {
 const ids = (c: string) => courseSteps(COURSES.find((x) => x.id === c)!).map((s) => s.id)
 const B = ids('beginner')
 const M = ids('intermediate')
-const at = (course: 'beginner' | 'intermediate', id: string) => ({ course, index: (course === 'beginner' ? B : M).indexOf(id) })
+const at = (course: CourseId, id: string) => ({ course, index: stepsOf(course).findIndex((s) => s.id === id) })
 
 describe('course navigation (never crosses into another course)', () => {
   it('steps through a course and stops at both ends', () => {
@@ -153,8 +153,9 @@ describe('course navigation (never crosses into another course)', () => {
     expect(isValidCoursePos({ course: 'beginner', index: B.length })).toBe(false)
     expect(isValidCoursePos({ course: 'beginner', index: -1 })).toBe(false)
     expect(isValidCoursePos({ course: 'beginner', index: 0.5 })).toBe(false)
-    expect(isValidCoursePos({ course: 'advanced', index: 0 })).toBe(false) // 高階還沒有步驟
-    expect(() => stepAtCourse({ course: 'advanced', index: 0 })).toThrow(RangeError)
+    expect(isValidCoursePos({ course: 'advanced', index: 0 })).toBe(true) // 高階（Plan 8）
+    expect(isValidCoursePos({ course: 'advanced', index: stepsOf('advanced').length })).toBe(false)
+    expect(() => stepAtCourse({ course: 'advanced', index: stepsOf('advanced').length })).toThrow(RangeError)
   })
 
   it('reports progress inside the course only', () => {
@@ -176,8 +177,8 @@ describe('course navigation (never crosses into another course)', () => {
 
   it('the next course follows course order and skips nothing that is unavailable', () => {
     expect(nextCourse('beginner')).toBe('intermediate')
-    expect(nextCourse('intermediate')).toBeNull() // 高階還沒開放
-    expect(nextCourse('advanced')).toBeNull()
+    expect(nextCourse('intermediate')).toBe('advanced') // Plan 8 開放高階
+    expect(nextCourse('advanced')).toBeNull() // 最後一門：結尾推薦自由玩
   })
 
   it('switching course keeps the step when the new course has it, else the first step', () => {
@@ -195,8 +196,9 @@ describe('progress persistence (per course)', () => {
     expect(parseProgress(null)).toEqual(emptyProgress())
     expect(parseProgress('{oops')).toEqual(emptyProgress())
     expect(parseProgress('[1,2]')).toEqual(emptyProgress())
+    // 高階開放後，finished 裡的 advanced 也留著（不認得的 x 丟掉）
     expect(parseProgress('{"course":"weird","completed":{"beginner":[1,"stock"]},"finished":["x","beginner","advanced"]}')).toEqual({
-      course: null, completed: { beginner: ['stock'], intermediate: [], advanced: [] }, finished: ['beginner'], sandboxUnlocked: true,
+      course: null, completed: { beginner: ['stock'], intermediate: [], advanced: [] }, finished: ['beginner', 'advanced'], sandboxUnlocked: true,
     })
   })
 
@@ -217,8 +219,9 @@ describe('progress persistence (per course)', () => {
     expect(resumeInCourse(emptyProgress(), 'beginner')).toEqual({ course: 'beginner', index: 0 })
   })
 
-  it('an unavailable course is treated as not chosen', () => {
-    expect(parseProgress('{"course":"advanced","completed":{},"finished":[],"sandboxUnlocked":false}').course).toBeNull()
+  it('an unknown course is treated as not chosen; 高階 is a real choice now', () => {
+    expect(parseProgress('{"course":"expert","completed":{},"finished":[],"sandboxUnlocked":false}').course).toBeNull()
+    expect(parseProgress('{"course":"advanced","stepId":"a-dt","completed":{},"finished":[],"sandboxUnlocked":false}')).toMatchObject({ course: 'advanced', stepId: 'a-dt' })
   })
 })
 
@@ -278,7 +281,8 @@ describe('parseCourseQuery / queryPosition / startOfCourse', () => {
     expect(pos('?course=intermediate&step=u-3')).toEqual(at('intermediate', 'u-3'))
     expect(pos('?course=intermediate&step=p-1')).toEqual({ course: 'intermediate', index: 0 })
     expect(pos('?course=beginner')).toEqual({ course: 'beginner', index: 0 })
-    expect(pos('?course=advanced')).toBeNull() // 還沒開放
+    expect(pos('?course=advanced')).toEqual({ course: 'advanced', index: 0 }) // Plan 8 開放
+    expect(pos('?course=advanced&step=a-hedge')).toEqual(at('advanced', 'a-hedge'))
     expect(pos('?course=weird')).toBeNull()
   })
 

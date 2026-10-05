@@ -5,13 +5,13 @@ import type { Control, ValueKey } from '../tour/types'
 import { MarkIcon } from './MarkIcon'
 import { T } from './strings'
 
-const STEP: Record<ValueKey, number> = { years: 0.5, periods: 1, phase: 0.01, frontLoad: 0.0025, tick: 1, rate: 0.001, months: 1 }
+const STEP: Record<ValueKey, number> = { years: 0.5, periods: 1, phase: 0.01, frontLoad: 0.0025, tick: 1, rate: 0.001, months: 1, bondPct: 10, trades: 10, hedgeCase: 1, rebal: 1, storm: 1, feeDiscount: 0.02, winRate: 0.01 }
 
 function ValueSlider({ k }: { k: ValueKey }) {
   const v = useTour((s) => s.values[k])
   const setValue = useTour((s) => s.setValue)
   const [lo, hi] = useTour((s) => controlRange(currentStep(s), k))
-  const fmt = { years: T.controls.yearsValue, periods: T.controls.periodsValue, phase: T.controls.phaseValue, frontLoad: T.controls.frontLoadValue, tick: T.controls.tickValue, rate: T.controls.rateValue, months: T.controls.monthsValue }[k]
+  const fmt = { years: T.controls.yearsValue, periods: T.controls.periodsValue, phase: T.controls.phaseValue, frontLoad: T.controls.frontLoadValue, tick: T.controls.tickValue, rate: T.controls.rateValue, months: T.controls.monthsValue, bondPct: T.controls.bondPctValue, trades: T.controls.tradesValue, hedgeCase: T.controls.hedgeCaseValue, rebal: T.controls.rebalValue, storm: T.controls.stormValue, feeDiscount: T.controls.feeDiscountValue, winRate: T.controls.winRateValue }[k]
   return (
     <label className="control">
       <span className="control__label">

@@ -86,3 +86,16 @@ describe('title + mark pills stay on one row (walkthrough: f-6 ✎ wrapped under
     expect(titleRowFits('公司變不值錢', [T.marks.illustrative.word], 'normal')).toBe(true)
   })
 })
+
+describe('高階: ？ from the research card and the day-trade cost data (Plan 8)', () => {
+  const base = { id: 'x', title: 't', line: 'l', more: 'm', scene: { camera: 'plaza' as const } }
+  it('a research row marked unverified puts ？ on the step; verified rows do not', () => {
+    const verified = { ...base, research: () => ({ rows: [{ value: '1%', text: 'a' }], cite: 'c' }) }
+    const stale = { ...base, research: () => ({ rows: [{ value: '1%', text: 'a', mark: 'unverified' as const }], cite: 'c' }) }
+    expect(stepMarks(verified, universe)).toEqual([])
+    expect(stepMarks(stale, universe)).toEqual(['unverified'])
+  })
+  it('the day-trade stage is ？-free while every cost item in TW_TRADING is verified', () => {
+    expect(stepMarks({ ...base, mark: 'illustrative', scene: { camera: 'plaza', stage: { kind: 'dayTrade' } } }, universe)).toEqual(['illustrative'])
+  })
+})

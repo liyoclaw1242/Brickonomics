@@ -36,6 +36,12 @@ export const T = {
     /** 文字版選階的群組名 */
     pickLabel: '選擇課程',
   },
+  /** 研究數據卡（a-dt）：一手出處的研究數字 */
+  research: { title: '研究怎麼說', source: (cite: string) => `出處：${cite}`, refs: '完整出處' },
+  /** 比例 → 一位小數的百分比（打平勝率在卡片、讀數、3D 用同一個格式）：0.7175 → '71.8%' */
+  pct1: (r: number) => `${(r * 100).toFixed(1)}%`,
+  /** 大數字卡等事件發生前的佔位（不顯示還沒發生的 0） */
+  waiting: '…',
   /** 比較步驟的提醒（mid-r1：比較結果一面倒，被讀成投資建議） */
   compareNote: '只是比較，不是叫你買或賣',
   /** 課內的第幾步（mid-r1：章的編號在同一章裡不動，她以為按壞了） */
@@ -107,6 +113,27 @@ export const T = {
     /** e-dca：定期定額買了幾個月 */
     months: '經過月數',
     monthsValue: (v: number) => `${v} 個月`,
+    /** a-dt 每次進出賺錢的機率（示意） */
+    winRate: '勝率',
+    winRateValue: (v: number) => `${Math.round(v * 100)}%`,
+    /** a-dt 券商手續費打幾折（1＝公告費率不打折） */
+    feeDiscount: '手續費折數',
+    feeDiscountValue: (v: number) => (v >= 0.995 ? '不打折' : `${Number((v * 10).toFixed(1))} 折`),
+    /** a-port 選哪一種示意風暴（0 股跌債漲、1 股債一起跌） */
+    storm: '風暴種類',
+    stormValue: (v: number) => (['股跌、債漲', '股債一起跌'] as const)[Math.round(v)] ?? '',
+    /** a-rebal 走到哪一步（0 一開始、1 股票漲了一年、2 剪高補低） */
+    rebal: '進度',
+    rebalValue: (v: number) => (['一開始', '一年後', '剪高補低'] as const)[Math.round(v)] ?? '',
+    /** a-hedge 看哪一種情境（0 平穩一年、1 慢慢漲一年、2 ⚡ 打下那天） */
+    hedgeCase: '情境',
+    hedgeCaseValue: (v: number) => (['來回晃的一年', '大漲那年', '🌋 大跌那天'] as const)[Math.round(v)] ?? '',
+    /** a-dt 當沖進出了幾次（一次＝買進再賣出） */
+    trades: '進出次數',
+    tradesValue: (v: number) => `${v} 次`,
+    /** a-port 組合塔裡債券佔幾 %（其餘是股票） */
+    bondPct: '債券比例',
+    bondPctValue: (v: number) => `${v}%`,
   },
   stage: {
     held: '你手上的方塊',
@@ -163,6 +190,75 @@ export const T = {
     coins: (pct: string) => `利息 ${pct}`,
     real: (pct: string) => `真正賺到約 ${pct}`,
     eaten: (pct: string) => `通膨 ${pct} 融掉了`,
+  },
+  /** a-port 組合塔的 3D 標註（高階） */
+  port: {
+    stock: (pct: number) => `股票 ${pct}%`,
+    bond: (pct: number) => `債券 ${pct}%`,
+    after: (v: string) => `風暴後 ${v}`,
+    ghost: '原本 100 萬',
+    lost: (pct: string) => `少掉 ${pct}`,
+  },
+  /** a-corr 兩組用彈簧連著的方塊（高階） */
+  corr: {
+    together: '一起動',
+    opposite: '一上一下',
+    /** 各放一半，⚡ 那天合起來 */
+    mix: (move: string) => `各一半，合起來 ${move}`,
+    /** 方塊頭上的名字；打中之後加上漲跌 */
+    a: (move: string) => (move ? `A ${move}` : 'A'),
+    /** 夥伴是誰：原因看得到（同產業一起受影響、對手反而接到生意；示意） */
+    bTogether: (move: string) => (move ? `同產業 B ${move}` : '同產業 B'),
+    bOpposite: (move: string) => (move ? `對手 B ${move}` : '對手 B'),
+  },
+  /** a-dt 當沖的 3D 標註（高階）：只說「交易成本」 */
+  dt: {
+    ghost: '原本 100 萬',
+    capital: (n: number) => `進出 ${n} 次後的本金`,
+    left: (v: string) => `剩 ${v}`,
+    /** 本金比 100 萬多時不說「剩」 */
+    capitalNow: (v: string) => `本金 ${v}`,
+    cost: '付掉的交易成本',
+    chips: (rate: string) => `勝率 ${rate}`,
+    chipsSub: (win: string, loss: string, even: string) => `賺 ${win}、賠 ${loss}・打平要 ${even}`,
+  },
+  /** a-dur 長短借據的 3D 標註（高階） */
+  dur: {
+    bond: (years: number) => `${years} 年借據`,
+    drop: (pct: string) => `現在值少 ${pct}`,
+    rate: (v: string) => `市場利率 ${v}`,
+  },
+  /** a-fee30 兩棵樹的 3D 標註（高階） */
+  fee30: {
+    /** 樹的名字寫出每年的費用（adv-r1：0.14% 是哪裡的費率？——就是 0050 的） */
+    active: (fee: string) => `基金（每年 ${fee}）`,
+    passive: (fee: string) => `0050（內扣每年 ${fee}）`,
+    /** 紅色帽子只說是什麼，不再放第二個數字（adv-r1：225.7 和 249.3 兩個數字打架） */
+    lost: '紅色＝費用吃掉的',
+    base: (gross: string) => `假設扣費前報酬一樣：每年 ${gross}`,
+  },
+  /** a-lev 三座塔（高階；通用名稱，不是真實商品） */
+  lev: {
+    plain: '大盤',
+    double: '2 倍塔',
+    inverse: '反向塔',
+    left: (v: string) => `剩 ${v}`,
+    start: '起點都是 100',
+    naive: (v: string) => `以為的 2 倍：${v}`,
+  },
+  /** a-hedge 三座塔（高階；反向 ETF 用通用名稱） */
+  hedge: {
+    plain: '全押 0050',
+    inverse: '0050＋反向',
+    cash: '少買 0050＋現金',
+  },
+  /** a-rebal 組合塔的 3D 標註（高階） */
+  rebal: {
+    stock: (v: string, pct: string) => `股票 ${v}（${pct}）`,
+    bond: (v: string) => `債券 ${v}`,
+    target: (pct: number) => `目標線：股票 ${pct}%`,
+    moved: (v: string) => `剪 ${v}，補到債券`,
+    over: '股票超過線：塔歪了',
   },
   /** 基金那一章的錢：投入 100＝100 萬（和計費表同一個底），一位小數、去掉「.0」 */
   wan,
@@ -248,6 +344,30 @@ export const T = {
     dcaCost: '平均成本',
     dcaPrice: '平均價格',
     peYears: (earn: number) => `每年賺 ${earn}：幾年賺回`,
+    portStock: '股票那一截',
+    portBond: '債券那一截',
+    portRemaining: '風暴後整座塔',
+    durBond: (years: number) => `${years} 年借據現在值`,
+    fee30Years: '經過年數',
+    fee30Active: (fee: string) => `怪手挑（每年扣 ${fee}）`,
+    fee30Passive: (fee: string) => `照藍圖（每年扣 ${fee}）`,
+    fee30NoFee: '完全沒費用的話',
+    levAfter: (name: string, rounds: number) => `${name}：來回 ${rounds} 次後`,
+    levNaive: '以為的 2 倍（大盤跌幅 × 2）',
+    hedgeCase: '情境',
+    rebalStage: '進度',
+    rebalStock: '股票',
+    rebalBond: '債券',
+    rebalPct: '股票比例',
+    rebalMoved: '從股票搬到債券',
+    dtTrades: '進出次數',
+    dtCost: '每次進出的交易成本',
+    dtCapital: '本金剩',
+    dtPaid: '付掉的交易成本',
+    dtBreakEven: '打平要的勝率',
+    corrAlone: '只放 A：平常晃多大',
+    corrTogether: 'A＋一起動的，各一半',
+    corrOpposite: 'A＋一上一下的，各一半',
   },
   feeParts: { expenseRatio: '內扣費用', distributionFee: '分銷費', cdsc: '遞延手續費', trading: '交易成本' },
   qualityNotice: '畫面有點卡，已自動切換成省電畫質。',

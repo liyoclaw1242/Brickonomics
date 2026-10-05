@@ -13,6 +13,8 @@ import { coinScaleAt } from './heatwave'
 import { TreeCrown } from './SunnyTree'
 import { treeGrowAt } from './sunnyTree'
 import { quakeAt } from './quake'
+import { heightOnPath, waveCount, waveStepAt } from './wave'
+import { LEVERAGE, leverageTowers } from '../../sim/leverage'
 import type { EventClock, EventKind, SpecOf } from './types'
 
 /**
@@ -207,6 +209,49 @@ function HeatwaveProps({ spec, clock }: PreviewPropsOf<'heatwave'>) {
   )
 }
 
+/** 塔高：路徑上的 100 對應幾個世界單位 */
+const WAVE_UNIT = 0.06
+
+/**
+ * 大浪：三座塔（一般、2 倍、反向），像舞台一樣沿 leveragedPath 取高度（−10%／+10% 來回、次數＝浪的次數）：
+ * 每次浪頭打到跌一步（2 倍塔被打矮一截）、退下漲一步（waveStepAt）；2 倍塔每道浪後都更矮。
+ */
+function WaveProps({ spec, clock }: PreviewPropsOf<'wave'>) {
+  const boxes = spec.targets ?? []
+  const paths = useMemo(() => {
+    const t = leverageTowers({ ...LEVERAGE, rounds: waveCount(spec) })
+    return [t.plain, t.double, t.inverse].map((p) => p.map((v) => v * WAVE_UNIT))
+  }, [spec])
+  const ref = useRef<InstancedMesh>(null)
+  const dummy = useMemo(() => new Object3D(), [])
+  useLayoutEffect(() => {
+    const m = ref.current
+    if (!m) return
+    const colors = [SECTOR_COLORS.semiconductor, SECTOR_COLORS.internet, SECTOR_COLORS.electronics]
+    boxes.forEach((_, i) => m.setColorAt(i, new Color(colors[i % colors.length])))
+    if (m.instanceColor) m.instanceColor.needsUpdate = true
+  }, [boxes])
+  useFrame(() => {
+    const m = ref.current
+    if (!m) return
+    const step = waveStepAt(spec, clock.reduced ? Infinity : clock.t.current)
+    boxes.forEach((b, i) => {
+      const h = heightOnPath(paths[i % paths.length]!, step)
+      dummy.position.set(...atPlaza(b.at[0], b.at[1] + h / 2, b.at[2]))
+      dummy.scale.set(b.size[0], h, b.size[2])
+      dummy.updateMatrix()
+      m.setMatrixAt(i, dummy.matrix)
+    })
+    m.instanceMatrix.needsUpdate = true
+  })
+  return (
+    <instancedMesh ref={ref} args={[undefined, undefined, Math.max(1, boxes.length)]} castShadow receiveShadow frustumCulled={false}>
+      <boxGeometry args={[1, 1, 1]} />
+      <meshStandardMaterial roughness={0.8} />
+    </instancedMesh>
+  )
+}
+
 export const PREVIEW_PROPS: { [K in EventKind]: ComponentType<PreviewPropsOf<K>> | null } = {
   tornado: null,
   lightning: null,
@@ -215,4 +260,5 @@ export const PREVIEW_PROPS: { [K in EventKind]: ComponentType<PreviewPropsOf<K>>
   freeze: FreezeProps,
   sunnyTree: SunnyTreeProps,
   heatwave: HeatwaveProps,
+  wave: WaveProps,
 }

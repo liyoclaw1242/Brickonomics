@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { BigNumber, Mark } from '../../tour/types'
 import { countUp, easeOut } from '../countUp'
 import { MarkIcon } from '../MarkIcon'
+import { T } from '../strings'
 
 const DURATION_MS = 600
 
@@ -13,16 +14,21 @@ const DURATION_MS = 600
 /** titleMarks：標題旁已經有的標示，卡片上不重複；delayMs：run 之後再等多久才開始數 */
 export function BigNumberCard({ n, color, run, instant, titleMarks = [], delayMs = 0 }: { n: BigNumber; color?: string; run: boolean; instant: boolean; titleMarks?: readonly Mark[]; delayMs?: number }) {
   const [t, setT] = useState(instant ? 1 : 0)
+  // 等事件（例如龍捲風掃到塔）的這段時間不顯示「0%」：還沒發生的結果不是 0（adv-r1：「少掉 0%」看起來像壞掉）
+  const [waiting, setWaiting] = useState(!instant && delayMs > 0)
   useEffect(() => {
     if (!run || instant) {
       if (instant) setT(1)
+      setWaiting(!instant && delayMs > 0)
       return
     }
+    setWaiting(delayMs > 0)
     let raf = 0
     // delayMs：等場景裡的事件（例如閃電打中）才開始數
     const start = performance.now() + delayMs
     const tick = (now: number) => {
       const x = Math.min(1, Math.max(0, (now - start) / DURATION_MS))
+      if (now >= start) setWaiting(false)
       setT(x)
       if (x < 1) raf = requestAnimationFrame(tick)
     }
@@ -30,11 +36,11 @@ export function BigNumberCard({ n, color, run, instant, titleMarks = [], delayMs
     return () => cancelAnimationFrame(raf)
   }, [run, instant, delayMs])
 
-  const fraction = n.fraction === undefined ? undefined : Math.max(0, Math.min(1, n.fraction)) * easeOut(t)
+  const fraction = n.fraction === undefined || waiting ? undefined : Math.max(0, Math.min(1, n.fraction)) * easeOut(t)
   return (
     <div className="bignum">
       <div className="bignum__value">
-        <span aria-hidden="true">{countUp(n.value, t)}</span>
+        <span aria-hidden="true">{waiting ? T.waiting : countUp(n.value, t)}</span>
         <span className="sr-only">{n.value}</span>
         {n.mark && !titleMarks.includes(n.mark) && <MarkIcon kind={n.mark} />}
       </div>

@@ -18,9 +18,13 @@ const FALLBACK_STOCK = '#90a4ae'
 
 /**
  * 課文顏色鍵與 3D 物體共用的顏色：coin＝金幣、loss＝損失紅；
- * profit＝公司每年賺的錢（s-pe 的淺綠薄片，不發給你，所以不是金幣）；units＝定期定額每月買到的方塊（e-dca）
+ * profit＝公司每年賺的錢（s-pe 的淺綠薄片，不發給你，所以不是金幣）；units＝定期定額每月買到的方塊（e-dca）；
+ * 高階（Plan 8）：stock／bond＝組合塔的股票、債券那一截（a-port、a-rebal）；
+ * together／opposite＝a-corr 裡和 A 一起動、一上一下的那一顆；short／long＝a-dur 的 2 年、20 年借據；
+ * active／passive＝a-fee30 的主動（怪手挑）、被動（照藍圖）那棵樹；double／inverse＝a-lev、a-hedge 的 2 倍塔、反向塔；
+ * cash＝a-hedge 少買 0050 留下的現金
  */
-export const ACCENT_COLORS = { coin: '#ffd54f', loss: '#e53935', profit: '#9ccc65', units: '#2bb3a3' } as const
+export const ACCENT_COLORS = { coin: '#ffd54f', loss: '#e53935', profit: '#9ccc65', units: '#2bb3a3', stock: '#5b8def', bond: '#b9c9dc', together: '#b388ff', opposite: '#4dd0a1', short: '#f48fb1', long: '#e0a43a', active: '#ff8a65', passive: '#4fc3f7', double: '#f06292', inverse: '#9575cd', cash: '#c5e1a5' } as const
 const isAccent = (k: string): k is keyof typeof ACCENT_COLORS => Object.hasOwn(ACCENT_COLORS, k)
 
 /** 股票依產業上色；債券用材質表示信用品質（國家債鑽石、公司債金屬、高收益債玻璃）。 */

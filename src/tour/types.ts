@@ -3,6 +3,7 @@ import type { Picked } from '../store/sandbox'
 import type { Sector } from '../scene/layout/underground'
 import type { Mark } from '../ui/marks'
 import type { FeeRaceRow } from '../sim/feeRace'
+import type { HedgeExample } from '../sim/hedge'
 import type { EventSpec } from '../scene/events/types'
 
 export type { Mark }
@@ -38,6 +39,22 @@ export type Stage =
   | { kind: 'dca' }
   /** b-infl 通膨：借據＋一排利息金幣；熱浪讓金幣融化變小（scene.event heatwave） */
   | { kind: 'inflation' }
+  /** a-port 組合塔：股票＋債券疊成一座塔（bondPct 拉桿）；🌪 龍捲風（scene.event tornado）掃過時股票那截縮掉 */
+  | { kind: 'portfolio' }
+  /** a-corr 兩組用彈簧連著的方塊（一起動、一上一下）；⚡ 閃電（scene.event lightning＋targets）打兩組的 A */
+  | { kind: 'correlation' }
+  /** a-dt 當沖：本金塔＋一堆付掉的交易成本（trades 拉桿）；前面一排賺、賠各一半的小圓片 */
+  | { kind: 'dayTrade' }
+  /** a-dur 長短借據：前面 2 年短板、後面 20 年長板（rate 拉桿）；拉到 3% 時 ❄️ 寒流（scene.event freeze＋eventWhen） */
+  | { kind: 'duration' }
+  /** a-fee30 主動 vs 被動 30 年：兩座塔像兩棵樹（periods 拉桿；天氣是 scene.event sunnyTree）；紅帽子＝費用吃掉的 */
+  | { kind: 'feeTrees' }
+  /** a-lev 槓桿的耗損：大盤、2 倍塔、反向塔站在水裡；🌊 大浪（scene.event wave）每道浪一跌一漲 */
+  | { kind: 'leverage' }
+  /** a-hedge 反向來對沖：三座塔（全押、加反向、少買＋現金；hedgeCase 拉桿換情境）；大跌那天 🌋 地震（scene.event quake＋eventWhen） */
+  | { kind: 'hedge' }
+  /** a-rebal 剪高補低：一座組合塔＋目標線（rebal 拉桿：一開始、股票漲了、剪高補低） */
+  | { kind: 'rebalance' }
   | { kind: 'overlap'; a: string; b: string }
   | { kind: 'underground'; show: 'strata' | 'cores' | 'dig' | 'veins' | 'gold'; cores?: [string, string] }
 
@@ -45,7 +62,14 @@ export type StageKind = Stage['kind']
 
 /** 舞台用的拉桿值（由導覽 store 持有） */
 /** tick＝價格路徑上的第幾個點（s-dd）；rate＝市場利率（b-rate）；months＝定期定額買了幾個月（e-dca） */
-export type StageValues = { years: number; periods: number; phase: number; frontLoad: number; tick: number; rate: number; months: number }
+/** bondPct：a-port 組合塔裡債券佔幾 %（其餘是股票） */
+/** trades：a-dt 當沖進出了幾次（一次＝買進再賣出） */
+/** hedgeCase：a-hedge 看哪一種情境（0 來回晃的一年、1 大漲那年、2 🌋 大跌那天） */
+/** rebal：a-rebal 走到哪一步（0 一開始、1 股票漲了一年、2 剪高補低） */
+/** storm：a-port 選哪一種示意風暴（0 股跌債漲、1 股債一起跌） */
+/** feeDiscount：a-dt 券商手續費打幾折（1＝公告費率不打折） */
+/** winRate：a-dt 每次進出賺錢的機率（示意） */
+export type StageValues = { years: number; periods: number; phase: number; frontLoad: number; tick: number; rate: number; months: number; bondPct: number; trades: number; hedgeCase: number; rebal: number; storm: number; feeDiscount: number; winRate: number }
 export type ValueKey = keyof StageValues
 export type Control = 'slice' | 'explode' | ValueKey
 /** 要讓「下一步」可按，control 的值必須 ≥ min */
@@ -94,6 +118,8 @@ export type TextContext = {
   fundFeeRows: (years: number, frontLoad: number) => FeeRaceRow[]
   /** 每年的分銷費（小數）與收幾年；資料沒有時為 undefined */
   distributionFee: (productId: string) => { rate: number; years: number } | undefined
+  /** a-hedge 的對沖舉例（sim/hedge；0050 的費用從資料讀） */
+  hedge: () => HedgeExample
 }
 
 /** 大數字卡：value 已格式化；fraction（0–1）畫色條；colorKey 對應物體顏色；note＝標籤下一行白話補充（例如為什麼是「至少」） */
@@ -107,6 +133,11 @@ export type CalloutSpec = {
   /** 拉桿到這個值才顯示（例如拆開之後才標出每一層的名字） */
   when?: Condition
 }
+
+/** 研究數據卡（a-dt）：一手出處的研究數字；mark 'unverified'＝這個數字沒查證（？，從資料推出來） */
+export type ResearchRow = { value: string; text: string; mark?: Mark; /** 這一列的短出處（作者、年份、樣本） */ source?: string }
+/** refs＝完整出處（論文原文名稱＋DOI），放在多說一點與文字版 */
+export type ResearchCard = { rows: ResearchRow[]; cite: string; refs?: { citation: string; doi: string }[] }
 
 /** 課程最後的回顧：一個圖示＋一句短話 */
 export type RecapLine = { icon: string; text: string }
@@ -134,6 +165,8 @@ export type Step = {
   /** 回傳 undefined 時不顯示大數字（例如資料沒有內扣費用）；values＝導覽目前的拉桿值（跟著拉桿即時變） */
   bigNumber?: (c: TextContext, values: Readonly<StageValues>) => BigNumber | undefined
   focus?: { holdings?: string[] }
+  /** 研究數據卡（附出處；過了門檻才顯示，文字版一直顯示） */
+  research?: (c: TextContext) => ResearchCard
   /** 面板上的回顧清單（最後一步用；文字版也顯示） */
   recap?: RecapLine[]
   callouts?: CalloutSpec[]

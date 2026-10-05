@@ -5,6 +5,7 @@ import { LIGHTNING_TIMELINE } from './lightning'
 import { QUAKE_TIMELINE } from './quake'
 import { SUNNY_TIMELINE } from './sunnyTree'
 import { TORNADO_TIMELINE } from './tornado'
+import { WAVE_TIMELINE } from './wave'
 import type { EventKind, EventSpec, EventTimeline, SpecOf } from './types'
 
 /**
@@ -43,6 +44,7 @@ export const EVENTS: { [K in EventKind]: EventTimeline<SpecOf<K>> } = {
   freeze: FREEZE_TIMELINE,
   sunnyTree: SUNNY_TIMELINE,
   heatwave: HEAT_TIMELINE,
+  wave: WAVE_TIMELINE,
 }
 
 export const EVENT_KINDS = Object.keys(EVENTS) as EventKind[]
