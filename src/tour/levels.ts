@@ -580,7 +580,7 @@ export const COURSE_STEPS: Step[] = [
     fallbackLine: () => `平均成本約 **${dcaNow(DCA_DEMO.prices.length).result.avgCost.toFixed(1)} 元**`,
     more: () => {
       const r = dcaNow(DCA_DEMO.prices.length).result
-      return `定期定額＝每月投入一樣的錢，這是示意。便宜的月份買比較多，只是讓成本平均。平均成本 ${r.avgCost.toFixed(1)} 元，比平均價格 ${r.avgPrice.toFixed(1)} 元低。不保證賺錢，價格一路跌，一樣會賠。`
+      return `定期定額＝每月投入一樣的錢，這是示意。平均成本 ${r.avgCost.toFixed(1)} 元，比平均價格 ${r.avgPrice.toFixed(1)} 元低。這是算術，只是讓成本平均，不比一次買完好。不保證賺錢，價格一路跌，一樣會賠。`
     },
     mark: 'illustrative',
     bigNumber: (_c, v) => {

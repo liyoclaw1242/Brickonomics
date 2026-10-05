@@ -803,6 +803,7 @@ describe('Plan 7 中階: 定期定額 (e-dca)', () => {
   })
   it('says it does not guarantee a profit; it only averages the cost', () => {
     expect(moreOf(s(), ctx)).toContain('只是讓成本平均')
+    expect(moreOf(s(), ctx)).toContain('這是算術，只是讓成本平均，不比一次買完好') // 成本 ≤ 平均價格是算術，不是贏過一次買完
     expect(moreOf(s(), ctx)).toContain('不保證賺錢，價格一路跌，一樣會賠')
     expect(moreOf(s(), ctx)).toContain('平均成本 39.0 元，比平均價格 40.9 元低')
   })
