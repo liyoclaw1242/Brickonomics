@@ -131,7 +131,7 @@ export const T = {
   seesaw: {
     rate: (v: string) => `市場利率 ${v}`,
     bond: (price: number) => `舊借據 約 ${price} 元`,
-    maturity: '放到到期，拿回 100',
+    maturity: '借的人沒出問題，到期拿回 100',
   },
   /** e-dca 定期定額的 3D 標註 */
   dca: {

@@ -750,6 +750,7 @@ describe('Plan 7 中階: 本益比 (s-pe)', () => {
     expect(bigOf(s())!.note).toContain('600')
     expect(moreOf(s(), ctx)).toContain('本益比＝股價÷每股盈餘')
     expect(moreOf(s(), ctx)).toContain('不代表一定會跌')
+    expect(moreOf(s(), ctx)).toContain('假設每年賺的錢不變') // 年數的前提
     expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('15 年和 60 年才賺回股價')
     // 每年賺的錢是公司的獲利（不一定發給你）：不叫金幣、配息
     for (const t of [lineOf(s(), ctx), moreOf(s(), ctx)]) for (const w of ['金幣', '配息']) expect(t).not.toContain(w)
@@ -769,12 +770,13 @@ describe('Plan 7 中階: 利率翹翹板 (b-rate)', () => {
     expect(bigOf(s(), { rate: 0.02 })!.value).toBe('約 100 元')
     expect(bigOf(s(), { rate: 0.05 })!.value).toBe(`約 ${(2 * ((1 - 1.05 ** -10) / 0.05) + 100 / 1.05 ** 10).toFixed(0)} 元`)
     expect(bigOf(s(), { rate: 0.05 })!.value).toBe('約 77 元')
-    expect(bigOf(s())!.note).toContain('還是拿回 100')
+    expect(bigOf(s())!.note).toBe('借的人沒出問題，到期拿回 100 元')
   })
   it('talks about the price of an existing bond, which goes back to 100 at maturity', () => {
     const more = moreOf(s(), ctx)
     expect(more).toContain('舊借據')
-    expect(more).toContain('放到到期，還是拿回 100 元')
+    expect(more).toContain('借的人沒出問題，到期拿回 100 元')
+    expect(T.seesaw.maturity).toContain('借的人沒出問題') // 3D 標註也一樣（三個地方）
     expect(more).toContain('10 年')
     expect(more).toContain('2%')
     expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('利率到 5%，舊借據約 77 元')
@@ -800,7 +802,8 @@ describe('Plan 7 中階: 定期定額 (e-dca)', () => {
     }
   })
   it('says it does not guarantee a profit; it only averages the cost', () => {
-    expect(moreOf(s(), ctx)).toContain('不保證賺錢，只是讓成本平均')
+    expect(moreOf(s(), ctx)).toContain('只是讓成本平均')
+    expect(moreOf(s(), ctx)).toContain('不保證賺錢，價格一路跌，一樣會賠')
     expect(moreOf(s(), ctx)).toContain('平均成本 39.0 元，比平均價格 40.9 元低')
   })
 })

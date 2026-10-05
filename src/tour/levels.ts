@@ -530,7 +530,7 @@ export const COURSE_STEPS: Step[] = [
     title: '本益比＝幾年',
     line: '拖**經過年數**。數幾年**賺回股價|profit**',
     fallbackLine: () => `**${peYears('cheap')} 年**和 **${peYears('pricey')} 年**才賺回股價`,
-    more: '本益比＝股價÷每股盈餘，就是要賺幾年才賺回股價。年數越多，表示買得越貴。本益比高，不代表一定會跌。泡泡＝太貴，數字是示意。',
+    more: '本益比＝股價÷每股盈餘，就是幾年賺回股價。這裡假設每年賺的錢不變，年數越多越貴。本益比高，不代表一定會跌。泡泡＝太貴，數字是示意。',
     mark: 'illustrative',
     bigNumber: () => ({ value: `${peYears('cheap')} 年 vs ${peYears('pricey')} 年`, label: '幾年賺回股價', note: `股價都是 ${PE_DEMO.price}，年數多＝較貴`, mark: 'illustrative' }),
     scene: { camera: 'plaza', product: null, stage: { kind: 'pe' }, event: peBubble(), eventWhen: { control: 'periods', min: peYears('pricey') }, values: { periods: 0 }, cityLabels: false },
@@ -545,10 +545,10 @@ export const COURSE_STEPS: Step[] = [
     line: '拖**市場利率**。舊借據價格就**跌|loss**',
     fallbackLine: () => `利率到 ${pct1(RATE_DEMO.to)}，舊借據約 **${n0(ratePrice(RATE_DEMO.to))} 元|loss**`,
     more: () =>
-      `利率漲，舊借據的價格就跌，像翹翹板。新借據給更多利息，舊的只好便宜賣。放到到期，還是拿回 100 元。這是示意，舉例 ${RATE_DEMO.years} 年、每年利息 ${pct1(RATE_DEMO.coupon)}。`,
+      `利率漲，舊借據的價格就跌，像翹翹板。新借據給更多利息，舊的只好便宜賣。借的人沒出問題，到期拿回 100 元。這是示意，舉例 ${RATE_DEMO.years} 年、每年利息 ${pct1(RATE_DEMO.coupon)}。`,
     mark: 'illustrative',
     // 跟著拉桿：舊借據現在值多少（面額 100）；note 一直提醒到期還是拿回 100
-    bigNumber: (_c, v) => ({ value: `約 ${n0(ratePrice(v.rate))} 元`, label: '舊借據現在值', note: '放到到期，還是拿回 100 元', mark: 'illustrative' }),
+    bigNumber: (_c, v) => ({ value: `約 ${n0(ratePrice(v.rate))} 元`, label: '舊借據現在值', note: '借的人沒出問題，到期拿回 100 元', mark: 'illustrative' }),
     scene: { camera: 'plaza', product: null, stage: { kind: 'seesaw' }, event: rateFreeze(), eventWhen: { control: 'rate', min: RATE_DEMO.to }, values: { rate: RATE_DEMO.from }, cityLabels: false },
     controls: ['rate'],
     ranges: { rate: [RATE_DEMO.from, RATE_DEMO.to] },
@@ -580,7 +580,7 @@ export const COURSE_STEPS: Step[] = [
     fallbackLine: () => `平均成本約 **${dcaNow(DCA_DEMO.prices.length).result.avgCost.toFixed(1)} 元**`,
     more: () => {
       const r = dcaNow(DCA_DEMO.prices.length).result
-      return `定期定額＝每個月固定投入一樣的錢。價格低的月份，同樣的錢買到比較多。平均成本 ${r.avgCost.toFixed(1)} 元，比平均價格 ${r.avgPrice.toFixed(1)} 元低。這是示意，不保證賺錢，只是讓成本平均。`
+      return `定期定額＝每月投入一樣的錢，這是示意。便宜的月份買比較多，只是讓成本平均。平均成本 ${r.avgCost.toFixed(1)} 元，比平均價格 ${r.avgPrice.toFixed(1)} 元低。不保證賺錢，價格一路跌，一樣會賠。`
     },
     mark: 'illustrative',
     bigNumber: (_c, v) => {
