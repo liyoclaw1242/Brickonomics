@@ -82,6 +82,15 @@ export function activeEvent(step: Pick<Step, 'scene'>, v: TourValues): EventSpec
   return isSatisfied(step.scene.eventWhen, v) ? e : undefined
 }
 
+/**
+ * 大數字要等哪個事件才開始數：門檻（eventWhen）觸發的事件不算。
+ * 大數字卡在 delayMs 改變時會從 0 重數；門檻事件出現時卡片早就顯示了，再重數會先閃一下錯的數字（例如 b-rate「約 0 元」）。
+ * 所以只有一進來就發生的事件（沒有 eventWhen）才讓大數字等它。
+ */
+export function numberDelayEvent(step: Pick<Step, 'scene'>, v: TourValues): EventSpec | undefined {
+  return step.scene.eventWhen ? undefined : activeEvent(step, v)
+}
+
 export function sandboxPatchFor(d: SceneDirective): SandboxPatch {
   const patch: SandboxPatch = {
     sliceAxis: d.sliceAxis ?? 'x',

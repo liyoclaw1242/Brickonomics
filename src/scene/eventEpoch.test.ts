@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { clockMode, eventEpoch } from './eventEpoch'
-import { activeEvent, controlRange, DEFAULT_VALUES } from '../tour/engine'
+import { activeEvent, controlRange, DEFAULT_VALUES, numberDelayEvent } from '../tour/engine'
+import { bigNumberDelayMs } from './events'
 import { STEP_POOL } from '../tour/courses'
 import type { Step, TourValues } from '../tour/types'
 
@@ -82,5 +83,28 @@ describe('gate-triggered events start right away (Tasks 2–4 review)', () => {
     expect(eventEpoch('x', quake, false, false)).not.toBe(eventEpoch('x', quake, false, true))
     // 過門檻的那一刻 revealed 已經是 true：epoch 只因為 spec 出現而變一次
     expect(eventEpoch('x', undefined, true, true)).not.toBe(eventEpoch('x', quake, false, true))
+  })
+})
+
+describe('the big number never restarts at a gate (whole-branch review)', () => {
+  it('every eventWhen step: the big-number delay is the same on both sides of the gate (and across the whole range)', () => {
+    let n = 0
+    for (const s of STEP_POOL.values()) {
+      if (!s.scene.eventWhen) continue
+      n++
+      const { control } = s.scene.eventWhen
+      const [lo, hi] = controlRange(s, control)
+      const delays = new Set<number>()
+      for (let i = 0; i <= 20; i++) {
+        const v = V({ ...s.scene.values, [control]: lo + ((hi - lo) * i) / 20 })
+        for (const reduced of [false, true]) delays.add(bigNumberDelayMs(numberDelayEvent(s, v), reduced))
+      }
+      expect([...delays], s.id).toEqual([0])
+    }
+    expect(n).toBe(3) // s-dd、s-pe、b-rate
+  })
+  it('steps whose event starts on entry still wait for it (c-2 waits for the strike)', () => {
+    const c2 = STEP_POOL.get('c-2')!
+    expect(bigNumberDelayMs(numberDelayEvent(c2, V()), false)).toBeGreaterThan(0)
   })
 })

@@ -5,7 +5,7 @@ import { prefersReducedMotion, useRevealAfterCamera } from '../scene/useRevealAf
 import { effectiveExplode, useSandbox } from '../store/sandbox'
 import { currentStep, useTour } from '../store/tour'
 import { makeTextContext } from '../tour/context'
-import { activeEvent, chapterOfIndex, courseById, isSatisfied, lineOf, moreOf, nextCourse, nextIndex, prevIndex, titleOf } from '../tour/engine'
+import { activeEvent, chapterOfIndex, numberDelayEvent, courseById, isSatisfied, lineOf, moreOf, nextCourse, nextIndex, prevIndex, titleOf } from '../tour/engine'
 import { BigNumberCard } from './panel/BigNumberCard'
 import { bigNumberDelayMs } from '../scene/events'
 import { MoreSection } from './panel/MoreSection'
@@ -74,7 +74,7 @@ function StepPanel() {
       </StepHeader>
       {big && (
         <div className={revealed ? 'step-reveal is-revealed' : 'step-reveal'}>
-          <BigNumberCard key={step.id} n={big} color={big.colorKey ? colorOf(big.colorKey) : undefined} run={revealed} instant={instant} titleMarks={marks} delayMs={bigNumberDelayMs(event, instant)} />
+          <BigNumberCard key={step.id} n={big} color={big.colorKey ? colorOf(big.colorKey) : undefined} run={revealed} instant={instant} titleMarks={marks} delayMs={bigNumberDelayMs(numberDelayEvent(step, { ...values, slice, explode }), instant)} />
         </div>
       )}
       {step.controls && <StageControls controls={step.controls} />}
