@@ -153,8 +153,9 @@ describe('course navigation (never crosses into another course)', () => {
     expect(isValidCoursePos({ course: 'beginner', index: B.length })).toBe(false)
     expect(isValidCoursePos({ course: 'beginner', index: -1 })).toBe(false)
     expect(isValidCoursePos({ course: 'beginner', index: 0.5 })).toBe(false)
-    expect(isValidCoursePos({ course: 'advanced', index: 0 })).toBe(false) // 高階還沒有步驟
-    expect(() => stepAtCourse({ course: 'advanced', index: 0 })).toThrow(RangeError)
+    expect(isValidCoursePos({ course: 'advanced', index: 0 })).toBe(true) // 高階（Plan 8）
+    expect(isValidCoursePos({ course: 'advanced', index: stepsOf('advanced').length })).toBe(false)
+    expect(() => stepAtCourse({ course: 'advanced', index: stepsOf('advanced').length })).toThrow(RangeError)
   })
 
   it('reports progress inside the course only', () => {

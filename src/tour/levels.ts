@@ -46,6 +46,14 @@ const BEGINNER_RECAP: RecapLine[] = [
   { icon: '🧩', text: 'ETF＝照藍圖挑（通常較便宜）' },
 ]
 
+/** 中階口訣：中階結尾（m-fin）與高階開頭的複習（a-0）用同一份 */
+const MID_RECAP: RecapLine[] = [
+  { icon: '🧱', text: '股票看總報酬、最大跌幅、本益比' },
+  { icon: '📜', text: '利率漲，舊借據現價跌；通膨吃利息' },
+  { icon: '🚜', text: '基金費用：進門、出門、每年' },
+  { icon: '🧩', text: 'ETF 看重疊；定期定額讓成本平均' },
+]
+
 export const LEVELS: Level[] = [
   {
     id: 'prologue',
@@ -502,7 +510,7 @@ export const LEVELS: Level[] = [
 
 /**
  * 課程專用的新步驟（不在 LEVELS 裡，只由 courses.ts 排進課程）：
- * m-0＝中階開頭的初階口訣複習；m-fin＝中階結尾的口訣卡（高階還沒開放，所以推薦自由玩）。
+ * m-0＝中階開頭的初階口訣複習；m-fin＝中階結尾的口訣卡；a-0…a-fin＝高階（Plan 8）。
  */
 export const COURSE_STEPS: Step[] = [
   {
@@ -616,12 +624,16 @@ export const COURSE_STEPS: Step[] = [
     fallbackLine: '中階課程**完成**了',
     more: '恭喜完成中階！自由玩已經解鎖。所有商品都能自由切開、拆開、比較。',
     fallbackMore: '恭喜完成中階！在支援 3D 的瀏覽器上，還可以自由玩。自由玩裡能切開、拆開、比較。',
-    recap: [
-      { icon: '🧱', text: '股票看總報酬、最大跌幅、本益比' },
-      { icon: '📜', text: '利率漲，舊借據現價跌；通膨吃利息' },
-      { icon: '🚜', text: '基金費用：進門、出門、每年' },
-      { icon: '🧩', text: 'ETF 看重疊；定期定額讓成本平均' },
-    ],
+    recap: MID_RECAP,
+    scene: { camera: 'overview', product: null },
+  },
+  // ───────────── 高階（Plan 8）：怎麼組合、怎麼控風險 ─────────────
+  {
+    id: 'a-0',
+    title: '中階口訣複習',
+    line: '先複習**中階**的四句話',
+    more: '這四句是中階學到的重點。高階教怎麼組合、怎麼算成本、怎麼控風險。',
+    recap: MID_RECAP,
     scene: { camera: 'overview', product: null },
   },
 ]

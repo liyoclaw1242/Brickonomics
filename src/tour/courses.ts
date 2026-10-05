@@ -46,12 +46,19 @@ export const COURSES: readonly Course[] = [
     ],
   },
   {
-    // Plan 8 才有內容；Plan 6 隱藏
+    // Plan 8：每一步做好就排進來；全部做完才開放（available）
     id: 'advanced',
     name: '高階',
     tagline: '自己組合、算成本',
     available: false,
-    chapters: [],
+    chapters: [
+      chapter('review', T.courseChapters.review, ['a-0']),
+      chapter('stock', STOCK, []),
+      chapter('bond', BOND, []),
+      chapter('fund', FUND, []),
+      chapter('etf', ETF, []),
+      chapter('finish', T.courseChapters.finish, []),
+    ],
   },
 ]
 
