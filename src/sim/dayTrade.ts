@@ -2,17 +2,25 @@ import { TW_TRADING } from '../data/trading'
 import { finite, inRange, nonNegInt, rate } from './guard'
 
 /**
- * 當沖一進一出（買進＋同一天賣出）的成本，占成交金額的比例。
- * buyFee、sellFee：券商手續費（公告上限，已查證，取自 data/trading）；
- * sellCost：現股當沖賣出時的交易成本（0.15%，舉例 ✎；出處與查證留給 Plan 8 Task 3，未查證前畫面顯示 ？）。
- * 三項直接相加（買、賣的成交金額都約等於本金）。
+ * 當沖一進一出（買進＋同一天賣出）的成本，占成交金額的比例；全部從 data/trading（TW_TRADING）讀：
+ * buyFee、sellFee：券商手續費；
+ * sellCost：現股當沖賣出那一次的交易成本（TW_TRADING.dayTradeSellCost，適用至 dayTradeSellCostUntil）。
+ * verified：各項的查證狀態（Task 4 依此自動標 ？）。三項直接相加（買、賣的成交金額都約等於本金）。
  */
 export const DAY_TRADE_COST = {
   buyFee: TW_TRADING.brokerFee,
   sellFee: TW_TRADING.brokerFee,
-  sellCost: 0.0015,
-  verified: { buyFee: TW_TRADING.verified.brokerFee, sellFee: TW_TRADING.verified.brokerFee, sellCost: false },
+  sellCost: TW_TRADING.dayTradeSellCost,
+  sellCostUntil: TW_TRADING.dayTradeSellCostUntil,
+  verified: {
+    buyFee: TW_TRADING.verified.brokerFee,
+    sellFee: TW_TRADING.verified.brokerFee,
+    sellCost: TW_TRADING.verified.dayTradeSellCost,
+  },
 } as const
+
+/** 成本三項都查證過（畫面不用標 ？） */
+export const dayTradeCostVerified = (): boolean => Object.values(DAY_TRADE_COST.verified).every(Boolean)
 
 export type DayTradeParams = {
   /** 進出幾次（一次＝買進再賣出） */

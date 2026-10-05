@@ -1,14 +1,24 @@
 import { describe, expect, it } from 'vitest'
 import { TW_TRADING } from '../data/trading'
-import { DAY_TRADE, DAY_TRADE_COST, breakEvenWinRate, dayTradeDrain } from './dayTrade'
+import { DAY_TRADE, DAY_TRADE_COST, breakEvenWinRate, dayTradeCostVerified, dayTradeDrain } from './dayTrade'
 
 describe('day-trade example (why most lose: costs at a 50% win rate)', () => {
-  it('cost per round trip = buy fee + sell fee + sell-side cost = 0.001425 + 0.001425 + 0.0015 = 0.00435', () => {
+  it('cost per round trip = buy fee + sell fee (posted cap) + day-trade sell-side cost = 0.001425 + 0.001425 + 0.0015 = 0.00435, all from TW_TRADING', () => {
     expect(DAY_TRADE_COST.buyFee).toBe(TW_TRADING.brokerFee)
     expect(DAY_TRADE_COST.sellFee).toBe(TW_TRADING.brokerFee)
+    expect(DAY_TRADE_COST.sellCost).toBe(TW_TRADING.dayTradeSellCost)
+    expect(TW_TRADING.dayTradeSellCost).toBe(0.0015)
     expect(DAY_TRADE.costPerTrade).toBeCloseTo(0.00435, 12)
-    // sellCost 尚未查證（Plan 8 Task 3 查證）：畫面要顯示 ？
-    expect(DAY_TRADE_COST.verified.sellCost).toBe(false)
+  })
+
+  it('verified flags follow the data (Task 4 derives ？ from them)', () => {
+    expect(DAY_TRADE_COST.verified).toEqual({
+      buyFee: TW_TRADING.verified.brokerFee,
+      sellFee: TW_TRADING.verified.brokerFee,
+      sellCost: TW_TRADING.verified.dayTradeSellCost,
+    })
+    expect(dayTradeCostVerified()).toBe(TW_TRADING.verified.brokerFee && TW_TRADING.verified.dayTradeSellCost)
+    expect(DAY_TRADE_COST.sellCostUntil).toBe('2027-12-31')
   })
 
   it('example: 250 trades, win 50% of the time, +1% / −1%', () => {
