@@ -918,3 +918,13 @@ describe('mid-r2: s-pe says 比較貴, never 泡沫', () => {
     expect(byId('s-pe').scene.event).toMatchObject({ kind: 'bubble', phase: 'float' }) // 不破
   })
 })
+
+describe('mid-r2: 總報酬 is named where it is taught (s-6), before the m-fin recap uses it', () => {
+  it('s-6 big-number label uses the exact term', () => {
+    expect(bigOf(byId('s-6'))!.label).toBe('總報酬（方塊＋金幣）變少')
+    expect(byId('m-fin').recap!.some((r) => r.text.includes('總報酬'))).toBe(true)
+    const ids = courseSteps(COURSES.find((c) => c.id === 'intermediate')!).map((s) => s.id)
+    const first = ids.find((id) => { const s = byId(id); return [s.title, stripMarkup(lineOf(s, ctx)), bigOf(s)?.label ?? ''].some((t) => t.includes('總報酬')) })
+    expect(first).toBe('s-6')
+  })
+})

@@ -140,7 +140,7 @@ export const LEVELS: Level[] = [
         // 不用再拉：一進來就是「過了一陣子」的結果（95 ＋ 5 → 92 ＋ 5）。卡片只放一個數字：少了多少
         bigNumber: (_c, v) => {
           const e = exDivTimeline(Math.max(v.phase, EXDIV_AFTER_PHASE), 'gap')
-          return { value: `少 ${n0(EXDIV.price - (e.blockValue + e.cash))}`, label: '方塊＋金幣，合起來變少', colorKey: 'loss', mark: 'illustrative' }
+          return { value: `少 ${n0(EXDIV.price - (e.blockValue + e.cash))}`, label: '總報酬（方塊＋金幣）變少', colorKey: 'loss', mark: 'illustrative' }
         },
         scene: { cityDim: true, camera: 'plazaNear', product: null, stage: { kind: 'exdiv', outcome: 'gap' }, values: { phase: 1 } },
       },
