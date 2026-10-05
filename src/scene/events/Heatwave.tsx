@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { CanvasTexture, type Group, type HemisphereLight, type InstancedMesh, type MeshBasicMaterial, Object3D } from 'three'
+import { CanvasTexture, type Group, type InstancedMesh, type MeshBasicMaterial, Object3D } from 'three'
 import { useThemeStore } from '../../store/theme'
 import { ACCENT_COLORS } from '../palette'
 import { THEMES } from '../theme'
+import { useEventHemi } from '../eventLights'
 import { PLAZA } from '../stage/plaza'
 import { rand } from './ease'
 import { HEAT, HEAT_DETAIL, HEAT_FIELD, HEAT_SUN, PUDDLE_GROW, heatLevel, meltAt, meltOf, shimmerOffset } from './heatwave'
@@ -52,7 +53,7 @@ export function Heatwave({ spec, clock, quality }: EventProps<SpecOf<'heatwave'>
   const root = useRef<Group>(null)
   const lines = useRef<InstancedMesh>(null)
   const puddles = useRef<InstancedMesh>(null)
-  const hemi = useRef<HemisphereLight>(null)
+  const hemi = useEventHemi(theme.light, theme.ground)
   const hazeMat = useRef<MeshBasicMaterial>(null)
   const haze = useMemo(hazeTexture, [])
   useEffect(() => () => haze?.dispose(), [haze])
@@ -81,7 +82,8 @@ export function Heatwave({ spec, clock, quality }: EventProps<SpecOf<'heatwave'>
     const h = t === null ? 0 : clock.reduced ? 1 : heatLevel(t)
     const m = t === null ? 0 : clock.reduced ? meltOf(spec) : meltAt(spec, t)
     tint(h)
-    if (hemi.current) hemi.current.intensity = theme.ambient * h
+    const hl = hemi()
+    if (hl) hl.intensity = theme.ambient * h
     if (!g) return
     g.visible = t !== null
     if (t === null) return
@@ -140,7 +142,6 @@ export function Heatwave({ spec, clock, quality }: EventProps<SpecOf<'heatwave'>
 
   return (
     <>
-      <hemisphereLight ref={hemi} args={[theme.light, theme.ground, 0]} />
       <Sun look={look} radius={HEAT_SUN.radius} rays={detail.rays} quality={quality} read={readSun} />
       <mesh position={[PLAZA[0], PLAZA[1] + HAZE.h / 2 - 1, PLAZA[2] + HAZE.z]} renderOrder={-5}>
         <planeGeometry args={[HAZE.w, HAZE.h]} />

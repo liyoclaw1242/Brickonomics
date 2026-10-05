@@ -1,8 +1,9 @@
 import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { type Group, type HemisphereLight, type InstancedMesh, Object3D } from 'three'
+import { type Group, type InstancedMesh, Object3D } from 'three'
 import { useThemeStore } from '../../store/theme'
 import { THEMES } from '../theme'
+import { useEventHemi } from '../eventLights'
 import { PLAZA } from '../stage/plaza'
 import { rand } from './ease'
 import { FREEZE, FREEZE_DETAIL, WIND_FIELD, chillLevel, frostLevel, frostOf, frostProgress, icicleSlots, windLevel } from './freeze'
@@ -43,7 +44,7 @@ export function Freeze({ spec, clock, quality }: EventProps<SpecOf<'freeze'>>) {
   const ice = useRef<InstancedMesh>(null)
   const streaks = useRef<InstancedMesh>(null)
   const flakes = useRef<InstancedMesh>(null)
-  const chill = useRef<HemisphereLight>(null)
+  const chill = useEventHemi(theme.chill, theme.chill)
   const dummy = useMemo(() => new Object3D(), [])
 
   useFrame(() => {
@@ -52,13 +53,15 @@ export function Freeze({ spec, clock, quality }: EventProps<SpecOf<'freeze'>>) {
     if (!g) return
     if (t === null) {
       g.visible = false
-      if (chill.current) chill.current.intensity = 0
+      const c0 = chill()
+      if (c0) c0.intensity = 0
       return
     }
     g.visible = true
     const te = clock.reduced ? Infinity : t
     const wind = windLevel(te)
-    if (chill.current) chill.current.intensity = theme.chillIntensity * chillLevel(spec, te)
+    const c = chill()
+    if (c) c.intensity = theme.chillIntensity * chillLevel(spec, te)
 
     // 外殼與積雪（每個目標一個）
     const sh = shells.current
@@ -155,7 +158,6 @@ export function Freeze({ spec, clock, quality }: EventProps<SpecOf<'freeze'>>) {
   const anyFrost = targets.some((_, i) => frostOf(spec, i) > 0)
   return (
     <>
-      <hemisphereLight ref={chill} args={[theme.chill, theme.chill, 0]} />
       <group ref={root} visible={false}>
         {anyFrost && (
           <>

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { settled } from './helpers'
+import { setRange, settled } from './helpers'
 
 const STRUCK = '台積電被打中'
 
@@ -78,4 +78,27 @@ test('s-dd: crossing the trough gate starts the quake clock right away (no secon
   // 而且只開始一次：舊的寫法先偷跑一幀、又收回，1.5 秒後才真正重新開始（第二筆 clock-start）
   await page.waitForTimeout(2500)
   expect((await log()).filter((e) => e.what === 'clock-start:quake')).toHaveLength(1)
+})
+
+// Plan 7 review：事件不自己掛燈（燈數一變，所有受光材質要重新編譯）。b-rate 過門檻（寒流）前後、再到 b-infl（熱浪）、e-dca（晴天），燈數都一樣。
+test('event lights: the scene light count never changes across the b-rate gate and the weather steps', async ({ page }) => {
+  test.setTimeout(120_000)
+  const lights = () => page.evaluate(() => (window as unknown as { __BCI_LIGHTS__?: number }).__BCI_LIGHTS__ ?? -1)
+  await page.goto('/?quality=high&course=intermediate&step=b-rate')
+  await settled(page)
+  await page.waitForTimeout(300)
+  const before = await lights()
+  expect(before).toBeGreaterThan(0)
+  await setRange(page, '市場利率', 0.05)
+  await page.waitForTimeout(1500)
+  expect(await lights()).toBe(before)
+  await setRange(page, '市場利率', 0.03)
+  await page.waitForTimeout(500)
+  expect(await lights()).toBe(before)
+  for (const step of ['b-infl', 'e-dca']) {
+    await page.goto(`/?quality=high&course=intermediate&step=${step}`)
+    await settled(page)
+    await page.waitForTimeout(1500)
+    expect(await lights(), step).toBe(before)
+  }
 })

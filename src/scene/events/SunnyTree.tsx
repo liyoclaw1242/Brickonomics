@@ -1,10 +1,11 @@
 import { useCallback, useLayoutEffect, useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
-import { Color, type DirectionalLight, type HemisphereLight, type InstancedMesh, Object3D } from 'three'
+import { Color, type InstancedMesh, Object3D } from 'three'
 import { useThemeStore } from '../../store/theme'
 import type { Vec3 } from '../camera'
 import type { Quality } from '../quality'
 import { THEMES } from '../theme'
+import { useEventHemi, useEventKey } from '../eventLights'
 import { PLAZA } from '../stage/plaza'
 import { rand } from './ease'
 import { SKY, SUNNY_DETAIL, crownPuffs, sunOf, sunnyAt, sunnyFinal } from './sunnyTree'
@@ -22,11 +23,11 @@ export function SunnyTree({ spec, clock, quality }: EventProps<SpecOf<'sunnyTree
   const detail = SUNNY_DETAIL[quality]
   const tint = useSkyTint(theme.sky, theme.fog)
   const clouds = useRef<InstancedMesh>(null)
-  const key = useRef<DirectionalLight>(null)
-  const hemi = useRef<HemisphereLight>(null)
   const dummy = useMemo(() => new Object3D(), [])
   const nClouds = SKY.clouds.length * detail.puffs
   const [sx, sy, sz] = sunOf(spec)
+  const key = useEventKey(theme.lightColor, [PLAZA[0] + sx, PLAZA[1] + sy, PLAZA[2] + sz + 10])
+  const hemi = useEventHemi(theme.lightColor, theme.ground)
   const look = useMemo(() => ({ core: theme.sun, glow: theme.glow, glowOpacity: theme.glowOpacity, additive: theme.glowAdditive }), [theme])
   // 太陽：從 sun 下方 rise 升上來；光芒等雲散開才亮（Sun 自己的 useFrame 呼叫，直接讀時鐘，不靠 useFrame 的先後）
   const readSun = useCallback(
@@ -46,8 +47,10 @@ export function SunnyTree({ spec, clock, quality }: EventProps<SpecOf<'sunnyTree
   useFrame(() => {
     const s = clock.reduced ? sunnyFinal(spec) : sunnyAt(spec, clock.t.current)
     tint(s.warm)
-    if (key.current) key.current.intensity = theme.light * s.warm
-    if (hemi.current) hemi.current.intensity = theme.ambient * s.warm
+    const k = key()
+    if (k) k.intensity = theme.light * s.warm
+    const h = hemi()
+    if (h) h.intensity = theme.ambient * s.warm
 
     // 雲：一開始擋在太陽前面，放晴時往左右飄走、縮小
     const cl = clouds.current
@@ -77,8 +80,6 @@ export function SunnyTree({ spec, clock, quality }: EventProps<SpecOf<'sunnyTree
 
   return (
     <>
-      <directionalLight ref={key} color={theme.lightColor} intensity={0} position={[PLAZA[0] + sx, PLAZA[1] + sy, PLAZA[2] + sz + 10]} />
-      <hemisphereLight ref={hemi} args={[theme.lightColor, theme.ground, 0]} />
       <Sun look={look} radius={SKY.sunRadius} rays={detail.rays} quality={quality} read={readSun} />
       <instancedMesh ref={clouds} args={[undefined, undefined, nClouds]} frustumCulled={false}>
         <icosahedronGeometry args={[1, quality === 'low' ? 0 : 1]} />

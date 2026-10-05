@@ -4,6 +4,7 @@ import { Environment, Lightformer } from '@react-three/drei'
 import { useThemeStore } from '../store/theme'
 import { QUALITY, type Quality } from './quality'
 import { THEMES } from './theme'
+import { eventLights } from './eventLights'
 
 export function Lighting({ quality }: { quality: Quality }) {
   const themeId = useThemeStore((s) => s.theme)
@@ -30,6 +31,9 @@ export function Lighting({ quality }: { quality: Quality }) {
         shadow-camera-bottom={-40}
       />
       <directionalLight color={t.fill.color} position={t.fill.position} intensity={t.fill.intensity} />
+      {/* 事件共用的燈（寒流、熱浪、晴天）：一直掛著、平常強度 0，燈數永遠不變（見 eventLights.ts） */}
+      <hemisphereLight ref={(h) => void (eventLights.hemi = h)} args={['#ffffff', '#ffffff', 0]} />
+      <directionalLight ref={(k) => void (eventLights.key = k)} intensity={0} />
       <Environment resolution={64} frames={1} environmentIntensity={t.envIntensity}>
         <Lightformer form="rect" intensity={2} position={[0, 8, 0]} rotation-x={Math.PI / 2} scale={[20, 20, 1]} />
         <Lightformer form="rect" intensity={1.5} position={[-8, 3, 0]} rotation-y={Math.PI / 2} scale={[12, 8, 1]} />
