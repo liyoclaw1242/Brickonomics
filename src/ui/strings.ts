@@ -127,6 +127,12 @@ export const T = {
     years: (n: number) => `${n} 年`,
     sub: (price: number, earn: number) => `股價 ${price}・每年賺 ${earn}`,
   },
+  /** b-rate 利率翹翹板的 3D 標註 */
+  seesaw: {
+    rate: (v: string) => `市場利率 ${v}`,
+    bond: (price: number) => `舊借據 約 ${price} 元`,
+    maturity: '放到到期，拿回 100',
+  },
   /** 基金那一章的錢：投入 100＝100 萬（和計費表同一個底），一位小數、去掉「.0」 */
   wan,
   /** 元（四捨五入、千分位）：18800 → '18,800 元'（r5：有感的錢，像計費表的「已磨掉約 39,073 元」） */
@@ -194,6 +200,9 @@ export const T = {
     ddDrop: '現在比最高少',
     ddWorst: '最多曾經少掉',
     pePrice: '兩棟的股價',
+    rateNow: '現在的市場利率',
+    ratePrice: '舊借據現在值',
+    rateFace: '到期拿回',
     peYears: (earn: number) => `每年賺 ${earn}：幾年賺回`,
   },
   feeParts: { expenseRatio: '內扣費用', distributionFee: '分銷費', cdsc: '遞延手續費', trading: '交易成本' },

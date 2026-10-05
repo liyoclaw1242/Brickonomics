@@ -3,7 +3,7 @@ import { isVerified } from '../data/verified'
 import { sectorBreakdown } from '../scene/layout/underground'
 import { accumulateVsPayout, exDivTimeline, principalTrap } from '../scene/layout/stages'
 import { feeRaceLeader, feeRaceRows } from '../sim/feeRace'
-import { ddNow, PE_DEMO, peYears } from '../scene/layout/intermediate'
+import { ddNow, PE_DEMO, peYears, ratePrice } from '../scene/layout/intermediate'
 import { overlap } from '../sim/overlap'
 import { shockImpact } from '../sim/scenario'
 import { SHOCK_2330, signedPct } from '../tour/context'
@@ -80,6 +80,12 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
       return [
         { label: T.readout.pePrice, value: String(PE_DEMO.price), marks: ['illustrative'] },
         ...(['cheap', 'pricey'] as const).map((k) => ({ label: T.readout.peYears(PE_DEMO.earnings[k]), value: T.pe.years(peYears(k)) })),
+      ]
+    case 'seesaw':
+      return [
+        { label: T.readout.rateNow, value: T.controls.rateValue(v.rate), marks: ['illustrative'] },
+        { label: T.readout.ratePrice, value: n1(ratePrice(v.rate)) },
+        { label: T.readout.rateFace, value: '100' },
       ]
     case 'overlap': {
       const o = overlap(u, stage.a, stage.b)

@@ -3,7 +3,7 @@ import { movePct, pct0, SHOCK_2330, signedPct, wan } from './context'
 import { DEFAULT_VALUES } from './values'
 import { EXDIV, exDivTimeline, principalTrap, TRAP_DEMO } from '../scene/layout/stages'
 import { T } from '../ui/strings'
-import { DD_DEMO, DD_TROUGH, ddNow, ddQuake, PE_DEMO, peBubble, peYears } from '../scene/layout/intermediate'
+import { DD_DEMO, DD_TROUGH, ddNow, ddQuake, PE_DEMO, peBubble, peYears, RATE_DEMO, rateFreeze, ratePrice } from '../scene/layout/intermediate'
 import { maxDrawdown } from '../sim/drawdown'
 
 /**
@@ -537,6 +537,22 @@ export const COURSE_STEPS: Step[] = [
     controls: ['periods'],
     ranges: { periods: [0, peYears('pricey')] },
     until: { control: 'periods', min: peYears('pricey') },
+  },
+  {
+    // 中階債券章（Plan 7）：市場利率漲，已經發行的舊借據價格就跌；拉到 5% 時 ❄️ 寒流讓舊借據結霜。說的是「舊借據現在的價格」，到期仍拿回 100
+    id: 'b-rate',
+    title: '利率翹翹板',
+    line: '拖**市場利率**。舊借據價格就**跌|loss**',
+    fallbackLine: () => `利率到 ${pct1(RATE_DEMO.to)}，舊借據約 **${n0(ratePrice(RATE_DEMO.to))} 元|loss**`,
+    more: () =>
+      `利率漲，舊借據的價格就跌，像翹翹板。新借據給更多利息，舊的只好便宜賣。放到到期，還是拿回 100 元。這是示意，舉例 ${RATE_DEMO.years} 年、每年利息 ${pct1(RATE_DEMO.coupon)}。`,
+    mark: 'illustrative',
+    // 跟著拉桿：舊借據現在值多少（面額 100）；note 一直提醒到期還是拿回 100
+    bigNumber: (_c, v) => ({ value: `約 ${n0(ratePrice(v.rate))} 元`, label: '舊借據現在值', note: '放到到期，還是拿回 100 元', mark: 'illustrative' }),
+    scene: { camera: 'plaza', product: null, stage: { kind: 'seesaw' }, event: rateFreeze(), eventWhen: { control: 'rate', min: RATE_DEMO.to }, values: { rate: RATE_DEMO.from }, cityLabels: false },
+    controls: ['rate'],
+    ranges: { rate: [RATE_DEMO.from, RATE_DEMO.to] },
+    until: { control: 'rate', min: RATE_DEMO.to },
   },
   {
     id: 'm-0',

@@ -32,6 +32,8 @@ export type Stage =
   | { kind: 'drawdown' }
   /** s-pe 本益比：兩棟股價一樣的大樓＋每年賺的錢一年一片疊起來（periods 拉桿）；數滿時太貴那棟被泡泡包住（scene.event bubble＋eventWhen） */
   | { kind: 'pe' }
+  /** b-rate 利率翹翹板：市場利率（rate 拉桿）vs 舊借據價格；拉到 5% 時舊借據結霜（scene.event freeze＋eventWhen） */
+  | { kind: 'seesaw' }
   | { kind: 'overlap'; a: string; b: string }
   | { kind: 'underground'; show: 'strata' | 'cores' | 'dig' | 'veins' | 'gold'; cores?: [string, string] }
 

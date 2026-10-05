@@ -36,7 +36,7 @@ const unverify = (ids: string[]): Universe => {
 
 const byId = (id: string): Step => steps.find((s) => s.id === id)!
 /** Plan 7 的舉例舞台：一定要標 ≈、多說一點寫「示意」 */
-const PLAN7_STAGES: string[] = ['drawdown', 'pe']
+const PLAN7_STAGES: string[] = ['drawdown', 'pe', 'seesaw']
 /** 大數字跟著即時拉桿值；測試預設用進入該步驟時的值 */
 const bigOf = (s: Step, values: Partial<StageValues> = {}) => s.bigNumber?.(ctx, { ...DEFAULT_VALUES, ...s.scene.values, ...values })
 const resolve = (t: Step['line'] | undefined): string | undefined => (t === undefined ? undefined : typeof t === 'function' ? t(ctx) : t)
@@ -753,5 +753,30 @@ describe('Plan 7 中階: 本益比 (s-pe)', () => {
     expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('15 年和 60 年才賺回股價')
     // 每年賺的錢是公司的獲利（不一定發給你）：不叫金幣、配息
     for (const t of [lineOf(s(), ctx), moreOf(s(), ctx)]) for (const w of ['金幣', '配息']) expect(t).not.toContain(w)
+  })
+})
+
+describe('Plan 7 中階: 利率翹翹板 (b-rate)', () => {
+  const s = () => byId('b-rate')
+  it('drag the market rate from 2% to 5%: the gate and the freeze are both at 5%, the top of the range', () => {
+    expect(controlRange(s(), 'rate')).toEqual([0.02, 0.05])
+    expect(s().scene.values?.rate).toBe(0.02)
+    expect(s().until).toEqual({ control: 'rate', min: 0.05 })
+    expect(s().scene.eventWhen).toEqual(s().until)
+    expect(s().scene.event).toMatchObject({ kind: 'freeze' })
+  })
+  it('the big number follows the slider: 100 at 2%, about 77 at 5% (2 × annuity(5%, 10) + 100 ÷ 1.05^10 = 76.83)', () => {
+    expect(bigOf(s(), { rate: 0.02 })!.value).toBe('約 100 元')
+    expect(bigOf(s(), { rate: 0.05 })!.value).toBe(`約 ${(2 * ((1 - 1.05 ** -10) / 0.05) + 100 / 1.05 ** 10).toFixed(0)} 元`)
+    expect(bigOf(s(), { rate: 0.05 })!.value).toBe('約 77 元')
+    expect(bigOf(s())!.note).toContain('還是拿回 100')
+  })
+  it('talks about the price of an existing bond, which goes back to 100 at maturity', () => {
+    const more = moreOf(s(), ctx)
+    expect(more).toContain('舊借據')
+    expect(more).toContain('放到到期，還是拿回 100 元')
+    expect(more).toContain('10 年')
+    expect(more).toContain('2%')
+    expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('利率到 5%，舊借據約 77 元')
   })
 })

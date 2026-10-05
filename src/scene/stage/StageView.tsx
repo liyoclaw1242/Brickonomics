@@ -10,6 +10,7 @@ import { BondShowcase } from './BondShowcase'
 import { DrawdownStage } from './DrawdownStage'
 import { Excavator } from './Excavator'
 import { PeStage } from './PeStage'
+import { SeesawStage } from './SeesawStage'
 import { ExDividendStage } from './ExDividendStage'
 import { FeeMeter } from './FeeMeter'
 import { FeeRaceStage } from './FeeRaceStage'
@@ -44,6 +45,7 @@ export function StageView({ quality }: { quality: Quality }) {
       {stage.kind === 'shock' && <ShockStage quality={quality} event={clock} />}
       {stage.kind === 'drawdown' && <DrawdownStage event={clock} />}
       {stage.kind === 'pe' && <PeStage event={clock} />}
+      {stage.kind === 'seesaw' && <SeesawStage event={clock} />}
       {stage.kind === 'overlap' && <OverlapStage a={stage.a} b={stage.b} quality={quality} />}
       {stage.kind === 'underground' && <UndergroundStage show={stage.show} cores={stage.cores} quality={quality} />}
       {stage.kind === 'excavator' && <Excavator other={stage.other} />}

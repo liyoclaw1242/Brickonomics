@@ -3,6 +3,8 @@ import { maxDrawdown } from '../../sim/drawdown'
 import { QUAKE, pitDepthOf } from '../events/quake'
 import { DD_DEMO, DD_LAYOUT, ddBarX, ddHeight, ddNow, ddQuake, PE_DEMO, PE_LAYOUT, peBubble, peSlabs, peYears } from './intermediate'
 import { yearsToPayBack } from '../../sim/valuation'
+import { bondPrice } from '../../sim/bondPrice'
+import { RATE_DEMO, SEESAW, rateFreeze, ratePrice, seesawPose } from './intermediate'
 import { bubbleRadii } from '../events/bubble'
 
 describe('s-dd drawdown layout', () => {
@@ -65,5 +67,33 @@ describe('s-pe P/E layout', () => {
     expect(b.target.size[1]).toBe(PE_LAYOUT.height)
     const rx = bubbleRadii(b.target.size)[0]
     expect(Math.abs(PE_LAYOUT.slabX.pricey - PE_LAYOUT.x.pricey) - PE_LAYOUT.slabW / 2).toBeGreaterThan(rx)
+  })
+})
+
+describe('b-rate seesaw layout', () => {
+  it('the old bond (2% a year, 10 years) is worth 100 at 2% and about 76.83 at 5%', () => {
+    expect(ratePrice(RATE_DEMO.from)).toBeCloseTo(100, 9)
+    expect(ratePrice(RATE_DEMO.to)).toBeCloseTo(bondPrice({ coupon: 0.02, years: 10, rate: 0.05 }), 12)
+    expect(ratePrice(RATE_DEMO.to)).toBeCloseTo(2 * ((1 - 1.05 ** -10) / 0.05) + 100 / 1.05 ** 10, 9) // ≈ 76.83
+  })
+  it('level at the coupon rate; the rate end goes up and the price end goes down as the rate rises', () => {
+    expect(seesawPose(RATE_DEMO.from).theta).toBeCloseTo(0, 9)
+    let prev = seesawPose(RATE_DEMO.from)
+    for (let r = RATE_DEMO.from + 0.005; r <= RATE_DEMO.to + 1e-9; r += 0.005) {
+      const p = seesawPose(r)
+      expect(p.left[1]).toBeGreaterThan(prev.left[1])
+      expect(p.right[1]).toBeLessThan(prev.right[1])
+      prev = p
+    }
+    // 最斜的時候板子末端還在地面以上（板子下緣 ≥ 0）
+    expect(seesawPose(RATE_DEMO.to).right[1] - SEESAW.thick / 2).toBeGreaterThanOrEqual(-1e-9)
+  })
+  it('the freeze target is the old bond where it sits at the gate (5%), so the frost lines up with it', () => {
+    const f = rateFreeze()
+    expect(f.targets).toHaveLength(1)
+    const end = seesawPose(RATE_DEMO.to).right
+    expect(f.targets[0]!.at[0]).toBeCloseTo(end[0], 12)
+    expect(f.targets[0]!.at[1]).toBeCloseTo(end[1] + SEESAW.thick / 2, 12)
+    expect(f.targets[0]!.size).toEqual(SEESAW.bond)
   })
 })
