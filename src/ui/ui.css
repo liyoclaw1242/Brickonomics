@@ -135,6 +135,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .legend__name--aggregate { color: var(--muted); font-style: italic; }
 .legend__pct { font-variant-numeric: tabular-nums; color: var(--muted); }
 .hint { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+.disclaimer { margin-top: 12px; line-height: 1.5; }
 /* 「先拉一下」提示：使用者測試時差點沒看到為什麼下一步按不下去 → 大一點、用強調色 */
 .hint--try { font-size: 15px; font-weight: 600; color: var(--em); margin: 8px 0 0; }
 /* 最後一步的回顧清單 */

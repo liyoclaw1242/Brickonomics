@@ -79,6 +79,7 @@ export function SandboxPanel() {
       )}
 
       <p className="hint">{T.heightNote}</p>
+      <p className="hint disclaimer">{T.disclaimer}</p>
     </aside>
   )
 }
