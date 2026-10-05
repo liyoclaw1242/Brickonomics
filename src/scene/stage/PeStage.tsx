@@ -7,13 +7,13 @@ import { Callout } from '../Callout'
 import { bubbleAt, bubbleFinal } from '../events/bubble'
 import type { EventClock } from '../events/types'
 import { PE_DEMO, PE_LAYOUT, peSlabs, peYears, type PeKey } from '../layout/intermediate'
-import { SECTOR_COLORS } from '../palette'
+import { ACCENT_COLORS, SECTOR_COLORS } from '../palette'
 import { atPlaza } from './plaza'
 
 const KEYS: readonly PeKey[] = ['cheap', 'pricey']
 const BUILDING = SECTOR_COLORS.finance
 /** 每年賺的錢（公司的獲利，不一定發給你，所以不用金幣）：淺綠色的薄片 */
-const PROFIT = '#9ccc65'
+const PROFIT = ACCENT_COLORS.profit
 const SLAB_FILL = 0.8
 const MAX_SLABS = KEYS.reduce((n, k) => n + peYears(k), 0)
 
@@ -84,9 +84,9 @@ export function PeStage({ event }: { event: EventClock }) {
       {KEYS.map((k) => (
         <Callout
           key={k}
-          anchor={atPlaza(PE_LAYOUT.slabX[k], 0.1, PE_LAYOUT.slabW / 2)}
-          // 左邊那疊的字塊往左、右邊往右：兩個字塊不會互撞
-          offset={[k === 'cheap' ? -1.8 : 1.8, -0.3, 2.4]}
+          // 錨在自己那一組（大樓＋那一疊）的中間前面，字塊往外長（左組往左、右組往右）：兩組中間留空，不會互相蓋住
+          anchor={atPlaza((PE_LAYOUT.x[k] + PE_LAYOUT.slabX[k]) / 2, 0.1, PE_LAYOUT.size / 2)}
+          offset={[k === 'cheap' ? -1.2 : 1.2, -0.3, 2.6]}
           title={T.pe.years(counts[k])}
           sub={T.pe.sub(PE_DEMO.price, PE_DEMO.earnings[k])}
           color={PROFIT}
