@@ -5,6 +5,7 @@ import { makeTextContext } from '../tour/context'
 import type { Step, TextContext } from '../tour/types'
 import { feeRaceRows } from '../sim/feeRace'
 import { dayTradeCostVerified } from '../sim/dayTrade'
+import { FEE_DRAG } from '../sim/feeDrag'
 
 export type Mark = 'illustrative' | 'assumption' | 'unverified'
 
@@ -29,6 +30,8 @@ export function stepMarks(step: Step, u: Universe): Mark[] {
     const p = u.get(step.scene.product)
     if (p?.fees?.expenseRatio !== undefined && !isVerified(p, 'fees.expenseRatio')) out.push('unverified')
   }
+  // 兩棵樹的內扣費用（主動、被動）：有一檔沒查證就加 ？
+  if (st?.kind === 'feeTrees' && [FEE_DRAG.active, FEE_DRAG.passive].some((id) => { const a = u.get(id); return !a || !isVerified(a, 'fees.expenseRatio') })) out.push('unverified')
   // 當沖的成本（手續費、賣出交易成本）來自 TW_TRADING：有一項沒查證就加 ？
   if (st?.kind === 'dayTrade' && !dayTradeCostVerified()) out.push('unverified')
   // 研究數據卡：有一個數字沒查證就加 ？（卡片上那一列也有）

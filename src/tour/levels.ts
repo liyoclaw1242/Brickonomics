@@ -6,7 +6,8 @@ import { T } from '../ui/strings'
 import { DD_DEMO, DD_TROUGH, ddNow, ddQuake, PE_DEMO, peBubble, peYears, RATE_DEMO, rateFreeze, ratePrice, DCA_DEMO, dcaNow, dcaSunny, INFL_DEMO, inflHeat, inflReal } from '../scene/layout/intermediate'
 import { maxDrawdown } from '../sim/drawdown'
 import { STORM } from '../sim/portfolio'
-import { corrLightning, corrNow, dtNow, durFreeze, durNow, PORT_LAYOUT, PORT_MAX_BOND, portNow } from '../scene/layout/advanced'
+import { corrLightning, corrNow, dtNow, durFreeze, durNow, feeSunny, feeTreesNow, PORT_LAYOUT, PORT_MAX_BOND, portNow } from '../scene/layout/advanced'
+import { FEE_DRAG } from '../sim/feeDrag'
 import { DURATION } from '../sim/duration'
 import { DAY_TRADE, DAY_TRADE_COST, dayTradeCostVerified } from '../sim/dayTrade'
 import { DAY_TRADE_RESEARCH, researchVerified, type ResearchId } from '../data/research'
@@ -54,6 +55,13 @@ const researchRow = (id: ResearchId, text: string): ResearchRow => {
   const f = DAY_TRADE_RESEARCH[id]
   const v = `${pct0(f.value * 100)}%`
   return { value: f.bound === 'lessThan' ? `不到 ${v}` : v, text, ...(researchVerified(id) ? {} : { mark: 'unverified' as const }) }
+}
+
+/** a-fee30：兩檔的內扣費用從資料讀；資料沒有時 undefined（不顯示數字） */
+const fee30Now = (c: TextContext, years: number) => {
+  const active = c.expenseRatio(FEE_DRAG.active)
+  const passive = c.expenseRatio(FEE_DRAG.passive)
+  return active === undefined || passive === undefined ? undefined : feeTreesNow(years, { active, passive })
 }
 
 /** 初階口訣：初階結尾（u-6）與中階開頭的複習（m-0）用同一份 */
@@ -746,5 +754,38 @@ export const COURSE_STEPS: Step[] = [
     controls: ['rate'],
     ranges: { rate: [DURATION.rateFrom, DURATION.rateTo] },
     until: { control: 'rate', min: DURATION.rateTo },
+  },
+  {
+    // 高階基金章：主動 vs 被動 30 年。扣費前報酬假設一樣（示意 6%），只差每年的內扣費用（資料：1.88% vs 0.14%）；
+    // 🌤 兩棵樹跟著年數長高，紅帽子＝費用吃掉的（塔＋帽子一樣高＝扣費前一樣）
+    id: 'a-fee30',
+    title: '怪手 vs 藍圖',
+    line: '拖**經過年數**。**費用|loss**差一點，樹差很多',
+    fallbackLine: (c) => {
+      const n = fee30Now(c, FEE_DRAG.years)
+      return n ? `${n.years} 年後。兩棵樹差 **${wan(n.gap)}**` : '費用差一點，樹差很多'
+    },
+    more: (c) => {
+      const a = c.expenseRatio(FEE_DRAG.active)
+      const p = c.expenseRatio(FEE_DRAG.passive)
+      return [
+        '主動型＝怪手（經理人）挑；指數型＝照藍圖買。',
+        ...(a !== undefined && p !== undefined ? [`這檔基金扣 ${pctOf(a)}，0050 扣 ${pctOf(p)}。`] : []),
+        `假設扣費前報酬一樣，每年 ${pct1(FEE_DRAG.grossReturn)}，這是示意。`,
+        '扣費前誰賺得多不一定，費用每年一定扣。',
+      ].join('')
+    },
+    mark: 'illustrative',
+    // 還沒拖時不顯示；扣費前報酬一樣是假設，寫在卡片上（不藏在多說一點）
+    bigNumber: (c, v) => {
+      const n = fee30Now(c, v.periods)
+      if (!n || n.years === 0) return undefined
+      return { value: `差 ${wan(n.gap)}`, label: `${n.years} 年後，兩棵樹差`, note: `假設扣費前報酬一樣，每年 ${pct1(FEE_DRAG.grossReturn)}`, mark: 'illustrative' }
+    },
+    compare: true,
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'feeTrees' }, event: feeSunny(), values: { periods: 0 }, cityLabels: false },
+    controls: ['periods'],
+    ranges: { periods: [0, FEE_DRAG.years] },
+    until: { control: 'periods', min: FEE_DRAG.years },
   },
 ]

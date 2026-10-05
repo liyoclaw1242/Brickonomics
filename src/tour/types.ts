@@ -46,6 +46,8 @@ export type Stage =
   | { kind: 'dayTrade' }
   /** a-dur 長短借據：前面 2 年短板、後面 20 年長板（rate 拉桿）；拉到 3% 時 ❄️ 寒流（scene.event freeze＋eventWhen） */
   | { kind: 'duration' }
+  /** a-fee30 主動 vs 被動 30 年：兩座塔像兩棵樹（periods 拉桿；天氣是 scene.event sunnyTree）；紅帽子＝費用吃掉的 */
+  | { kind: 'feeTrees' }
   | { kind: 'overlap'; a: string; b: string }
   | { kind: 'underground'; show: 'strata' | 'cores' | 'dig' | 'veins' | 'gold'; cores?: [string, string] }
 

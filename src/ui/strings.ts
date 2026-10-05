@@ -205,6 +205,14 @@ export const T = {
     drop: (pct: string) => `現在值少 ${pct}`,
     rate: (v: string) => `市場利率 ${v}`,
   },
+  /** a-fee30 兩棵樹的 3D 標註（高階） */
+  fee30: {
+    active: '怪手挑（主動型）',
+    passive: '照藍圖（指數型）',
+    sub: (fee: string, v: string) => `每年 ${fee}・${v}`,
+    lost: (v: string) => `費用吃掉 ${v}`,
+    base: (gross: string) => `假設扣費前報酬一樣：每年 ${gross}`,
+  },
   /** 基金那一章的錢：投入 100＝100 萬（和計費表同一個底），一位小數、去掉「.0」 */
   wan,
   /** 元（四捨五入、千分位）：18800 → '18,800 元'（r5：有感的錢，像計費表的「已磨掉約 39,073 元」） */
@@ -293,6 +301,10 @@ export const T = {
     portBond: '債券那一截',
     portRemaining: '風暴後整座塔',
     durBond: (years: number) => `${years} 年借據現在值`,
+    fee30Years: '經過年數',
+    fee30Active: (fee: string) => `怪手挑（每年扣 ${fee}）`,
+    fee30Passive: (fee: string) => `照藍圖（每年扣 ${fee}）`,
+    fee30NoFee: '完全沒費用的話',
     dtTrades: '進出次數',
     dtCost: '每次進出的交易成本',
     dtCapital: '本金剩',

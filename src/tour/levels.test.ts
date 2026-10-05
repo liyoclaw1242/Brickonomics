@@ -40,7 +40,7 @@ const byId = (id: string): Step => steps.find((s) => s.id === id)!
 /** Plan 7 的舉例舞台：一定要標 ≈、多說一點寫「示意」 */
 const PLAN7_STAGES: string[] = ['drawdown', 'pe', 'seesaw', 'dca', 'inflation']
 /** Plan 8 的高階舞台：都是舉例（≈、多說一點寫「示意」） */
-const PLAN8_STAGES: string[] = ['portfolio', 'correlation', 'dayTrade', 'duration']
+const PLAN8_STAGES: string[] = ['portfolio', 'correlation', 'dayTrade', 'duration', 'feeTrees']
 /** 大數字跟著即時拉桿值；測試預設用進入該步驟時的值 */
 const bigOf = (s: Step, values: Partial<StageValues> = {}) => s.bigNumber?.(ctx, { ...DEFAULT_VALUES, ...s.scene.values, ...values })
 const resolve = (t: Step['line'] | undefined): string | undefined => (t === undefined ? undefined : typeof t === 'function' ? t(ctx) : t)
@@ -863,12 +863,12 @@ describe('mid-r1: comparisons never read as advice', () => {
     if (!st) return false
     if (st.kind === 'held') return st.items.length >= 2
     if (st.kind === 'underground') return (st.cores ?? []).length >= 2
-    return ['bonds', 'feeRace', 'accumulate', 'overlap', 'shock', 'pe', 'duration'].includes(st.kind)
+    return ['bonds', 'feeRace', 'accumulate', 'overlap', 'shock', 'pe', 'duration', 'feeTrees'].includes(st.kind)
   }
 
   it('the compare note sits only where a side-by-side outcome could be read as a pick (mid-r2: on 15 steps it became wallpaper)', () => {
     const flagged = steps.filter((s) => s.compare).map((s) => s.id).sort()
-    expect(flagged).toEqual(['a-dur', 'c-3', 'e-dca', 'f-6', 'f-8', 's-pe'])
+    expect(flagged).toEqual(['a-dur', 'a-fee30', 'c-3', 'e-dca', 'f-6', 'f-8', 's-pe'])
     for (const id of flagged) if (id !== 'e-dca') expect(sideBySide(byId(id)), id).toBe(true)
     expect(T.compareNote).toBe('只是比較，不是叫你買或賣')
     expect(forbiddenWordsIn(T.compareNote)).toEqual([])
@@ -1050,5 +1050,27 @@ describe('Plan 8 高階: 長短借據 (a-dur)', () => {
     expect(moreOf(s(), ctx)).toContain('存續期間＝')
     expect(moreOf(s(), ctx)).toContain('利率跌時，長借據也漲比較多')
     expect(moreOf(s(), ctx)).toContain('示意：2 年和 20 年，利率 2% 漲到 3%')
+  })
+})
+
+describe('Plan 8 高階: 主動 vs 被動 30 年 (a-fee30)', () => {
+  const s = () => byId('a-fee30')
+  it('drag the years 0 → 30 (gate); 🌤 the sunny weather comes on entry', () => {
+    expect(controlRange(s(), 'periods')).toEqual([0, 30])
+    expect(s().until).toEqual({ control: 'periods', min: 30 })
+    expect(s().scene.event).toMatchObject({ kind: 'sunnyTree' })
+    expect(s().scene.eventWhen).toBeUndefined()
+    expect(stripMarkup(lineOf(s(), ctx))).toBe('拖經過年數。費用差一點，樹差很多')
+  })
+  it('big number: after 30 years 550.7 − 325.0 = 225.7 萬 apart; the card says the return before fees is assumed equal', () => {
+    expect(bigOf(s(), { periods: 0 })).toBeUndefined()
+    expect(bigOf(s(), { periods: 30 })).toEqual({ value: '差 225.7 萬', label: '30 年後，兩棵樹差', note: '假設扣費前報酬一樣，每年 6%', mark: 'illustrative' })
+    expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('30 年後。兩棵樹差 225.7 萬')
+  })
+  it('fees come from the data (1.88% vs 0.14%) and ？ appears if either is unverified', () => {
+    expect(moreOf(s(), ctx)).toContain('這檔基金扣 1.88%，0050 扣 0.14%')
+    expect(moreOf(s(), ctx)).toContain('扣費前誰賺得多不一定')
+    expect(stepMarks(s(), universe)).toEqual(['illustrative'])
+    expect(stepMarks(s(), unverify(['JH_BALANCED']))).toEqual(['illustrative', 'unverified'])
   })
 })

@@ -6,6 +6,7 @@ import type { SpecOf } from '../events/types'
 import { PAIRS, combine, volatility } from '../../sim/correlation'
 import { DAY_TRADE, dayTradeDrain } from '../../sim/dayTrade'
 import { DURATION, priceChange } from '../../sim/duration'
+import { FEE_DRAG, grow } from '../../sim/feeDrag'
 import type { Vec3 } from '../camera'
 
 /**
@@ -184,3 +185,30 @@ export function durFreeze(): SpecOf<'freeze'> {
   }
   return { kind: 'freeze', amount: 0.9, targets: [target('short'), target('long')] }
 }
+
+// ───────────── a-fee30 主動 vs 被動 30 年（🌤 晴天大樹） ─────────────
+
+/** 兩座塔像兩棵樹：左邊主動（怪手挑的基金）、右邊被動（照藍圖的 0050）；unit＝每 1 萬多高；紅色帽子＝費用吃掉的 */
+export const FEE_TREES = { x: { active: -5, passive: 5 }, w: 3.2, unit: 0.02, crown: 2.2 } as const
+
+export type FeeTree = { fee: number; value: number; lost: number }
+export type FeeTreesNow = { years: number; active: FeeTree; passive: FeeTree; noFee: number; gap: number }
+
+/**
+ * 拉桿值 → 經過幾年（整數、0..FEE_DRAG.years）與兩棵樹的價值（投入 100 萬，扣費前每年一樣 FEE_DRAG.grossReturn）。
+ * fees＝兩檔每年的內扣費用（從資料讀；呼叫端傳進來，這裡不載入資料）。value＋lost＝完全沒有費用時的價值。
+ */
+export function feeTreesNow(years: number, fees: { active: number; passive: number }): FeeTreesNow {
+  const y = Math.min(FEE_DRAG.years, Math.max(0, Math.round(Number.isFinite(years) ? years : 0)))
+  const noFee = grow(FEE_DRAG.principal, FEE_DRAG.grossReturn, 0, y)
+  const tree = (fee: number): FeeTree => {
+    const value = grow(FEE_DRAG.principal, FEE_DRAG.grossReturn, fee, y)
+    return { fee, value, lost: noFee - value }
+  }
+  const active = tree(fees.active)
+  const passive = tree(fees.passive)
+  return { years: y, active, passive, noFee, gap: passive.value - active.value }
+}
+
+/** 晴天：太陽在兩棵樹中間的後上方（手機上也不會被切掉）；一進來就放晴，樹跟著年數拉桿長 */
+export const feeSunny = (): SpecOf<'sunnyTree'> => ({ kind: 'sunnyTree', sun: [0, 9, -20] })

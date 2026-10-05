@@ -4,7 +4,8 @@ import { sectorBreakdown } from '../scene/layout/underground'
 import { accumulateVsPayout, exDivTimeline, principalTrap } from '../scene/layout/stages'
 import { feeRaceLeader, feeRaceRows } from '../sim/feeRace'
 import { DCA_DEMO, dcaNow, ddNow, INFL_DEMO, inflReal, PE_DEMO, peYears, ratePrice } from '../scene/layout/intermediate'
-import { corrNow, dtNow, durNow, portNow } from '../scene/layout/advanced'
+import { corrNow, dtNow, durNow, feeTreesNow, portNow } from '../scene/layout/advanced'
+import { FEE_DRAG } from '../sim/feeDrag'
 import { DURATION } from '../sim/duration'
 import { overlap } from '../sim/overlap'
 import { shockImpact } from '../sim/scenario'
@@ -113,6 +114,21 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
         { label: T.readout.portStock, value: `${T.wan(n.before.stock)} → ${T.wan(n.after.stock)}`, marks: ['illustrative'] },
         { label: T.readout.portBond, value: `${T.wan(n.before.bond)} → ${T.wan(n.after.bond)}` },
         { label: T.readout.portRemaining, value: T.wan(n.after.remaining) },
+      ]
+    }
+    case 'feeTrees': {
+      const er = (id: string) => u.get(id)?.fees?.expenseRatio
+      const a = er(FEE_DRAG.active)
+      const p = er(FEE_DRAG.passive)
+      if (a === undefined || p === undefined) return []
+      const n = feeTreesNow(v.periods, { active: a, passive: p })
+      const pct = (r: number) => `${(r * 100).toFixed(2)}%`
+      const mark = (id: string): Mark[] | undefined => (isVerified(u.get(id)!, 'fees.expenseRatio') ? undefined : ['unverified'])
+      return [
+        { label: T.readout.fee30Years, value: T.controls.periodsValue(n.years), marks: ['illustrative'] },
+        { label: T.readout.fee30Active(pct(a)), value: T.wan(n.active.value), marks: mark(FEE_DRAG.active) },
+        { label: T.readout.fee30Passive(pct(p)), value: T.wan(n.passive.value), marks: mark(FEE_DRAG.passive) },
+        { label: T.readout.fee30NoFee, value: T.wan(n.noFee) },
       ]
     }
     case 'duration': {

@@ -7,6 +7,9 @@ import { PAIRS, combine, volatility } from '../../sim/correlation'
 import { DT_LAYOUT, dtNow, dtTower } from './advanced'
 import { DUR_LAYOUT, durFreeze, durNow, durPose } from './advanced'
 import { priceChange } from '../../sim/duration'
+import { FEE_TREES, feeTreesNow } from './advanced'
+import { feeDrag } from '../../sim/feeDrag'
+import { universe } from '../../data'
 
 describe('a-port portfolio tower (🌪)', () => {
   it('portNow: 100 split by the bond slider; the example storm takes stocks −40%, bonds +5% (sim/portfolio STORM)', () => {
@@ -135,5 +138,30 @@ describe('a-dur short vs long seesaw (❄️)', () => {
     expect(f.targets[0]!.at[1]).toBeCloseTo(sy + DUR_LAYOUT.thick / 2, 12)
     expect(f.targets[0]!.at[2]).toBe(DUR_LAYOUT.z.short)
     expect(f.targets[1]!.at[2]).toBe(DUR_LAYOUT.z.long)
+  })
+})
+
+describe('a-fee30 two trees (🌤)', () => {
+  const fees = { active: 0.0188, passive: 0.0014 }
+  it('feeTreesNow: 6% before fees for both; after 30 years 325.0 vs 550.7 (sim/feeDrag), gap 225.7; fees ate 249.3 vs 23.6', () => {
+    const n = feeTreesNow(30, fees)
+    const ref = feeDrag(universe)
+    expect(n.active.value).toBeCloseTo(ref.active.value, 9)
+    expect(n.passive.value).toBeCloseTo(ref.passive.value, 9)
+    expect(n.active.value).toBeCloseTo(325.01, 2)
+    expect(n.passive.value).toBeCloseTo(550.71, 2)
+    expect(n.gap).toBeCloseTo(225.70, 2)
+    expect(n.active.lost).toBeCloseTo(249.34, 2)
+    expect(n.noFee).toBeCloseTo(574.35, 2)
+    expect(feeTreesNow(0, fees)).toMatchObject({ years: 0, gap: 0, noFee: 100 })
+    expect(feeTreesNow(99, fees).years).toBe(30)
+    expect(feeTreesNow(12.4, fees).years).toBe(12)
+  })
+  it('a tower and its red cap (fees eaten) always reach the no-fee height: same return before fees, made visible', () => {
+    for (const y of [0, 10, 30]) {
+      const n = feeTreesNow(y, fees)
+      for (const k of ['active', 'passive'] as const) expect(n[k].value + n[k].lost).toBeCloseTo(n.noFee, 9)
+    }
+    expect(FEE_TREES.unit * feeTreesNow(30, fees).noFee).toBeLessThanOrEqual(12) // 塔頂在鏡頭裡
   })
 })
