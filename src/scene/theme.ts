@@ -105,13 +105,13 @@ export const THEMES: Record<ThemeId, Theme> = {
       leaf: '#5fbf5a',
       leafDark: '#3f9a48',
     },
-    // 黃昏的熱浪：天空與霧往暗橘紅混，烈日偏白、光暈橘紅
+    // 黃昏的熱浪：天空與霧往暗橘紅混；烈日是刺眼的紅橘圓盤、沒有光芒（mid-r2：和晴天大樹友善的黃太陽分開，一種現象一種意思）
     heat: {
       sky: '#5a2a26',
       fog: '#4a2a28',
-      sun: '#fff1c8',
-      glow: '#ff7a3d',
-      glowOpacity: 0.8,
+      sun: '#ff5a2a',
+      glow: '#ff3d1f',
+      glowOpacity: 0.55,
       glowAdditive: true,
       shimmer: '#ffb27a',
       haze: '#ff7a45',
@@ -167,9 +167,9 @@ export const THEMES: Record<ThemeId, Theme> = {
     heat: {
       sky: '#ffd9a8',
       fog: '#ffe2bf',
-      sun: '#fff6d8',
-      glow: '#ff9a3d',
-      glowOpacity: 0.7,
+      sun: '#ff5326',
+      glow: '#ff6a3d',
+      glowOpacity: 0.5,
       glowAdditive: false,
       shimmer: '#e8762e',
       haze: '#ffb36b',

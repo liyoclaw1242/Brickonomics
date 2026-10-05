@@ -142,7 +142,7 @@ export function Heatwave({ spec, clock, quality }: EventProps<SpecOf<'heatwave'>
 
   return (
     <>
-      <Sun look={look} radius={HEAT_SUN.radius} rays={detail.rays} quality={quality} read={readSun} />
+      <Sun look={look} radius={HEAT_SUN.radius} rays={HEAT_SUN.rays} quality={quality} read={readSun} />
       <mesh position={[PLAZA[0], PLAZA[1] + HAZE.h / 2 - 1, PLAZA[2] + HAZE.z]} renderOrder={-5}>
         <planeGeometry args={[HAZE.w, HAZE.h]} />
         <meshBasicMaterial ref={hazeMat} map={haze} color={theme.haze} transparent opacity={0} depthWrite={false} fog={false} />

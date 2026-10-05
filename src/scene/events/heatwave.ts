@@ -57,7 +57,11 @@ export const HEAT_DETAIL: Record<Quality, { lines: number; segments: number; ray
 export const HEAT_FIELD = { span: 13, depth: 5, height: 6 } as const
 
 /** 烈日的位置（相對廣場中心；右後方、低低的，留在廣場鏡頭的畫面裡）與大小 */
-export const HEAT_SUN = { at: [11, 7.5, -20] as [number, number, number], radius: 2.1 } as const
+/**
+ * 烈日的位置（相對廣場中心；右後方、低低的，留在廣場鏡頭的畫面裡）與大小。
+ * rays 0：熱浪的太陽是紅橘色圓盤、沒有光芒——友善的黃太陽＋光芒只代表 🌤 晴天大樹（長期成長），一種現象一種意思（mid-r2）
+ */
+export const HEAT_SUN = { at: [11, 7.5, -20] as [number, number, number], radius: 2.1, rays: 0 } as const
 
 /** 水窪：最大半徑（相對金幣半徑） */
 export const PUDDLE_GROW = 0.9

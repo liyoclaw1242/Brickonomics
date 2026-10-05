@@ -1,6 +1,8 @@
+import { Color } from 'three'
+import { THEMES } from '../theme'
 import { describe, expect, it } from 'vitest'
 import { bigNumberDelayMs, eventAftermath, eventDuration, eventLingers } from './index'
-import { HEAT, HEAT_DETAIL, HEAT_END, coinScaleAt, heatLevel, meltAt, meltOf, shimmerOffset } from './heatwave'
+import { HEAT, HEAT_DETAIL, HEAT_END, HEAT_SUN, coinScaleAt, heatLevel, meltAt, meltOf, shimmerOffset } from './heatwave'
 import type { SpecOf } from './types'
 
 const spec: SpecOf<'heatwave'> = { kind: 'heatwave', melt: 0.3, coins: [[0, 0, 0]] }
@@ -56,5 +58,17 @@ describe('heatwave timeline', () => {
   it('low quality is simpler', () => {
     expect(HEAT_DETAIL.low.lines).toBeLessThan(HEAT_DETAIL.high.lines)
     expect(HEAT_DETAIL.low.segments).toBeLessThan(HEAT_DETAIL.high.segments)
+  })
+})
+
+describe('the heatwave sun is not the sunnyTree sun (mid-r2: one phenomenon, one meaning)', () => {
+  it('no rays, and a red-orange core unlike the sunny sun in both themes', () => {
+    expect(HEAT_SUN.rays).toBe(0)
+    for (const th of Object.values(THEMES)) {
+      expect(th.heat.sun).not.toBe(th.sunny.sun)
+      const c = new Color(th.heat.sun)
+      expect(c.r).toBeGreaterThan(0.9)
+      expect(c.g).toBeLessThan(0.45) // 紅橘，不是黃白
+    }
   })
 })
