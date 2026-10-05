@@ -30,6 +30,8 @@ export type Stage =
   | { kind: 'shock' }
   /** s-dd 最大跌幅：一排柱子＝每年的價格，跟著 tick 拉桿長；拖到谷底時地震（scene.event quake＋eventWhen） */
   | { kind: 'drawdown' }
+  /** s-pe 本益比：兩棟股價一樣的大樓＋每年賺的錢一年一片疊起來（periods 拉桿）；數滿時太貴那棟被泡泡包住（scene.event bubble＋eventWhen） */
+  | { kind: 'pe' }
   | { kind: 'overlap'; a: string; b: string }
   | { kind: 'underground'; show: 'strata' | 'cores' | 'dig' | 'veins' | 'gold'; cores?: [string, string] }
 

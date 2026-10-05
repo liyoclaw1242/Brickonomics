@@ -3,7 +3,7 @@ import { movePct, pct0, SHOCK_2330, signedPct, wan } from './context'
 import { DEFAULT_VALUES } from './values'
 import { EXDIV, exDivTimeline, principalTrap, TRAP_DEMO } from '../scene/layout/stages'
 import { T } from '../ui/strings'
-import { DD_DEMO, DD_TROUGH, ddNow, ddQuake } from '../scene/layout/intermediate'
+import { DD_DEMO, DD_TROUGH, ddNow, ddQuake, PE_DEMO, peBubble, peYears } from '../scene/layout/intermediate'
 import { maxDrawdown } from '../sim/drawdown'
 
 /**
@@ -523,6 +523,20 @@ export const COURSE_STEPS: Step[] = [
     controls: ['tick'],
     ranges: { tick: [0, DD_DEMO.path.length - 1] },
     until: { control: 'tick', min: DD_TROUGH },
+  },
+  {
+    // 中階股票章（Plan 7）：股價一樣，每年賺的錢不同 → 要賺幾年才賺回股價；數滿時太貴那棟 🫧 被泡泡包住（不破：本益比高不代表一定會跌）
+    id: 's-pe',
+    title: '本益比＝幾年',
+    line: '拖**經過年數**。數幾年**賺回股價**',
+    fallbackLine: () => `**${peYears('cheap')} 年**和 **${peYears('pricey')} 年**才賺回股價`,
+    more: '本益比＝股價÷每股盈餘，就是要賺幾年才賺回股價。年數越多，表示買得越貴。本益比高，不代表一定會跌。泡泡＝太貴，數字是示意。',
+    mark: 'illustrative',
+    bigNumber: () => ({ value: `${peYears('cheap')} 年 vs ${peYears('pricey')} 年`, label: '幾年賺回股價', note: `股價都是 ${PE_DEMO.price}，年數多＝較貴`, mark: 'illustrative' }),
+    scene: { camera: 'plaza', product: null, stage: { kind: 'pe' }, event: peBubble(), eventWhen: { control: 'periods', min: peYears('pricey') }, values: { periods: 0 }, cityLabels: false },
+    controls: ['periods'],
+    ranges: { periods: [0, peYears('pricey')] },
+    until: { control: 'periods', min: peYears('pricey') },
   },
   {
     id: 'm-0',

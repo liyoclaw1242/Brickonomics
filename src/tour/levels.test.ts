@@ -5,7 +5,7 @@ import { overlap } from '../sim/overlap'
 import { EXDIV_AFTER_PHASE, LEVELS } from './levels'
 import { STEP_POOL } from './courses'
 import { maxDrawdown } from '../sim/drawdown'
-import { DD_DEMO, DD_LAYOUT, ddBarX } from '../scene/layout/intermediate'
+import { DD_DEMO, DD_LAYOUT, ddBarX, peYears } from '../scene/layout/intermediate'
 import { stageReadout } from '../ui/readout'
 import { exDivTimeline, principalTrap } from '../scene/layout/stages'
 import { towerTexts, trapTowerSpec } from '../scene/layout/towers'
@@ -36,7 +36,7 @@ const unverify = (ids: string[]): Universe => {
 
 const byId = (id: string): Step => steps.find((s) => s.id === id)!
 /** Plan 7 的舉例舞台：一定要標 ≈、多說一點寫「示意」 */
-const PLAN7_STAGES: string[] = ['drawdown']
+const PLAN7_STAGES: string[] = ['drawdown', 'pe']
 /** 大數字跟著即時拉桿值；測試預設用進入該步驟時的值 */
 const bigOf = (s: Step, values: Partial<StageValues> = {}) => s.bigNumber?.(ctx, { ...DEFAULT_VALUES, ...s.scene.values, ...values })
 const resolve = (t: Step['line'] | undefined): string | undefined => (t === undefined ? undefined : typeof t === 'function' ? t(ctx) : t)
@@ -732,5 +732,26 @@ describe('Plan 7 中階: 最大跌幅 (s-dd)', () => {
   it('the fallback (text) version shows the readout at the gate', () => {
     const rows = stageReadout({ kind: 'drawdown' }, { ...DEFAULT_VALUES, tick: 5, slice: 0, explode: 0 }, universe, null)
     expect(rows.map((r) => r.value)).toEqual(['84', '140', '40.0%', '40.0%'])
+  })
+})
+
+describe('Plan 7 中階: 本益比 (s-pe)', () => {
+  const s = () => byId('s-pe')
+  it('drag the years until the pricey one pays back (60): that is the gate, and the bubble floats then (no pop)', () => {
+    expect(peYears('cheap')).toBe(15) // 600 ÷ 40
+    expect(peYears('pricey')).toBe(60) // 600 ÷ 10
+    expect(s().until).toEqual({ control: 'periods', min: 60 })
+    expect(s().scene.eventWhen).toEqual(s().until)
+    expect(s().scene.event).toMatchObject({ kind: 'bubble', phase: 'float' })
+    expect(controlRange(s(), 'periods')).toEqual([0, 60])
+  })
+  it('big number 15 年 vs 60 年; the more text says a high P/E does not mean it will fall', () => {
+    expect(bigOf(s())).toMatchObject({ value: '15 年 vs 60 年', label: '幾年賺回股價', mark: 'illustrative' })
+    expect(bigOf(s())!.note).toContain('600')
+    expect(moreOf(s(), ctx)).toContain('本益比＝股價÷每股盈餘')
+    expect(moreOf(s(), ctx)).toContain('不代表一定會跌')
+    expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('15 年和 60 年才賺回股價')
+    // 每年賺的錢是公司的獲利（不一定發給你）：不叫金幣、配息
+    for (const t of [lineOf(s(), ctx), moreOf(s(), ctx)]) for (const w of ['金幣', '配息']) expect(t).not.toContain(w)
   })
 })

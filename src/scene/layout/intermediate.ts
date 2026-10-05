@@ -1,4 +1,5 @@
 import { maxDrawdown } from '../../sim/drawdown'
+import { yearsToPayBack } from '../../sim/valuation'
 import { QUAKE } from '../events/quake'
 import type { SpecOf } from '../events/types'
 
@@ -53,3 +54,35 @@ export function ddNow(tick: number): DdNow {
   const price = seen[index]!
   return { index, price, peak, peakIndex: seen.indexOf(peak), drop: (peak - price) / peak, worst: maxDrawdown(seen).pct }
 }
+
+// ───────────── s-pe 本益比（🫧 泡泡） ─────────────
+
+/** 兩棟舉例大樓：股價一樣，每年每股賺的錢不同。示意，不代表任何真實公司 */
+export const PE_DEMO = { price: 600, earnings: { cheap: 40, pricey: 10 } } as const
+export type PeKey = keyof typeof PE_DEMO.earnings
+
+/** 大樓高 height（＝股價）；旁邊一疊「每年賺的錢」，一年一片，疊滿＝賺回股價 */
+export const PE_LAYOUT = {
+  height: 7,
+  size: 3,
+  x: { cheap: -8.5, pricey: 7.5 },
+  slabX: { cheap: -4, pricey: 2.6 },
+  slabW: 2.2,
+} as const
+
+/** 要賺幾年才賺回股價（本益比） */
+export const peYears = (k: PeKey): number => yearsToPayBack(PE_DEMO.price, PE_DEMO.earnings[k])
+
+/** 經過 periods 年時疊了幾片（一年一片，疊滿就停）；pitch＝每片佔的高度（疊滿＝大樓高） */
+export function peSlabs(k: PeKey, periods: number): { count: number; pitch: number } {
+  const years = peYears(k)
+  const n = Math.floor(Number.isFinite(periods) ? Math.max(0, periods) : 0)
+  return { count: Math.min(n, years), pitch: PE_LAYOUT.height / years }
+}
+
+/** 泡泡包住年數多（太貴）的那棟；參數固定，經過年數數滿時（scene.eventWhen）才浮起 */
+export const peBubble = (): SpecOf<'bubble'> => ({
+  kind: 'bubble',
+  phase: 'float',
+  target: { at: [PE_LAYOUT.x.pricey, 0, 0], size: [PE_LAYOUT.size, PE_LAYOUT.height, PE_LAYOUT.size] },
+})
