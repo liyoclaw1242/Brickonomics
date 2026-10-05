@@ -6,13 +6,13 @@ import { T } from '../../ui/strings'
 import { Callout } from '../Callout'
 import { TreeCrown } from '../events/SunnyTree'
 import { DCA_DEMO, DCA_LAYOUT, dcaCheapest, dcaNow, dcaPileHeight, dcaPileX, dcaTowerHeight } from '../layout/intermediate'
-import { SECTOR_COLORS } from '../palette'
+import { ACCENT_COLORS } from '../palette'
 import type { Quality } from '../quality'
 import { atPlaza } from './plaza'
 
 const N = DCA_DEMO.prices.length
 /** 一檔舉例 ETF 的方塊顏色（鮮明的青綠，和樹冠的綠一起看像一棵樹） */
-const look = { color: SECTOR_COLORS.electronics }
+const look = { color: ACCENT_COLORS.units }
 
 /**
  * e-dca 定期定額：每個月一小堆方塊（同樣的錢，便宜的月份買比較多＝比較高），右邊一座塔＝累積的單位。

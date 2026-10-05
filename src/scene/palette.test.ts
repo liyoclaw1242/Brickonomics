@@ -55,6 +55,8 @@ describe('colorForKey', () => {
   it('maps coin and loss to the accent colours', () => {
     expect(colorForKey(universe, 'coin')).toBe(ACCENT_COLORS.coin)
     expect(colorForKey(universe, 'loss')).toBe(ACCENT_COLORS.loss)
+    expect(colorForKey(universe, 'profit')).toBe(ACCENT_COLORS.profit)
+    expect(colorForKey(universe, 'units')).toBe(ACCENT_COLORS.units)
   })
 
   it('maps sector ids to their sector colour', () => {
