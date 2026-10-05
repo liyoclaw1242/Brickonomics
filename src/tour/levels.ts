@@ -6,8 +6,9 @@ import { T } from '../ui/strings'
 import { DD_DEMO, DD_TROUGH, ddNow, ddQuake, PE_DEMO, peBubble, peYears, RATE_DEMO, rateFreeze, ratePrice, DCA_DEMO, dcaNow, dcaSunny, INFL_DEMO, inflHeat, inflReal } from '../scene/layout/intermediate'
 import { maxDrawdown } from '../sim/drawdown'
 import { STORM } from '../sim/portfolio'
-import { corrLightning, corrNow, dtNow, durFreeze, durNow, feeSunny, feeTreesNow, levNow, levWave, PORT_LAYOUT, PORT_MAX_BOND, portNow } from '../scene/layout/advanced'
+import { corrLightning, corrNow, dtNow, durFreeze, durNow, feeSunny, feeTreesNow, HEDGE_CASES, hedgeCaseIndex, hedgeLightning, levNow, levWave, PORT_LAYOUT, PORT_MAX_BOND, portNow } from '../scene/layout/advanced'
 import { LEVERAGE } from '../sim/leverage'
+import { HEDGE } from '../sim/hedge'
 import { FEE_DRAG } from '../sim/feeDrag'
 import { DURATION } from '../sim/duration'
 import { DAY_TRADE, DAY_TRADE_COST, dayTradeCostVerified } from '../sim/dayTrade'
@@ -64,6 +65,19 @@ const fee30Now = (c: TextContext, years: number) => {
   const passive = c.expenseRatio(FEE_DRAG.passive)
   return active === undefined || passive === undefined ? undefined : feeTreesNow(years, { active, passive })
 }
+
+/** a-hedge：三種做法在三種情境的差（萬）。正的＝少賠或多的；cost＝加反向少賺／付掉的 */
+const hedgeGaps = (c: TextContext) => {
+  const ex = c.hedge()
+  const row = (id: 'plain' | 'inverse' | 'cash') => ex.rows.find((r) => r.id === id)!
+  const [p, i, k] = [row('plain'), row('inverse'), row('cash')]
+  return {
+    flat: { inverse: p.flat - i.flat, cash: p.flat - k.flat },
+    rising: { inverse: p.rising - i.rising, cash: p.rising - k.rising },
+    strike: { inverse: i.strike - p.strike, cash: k.strike - p.strike },
+  }
+}
+const n1 = (v: number): string => v.toFixed(1)
 
 /** 初階口訣：初階結尾（u-6）與中階開頭的複習（m-0）用同一份 */
 const BEGINNER_RECAP: RecapLine[] = [
@@ -809,5 +823,32 @@ export const COURSE_STEPS: Step[] = [
       return { value: fall(l.double), label: `${LEVERAGE.rounds} 次來回後 2 倍塔`, note: `大盤${fall(l.plain)}；反向塔也${fall(l.inverse)}`, colorKey: 'double', mark: 'illustrative' }
     },
     scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'leverage' }, event: levWave(), cityLabels: false },
+  },
+  {
+    // 高階 ETF 章：反向 ETF 對沖。兩邊都畫：平時（平穩、慢慢漲）反向那邊一直付代價，⚡ 那天少賠；
+    // 少買 0050 留現金一樣少賠、平時不付反向的費用。反向的費用 1% 是假設（✎，stepMarks 從 sim/hedge 推出來）
+    id: 'a-hedge',
+    title: '反向來對沖',
+    line: '拖**情境**。⚡ 時少賠，平時**少賺|loss**',
+    fallbackLine: (c) => {
+      const g = hedgeGaps(c)
+      return `⚡ 時少賠 ${n0(g.strike.inverse)} 萬。平時少賺 ${n0(g.rising.inverse)} 萬`
+    },
+    more: () =>
+      `對沖＝放一點反向 ETF，大盤跌它漲。示意：${HEDGE.hedgePct}% 放反向，${100 - HEDGE.hedgePct}% 放 0050。反向的費用這裡假設一年 ${pct1(HEDGE.inverseFee)}。少買 0050、多留現金，⚡ 時也一樣少賠。`,
+    mark: 'illustrative',
+    // 跟著情境：平時的代價、⚡ 那天少賠多少；note 一直拿「少買 0050 留現金」來比
+    bigNumber: (c, v) => {
+      const g = hedgeGaps(c)
+      const which = HEDGE_CASES[hedgeCaseIndex(v.hedgeCase)]!
+      if (which === 'flat') return { value: `${n1(g.flat.inverse)} 萬`, label: '平穩一年：加反向的代價', note: g.flat.cash <= 0 ? '少買 0050 改留現金：不用付' : `少買 0050 改留現金：${n1(g.flat.cash)} 萬`, colorKey: 'loss', mark: 'illustrative' }
+      if (which === 'rising') return { value: `少賺 ${n1(g.rising.inverse)} 萬`, label: '漲的一年：加反向少賺', note: `少買 0050 改留現金：也少賺 ${n1(g.rising.cash)} 萬`, colorKey: 'loss', mark: 'illustrative' }
+      return { value: `少賠 ${n1(g.strike.inverse)} 萬`, label: '⚡ 那天：加反向少賠', note: `少買 0050 改留現金：一樣少賠 ${n1(g.strike.cash)} 萬`, mark: 'illustrative' }
+    },
+    compare: true,
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'hedge' }, event: hedgeLightning(), eventWhen: { control: 'hedgeCase', min: 2 }, values: { hedgeCase: 0 }, cityLabels: false },
+    controls: ['hedgeCase'],
+    ranges: { hedgeCase: [0, HEDGE_CASES.length - 1] },
+    until: { control: 'hedgeCase', min: HEDGE_CASES.length - 1 },
   },
 ]

@@ -5,6 +5,7 @@ import type { AssetType } from '../data/schema'
 import type { TextContext } from './types'
 import { sectorBreakdown } from '../scene/layout/underground'
 import { feeRaceRows } from '../sim/feeRace'
+import { hedgeExample } from '../sim/hedge'
 import { T } from '../ui/strings'
 
 /** 第 5 關的假設情境：台積電下跌 30% */
@@ -43,6 +44,7 @@ export function makeTextContext(u: Universe): TextContext {
       const f = u.get(productId)?.fees
       return f?.distributionFee !== undefined && f.distributionFeeYears !== undefined ? { rate: f.distributionFee, years: f.distributionFeeYears } : undefined
     },
+    hedge: () => hedgeExample(u),
   }
 }
 

@@ -8,6 +8,7 @@ import { DAY_TRADE, dayTradeDrain } from '../../sim/dayTrade'
 import { DURATION, priceChange } from '../../sim/duration'
 import { FEE_DRAG, grow } from '../../sim/feeDrag'
 import { LEVERAGE, leverageTowers } from '../../sim/leverage'
+import type { HedgeExample, HedgeRow } from '../../sim/hedge'
 import type { Vec3 } from '../camera'
 
 /**
@@ -244,3 +245,45 @@ export function levWave(): SpecOf<'wave'> {
     targets: LEV_LAYOUT.x.map((x) => ({ at: [x, 0, 0] as Vec3, size: [LEV_LAYOUT.w, h, LEV_LAYOUT.w] as Vec3 })),
   }
 }
+
+// ───────────── a-hedge 反向來對沖（⚡ 閃電） ─────────────
+
+/** 拉桿的三種情境（照順序）：平穩一年、慢慢漲一年、⚡ 打下那天 */
+export const HEDGE_CASES = ['flat', 'rising', 'strike'] as const
+export type HedgeCase = (typeof HEDGE_CASES)[number]
+
+/** 三座塔：全押 0050、0050＋反向、少買 0050＋現金；100 萬＝unit × 100 高 */
+export const HEDGE_LAYOUT = { x: [-7, 0, 7] as readonly number[], w: 3.4, unit: 0.08 } as const
+
+export type HedgeTower = { id: HedgeRow['id']; base: number; inverse: number; cash: number; total: number }
+
+/** 拉桿值 → 第幾種情境（0..2） */
+export const hedgeCaseIndex = (v: number): number => Math.min(HEDGE_CASES.length - 1, Math.max(0, Math.round(Number.isFinite(v) ? v : 0)))
+
+/**
+ * 三座塔在某個情境的三截（萬）：0050 那截＝買的比例 × 大盤漲跌（含費用；＝全押那座 ÷ 100），現金不動，反向那截＝其餘。
+ * drop（0..1）＝⚡ 打中之後的進度：⚡ 情境在打中之前畫起點（100 的分法），其他情境 drop 不影響。
+ */
+export function hedgeTowers(ex: HedgeExample, caseIdx: number, drop: number): HedgeTower[] {
+  const c = HEDGE_CASES[hedgeCaseIndex(caseIdx)]!
+  const k = c === 'strike' ? drop : 1
+  return ex.rows.map((r) => {
+    const factor = ex.rows.find((x) => x.id === 'plain')![c] / 100
+    const end = { base: r.basePct * factor, cash: r.cashPct, total: r[c] }
+    const endInverse = end.total - end.base - end.cash
+    const lerp = (a: number, b: number) => a + (b - a) * k
+    const base = lerp(r.basePct, end.base)
+    const inverse = lerp(r.inversePct, endInverse)
+    return { id: r.id, base, inverse, cash: r.cashPct, total: base + inverse + r.cashPct }
+  })
+}
+
+/** 閃電打三座塔的塔頂（三座都有 0050）；拉到 ⚡ 情境才打（scene.eventWhen） */
+export const hedgeLightning = (): SpecOf<'lightning'> => ({
+  kind: 'lightning',
+  phase: 'strike',
+  targets: HEDGE_LAYOUT.x.map((x): Vec3 => [x, 100 * HEDGE_LAYOUT.unit, 0]),
+})
+
+/** ⚡ 打中之後的進度 0..1（和 a-corr 一樣） */
+export const hedgeDropAt = corrDropAt

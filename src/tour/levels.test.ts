@@ -40,7 +40,7 @@ const byId = (id: string): Step => steps.find((s) => s.id === id)!
 /** Plan 7 的舉例舞台：一定要標 ≈、多說一點寫「示意」 */
 const PLAN7_STAGES: string[] = ['drawdown', 'pe', 'seesaw', 'dca', 'inflation']
 /** Plan 8 的高階舞台：都是舉例（≈、多說一點寫「示意」） */
-const PLAN8_STAGES: string[] = ['portfolio', 'correlation', 'dayTrade', 'duration', 'feeTrees', 'leverage']
+const PLAN8_STAGES: string[] = ['portfolio', 'correlation', 'dayTrade', 'duration', 'feeTrees', 'leverage', 'hedge']
 /** 大數字跟著即時拉桿值；測試預設用進入該步驟時的值 */
 const bigOf = (s: Step, values: Partial<StageValues> = {}) => s.bigNumber?.(ctx, { ...DEFAULT_VALUES, ...s.scene.values, ...values })
 const resolve = (t: Step['line'] | undefined): string | undefined => (t === undefined ? undefined : typeof t === 'function' ? t(ctx) : t)
@@ -863,12 +863,12 @@ describe('mid-r1: comparisons never read as advice', () => {
     if (!st) return false
     if (st.kind === 'held') return st.items.length >= 2
     if (st.kind === 'underground') return (st.cores ?? []).length >= 2
-    return ['bonds', 'feeRace', 'accumulate', 'overlap', 'shock', 'pe', 'duration', 'feeTrees'].includes(st.kind)
+    return ['bonds', 'feeRace', 'accumulate', 'overlap', 'shock', 'pe', 'duration', 'feeTrees', 'hedge'].includes(st.kind)
   }
 
   it('the compare note sits only where a side-by-side outcome could be read as a pick (mid-r2: on 15 steps it became wallpaper)', () => {
     const flagged = steps.filter((s) => s.compare).map((s) => s.id).sort()
-    expect(flagged).toEqual(['a-dur', 'a-fee30', 'c-3', 'e-dca', 'f-6', 'f-8', 's-pe'])
+    expect(flagged).toEqual(['a-dur', 'a-fee30', 'a-hedge', 'c-3', 'e-dca', 'f-6', 'f-8', 's-pe'].sort())
     for (const id of flagged) if (id !== 'e-dca') expect(sideBySide(byId(id)), id).toBe(true)
     expect(T.compareNote).toBe('只是比較，不是叫你買或賣')
     expect(forbiddenWordsIn(T.compareNote)).toEqual([])
@@ -1091,5 +1091,28 @@ describe('Plan 8 高階: 槓桿的耗損 (a-lev)', () => {
     expect(moreOf(s(), ctx)).toContain('跌 10% 再漲 10%，大盤少 1%')
     expect(moreOf(s(), ctx)).toContain('2 倍塔少 4%，反向塔也少 1%')
     expect(moreOf(s(), ctx)).toContain('不是真實商品')
+  })
+})
+
+describe('Plan 8 高階: 反向來對沖 (a-hedge)', () => {
+  const s = () => byId('a-hedge')
+  it('drag the case: flat year → rising year → ⚡ day (gate); the bolt only comes on the ⚡ case', () => {
+    expect(controlRange(s(), 'hedgeCase')).toEqual([0, 2])
+    expect(s().until).toEqual({ control: 'hedgeCase', min: 2 })
+    expect(s().scene.eventWhen).toEqual(s().until)
+    expect(s().scene.event).toMatchObject({ kind: 'lightning', phase: 'strike' })
+    expect(stripMarkup(lineOf(s(), ctx))).toBe('拖情境。⚡ 時少賠，平時少賺')
+  })
+  it('both sides on the card, each with the cash comparison: flat costs 0.2 (fee), rising costs 4.0, ⚡ saves 4.0 — and less 0050 + cash saves the same 4.0', () => {
+    expect(bigOf(s(), { hedgeCase: 0 })).toEqual({ value: '0.2 萬', label: '平穩一年：加反向的代價', note: '少買 0050 改留現金：不用付', colorKey: 'loss', mark: 'illustrative' }) // 99.86 − 99.688
+    expect(bigOf(s(), { hedgeCase: 1 })).toEqual({ value: '少賺 4.0 萬', label: '漲的一年：加反向少賺', note: '少買 0050 改留現金：也少賺 3.9 萬', colorKey: 'loss', mark: 'illustrative' }) // 109.846 − 105.876；109.846 − 105.908
+    expect(bigOf(s(), { hedgeCase: 2 })).toEqual({ value: '少賠 4.0 萬', label: '⚡ 那天：加反向少賠', note: '少買 0050 改留現金：一樣少賠 4.0 萬', mark: 'illustrative' }) // 94 − 90；(60 × 0.9 + 40) − 90
+    expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('⚡ 時少賠 4 萬。平時少賺 4 萬')
+  })
+  it('carries ≈ for the step and ✎ for the assumed 1% inverse fee (from sim/hedge), in the title row', () => {
+    expect(stepMarks(s(), universe)).toEqual(['illustrative', 'assumption'])
+    expect(stepMarks(s(), unverify(['0050']))).toEqual(['illustrative', 'assumption', 'unverified'])
+    expect(moreOf(s(), ctx)).toContain('反向的費用這裡假設一年 1%')
+    expect(moreOf(s(), ctx)).toContain('少買 0050、多留現金，⚡ 時也一樣少賠')
   })
 })

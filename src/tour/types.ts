@@ -3,6 +3,7 @@ import type { Picked } from '../store/sandbox'
 import type { Sector } from '../scene/layout/underground'
 import type { Mark } from '../ui/marks'
 import type { FeeRaceRow } from '../sim/feeRace'
+import type { HedgeExample } from '../sim/hedge'
 import type { EventSpec } from '../scene/events/types'
 
 export type { Mark }
@@ -50,6 +51,8 @@ export type Stage =
   | { kind: 'feeTrees' }
   /** a-lev 槓桿的耗損：大盤、2 倍塔、反向塔站在水裡；🌊 大浪（scene.event wave）每道浪一跌一漲 */
   | { kind: 'leverage' }
+  /** a-hedge 反向來對沖：三座塔（全押、加反向、少買＋現金；hedgeCase 拉桿換情境）；⚡ 情境時閃電（scene.event lightning＋eventWhen） */
+  | { kind: 'hedge' }
   | { kind: 'overlap'; a: string; b: string }
   | { kind: 'underground'; show: 'strata' | 'cores' | 'dig' | 'veins' | 'gold'; cores?: [string, string] }
 
@@ -59,7 +62,8 @@ export type StageKind = Stage['kind']
 /** tick＝價格路徑上的第幾個點（s-dd）；rate＝市場利率（b-rate）；months＝定期定額買了幾個月（e-dca） */
 /** bondPct：a-port 組合塔裡債券佔幾 %（其餘是股票） */
 /** trades：a-dt 當沖進出了幾次（一次＝買進再賣出） */
-export type StageValues = { years: number; periods: number; phase: number; frontLoad: number; tick: number; rate: number; months: number; bondPct: number; trades: number }
+/** hedgeCase：a-hedge 看哪一種情境（0 平穩一年、1 慢慢漲一年、2 ⚡ 打下那天） */
+export type StageValues = { years: number; periods: number; phase: number; frontLoad: number; tick: number; rate: number; months: number; bondPct: number; trades: number; hedgeCase: number }
 export type ValueKey = keyof StageValues
 export type Control = 'slice' | 'explode' | ValueKey
 /** 要讓「下一步」可按，control 的值必須 ≥ min */
@@ -108,6 +112,8 @@ export type TextContext = {
   fundFeeRows: (years: number, frontLoad: number) => FeeRaceRow[]
   /** 每年的分銷費（小數）與收幾年；資料沒有時為 undefined */
   distributionFee: (productId: string) => { rate: number; years: number } | undefined
+  /** a-hedge 的對沖舉例（sim/hedge；0050 的費用從資料讀） */
+  hedge: () => HedgeExample
 }
 
 /** 大數字卡：value 已格式化；fraction（0–1）畫色條；colorKey 對應物體顏色；note＝標籤下一行白話補充（例如為什麼是「至少」） */

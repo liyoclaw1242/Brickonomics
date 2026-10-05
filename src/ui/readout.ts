@@ -4,7 +4,8 @@ import { sectorBreakdown } from '../scene/layout/underground'
 import { accumulateVsPayout, exDivTimeline, principalTrap } from '../scene/layout/stages'
 import { feeRaceLeader, feeRaceRows } from '../sim/feeRace'
 import { DCA_DEMO, dcaNow, ddNow, INFL_DEMO, inflReal, PE_DEMO, peYears, ratePrice } from '../scene/layout/intermediate'
-import { corrNow, dtNow, durNow, feeTreesNow, levNow, portNow } from '../scene/layout/advanced'
+import { corrNow, dtNow, durNow, feeTreesNow, hedgeCaseIndex, hedgeTowers, levNow, portNow } from '../scene/layout/advanced'
+import { hedgeExample } from '../sim/hedge'
 import { FEE_DRAG } from '../sim/feeDrag'
 import { DURATION } from '../sim/duration'
 import { overlap } from '../sim/overlap'
@@ -129,6 +130,15 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
         { label: T.readout.fee30Active(pct(a)), value: T.wan(n.active.value), marks: mark(FEE_DRAG.active) },
         { label: T.readout.fee30Passive(pct(p)), value: T.wan(n.passive.value), marks: mark(FEE_DRAG.passive) },
         { label: T.readout.fee30NoFee, value: T.wan(n.noFee) },
+      ]
+    }
+    case 'hedge': {
+      // 這個情境走完的結果（⚡ 情境：閃電已經打下來）；反向那座用到假設的費用（✎）
+      const ex = hedgeExample(u)
+      const c = hedgeCaseIndex(v.hedgeCase)
+      return [
+        { label: T.readout.hedgeCase, value: T.controls.hedgeCaseValue(c), marks: ['illustrative'] },
+        ...hedgeTowers(ex, c, 1).map((t) => ({ label: T.hedge[t.id], value: T.wan(t.total), ...(t.id === 'inverse' ? { marks: ['assumption' as const] } : {}) })),
       ]
     }
     case 'leverage': {

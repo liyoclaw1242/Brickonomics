@@ -18,6 +18,7 @@ import { DayTradeStage } from './DayTradeStage'
 import { DurationStage } from './DurationStage'
 import { FeeTreesStage } from './FeeTreesStage'
 import { LeverageStage } from './LeverageStage'
+import { HedgeStage } from './HedgeStage'
 import { SeesawStage } from './SeesawStage'
 import { ExDividendStage } from './ExDividendStage'
 import { FeeMeter } from './FeeMeter'
@@ -63,6 +64,7 @@ export function StageView({ quality }: { quality: Quality }) {
       {stage.kind === 'duration' && <DurationStage event={clock} />}
       {stage.kind === 'feeTrees' && <FeeTreesStage quality={quality} />}
       {stage.kind === 'leverage' && <LeverageStage event={clock} />}
+      {stage.kind === 'hedge' && <HedgeStage event={clock} />}
       {stage.kind === 'overlap' && <OverlapStage a={stage.a} b={stage.b} quality={quality} />}
       {stage.kind === 'underground' && <UndergroundStage show={stage.show} cores={stage.cores} quality={quality} />}
       {stage.kind === 'excavator' && <Excavator other={stage.other} />}

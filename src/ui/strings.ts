@@ -109,6 +109,9 @@ export const T = {
     /** e-dca：定期定額買了幾個月 */
     months: '經過月數',
     monthsValue: (v: number) => `${v} 個月`,
+    /** a-hedge 看哪一種情境（0 平穩一年、1 慢慢漲一年、2 ⚡ 打下那天） */
+    hedgeCase: '情境',
+    hedgeCaseValue: (v: number) => (['平穩的一年', '慢慢漲的一年', '⚡ 打下那天'] as const)[Math.round(v)] ?? '',
     /** a-dt 當沖進出了幾次（一次＝買進再賣出） */
     trades: '進出次數',
     tradesValue: (v: number) => `${v} 次`,
@@ -221,6 +224,13 @@ export const T = {
     left: (v: string) => `剩 ${v}`,
     start: '起點都是 100',
   },
+  /** a-hedge 三座塔（高階；反向 ETF 用通用名稱） */
+  hedge: {
+    plain: '全押 0050',
+    inverse: '0050＋反向',
+    cash: '少買 0050＋現金',
+    split: (base: number, other: number) => `${base}／${other}`,
+  },
   /** 基金那一章的錢：投入 100＝100 萬（和計費表同一個底），一位小數、去掉「.0」 */
   wan,
   /** 元（四捨五入、千分位）：18800 → '18,800 元'（r5：有感的錢，像計費表的「已磨掉約 39,073 元」） */
@@ -316,6 +326,7 @@ export const T = {
     levPlain: '大盤：來回 5 次後',
     levDouble: '2 倍塔：來回 5 次後',
     levInverse: '反向塔：來回 5 次後',
+    hedgeCase: '情境',
     dtTrades: '進出次數',
     dtCost: '每次進出的交易成本',
     dtCapital: '本金剩',

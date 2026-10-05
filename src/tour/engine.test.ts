@@ -83,7 +83,7 @@ describe('sandboxPatchFor', () => {
 
 describe('titleOf / lineOf / moreOf', () => {
   it('returns static text or calls the template with the context', () => {
-    const ctx = { weightPct: () => 57.35, shock: () => -0.17, sectorPct: () => 0, expenseRatio: () => 0.002, overlapShared: () => 0.3, exitFee: () => 0, assetClassPct: () => 0, fundFeeRows: () => [], distributionFee: () => undefined }
+    const ctx = { weightPct: () => 57.35, shock: () => -0.17, sectorPct: () => 0, expenseRatio: () => 0.002, overlapShared: () => 0.3, exitFee: () => 0, assetClassPct: () => 0, fundFeeRows: () => [], distributionFee: () => undefined, hedge: () => { throw new Error('unused') } }
     expect(titleOf(L[0]!.steps[0]!)).toBe('T1')
     expect(lineOf(L[0]!.steps[0]!, ctx)).toBe('x')
     expect(moreOf(L[0]!.steps[0]!, ctx)).toBe('mx')

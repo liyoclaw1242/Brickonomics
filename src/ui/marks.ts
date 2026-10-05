@@ -6,6 +6,7 @@ import type { Step, TextContext } from '../tour/types'
 import { feeRaceRows } from '../sim/feeRace'
 import { dayTradeCostVerified } from '../sim/dayTrade'
 import { FEE_DRAG } from '../sim/feeDrag'
+import { hedgeExample } from '../sim/hedge'
 
 export type Mark = 'illustrative' | 'assumption' | 'unverified'
 
@@ -32,6 +33,12 @@ export function stepMarks(step: Step, u: Universe): Mark[] {
   }
   // 兩棵樹的內扣費用（主動、被動）：有一檔沒查證就加 ？
   if (st?.kind === 'feeTrees' && [FEE_DRAG.active, FEE_DRAG.passive].some((id) => { const a = u.get(id); return !a || !isVerified(a, 'fees.expenseRatio') })) out.push('unverified')
+  // 反向對沖：反向 ETF 的費用是假設（✎）；0050 的費用沒查證就加 ？
+  if (st?.kind === 'hedge') {
+    const ex = hedgeExample(u)
+    if (ex.inverseFeeAssumed) out.push('assumption')
+    if (!ex.baseFeeVerified) out.push('unverified')
+  }
   // 當沖的成本（手續費、賣出交易成本）來自 TW_TRADING：有一項沒查證就加 ？
   if (st?.kind === 'dayTrade' && !dayTradeCostVerified()) out.push('unverified')
   // 研究數據卡：有一個數字沒查證就加 ？（卡片上那一列也有）

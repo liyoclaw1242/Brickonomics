@@ -12,6 +12,8 @@ import { feeDrag } from '../../sim/feeDrag'
 import { universe } from '../../data'
 import { LEV_LAYOUT, levNow, levWave } from './advanced'
 import { waveSteps } from '../events/wave'
+import { HEDGE_CASES, HEDGE_LAYOUT, hedgeLightning, hedgeTowers } from './advanced'
+import { hedgeExample } from '../../sim/hedge'
 
 describe('a-port portfolio tower (🌪)', () => {
   it('portNow: 100 split by the bond slider; the example storm takes stocks −40%, bonds +5% (sim/portfolio STORM)', () => {
@@ -187,5 +189,40 @@ describe('a-lev leverage towers in the 🌊 wave', () => {
     expect(w.targets).toHaveLength(3)
     expect(w.targets!.map((t) => t.at[0])).toEqual([...LEV_LAYOUT.x])
     expect(LEV_LAYOUT.unit * 120).toBeLessThanOrEqual(9) // 2 倍塔最高（第一道浪退下時 96 → 不會超過 120）
+  })
+})
+
+describe('a-hedge three towers (⚡ on the strike case)', () => {
+  const ex = hedgeExample(universe)
+  it('cases in slider order: flat year, rising year, then the ⚡ day', () => {
+    expect(HEDGE_CASES).toEqual(['flat', 'rising', 'strike'])
+  })
+  it('hedgeTowers: each tower is split into 0050 / inverse / cash parts that add up to the sim row (sim/hedge rows)', () => {
+    for (const [ci, c] of HEDGE_CASES.entries()) {
+      const t = hedgeTowers(ex, ci, 1)
+      expect(t.map((x) => x.id)).toEqual(['plain', 'inverse', 'cash'])
+      for (const x of t) {
+        const row = ex.rows.find((r) => r.id === x.id)!
+        expect(x.base + x.inverse + x.cash, `${c} ${x.id}`).toBeCloseTo(row[c], 9)
+        expect(x.total).toBeCloseTo(row[c], 9)
+      }
+    }
+    // ⚡（一天）：全押 90；加反向 94（72 + 22）；少買＋現金 94（54 + 40）。一天的費用 × (1 − 0.14%)^(1/250) 只差萬分之幾
+    const s = hedgeTowers(ex, 2, 1)
+    expect(s[0]!.total).toBeCloseTo(90, 2)
+    expect(s[1]!.base).toBeCloseTo(72, 2)
+    expect(s[1]!.inverse).toBeCloseTo(22, 2)
+    expect(s[2]!.base).toBeCloseTo(54, 2)
+    expect(s[2]!.cash).toBe(40)
+  })
+  it('before the strike lands (drop 0) the ⚡ case still shows the starting 100 split', () => {
+    const t = hedgeTowers(ex, 2, 0)
+    expect(t.map((x) => x.total)).toEqual([100, 100, 100])
+    expect(t[1]!.inverse).toBe(20)
+    expect(t[2]!.cash).toBe(40)
+  })
+  it('the bolt hits the top of each tower (everything holds 0050)', () => {
+    const l = hedgeLightning()
+    expect(l.targets).toEqual(HEDGE_LAYOUT.x.map((x) => [x, 100 * HEDGE_LAYOUT.unit, 0]))
   })
 })
