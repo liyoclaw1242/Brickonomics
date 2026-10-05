@@ -243,13 +243,15 @@ export type LevNow = {
   inverse: number[]
   /** 跌一次再漲一次（一道浪）之後各少掉多少（比例） */
   round: { plain: number; double: number; inverse: number }
+  /** 一般人以為的 2 倍：大盤跌幅的兩倍（100 − 2 × 大盤少掉的） */
+  naiveDouble: number
 }
 
 /** 三座塔每一步的高度（sim/leverage 的 leverageTowers），以及一道浪各磨掉多少 */
 export function levNow(): LevNow {
   const t = leverageTowers(LEVERAGE)
   const r = (p: number[]) => 1 - p[2]! / p[0]!
-  return { ...t, round: { plain: r(t.plain), double: r(t.double), inverse: r(t.inverse) } }
+  return { ...t, round: { plain: r(t.plain), double: r(t.double), inverse: r(t.inverse) }, naiveDouble: t.plain[0]! - 2 * (t.plain[0]! - t.plain.at(-1)!) }
 }
 
 /** 大浪：一道浪＝一次跌再漲（LEVERAGE.rounds 道），浪頭打到三座塔時噴浪花；塔高由舞台沿 levNow 的路徑取 */
@@ -258,6 +260,7 @@ export function levWave(): SpecOf<'wave'> {
   return {
     kind: 'wave',
     waves: LEVERAGE.rounds,
+    numberAtEnd: true,
     size: LEV_LAYOUT.water,
     targets: LEV_LAYOUT.x.map((x) => ({ at: [x, 0, 0] as Vec3, size: [LEV_LAYOUT.w, h, LEV_LAYOUT.w] as Vec3 })),
   }

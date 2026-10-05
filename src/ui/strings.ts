@@ -237,6 +237,7 @@ export const T = {
     inverse: '反向塔',
     left: (v: string) => `剩 ${v}`,
     start: '起點都是 100',
+    naive: (v: string) => `以為的 2 倍：${v}`,
   },
   /** a-hedge 三座塔（高階；反向 ETF 用通用名稱） */
   hedge: {
@@ -344,9 +345,8 @@ export const T = {
     fee30Active: (fee: string) => `怪手挑（每年扣 ${fee}）`,
     fee30Passive: (fee: string) => `照藍圖（每年扣 ${fee}）`,
     fee30NoFee: '完全沒費用的話',
-    levPlain: '大盤：來回 5 次後',
-    levDouble: '2 倍塔：來回 5 次後',
-    levInverse: '反向塔：來回 5 次後',
+    levAfter: (name: string, rounds: number) => `${name}：來回 ${rounds} 次後`,
+    levNaive: '以為的 2 倍（大盤跌幅 × 2）',
     hedgeCase: '情境',
     rebalStage: '進度',
     rebalStock: '股票',

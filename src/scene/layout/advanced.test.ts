@@ -211,6 +211,13 @@ describe('a-lev leverage towers in the 🌊 wave', () => {
     expect(w.targets).toHaveLength(3)
     expect(w.targets!.map((t) => t.at[0])).toEqual([...LEV_LAYOUT.x])
     expect(LEV_LAYOUT.unit * 120).toBeLessThanOrEqual(9) // 2 倍塔最高（第一道浪退下時 96 → 不會超過 120）
+    expect(w.numberAtEnd).toBe(true) // 大數字等浪退了才數
+  })
+  it('what people expect from 2×: twice the market’s fall, 2 × 4.90% = 9.80% → 90.2 (the real 2× tower ends at 81.54)', () => {
+    const n = levNow()
+    expect(n.naiveDouble).toBeCloseTo(100 - 2 * (100 - n.plain.at(-1)!), 9)
+    expect(n.naiveDouble).toBeCloseTo(90.2, 1)
+    expect(n.double.at(-1)!).toBeLessThan(n.naiveDouble)
   })
 })
 

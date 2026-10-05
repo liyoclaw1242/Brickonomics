@@ -137,7 +137,7 @@ export const surfaceY = (s: WaveState, x: number, z: number): number => s.level 
 export const WAVE_TIMELINE: EventTimeline<SpecOf<'wave'>> = {
   duration: (spec) => waveEnd(spec),
   lingers: () => false,
-  numberDelay: (spec) => (waveCount(spec) > 0 ? crestTime(0) : 0),
+  numberDelay: (spec) => (waveCount(spec) === 0 ? 0 : spec.numberAtEnd ? waveEnd(spec) : crestTime(0)),
   aftermath: (spec) => waveCount(spec) > 0,
 }
 

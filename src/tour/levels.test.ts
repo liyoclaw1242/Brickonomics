@@ -1086,11 +1086,13 @@ describe('Plan 8 高階: 槓桿的耗損 (a-lev)', () => {
     for (const t of [lineOf(s(), ctx), moreOf(s(), ctx)]) expect(t).not.toMatch(/\d{4,5}[LR]?|00631|00632/) // 沒有真實代號
   })
   it('big number: the 2× tower falls 18.5% (100 × 0.96^5 = 81.54) while the market falls 4.9% and the inverse tower falls 4.9% too', () => {
-    expect(bigOf(s())).toEqual({ value: '跌 18.5%', label: '5 次來回後 2 倍塔', note: '大盤跌 4.9%；反向塔也跌 4.9%', colorKey: 'double', mark: 'illustrative' })
+    // 大盤 −4.90% → 以為 2 倍是 −9.80%；實際 100 × 0.96^5 = 81.54 → −18.46%
+    expect(bigOf(s())).toEqual({ value: '跌 18.5%', label: '5 次來回後 2 倍塔', note: '以為 2 倍會跌 9.8%，實際跌 18.5%', colorKey: 'double', mark: 'illustrative' })
+    expect(s().scene.event).toMatchObject({ numberAtEnd: true }) // 浪退了才數
     expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('來回 5 次。2 倍塔跌 18.5%')
   })
   it('the more text does the one-round arithmetic: market −1%, 2× −4%, inverse −1%', () => {
-    expect(moreOf(s(), ctx)).toContain('跌 10% 再漲 10%，大盤少 1%')
+    expect(moreOf(s(), ctx)).toContain('跌 10% 再漲 10%，大盤也少 1%')
     expect(moreOf(s(), ctx)).toContain('2 倍塔少 4%，反向塔也少 1%')
     expect(moreOf(s(), ctx)).toContain('不是真實商品')
   })

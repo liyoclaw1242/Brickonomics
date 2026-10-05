@@ -163,3 +163,11 @@ describe('wave surface and detail', () => {
     expect(WAVE_DETAIL.low.spray).toBeLessThan(WAVE_DETAIL.high.spray)
   })
 })
+
+describe('fix round: numberAtEnd (a-lev: the card waits until the waves end)', () => {
+  it('numberDelay is the first crest by default and the end of the last wave with numberAtEnd', async () => {
+    const { WAVE_TIMELINE, crestTime, waveEnd } = await import('./wave')
+    expect(WAVE_TIMELINE.numberDelay({ kind: 'wave', waves: 5 })).toBe(crestTime(0))
+    expect(WAVE_TIMELINE.numberDelay({ kind: 'wave', waves: 5, numberAtEnd: true })).toBe(waveEnd({ kind: 'wave', waves: 5 }))
+  })
+})

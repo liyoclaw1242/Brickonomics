@@ -65,6 +65,23 @@ export function LeverageStage({ event }: { event: EventClock }) {
           <Edges color={line} />
         </mesh>
       ))}
+      {/* 以為的 2 倍（大盤跌幅 × 2）：2 倍塔上一圈虛框，浪退了才畫——實際比它矮得多 */}
+      {done && (
+        <mesh position={atPlaza(LEV_LAYOUT.x[1]!, n.naiveDouble * LEV_LAYOUT.unit, 0)}>
+          <boxGeometry args={[LEV_LAYOUT.w + 0.6, 0.02, LEV_LAYOUT.w + 0.6]} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+          <Edges color={ACCENT_COLORS.double} />
+        </mesh>
+      )}
+      {done && (
+        <Callout
+          anchor={atPlaza(LEV_LAYOUT.x[1]! + LEV_LAYOUT.w / 2 + 0.3, n.naiveDouble * LEV_LAYOUT.unit, 0)}
+          offset={[1.6, -1.4, 1]}
+          title={T.lev.naive(n.naiveDouble.toFixed(1))}
+          compact
+          persistent
+        />
+      )}
       {KEYS.map((k, i) => (
         <Callout
           key={k}

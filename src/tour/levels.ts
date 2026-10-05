@@ -828,14 +828,14 @@ export const COURSE_STEPS: Step[] = [
     more: () => {
       const r = levNow().round
       const m = pct0(LEVERAGE.move * 100)
-      return `2 倍 ETF＝每天的漲跌放大 2 倍。跌 ${m}% 再漲 ${m}%，大盤少 ${pct0(r.plain * 100)}%。2 倍塔少 ${pct0(r.double * 100)}%，反向塔也少 ${pct0(r.inverse * 100)}%。這是示意，用通用名稱，不是真實商品。`
+      return `2 倍 ETF＝每天的漲跌放大 2 倍。跌 ${m}% 再漲 ${m}%，大盤也少 ${pct0(r.plain * 100)}%。2 倍塔少 ${pct0(r.double * 100)}%，反向塔也少 ${pct0(r.inverse * 100)}%。這是示意，用通用名稱，不是真實商品。`
     },
     mark: 'illustrative',
-    // 等第一道浪打到才數（事件的 numberDelay）
+    // 等浪全部退了才數（wave numberAtEnd）；note 直接寫「以為的 2 倍」和實際（adv-r1：要自己心算 9.8）
     bigNumber: () => {
       const l = levNow()
-      const fall = (p: number[]) => movePct(p.at(-1)! / p[0]! - 1)
-      return { value: fall(l.double), label: `${LEVERAGE.rounds} 次來回後 2 倍塔`, note: `大盤${fall(l.plain)}；反向塔也${fall(l.inverse)}`, colorKey: 'double', mark: 'illustrative' }
+      const naive = pctAbs1(l.naiveDouble / 100 - 1)
+      return { value: movePct(l.double.at(-1)! / 100 - 1), label: `${LEVERAGE.rounds} 次來回後 2 倍塔`, note: `以為 2 倍會跌 ${naive}，實際跌 ${pctAbs1(l.double.at(-1)! / 100 - 1)}`, colorKey: 'double', mark: 'illustrative' }
     },
     scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'leverage' }, event: levWave(), cityLabels: false },
   },

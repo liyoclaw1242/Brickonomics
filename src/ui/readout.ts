@@ -7,6 +7,7 @@ import { DCA_DEMO, dcaNow, ddNow, INFL_DEMO, inflReal, PE_DEMO, peYears, ratePri
 import { corrNow, dtNow, durNow, feeTreesNow, hedgeCaseIndex, hedgeTowers, levNow, portNow, rebalNow } from '../scene/layout/advanced'
 import { hedgeExample } from '../sim/hedge'
 import { FEE_DRAG } from '../sim/feeDrag'
+import { LEVERAGE } from '../sim/leverage'
 import { DURATION } from '../sim/duration'
 import { overlap } from '../sim/overlap'
 import { shockImpact } from '../sim/scenario'
@@ -155,9 +156,10 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
       // 浪是一進來就發生的事件：讀數直接寫走完之後（文字版也一樣）
       const l = levNow()
       return [
-        { label: T.readout.levPlain, value: n1(l.plain.at(-1)!), marks: ['illustrative'] },
-        { label: T.readout.levDouble, value: n1(l.double.at(-1)!) },
-        { label: T.readout.levInverse, value: n1(l.inverse.at(-1)!) },
+        { label: T.readout.levAfter(T.lev.plain, LEVERAGE.rounds), value: n1(l.plain.at(-1)!), marks: ['illustrative'] },
+        { label: T.readout.levAfter(T.lev.double, LEVERAGE.rounds), value: n1(l.double.at(-1)!) },
+        { label: T.readout.levNaive, value: n1(l.naiveDouble) },
+        { label: T.readout.levAfter(T.lev.inverse, LEVERAGE.rounds), value: n1(l.inverse.at(-1)!) },
       ]
     }
     case 'duration': {

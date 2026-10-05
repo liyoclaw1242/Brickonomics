@@ -63,7 +63,7 @@ export type EventSpec =
    * at：水面中心（相對廣場中心的 x、z，預設 [0, 0]）；size：水面寬（x）、深（z）（預設 WAVE.width、WAVE.depth）；
    * targets：浪頭打到時在這些目標旁噴浪花（不閃）。
    */
-  | { kind: 'wave'; waves: number; at?: [number, number]; size?: [number, number]; targets?: readonly EventTarget[] }
+  | { kind: 'wave'; waves: number; at?: [number, number]; size?: [number, number]; targets?: readonly EventTarget[]; /** 面板大數字等浪全部退了才數（a-lev：結果要等走完才知道） */ numberAtEnd?: boolean }
 
 export type EventKind = EventSpec['kind']
 
