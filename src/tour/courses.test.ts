@@ -78,11 +78,11 @@ describe('COURSES', () => {
     expect(m[0]).toBe('m-0')
     expect(m.at(-1)).toBe('m-fin')
     expect(course('intermediate').chapters.map((ch) => ch.stepIds)).toEqual([
-      ['m-0', 'p-3'],
+      ['m-0'],
       ['s-4', 's-dd', 's-5', 's-6', 's-pe'],
       ['b-2', 'b-rate', 'b-infl'],
       ['f-2', 'f-3', 'f-4', 'f-6', 'f-8'],
-      ['e-4', 'e-dca', 'c-3', 'c-4', 'u-1', 'u-2', 'u-3', 'u-4', 'u-5'],
+      ['e-4', 'e-dca', 'c-3', 'u-1', 'u-2', 'u-3', 'u-4', 'u-5'],
       ['m-fin'],
     ])
   })
@@ -137,7 +137,9 @@ describe('course helpers', () => {
   it('courseOfStep finds the one course that holds a step', () => {
     expect(courseOfStep('p-1')).toBe('beginner')
     expect(courseOfStep('u-6')).toBe('beginner')
-    expect(courseOfStep('p-3')).toBe('intermediate')
+    // 使用者測試 mid-r1：p-3（觀光）、c-4（一句話的過場）已刪除
+    expect(courseOfStep('p-3')).toBeUndefined()
+    expect(courseOfStep('c-4')).toBeUndefined()
     expect(courseOfStep('m-0')).toBe('intermediate')
     expect(courseOfStep('m-fin')).toBe('intermediate')
     expect(courseOfStep('f-7')).toBeUndefined()

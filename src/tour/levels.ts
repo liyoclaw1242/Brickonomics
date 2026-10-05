@@ -65,14 +65,6 @@ export const LEVELS: Level[] = [
         callouts: [{ anchor: { kind: 'building', id: '2330' }, title: '台積電：最高' }],
         scene: { camera: 'tw', product: null },
       },
-      {
-        id: 'p-3',
-        title: '巨人在美國',
-        line: '**輝達**、**蘋果**、**微軟**都在這',
-        more: '美國大陸有輝達、蘋果、微軟這些巨型公司。接下來一步一步看懂股票、債券、基金和 ETF。',
-        callouts: [{ anchor: { kind: 'building', id: 'NVDA' }, title: '輝達' }],
-        scene: { camera: 'us', product: null },
-      },
     ],
   },
   {
@@ -426,13 +418,6 @@ export const LEVELS: Level[] = [
           return { value: `至少 ${(o * 100).toFixed(1)}%`, label: '兩盒一樣的部分', fraction: o, note: '只算前幾大公司，實際更多' }
         },
         scene: { camera: 'plaza', product: null, stage: { kind: 'overlap', a: 'QQQ', b: 'SPY' }, cityLabels: false },
-      },
-      {
-        id: 'c-4',
-        title: '往地底鑽',
-        line: '看看 ETF 還有**哪幾種**',
-        more: '接下來鑽到城市底下。看看 ETF 還分成哪些種類。',
-        scene: { camera: 'overview', product: null },
       },
     ],
   },

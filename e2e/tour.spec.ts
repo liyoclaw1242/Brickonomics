@@ -15,7 +15,7 @@ const CONTROL_LABEL: Record<string, string> = {
 }
 
 test('walks the whole 中階 course by clicking 下一步 and unlocks the sandbox', async ({ page }) => {
-  test.setTimeout(300_000) // 軟體渲染約 1fps，整門課 25 步要一分鐘左右（初階由下面的第一次來測試走完）
+  test.setTimeout(300_000) // 軟體渲染約 1fps，整門課 23 步要一分鐘左右（初階由下面的第一次來測試走完）
   const errors: string[] = []
   page.on('pageerror', (e) => errors.push(String(e)))
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
@@ -103,7 +103,7 @@ test('first visit: choose 初階, walk its steps to 自由玩, timeline shows th
   // 開場卡：可上的課各一顆大按鈕（高階還沒開放）；還沒選之前沒有時間軸、也沒有下一步
   const beginnerBtn = page.getByRole('button', { name: /初階.*17 步/ })
   await expect(beginnerBtn).toBeVisible()
-  await expect(page.getByRole('button', { name: /中階.*25 步/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /中階.*23 步/ })).toBeVisible()
   await expect(page.getByRole('button', { name: /高階/ })).toHaveCount(0)
   await expect(page.getByRole('navigation', { name: '章節' })).toHaveCount(0)
   await expect(page.getByRole('button', { name: /下一步/ })).toHaveCount(0)
