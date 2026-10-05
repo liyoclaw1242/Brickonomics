@@ -27,6 +27,11 @@ test('walks the whole 中階 course by clicking 下一步 and unlocks the sandbo
   const gates = await page.evaluate(() => (window as unknown as { __BCI_STEP_GATES__: { id: string; control: string; min: number }[] }).__BCI_STEP_GATES__)
   const GATES = new Map(gates.map((g) => [g.id, g]))
   expect(GATES.size).toBeGreaterThan(0)
+  // Plan 7 的新門檻（拖到谷底、數滿 60 年、利率拉到 5%、買滿 12 個月）都在這條路上
+  for (const id of ['s-dd', 's-pe', 'b-rate', 'e-dca']) {
+    expect(ids, id).toContain(id)
+    expect(GATES.has(id), id).toBe(true)
+  }
   let before = 0
   for (const id of ids) {
     await settled(page, before)
