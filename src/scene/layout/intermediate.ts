@@ -2,6 +2,7 @@ import { maxDrawdown } from '../../sim/drawdown'
 import { yearsToPayBack } from '../../sim/valuation'
 import { bondPrice, FACE } from '../../sim/bondPrice'
 import { dca, type DcaResult } from '../../sim/dca'
+import { realReturn } from '../../sim/inflation'
 import type { Vec3 } from '../camera'
 import { QUAKE } from '../events/quake'
 import type { SpecOf } from '../events/types'
@@ -146,3 +147,25 @@ export const dcaCheapest = (): number => DCA_DEMO.prices.indexOf(Math.min(...DCA
 
 /** 晴天大樹：太陽放在畫面中間偏左上（手機上也不會被切掉）；天氣一進來就放晴，塔跟著月份拉桿長高 */
 export const dcaSunny = (): SpecOf<'sunnyTree'> => ({ kind: 'sunnyTree', sun: [-3, 8, -20] })
+
+// ───────────── b-infl 通膨（☀️ 熱浪） ─────────────
+
+/** 舉例：借據每年利息 5%，通膨 3%。示意 */
+export const INFL_DEMO = { nominal: 0.05, inflation: 0.03 } as const
+
+/** 左邊一張借據；右邊一排金幣疊（每 1% 利息一疊） */
+export const INFL_LAYOUT = { bondX: -8, bond: [3.6, 1.8, 2.6] as Vec3, coinX0: -2.4, coinGap: 3.3, coinR: 1.4, perStack: 9, coinH: 0.34 } as const
+
+/** 扣掉通膨後真正賺到的比例 */
+export const inflReal = (): number => realReturn(INFL_DEMO.nominal, INFL_DEMO.inflation)
+
+/** 熱浪：每 1% 利息一疊金幣；融掉的比例＝通膨吃掉的那部分（1 − 真正賺到 ÷ 利息） */
+export function inflHeat(): SpecOf<'heatwave'> {
+  const n = Math.round(INFL_DEMO.nominal * 100)
+  return {
+    kind: 'heatwave',
+    melt: 1 - inflReal() / INFL_DEMO.nominal,
+    coins: Array.from({ length: n }, (_, i): Vec3 => [INFL_LAYOUT.coinX0 + i * INFL_LAYOUT.coinGap, 0, 0]),
+    coinRadius: INFL_LAYOUT.coinR,
+  }
+}

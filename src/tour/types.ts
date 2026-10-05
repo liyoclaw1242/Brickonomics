@@ -36,6 +36,8 @@ export type Stage =
   | { kind: 'seesaw' }
   /** e-dca 定期定額：每月一小堆（months 拉桿）＋累積的塔像樹一樣長高；天氣是 scene.event sunnyTree */
   | { kind: 'dca' }
+  /** b-infl 通膨：借據＋一排利息金幣；熱浪讓金幣融化變小（scene.event heatwave） */
+  | { kind: 'inflation' }
   | { kind: 'overlap'; a: string; b: string }
   | { kind: 'underground'; show: 'strata' | 'cores' | 'dig' | 'veins' | 'gold'; cores?: [string, string] }
 

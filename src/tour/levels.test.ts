@@ -36,7 +36,7 @@ const unverify = (ids: string[]): Universe => {
 
 const byId = (id: string): Step => steps.find((s) => s.id === id)!
 /** Plan 7 的舉例舞台：一定要標 ≈、多說一點寫「示意」 */
-const PLAN7_STAGES: string[] = ['drawdown', 'pe', 'seesaw', 'dca']
+const PLAN7_STAGES: string[] = ['drawdown', 'pe', 'seesaw', 'dca', 'inflation']
 /** 大數字跟著即時拉桿值；測試預設用進入該步驟時的值 */
 const bigOf = (s: Step, values: Partial<StageValues> = {}) => s.bigNumber?.(ctx, { ...DEFAULT_VALUES, ...s.scene.values, ...values })
 const resolve = (t: Step['line'] | undefined): string | undefined => (t === undefined ? undefined : typeof t === 'function' ? t(ctx) : t)
@@ -802,5 +802,20 @@ describe('Plan 7 中階: 定期定額 (e-dca)', () => {
   it('says it does not guarantee a profit; it only averages the cost', () => {
     expect(moreOf(s(), ctx)).toContain('不保證賺錢，只是讓成本平均')
     expect(moreOf(s(), ctx)).toContain('平均成本 39.0 元，比平均價格 40.9 元低')
+  })
+})
+
+describe('Plan 7 中階: 通膨 (b-infl)', () => {
+  const s = () => byId('b-infl')
+  it('no drag: the heatwave plays when the camera stops and melts the coins by the part inflation eats', () => {
+    expect(s().until).toBeUndefined()
+    expect(s().scene.event).toMatchObject({ kind: 'heatwave' })
+    expect((s().scene.event as { melt: number }).melt).toBeCloseTo(1 - (1.05 / 1.03 - 1) / 0.05, 12)
+  })
+  it('big number ≈ 2%: 1.05 ÷ 1.03 − 1 = 1.94%, and the more text gives the approximation 利息 − 通膨', () => {
+    expect(1.05 / 1.03 - 1).toBeCloseTo(0.0194, 4)
+    expect(bigOf(s())).toEqual({ value: '約 2%', label: '扣掉通膨，真正賺到', note: '利息 5%・通膨 3%', colorKey: 'coin', mark: 'illustrative' })
+    expect(moreOf(s(), ctx)).toContain('真正賺到 ≈ 利息 − 通膨')
+    expect(moreOf(s(), ctx)).toContain('利息 5%，通膨 3%，真正賺到約 2%')
   })
 })

@@ -3,7 +3,7 @@ import { isVerified } from '../data/verified'
 import { sectorBreakdown } from '../scene/layout/underground'
 import { accumulateVsPayout, exDivTimeline, principalTrap } from '../scene/layout/stages'
 import { feeRaceLeader, feeRaceRows } from '../sim/feeRace'
-import { DCA_DEMO, dcaNow, ddNow, PE_DEMO, peYears, ratePrice } from '../scene/layout/intermediate'
+import { DCA_DEMO, dcaNow, ddNow, INFL_DEMO, inflReal, PE_DEMO, peYears, ratePrice } from '../scene/layout/intermediate'
 import { overlap } from '../sim/overlap'
 import { shockImpact } from '../sim/scenario'
 import { SHOCK_2330, signedPct } from '../tour/context'
@@ -94,6 +94,14 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
         { label: T.readout.dcaUnits, value: n1(r.totalUnits) },
         { label: T.readout.dcaCost, value: `${n1(r.avgCost)} 元` },
         { label: T.readout.dcaPrice, value: `${n1(r.avgPrice)} 元` },
+      ]
+    }
+    case 'inflation': {
+      const p = (r: number) => `${(r * 100).toFixed(1)}%`
+      return [
+        { label: T.readout.inflNominal, value: p(INFL_DEMO.nominal), marks: ['illustrative'] },
+        { label: T.readout.inflInflation, value: p(INFL_DEMO.inflation) },
+        { label: T.readout.inflReal, value: p(inflReal()) },
       ]
     }
     case 'overlap': {

@@ -1,0 +1,71 @@
+import { useMemo, useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
+import { type InstancedMesh, Object3D } from 'three'
+import { T } from '../../ui/strings'
+import { Callout } from '../Callout'
+import { CoinMaterial } from '../CoinDrip'
+import { coinScaleAt, HEAT_END } from '../events/heatwave'
+import type { EventClock } from '../events/types'
+import { INFL_DEMO, INFL_LAYOUT, inflReal } from '../layout/intermediate'
+import { ACCENT_COLORS } from '../palette'
+import { useEventValue } from '../useEventClock'
+import { atPlaza } from './plaza'
+
+const BOND_COLOR = '#d4a72c'
+const pct0 = (r: number) => `${Math.round(r * 100)}%`
+
+/**
+ * b-infl 通膨：左邊一張借據，右邊一排利息金幣（每 1% 一疊）。步驟的 scene.event 是熱浪（events/Heatwave）：
+ * 烈日、熱氣線，金幣慢慢融化變小（coinScaleAt），融掉的部分＝通膨吃掉的；剩下的＝真正賺到的（約 利息 − 通膨）。
+ */
+export function InflationStage({ event }: { event: EventClock }) {
+  const heat = event.spec?.kind === 'heatwave' ? event.spec : undefined
+  const coins = heat?.coins ?? []
+  const ref = useRef<InstancedMesh>(null)
+  const dummy = useMemo(() => new Object3D(), [])
+  const n = coins.length * INFL_LAYOUT.perStack
+  const melted = useEventValue(event, (t) => !!heat && t !== null && t >= HEAT_END)
+
+  useFrame(() => {
+    const m = ref.current
+    if (!m || !heat) return
+    const k = Math.max(0.001, coinScaleAt(heat, event.reduced ? Infinity : event.t.current))
+    const r = INFL_LAYOUT.coinR
+    coins.forEach((c, i) => {
+      for (let j = 0; j < INFL_LAYOUT.perStack; j++) {
+        dummy.position.set(...atPlaza(c[0], c[1] + (j + 0.5) * INFL_LAYOUT.coinH * k, c[2]))
+        dummy.rotation.set(0, j * 0.4, 0)
+        dummy.scale.set(r * k, k, r * k)
+        dummy.updateMatrix()
+        m.setMatrixAt(i * INFL_LAYOUT.perStack + j, dummy.matrix)
+      }
+    })
+    m.instanceMatrix.needsUpdate = true
+  })
+
+  const [bw, bh, bd] = INFL_LAYOUT.bond
+  const mid = coins.length > 0 ? (coins[0]![0] + coins[coins.length - 1]![0]) / 2 : 0
+  return (
+    <>
+      <mesh position={atPlaza(INFL_LAYOUT.bondX, bh / 2, 0)} castShadow>
+        <boxGeometry args={[bw, bh, bd]} />
+        <meshStandardMaterial color={BOND_COLOR} roughness={0.45} metalness={0.3} />
+      </mesh>
+      {n > 0 && (
+        <instancedMesh ref={ref} args={[undefined, undefined, n]} castShadow frustumCulled={false}>
+          <cylinderGeometry args={[1, 1, INFL_LAYOUT.coinH * 0.9, 24]} />
+          <CoinMaterial />
+        </instancedMesh>
+      )}
+      <Callout anchor={atPlaza(INFL_LAYOUT.bondX, bh, 0)} offset={[0, 1.6, 0]} title={T.infl.bond(pct0(INFL_DEMO.nominal))} persistent />
+      <Callout
+        anchor={atPlaza(mid, 0.1, INFL_LAYOUT.coinR)}
+        offset={[0, -0.3, 2.6]}
+        title={melted ? T.infl.real(pct0(inflReal())) : T.infl.coins(pct0(INFL_DEMO.nominal))}
+        sub={melted ? T.infl.eaten(pct0(INFL_DEMO.inflation)) : undefined}
+        color={ACCENT_COLORS.coin}
+        persistent
+      />
+    </>
+  )
+}

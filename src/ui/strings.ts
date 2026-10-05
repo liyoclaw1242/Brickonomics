@@ -140,6 +140,13 @@ export const T = {
     tower: (months: number) => `買了 ${months} 個月`,
     cost: (v: string) => `平均成本 ${v} 元`,
   },
+  /** b-infl 通膨的 3D 標註 */
+  infl: {
+    bond: (pct: string) => `借據：利息 ${pct}`,
+    coins: (pct: string) => `利息 ${pct}`,
+    real: (pct: string) => `真正賺到約 ${pct}`,
+    eaten: (pct: string) => `通膨 ${pct} 融掉了`,
+  },
   /** 基金那一章的錢：投入 100＝100 萬（和計費表同一個底），一位小數、去掉「.0」 */
   wan,
   /** 元（四捨五入、千分位）：18800 → '18,800 元'（r5：有感的錢，像計費表的「已磨掉約 39,073 元」） */
@@ -211,6 +218,9 @@ export const T = {
     ratePrice: '舊借據現在值',
     rateFace: '到期拿回',
     dcaAmount: '每月投入',
+    inflNominal: '利息',
+    inflInflation: '通膨',
+    inflReal: '真正賺到（約）',
     dcaUnits: '累積的單位',
     dcaCost: '平均成本',
     dcaPrice: '平均價格',

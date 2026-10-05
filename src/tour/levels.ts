@@ -3,7 +3,7 @@ import { movePct, pct0, SHOCK_2330, signedPct, wan } from './context'
 import { DEFAULT_VALUES } from './values'
 import { EXDIV, exDivTimeline, principalTrap, TRAP_DEMO } from '../scene/layout/stages'
 import { T } from '../ui/strings'
-import { DD_DEMO, DD_TROUGH, ddNow, ddQuake, PE_DEMO, peBubble, peYears, RATE_DEMO, rateFreeze, ratePrice, DCA_DEMO, dcaNow, dcaSunny } from '../scene/layout/intermediate'
+import { DD_DEMO, DD_TROUGH, ddNow, ddQuake, PE_DEMO, peBubble, peYears, RATE_DEMO, rateFreeze, ratePrice, DCA_DEMO, dcaNow, dcaSunny, INFL_DEMO, inflHeat, inflReal } from '../scene/layout/intermediate'
 import { maxDrawdown } from '../sim/drawdown'
 
 /**
@@ -553,6 +553,24 @@ export const COURSE_STEPS: Step[] = [
     controls: ['rate'],
     ranges: { rate: [RATE_DEMO.from, RATE_DEMO.to] },
     until: { control: 'rate', min: RATE_DEMO.to },
+  },
+  {
+    // 中階債券章（Plan 7）：☀️ 熱浪讓利息金幣融化變小；真正賺到 ≈ 利息 − 通膨（近似）
+    id: 'b-infl',
+    title: '通膨吃利息',
+    line: '**通膨**讓**金幣|coin**縮水',
+    fallbackLine: () => `扣掉通膨，真正賺到約 **${pct0(inflReal() * 100)}%|coin**`,
+    more: () =>
+      `通膨＝東西變貴，同樣的錢買得比較少。利息 ${pct1(INFL_DEMO.nominal)}，通膨 ${pct1(INFL_DEMO.inflation)}，真正賺到約 ${pct0(inflReal() * 100)}%。真正賺到 ≈ 利息 − 通膨。這是示意，熱浪＝通膨。`,
+    mark: 'illustrative',
+    bigNumber: () => ({
+      value: `約 ${pct0(inflReal() * 100)}%`,
+      label: '扣掉通膨，真正賺到',
+      note: `利息 ${pct1(INFL_DEMO.nominal)}・通膨 ${pct1(INFL_DEMO.inflation)}`,
+      colorKey: 'coin',
+      mark: 'illustrative',
+    }),
+    scene: { camera: 'plaza', product: null, stage: { kind: 'inflation' }, event: inflHeat(), cityLabels: false },
   },
   {
     // 中階 ETF 章（Plan 7）：每月固定金額，便宜的月份買比較多；🌤 晴天大樹讓塔跟著月份長高。只讓成本平均，不保證賺錢

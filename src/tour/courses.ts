@@ -39,7 +39,7 @@ export const COURSES: readonly Course[] = [
     chapters: [
       chapter('review', T.courseChapters.review, ['m-0', 'p-3']),
       chapter('stock', STOCK, ['s-4', 's-dd', 's-5', 's-6', 's-pe']),
-      chapter('bond', BOND, ['b-2', 'b-rate']),
+      chapter('bond', BOND, ['b-2', 'b-rate', 'b-infl']),
       chapter('fund', FUND, ['f-2', 'f-3', 'f-4', 'f-6', 'f-8']),
       chapter('etf', ETF, ['e-4', 'e-dca', 'c-3', 'c-4', 'u-1', 'u-2', 'u-3', 'u-4', 'u-5']),
       chapter('finish', T.courseChapters.finish, ['m-fin']),

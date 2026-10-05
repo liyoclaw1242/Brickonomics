@@ -98,7 +98,7 @@ test('first visit: choose 初階, walk its steps to 自由玩, timeline shows th
   // 開場卡：可上的課各一顆大按鈕（高階還沒開放）；還沒選之前沒有時間軸、也沒有下一步
   const beginnerBtn = page.getByRole('button', { name: /初階.*17 步/ })
   await expect(beginnerBtn).toBeVisible()
-  await expect(page.getByRole('button', { name: /中階.*24 步/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /中階.*25 步/ })).toBeVisible()
   await expect(page.getByRole('button', { name: /高階/ })).toHaveCount(0)
   await expect(page.getByRole('navigation', { name: '章節' })).toHaveCount(0)
   await expect(page.getByRole('button', { name: /下一步/ })).toHaveCount(0)

@@ -5,6 +5,8 @@ import { DD_DEMO, DD_LAYOUT, ddBarX, ddHeight, ddNow, ddQuake, PE_DEMO, PE_LAYOU
 import { yearsToPayBack } from '../../sim/valuation'
 import { bondPrice } from '../../sim/bondPrice'
 import { dca } from '../../sim/dca'
+import { realReturn } from '../../sim/inflation'
+import { INFL_DEMO, INFL_LAYOUT, inflHeat, inflReal } from './intermediate'
 import { DCA_DEMO, DCA_LAYOUT, dcaCheapest, dcaNow, dcaPileHeight, dcaPileX, dcaTowerHeight } from './intermediate'
 import { RATE_DEMO, SEESAW, rateFreeze, ratePrice, seesawPose } from './intermediate'
 import { bubbleRadii } from '../events/bubble'
@@ -125,5 +127,19 @@ describe('e-dca layout', () => {
     expect(dcaTowerHeight(12)).toBeCloseTo(DCA_LAYOUT.towerH, 12)
     for (let m = 2; m <= 12; m++) expect(dcaTowerHeight(m)).toBeGreaterThan(dcaTowerHeight(m - 1))
     expect(dcaPileX(11) + DCA_LAYOUT.pileW / 2).toBeLessThan(DCA_LAYOUT.towerX - DCA_LAYOUT.towerW / 2)
+  })
+})
+
+describe('b-infl layout', () => {
+  it('interest 5%, inflation 3%: real ≈ 1.05 ÷ 1.03 − 1 = 1.94% (≈ 5% − 3%)', () => {
+    expect(inflReal()).toBeCloseTo(realReturn(0.05, 0.03), 12)
+    expect(inflReal()).toBeCloseTo(0.05 - 0.03, 2)
+  })
+  it('one coin stack per 1% of interest; the heatwave melts away the part inflation eats (1 − real ÷ nominal)', () => {
+    const h = inflHeat()
+    expect(h.coins).toHaveLength(Math.round(INFL_DEMO.nominal * 100))
+    expect(h.melt).toBeCloseTo(1 - inflReal() / INFL_DEMO.nominal, 12) // 0.612
+    expect(h.coinRadius).toBe(INFL_LAYOUT.coinR)
+    for (const c of h.coins!) expect(c[0]).toBeGreaterThan(INFL_LAYOUT.bondX + 2)
   })
 })
