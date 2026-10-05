@@ -55,6 +55,12 @@ describe('event preview query', () => {
     expect(parsePreview('?eventPreview=sunnyTree&warmth=0.4')?.spec).toEqual({ kind: 'sunnyTree', warmth: 0.4 })
   })
 
+  it('wave count', () => {
+    expect(parsePreview('?eventPreview=wave')?.spec).toMatchObject({ kind: 'wave', waves: 5 })
+    expect(parsePreview('?eventPreview=wave&waves=3')?.spec).toMatchObject({ kind: 'wave', waves: 3 })
+    expect(parsePreview('?eventPreview=wave&waves=20')?.spec).toMatchObject({ kind: 'wave', waves: 8 })
+  })
+
   it('heatwave melt', () => {
     expect(parsePreview('?eventPreview=heatwave')?.spec).toMatchObject({ kind: 'heatwave', melt: 0.5 })
     expect(parsePreview('?eventPreview=heatwave&melt=0.3')?.spec).toMatchObject({ kind: 'heatwave', melt: 0.3 })

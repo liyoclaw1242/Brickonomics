@@ -62,6 +62,8 @@ export type Theme = {
     ambient: number
     ground: string
   }
+  /** 🌊 大浪：水（顏色、不透明度）、浪頭的泡沫與浪花 */
+  wave: { water: string; opacity: number; foam: string }
   /** 低飽和方塊：飽和度乘數、亮度位移；鮮豔方塊：亮度乘數 */
   tone: { mutedSaturation: number; mutedLightness: number; vividBoost: number }
 }
@@ -120,6 +122,8 @@ export const THEMES: Record<ThemeId, Theme> = {
       ambient: 0.6,
       ground: '#4a2418',
     },
+    // 暗廣場上：水比遠處的海亮一階（讀得出是水，不會和廣場糊在一起）
+    wave: { water: '#3f86b8', opacity: 0.74, foam: '#e3f4ff' },
     tone: { mutedSaturation: 0.55, mutedLightness: -0.09, vividBoost: 1.15 },
   },
   day: {
@@ -178,6 +182,8 @@ export const THEMES: Record<ThemeId, Theme> = {
       ambient: 0.45,
       ground: '#d9a070',
     },
+    // 亮廣場上：水比海深一點才看得到
+    wave: { water: '#2f80c2', opacity: 0.74, foam: '#ffffff' },
     tone: { mutedSaturation: 0.55, mutedLightness: 0.06, vividBoost: 1 },
   },
 }

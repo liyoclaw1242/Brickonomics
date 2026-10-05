@@ -41,6 +41,13 @@ export const PREVIEW_LAYOUT = {
     [5, 0, 1],
   ] as readonly [number, number, number][],
   bubbleOther: { at: [-6, 0, 0] as [number, number, number], size: [3, 7, 3] as [number, number, number] },
+  /** 大浪：三座塔（一般、2 倍、反向）站在水裡，起點一樣高；塔高由 PreviewProps 沿 leveragedPath 取 */
+  waveTowers: [
+    { at: [-5.5, 0, 0] as [number, number, number], size: [2.6, 6, 2.6] as [number, number, number] },
+    { at: [0, 0, 0] as [number, number, number], size: [2.6, 6, 2.6] as [number, number, number] },
+    { at: [5.5, 0, 0] as [number, number, number], size: [2.6, 6, 2.6] as [number, number, number] },
+  ],
+  waveSize: [19, 8] as [number, number],
 } as const
 
 /** 讀一個數字參數並限制範圍；沒給或不是數字時用預設值 */
@@ -69,6 +76,8 @@ export const PREVIEW_SPECS: { [K in EventKind]: (q: URLSearchParams) => SpecOf<K
   sunnyTree: (q) => ({ kind: 'sunnyTree', warmth: numParam(q, 'warmth', 1, 0, 1) }),
   // melt＝最後融掉的比例（0–1），例如 0.3＝剩 70%
   heatwave: (q) => ({ kind: 'heatwave', melt: numParam(q, 'melt', 0.5, 0, 1), coins: PREVIEW_LAYOUT.heatCoins, coinRadius: 1.1 }),
+  // waves＝浪的次數（0–8；每道浪一漲一跌）
+  wave: (q) => ({ kind: 'wave', waves: Math.round(numParam(q, 'waves', 5, 0, 8)), size: PREVIEW_LAYOUT.waveSize, targets: PREVIEW_LAYOUT.waveTowers }),
 }
 
 const isKind = (k: string | null): k is EventKind => k !== null && Object.hasOwn(PREVIEW_SPECS, k)

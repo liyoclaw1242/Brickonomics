@@ -7,6 +7,7 @@ import { Lightning } from './Lightning'
 import { Quake } from './Quake'
 import { SunnyTree } from './SunnyTree'
 import { Tornado } from './Tornado'
+import { Wave } from './Wave'
 import type { EventClock, EventKind, EventProps, SpecOf } from './types'
 
 /** 事件種類 → 元件（新增種類的步驟見 ./index.ts；和 EVENTS 一樣是 Record，漏了 tsc 會報錯） */
@@ -18,6 +19,7 @@ const COMPONENTS: { [K in EventKind]: ComponentType<EventProps<SpecOf<K>>> } = {
   freeze: Freeze,
   sunnyTree: SunnyTree,
   heatwave: Heatwave,
+  wave: Wave,
 }
 
 /** 畫出目前步驟的事件（沒有事件時什麼都不畫）；clock 由 StageView 的 useEventClock 提供，與舞台共用 */

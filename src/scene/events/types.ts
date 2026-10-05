@@ -4,7 +4,7 @@ import type { Quality } from '../quality'
 /**
  * 事件元件庫的共用型別（純 TS）。新增事件種類的步驟見 ./index.ts。
  * 一種金融事件只對應一種自然現象：tornado＝經濟衰退／金融風暴、lightning＝單一公司出事、quake＝股市崩盤／最大跌幅、
- * bubble＝泡沫／太貴、freeze＝升息、sunnyTree＝長期成長／複利、heatwave＝通膨。
+ * bubble＝泡沫／太貴、freeze＝升息、sunnyTree＝長期成長／複利、heatwave＝通膨、wave＝劇烈來回震盪。
  */
 
 /** 閃電的階段：gather＝烏雲聚集（還沒打）、strike＝打一次 */
@@ -21,7 +21,7 @@ export type FreezeTarget = EventTarget & { length?: number }
 
 /**
  * 步驟資料用 `scene.event` 叫用事件。每種事件一個分支（依 kind 區分），各自的參數在自己的分支裡檢查型別。
- * 位置參數一律相對廣場中心（與 lightningBolt 相同；元件再加 atPlaza）。Plan 8 會再加 wave。
+ * 位置參數一律相對廣場中心（與 lightningBolt 相同；元件再加 atPlaza）。
  */
 export type EventSpec =
   | { kind: 'tornado' }
@@ -52,6 +52,13 @@ export type EventSpec =
    * coins：金幣（堆）的底部中心（相對廣場中心），事件在它們下面畫融化的金色水窪；金幣本身由舞台畫，舞台用 coinScaleAt 縮小。
    */
   | { kind: 'heatwave'; melt: number; coins?: readonly Vec3[]; coinRadius?: number }
+  /**
+   * 🌊 大浪（劇烈來回震盪）：一片水圍住目標的底部，浪湧起再退下 waves 次（一上一下）；終點水面平靜。
+   * 浪頭打到＝漲一步、退下＝跌一步，舞台用 waveStepAt 讀走到第幾步，塔高沿自己算的 leveragedPath 取（事件不知道數值）。
+   * at：水面中心（相對廣場中心的 x、z，預設 [0, 0]）；size：水面寬（x）、深（z）（預設 WAVE.width、WAVE.depth）；
+   * targets：浪頭打到時在這些目標旁噴浪花（不閃）。
+   */
+  | { kind: 'wave'; waves: number; at?: [number, number]; size?: [number, number]; targets?: readonly EventTarget[] }
 
 export type EventKind = EventSpec['kind']
 
