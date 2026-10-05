@@ -1096,24 +1096,28 @@ describe('Plan 8 高階: 槓桿的耗損 (a-lev)', () => {
 
 describe('Plan 8 高階: 反向來對沖 (a-hedge)', () => {
   const s = () => byId('a-hedge')
-  it('drag the case: flat year → rising year → ⚡ day (gate); the bolt only comes on the ⚡ case', () => {
+  it('drag the case: choppy year → big-rise year → 🌋 big-fall day (gate); a market crash is a quake (spec §4), not ⚡', () => {
     expect(controlRange(s(), 'hedgeCase')).toEqual([0, 2])
     expect(s().until).toEqual({ control: 'hedgeCase', min: 2 })
     expect(s().scene.eventWhen).toEqual(s().until)
-    expect(s().scene.event).toMatchObject({ kind: 'lightning', phase: 'strike' })
-    expect(stripMarkup(lineOf(s(), ctx))).toBe('拖情境。⚡ 時少賠，平時少賺')
+    expect(s().scene.event).toMatchObject({ kind: 'quake', depth: 0.1 })
+    expect(stripMarkup(lineOf(s(), ctx))).toBe('拖情境。🌋 時少賠，平時少賺')
+    for (const t of [lineOf(s(), ctx), moreOf(s(), ctx), bigOf(s(), { hedgeCase: 2 })!.label]) expect(t).not.toContain('⚡')
   })
-  it('both sides on the card, each with the cash comparison: flat costs 0.2 (fee), rising costs 4.0, ⚡ saves 4.0 — and less 0050 + cash saves the same 4.0', () => {
-    expect(bigOf(s(), { hedgeCase: 0 })).toEqual({ value: '0.2 萬', label: '平穩一年：加反向的代價', note: '少買 0050 改留現金：不用付', colorKey: 'loss', mark: 'illustrative' }) // 99.86 − 99.688
-    expect(bigOf(s(), { hedgeCase: 1 })).toEqual({ value: '少賺 4.0 萬', label: '漲的一年：加反向少賺', note: '少買 0050 改留現金：也少賺 3.9 萬', colorKey: 'loss', mark: 'illustrative' }) // 109.846 − 105.876；109.846 − 105.908
-    expect(bigOf(s(), { hedgeCase: 2 })).toEqual({ value: '少賠 4.0 萬', label: '⚡ 那天：加反向少賠', note: '少買 0050 改留現金：一樣少賠 4.0 萬', mark: 'illustrative' }) // 94 − 90；(60 × 0.9 + 40) − 90
-    expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('⚡ 時少賠 4 萬。平時少賺 4 萬')
+  it('both sides on the card, each next to cash: choppy year costs ≈2.0 (decay + fee), big rise costs 10.7, 🌋 day saves 4.0 — and cash saves the same 4.0', () => {
+    // 來回晃：99.86 − (79.888 + 20 × 0.999216^125 × 0.99) = 2.02；現金 60 × 0.9986 + 40 = 99.916 ≥ 99.86 → 不用付
+    expect(bigOf(s(), { hedgeCase: 0 })).toEqual({ value: '2.0 萬', label: '來回晃一年：加反向的代價', note: '少買 0050 改留現金：不用付', colorKey: 'loss', mark: 'illustrative' })
+    // 大漲 30%：129.818 − (103.854 + 20 × (1 − d)^250 × 0.99)，d = 1.3^(1/250) − 1；現金 129.818 − (77.891 + 40)
+    expect(bigOf(s(), { hedgeCase: 1 })).toMatchObject({ value: '少賺 10.7 萬', label: '大漲那年：加反向少賺', note: '少買 0050 改留現金：少賺 11.9 萬' })
+    expect(bigOf(s(), { hedgeCase: 2 })).toEqual({ value: '少賠 4.0 萬', label: '🌋 大跌那天：加反向少賠', note: '少買 0050 改留現金：一樣少賠 4.0 萬', mark: 'illustrative' }) // 94 − 90；(60 × 0.9 + 40) − 90
+    expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('大跌少賠 4 萬。大漲少賺 11 萬')
   })
   it('carries ≈ for the step and ✎ for the assumed 1% inverse fee (from sim/hedge), in the title row', () => {
     expect(stepMarks(s(), universe)).toEqual(['illustrative', 'assumption'])
     expect(stepMarks(s(), unverify(['0050']))).toEqual(['illustrative', 'assumption', 'unverified'])
-    expect(moreOf(s(), ctx)).toContain('反向的費用這裡假設一年 1%')
-    expect(moreOf(s(), ctx)).toContain('少買 0050、多留現金，⚡ 時也一樣少賠')
+    expect(moreOf(s(), ctx)).toContain('費用假設一年 1%')
+    expect(moreOf(s(), ctx)).toContain('來回晃也會磨掉')
+    expect(moreOf(s(), ctx)).toContain('少買 0050、多留現金，🌋 時也一樣少賠')
   })
 })
 

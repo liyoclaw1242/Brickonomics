@@ -8,7 +8,8 @@ import { DAY_TRADE, dayTradeDrain } from '../../sim/dayTrade'
 import { DURATION, priceChange } from '../../sim/duration'
 import { FEE_DRAG, grow } from '../../sim/feeDrag'
 import { LEVERAGE, leverageTowers } from '../../sim/leverage'
-import type { HedgeExample, HedgeRow } from '../../sim/hedge'
+import { HEDGE, type HedgeExample, type HedgeRow } from '../../sim/hedge'
+import { quakeAt } from '../events/quake'
 import { REBALANCE, drift, rebalance } from '../../sim/rebalance'
 import type { Vec3 } from '../camera'
 
@@ -247,14 +248,17 @@ export function levWave(): SpecOf<'wave'> {
   }
 }
 
-// ───────────── a-hedge 反向來對沖（⚡ 閃電） ─────────────
+// ───────────── a-hedge 反向來對沖（🌋 地震） ─────────────
 
-/** 拉桿的三種情境（照順序）：平穩一年、慢慢漲一年、⚡ 打下那天 */
-export const HEDGE_CASES = ['flat', 'rising', 'strike'] as const
+/**
+ * 拉桿的三種情境（照順序）：來回晃的一年、大漲那年、🌋 大跌那天（大盤崩跌＝地震，規格 §4；拉到這裡才震＝門檻）。
+ * 鍵名＝sim/hedge 的 HedgeRow 欄位
+ */
+export const HEDGE_CASES = ['choppy', 'boom', 'strike'] as const
 export type HedgeCase = (typeof HEDGE_CASES)[number]
 
-/** 三座塔：全押 0050、0050＋反向、少買 0050＋現金；100 萬＝unit × 100 高 */
-export const HEDGE_LAYOUT = { x: [-7, 0, 7] as readonly number[], w: 3.4, unit: 0.08 } as const
+/** 三座塔：全押 0050、0050＋反向、少買 0050＋現金；100 萬＝unit × 100 高；地震的坑在三座塔前面 */
+export const HEDGE_LAYOUT = { x: [-7, 0, 7] as readonly number[], w: 3.4, unit: 0.08, pitZ: 4.6 } as const
 
 export type HedgeTower = { id: HedgeRow['id']; base: number; inverse: number; cash: number; total: number }
 
@@ -263,31 +267,34 @@ export const hedgeCaseIndex = (v: number): number => Math.min(HEDGE_CASES.length
 
 /**
  * 三座塔在某個情境的三截（萬）：0050 那截＝買的比例 × 大盤漲跌（含費用；＝全押那座 ÷ 100），現金不動，反向那截＝其餘。
- * drop（0..1）＝⚡ 打中之後的進度：⚡ 情境在打中之前畫起點（100 的分法），其他情境 drop 不影響。
+ * drop（0..1）＝🌋 裂開之後的進度：大跌情境在裂開之前畫起點（100 的分法），其他情境 drop 不影響。
  */
 export function hedgeTowers(ex: HedgeExample, caseIdx: number, drop: number): HedgeTower[] {
   const c = HEDGE_CASES[hedgeCaseIndex(caseIdx)]!
   const k = c === 'strike' ? drop : 1
+  const factor = ex.rows.find((x) => x.id === 'plain')![c] / 100
   return ex.rows.map((r) => {
-    const factor = ex.rows.find((x) => x.id === 'plain')![c] / 100
-    const end = { base: r.basePct * factor, cash: r.cashPct, total: r[c] }
-    const endInverse = end.total - end.base - end.cash
-    const lerp = (a: number, b: number) => a + (b - a) * k
-    const base = lerp(r.basePct, end.base)
-    const inverse = lerp(r.inversePct, endInverse)
+    const endBase = r.basePct * factor
+    const endInverse = r[c] - endBase - r.cashPct
+    const base = r.basePct + (endBase - r.basePct) * k
+    const inverse = r.inversePct + (endInverse - r.inversePct) * k
     return { id: r.id, base, inverse, cash: r.cashPct, total: base + inverse + r.cashPct }
   })
 }
 
-/** 閃電打三座塔的塔頂（三座都有 0050）；拉到 ⚡ 情境才打（scene.eventWhen） */
-export const hedgeLightning = (): SpecOf<'lightning'> => ({
-  kind: 'lightning',
-  phase: 'strike',
-  targets: HEDGE_LAYOUT.x.map((x): Vec3 => [x, 100 * HEDGE_LAYOUT.unit, 0]),
+/** 🌋 大跌那天：三座塔前面裂一個坑，坑深＝大盤跌幅（HEDGE.strikeDrop）；拉到大跌情境才震（scene.eventWhen） */
+export const hedgeQuake = (): SpecOf<'quake'> => ({
+  kind: 'quake',
+  depth: HEDGE.strikeDrop,
+  at: [0, HEDGE_LAYOUT.pitZ],
+  width: HEDGE_LAYOUT.x.at(-1)! - HEDGE_LAYOUT.x[0]! + HEDGE_LAYOUT.w + 2,
 })
 
-/** ⚡ 打中之後的進度 0..1（和 a-corr 一樣） */
-export const hedgeDropAt = corrDropAt
+/** 地震之後塔變到大跌後的進度 0..1：跟著地面裂開（quakeAt 的 open） */
+export function hedgeDropAt(spec: SpecOf<'quake'>, t: number | null): number {
+  if (t === null) return 0
+  return t === Infinity ? 1 : quakeAt(spec, t).open
+}
 
 // ───────────── a-rebal 剪高補低（再平衡） ─────────────
 

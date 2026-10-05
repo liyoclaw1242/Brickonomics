@@ -12,7 +12,8 @@ import { feeDrag } from '../../sim/feeDrag'
 import { universe } from '../../data'
 import { LEV_LAYOUT, levNow, levWave } from './advanced'
 import { waveSteps } from '../events/wave'
-import { HEDGE_CASES, HEDGE_LAYOUT, hedgeLightning, hedgeTowers } from './advanced'
+import { HEDGE_CASES, HEDGE_LAYOUT, hedgeDropAt, hedgeQuake, hedgeTowers } from './advanced'
+import { QUAKE } from '../events/quake'
 import { hedgeExample } from '../../sim/hedge'
 import { REBAL_LAYOUT, rebalNow, rebalTower } from './advanced'
 
@@ -193,10 +194,10 @@ describe('a-lev leverage towers in the 🌊 wave', () => {
   })
 })
 
-describe('a-hedge three towers (⚡ on the strike case)', () => {
+describe('a-hedge three towers (🌋 on the big-fall day)', () => {
   const ex = hedgeExample(universe)
-  it('cases in slider order: flat year, rising year, then the ⚡ day', () => {
-    expect(HEDGE_CASES).toEqual(['flat', 'rising', 'strike'])
+  it('cases in slider order: choppy year, big-rise year, then the 🌋 big-fall day (the gate, so the quake can start there)', () => {
+    expect(HEDGE_CASES).toEqual(['choppy', 'boom', 'strike'])
   })
   it('hedgeTowers: each tower is split into 0050 / inverse / cash parts that add up to the sim row (sim/hedge rows)', () => {
     for (const [ci, c] of HEDGE_CASES.entries()) {
@@ -216,15 +217,21 @@ describe('a-hedge three towers (⚡ on the strike case)', () => {
     expect(s[2]!.base).toBeCloseTo(54, 2)
     expect(s[2]!.cash).toBe(40)
   })
-  it('before the strike lands (drop 0) the ⚡ case still shows the starting 100 split', () => {
+  it('before the quake opens (drop 0) the big-fall case still shows the starting 100 split', () => {
     const t = hedgeTowers(ex, 2, 0)
     expect(t.map((x) => x.total)).toEqual([100, 100, 100])
     expect(t[1]!.inverse).toBe(20)
     expect(t[2]!.cash).toBe(40)
   })
-  it('the bolt hits the top of each tower (everything holds 0050)', () => {
-    const l = hedgeLightning()
-    expect(l.targets).toEqual(HEDGE_LAYOUT.x.map((x) => [x, 100 * HEDGE_LAYOUT.unit, 0]))
+  it('🌋 the whole market falls (spec §4): a pit as deep as the drop opens in front of all three towers; the drop follows the crack opening', () => {
+    const q = hedgeQuake()
+    expect(q.kind).toBe('quake')
+    expect(q.depth).toBeCloseTo(0.1, 12) // HEDGE.strikeDrop
+    expect(q.width!).toBeGreaterThan(HEDGE_LAYOUT.x.at(-1)! - HEDGE_LAYOUT.x[0]!)
+    expect(q.at![1]).toBeGreaterThan(HEDGE_LAYOUT.w / 2)
+    expect(hedgeDropAt(q, null)).toBe(0)
+    expect(hedgeDropAt(q, QUAKE.openAt - 0.01)).toBe(0)
+    expect(hedgeDropAt(q, Infinity)).toBe(1)
   })
 })
 

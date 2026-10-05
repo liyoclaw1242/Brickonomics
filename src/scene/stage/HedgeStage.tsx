@@ -1,14 +1,14 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Edges } from '@react-three/drei'
-import { Color, type InstancedMesh, Object3D } from 'three'
+import { Color, type Group, type InstancedMesh, Object3D } from 'three'
 import { universe } from '../../data'
 import { hedgeExample } from '../../sim/hedge'
 import { useTour } from '../../store/tour'
 import { useThemeStore } from '../../store/theme'
 import { T } from '../../ui/strings'
 import { Callout } from '../Callout'
-import { strikeAt } from '../events/lightning'
+import { QUAKE, quakeAt, quakeFinal } from '../events/quake'
 import type { EventClock } from '../events/types'
 import { HEDGE_LAYOUT, hedgeCaseIndex, hedgeDropAt, hedgeTowers } from '../layout/advanced'
 import { ACCENT_COLORS } from '../palette'
@@ -23,20 +23,23 @@ const N = 3 * PARTS.length
 
 /**
  * a-hedge 反向來對沖：三座塔（全押 0050、0050＋反向、少買 0050＋現金），起點都是 100 萬（框線）。
- * 拖情境：平穩的一年（反向那截一直扣費用）、慢慢漲的一年（反向那截一直賠）、⚡ 打下那天（scene.eventWhen 打開閃電：
- * 加反向的那座少賠，少買 0050 留現金的那座一樣少賠）。數字全部來自 sim/hedge（反向的費用是 ✎ 假設）。
+ * 拖情境：來回晃的一年（年底大盤回到原處，反向那截每日重設一路磨掉，再扣費用）、大漲那年（反向那截一直賠）、
+ * 🌋 大跌那天（scene.eventWhen 打開地震：大盤崩跌，地面震一次、裂出坑；加反向的那座少賠，少買 0050 留現金的那座一樣少賠）。
+ * 數字全部來自 sim/hedge（反向的費用是 ✎ 假設）。
  */
 export function HedgeStage({ event }: { event: EventClock }) {
   const caseIdx = hedgeCaseIndex(useTour((s) => s.values.hedgeCase))
   const ex = useMemo(() => hedgeExample(universe), [])
   const line = THEMES[useThemeStore((s) => s.theme)].calloutLine
   const ref = useRef<InstancedMesh>(null)
+  const group = useRef<Group>(null)
   const dummy = useMemo(() => new Object3D(), [])
   const invalidate = useThree((s) => s.invalidate)
   useEffect(() => invalidate(), [caseIdx, invalidate])
-  const lightning = event.spec?.kind === 'lightning'
-  const dropAt = (t: number | null) => (!lightning ? 0 : event.reduced ? 1 : hedgeDropAt(t))
-  const struck = useEventValue(event, (t) => lightning && (event.reduced || strikeAt(event.spec, t)))
+  const quake = event.spec?.kind === 'quake' ? event.spec : undefined
+  const dropAt = (t: number | null) => (!quake ? 0 : event.reduced ? 1 : hedgeDropAt(quake, t))
+  // 地面裂開之後標註才寫大跌後的數字
+  const struck = useEventValue(event, (t) => !!quake && (event.reduced || (t !== null && t >= QUAKE.openAt)))
   const { unit, w: W } = HEDGE_LAYOUT
   const top = 100 * unit
 
@@ -48,6 +51,12 @@ export function HedgeStage({ event }: { event: EventClock }) {
   }, [])
 
   useFrame(() => {
+    // 塔跟著地面震一次（和 s-dd 的柱子一樣）
+    const g = group.current
+    if (g) {
+      const st = quake ? (event.reduced ? quakeFinal(quake) : quakeAt(quake, event.t.current)) : undefined
+      g.position.set(st?.shakeX ?? 0, 0, st?.shakeZ ?? 0)
+    }
     const m = ref.current
     if (!m) return
     hedgeTowers(ex, caseIdx, dropAt(event.t.current)).forEach((t, ti) => {
@@ -64,10 +73,11 @@ export function HedgeStage({ event }: { event: EventClock }) {
     m.instanceMatrix.needsUpdate = true
   })
 
-  // 標註寫這個情境走完的結果（⚡ 打中之前寫起點）
+  // 標註寫這個情境走完的結果（🌋 裂開之前寫起點）
   const shown = hedgeTowers(ex, caseIdx, caseIdx === 2 && !struck ? 0 : 1)
   return (
     <>
+      <group ref={group}>
       <instancedMesh ref={ref} args={[undefined, undefined, N]} castShadow receiveShadow frustumCulled={false}>
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial roughness={0.7} />
@@ -79,6 +89,7 @@ export function HedgeStage({ event }: { event: EventClock }) {
           <Edges color={line} />
         </mesh>
       ))}
+      </group>
       {shown.map((t, i) => (
         <Callout
           key={t.id}

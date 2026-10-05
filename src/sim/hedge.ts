@@ -11,9 +11,11 @@ export const TRADING_DAYS = 250
  * 100 元裡 hedgePct 放反向 ETF（−1 倍、每日重設），其餘放 0050（費率從資料讀）。
  * inverseFee：反向 ETF 一年的費用（1%，✎ 假設；hedgeExample 回傳 inverseFeeAssumed: true）。
  * 對照組（現金）：少買 0050、多留現金也能讓 ⚡ 的損失一樣小，平時還不用付反向 ETF 的代價——反向 ETF 不是特別的工具。
- * ⚡ strike：某一天大盤跌 strikeDrop；平時：calmDays 天裡大盤平穩地漲 calmRise（另有完全不漲的一年，只看費用）。
+ * strike：某一天大盤跌 strikeDrop；平時：calmDays 天裡大盤平穩地漲 calmRise（另有完全不漲的一年，只看費用）。
+ * choppy：來回晃的一年（每天漲 choppyMove 再跌回原處，年底和年初一樣）：反向那邊每日重設，晃一次磨掉一點；
+ * boom：大漲那年（calmDays 天裡平穩地漲 boomRise）。
  */
-export const HEDGE = { base: '0050', hedgePct: 20, inverseFee: 0.01, strikeDrop: 0.1, calmDays: 250, calmRise: 0.1 } as const
+export const HEDGE = { base: '0050', hedgePct: 20, inverseFee: 0.01, strikeDrop: 0.1, calmDays: 250, calmRise: 0.1, choppyMove: 0.02, boomRise: 0.3 } as const
 
 export type HedgeParams = { hedgePct: number; baseFee: number; inverseFee: number }
 /**
@@ -50,6 +52,16 @@ export function calmPath(days: number, rise: number): number[] {
   return Array.from({ length: days + 1 }, (_, i) => (days === 0 ? 100 : 100 * (1 + rise) ** (i / days)))
 }
 
+/**
+ * 來回晃、最後回到原處的路徑：單數天漲 move，雙數天跌回前一天的前一天（第 2k 天＝100）。長度 days + 1。
+ * days 為非負整數、move 在 [0, 1)，否則丟 RangeError。
+ */
+export function choppyFlatPath(days: number, move: number): number[] {
+  nonNegInt('days', days)
+  rate('move', move)
+  return Array.from({ length: days + 1 }, (_, i) => (i % 2 === 1 ? 100 * (1 + move) : 100))
+}
+
 /** 一列＝一種做法在三種情境的結果（給畫面列表）：0050 全押、0050＋反向 ETF、少買 0050＋現金 */
 export type HedgeRow = {
   id: 'plain' | 'inverse' | 'cash'
@@ -60,6 +72,8 @@ export type HedgeRow = {
   strike: number
   flat: number
   rising: number
+  choppy: number
+  boom: number
 }
 
 export type HedgeExample = {
@@ -74,6 +88,10 @@ export type HedgeExample = {
   flat: HedgeOutcome
   /** 平時（大盤一整年慢慢漲）：反向那邊一直賠，加上費用 */
   rising: HedgeOutcome
+  /** 來回晃的一年（年底回到原處）：反向那邊每日重設的耗損＋費用 */
+  choppy: HedgeOutcome
+  /** 大漲那年（漲 boomRise） */
+  boom: HedgeOutcome
 }
 
 /** 兩邊都算：⚡ 打下時與平時（不動、上漲）。0050 的費率從資料讀；沒有資料時丟 Error */
@@ -85,12 +103,14 @@ export function hedgeExample(u: Universe, h: typeof HEDGE = HEDGE): HedgeExample
   const strike = hedgeRun([100, 100 * (1 - h.strikeDrop)], p)
   const flat = hedgeRun(calmPath(h.calmDays, 0), p)
   const rising = hedgeRun(calmPath(h.calmDays, h.calmRise), p)
+  const choppy = hedgeRun(choppyFlatPath(h.calmDays, h.choppyMove), p)
+  const boom = hedgeRun(calmPath(h.calmDays, h.boomRise), p)
   const rows: HedgeRow[] = [
-    { id: 'plain', basePct: 100, inversePct: 0, cashPct: 0, strike: strike.plain, flat: flat.plain, rising: rising.plain },
-    { id: 'inverse', basePct: 100 - h.hedgePct, inversePct: h.hedgePct, cashPct: 0, strike: strike.hedged, flat: flat.hedged, rising: rising.hedged },
+    { id: 'plain', basePct: 100, inversePct: 0, cashPct: 0, strike: strike.plain, flat: flat.plain, rising: rising.plain, choppy: choppy.plain, boom: boom.plain },
+    { id: 'inverse', basePct: 100 - h.hedgePct, inversePct: h.hedgePct, cashPct: 0, strike: strike.hedged, flat: flat.hedged, rising: rising.hedged, choppy: choppy.hedged, boom: boom.hedged },
   ]
-  if (strike.cash !== null && flat.cash !== null && rising.cash !== null) {
-    rows.push({ id: 'cash', basePct: 100 - 2 * h.hedgePct, inversePct: 0, cashPct: 2 * h.hedgePct, strike: strike.cash, flat: flat.cash, rising: rising.cash })
+  if (strike.cash !== null && flat.cash !== null && rising.cash !== null && choppy.cash !== null && boom.cash !== null) {
+    rows.push({ id: 'cash', basePct: 100 - 2 * h.hedgePct, inversePct: 0, cashPct: 2 * h.hedgePct, strike: strike.cash, flat: flat.cash, rising: rising.cash, choppy: choppy.cash, boom: boom.cash })
   }
-  return { baseFee, baseFeeVerified: isVerified(a, 'fees.expenseRatio'), inverseFeeAssumed: true, rows, strike, flat, rising }
+  return { baseFee, baseFeeVerified: isVerified(a, 'fees.expenseRatio'), inverseFeeAssumed: true, rows, strike, flat, rising, choppy, boom }
 }

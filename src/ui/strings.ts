@@ -114,7 +114,7 @@ export const T = {
     rebalValue: (v: number) => (['一開始', '股票漲了一年', '剪高補低'] as const)[Math.round(v)] ?? '',
     /** a-hedge 看哪一種情境（0 平穩一年、1 慢慢漲一年、2 ⚡ 打下那天） */
     hedgeCase: '情境',
-    hedgeCaseValue: (v: number) => (['平穩的一年', '慢慢漲的一年', '⚡ 打下那天'] as const)[Math.round(v)] ?? '',
+    hedgeCaseValue: (v: number) => (['來回晃的一年', '大漲那年', '🌋 大跌那天'] as const)[Math.round(v)] ?? '',
     /** a-dt 當沖進出了幾次（一次＝買進再賣出） */
     trades: '進出次數',
     tradesValue: (v: number) => `${v} 次`,
@@ -232,7 +232,6 @@ export const T = {
     plain: '全押 0050',
     inverse: '0050＋反向',
     cash: '少買 0050＋現金',
-    split: (base: number, other: number) => `${base}／${other}`,
   },
   /** a-rebal 組合塔的 3D 標註（高階） */
   rebal: {
