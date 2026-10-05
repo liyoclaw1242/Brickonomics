@@ -16,6 +16,9 @@ export type BubblePhase = 'float' | 'pop'
 /** 事件作用的目標（舞台上的方塊）：at＝底部中心（相對廣場中心）、size＝寬（x）、高（y）、深（z） */
 export type EventTarget = { at: Vec3; size: Vec3 }
 
+/** 寒流的目標：length＝「多長」（例如借據的年期；預設 size[0]），越長霜越厚 */
+export type FreezeTarget = EventTarget & { length?: number }
+
 /**
  * 步驟資料用 `scene.event` 叫用事件。每種事件一個分支（依 kind 區分），各自的參數在自己的分支裡檢查型別。
  * 位置參數一律相對廣場中心（與 lightningBolt 相同；元件再加 atPlaza）。Plan 8 會再加 wave。
@@ -33,6 +36,11 @@ export type EventSpec =
    * pop＝（接在 float 後面）泡泡破一次、目標落回地面（不閃）。目標本身由舞台畫，舞台用 bubbleAt 讀浮起高度。
    */
   | { kind: 'bubble'; phase: BubblePhase; target: EventTarget; lift?: number }
+  /**
+   * ❄️ 寒流（升息）：一陣寒風吹過，目標表面結霜（往冰藍混、上面積雪、邊緣掛冰柱）；終點霜保留。
+   * amount（0–1）＝霜有多厚；每個目標再乘 length ÷ 最長的 length（長的霜更厚）。目標本身由舞台畫，舞台用 freezeTint 往冰藍混色。
+   */
+  | { kind: 'freeze'; amount: number; targets: readonly FreezeTarget[] }
 
 export type EventKind = EventSpec['kind']
 

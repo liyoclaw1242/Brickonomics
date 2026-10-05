@@ -5,7 +5,10 @@ import { SECTOR_COLORS } from '../palette'
 import type { Quality } from '../quality'
 import { atPlaza } from '../stage/plaza'
 import { PREVIEW_LAYOUT } from './preview'
+import { useThemeStore } from '../../store/theme'
+import { THEMES } from '../theme'
 import { bubbleAt, bubbleFinal } from './bubble'
+import { freezeTint } from './freeze'
 import { quakeAt } from './quake'
 import type { EventClock, EventKind, SpecOf } from './types'
 
@@ -85,9 +88,43 @@ function BubbleProps({ spec, clock }: PreviewPropsOf<'bubble'>) {
   )
 }
 
+/** 寒流：三塊長短不同的板子（借據），顏色跟著霜往冰藍混 */
+function FreezeProps({ spec, clock }: PreviewPropsOf<'freeze'>) {
+  const ice = THEMES[useThemeStore((s) => s.theme)].frost.ice
+  const ref = useRef<InstancedMesh>(null)
+  const dummy = useMemo(() => new Object3D(), [])
+  const colors = useMemo(() => ({ base: new Color('#c9a227'), ice: new Color(), c: new Color() }), [])
+  useLayoutEffect(() => {
+    const m = ref.current
+    if (!m) return
+    spec.targets.forEach((b, i) => {
+      dummy.position.set(...atPlaza(b.at[0], b.at[1] + b.size[1] / 2, b.at[2]))
+      dummy.scale.set(...b.size)
+      dummy.updateMatrix()
+      m.setMatrixAt(i, dummy.matrix)
+    })
+    m.instanceMatrix.needsUpdate = true
+  }, [spec.targets, dummy])
+  useFrame(() => {
+    const m = ref.current
+    if (!m) return
+    colors.ice.set(ice)
+    const t = clock.reduced ? Infinity : clock.t.current
+    for (let i = 0; i < spec.targets.length; i++) m.setColorAt(i, colors.c.copy(colors.base).lerp(colors.ice, freezeTint(spec, i, t)))
+    if (m.instanceColor) m.instanceColor.needsUpdate = true
+  })
+  return (
+    <instancedMesh ref={ref} args={[undefined, undefined, spec.targets.length]} castShadow receiveShadow frustumCulled={false}>
+      <boxGeometry args={[1, 1, 1]} />
+      <meshStandardMaterial roughness={0.5} metalness={0.2} />
+    </instancedMesh>
+  )
+}
+
 export const PREVIEW_PROPS: { [K in EventKind]: ComponentType<PreviewPropsOf<K>> | null } = {
   tornado: null,
   lightning: null,
   quake: QuakeProps,
   bubble: BubbleProps,
+  freeze: FreezeProps,
 }

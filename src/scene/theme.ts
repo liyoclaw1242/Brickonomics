@@ -25,6 +25,8 @@ export type Theme = {
   quake: { wall: string; floor: string; crack: string; dust: string; rim: string }
   /** 🫧 泡泡：膜邊緣的兩個顏色（像肥皂泡的彩虹）、亮點、破掉的水滴、浮起時地上的影子 */
   bubble: { rimA: string; rimB: string; highlight: string; drop: string; shadow: string }
+  /** ❄️ 寒流：冰殼與冰柱、積雪與雪花、風絲、冷色天光（顏色與最大強度） */
+  frost: { ice: string; snow: string; wind: string; chill: string; chillIntensity: number }
   /** 低飽和方塊：飽和度乘數、亮度位移；鮮豔方塊：亮度乘數 */
   tone: { mutedSaturation: number; mutedLightness: number; vividBoost: number }
 }
@@ -51,6 +53,7 @@ export const THEMES: Record<ThemeId, Theme> = {
     // 暗廣場上：坑壁用暖褐（比廣場亮、讀得出是土），坑底更暗；翹起的地磚比廣場亮一階
     quake: { wall: '#7a5442', floor: '#24181a', crack: '#0d0a10', dust: '#a89a8e', rim: '#4b5164' },
     bubble: { rimA: '#9fe7ff', rimB: '#f3b4ff', highlight: '#ffffff', drop: '#cdefff', shadow: '#05060c' },
+    frost: { ice: '#9fdcff', snow: '#eef8ff', wind: '#cfe9ff', chill: '#8fc8ff', chillIntensity: 0.45 },
     tone: { mutedSaturation: 0.55, mutedLightness: -0.09, vividBoost: 1.15 },
   },
   day: {
@@ -76,6 +79,8 @@ export const THEMES: Record<ThemeId, Theme> = {
     quake: { wall: '#9a7058', floor: '#4a3128', crack: '#3e2723', dust: '#c9b8aa', rim: '#ddd6c6' },
     // 亮底上：膜邊緣要深一點才看得到
     bubble: { rimA: '#2f8fd0', rimB: '#b05ad8', highlight: '#ffffff', drop: '#4aa6e0', shadow: '#4a5568' },
+    // 亮底上：風絲用深一點的灰藍才看得到
+    frost: { ice: '#8fd3f7', snow: '#ffffff', wind: '#5f8fb5', chill: '#a9d8ff', chillIntensity: 0.35 },
     tone: { mutedSaturation: 0.55, mutedLightness: 0.06, vividBoost: 1 },
   },
 }

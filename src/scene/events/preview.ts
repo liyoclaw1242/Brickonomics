@@ -25,6 +25,12 @@ export const PREVIEW_LAYOUT = {
   quakeBars: [3, 5, 7, 4.5, 2.5, 4] as readonly number[],
   /** 泡泡：右邊那棟（太貴）被包住；左邊一棟一樣價格但正常的當對照 */
   bubbleTarget: { at: [4, 0, 0] as [number, number, number], size: [3, 7, 3] as [number, number, number] },
+  /** 寒流：三塊長短不同的板子（短、中、長借據），左邊對齊、前短後長 */
+  freezeBoards: [
+    { at: [-4.5, 0, 4.5] as [number, number, number], size: [3, 2, 1.6] as [number, number, number] },
+    { at: [-2.5, 0, 0.5] as [number, number, number], size: [7, 2, 1.6] as [number, number, number] },
+    { at: [0, 0, -3.5] as [number, number, number], size: [12, 2, 1.6] as [number, number, number] },
+  ],
   bubbleOther: { at: [-6, 0, 0] as [number, number, number], size: [3, 7, 3] as [number, number, number] },
 } as const
 
@@ -48,6 +54,8 @@ export const PREVIEW_SPECS: { [K in EventKind]: (q: URLSearchParams) => SpecOf<K
     target: PREVIEW_LAYOUT.bubbleTarget,
     ...(q.has('lift') ? { lift: numParam(q, 'lift', 2.5, 0, 12) } : {}),
   }),
+  // amount＝霜有多厚（0–1）；長的板子霜更厚
+  freeze: (q) => ({ kind: 'freeze', amount: numParam(q, 'amount', 0.9, 0, 1), targets: PREVIEW_LAYOUT.freezeBoards }),
 }
 
 const isKind = (k: string | null): k is EventKind => k !== null && Object.hasOwn(PREVIEW_SPECS, k)

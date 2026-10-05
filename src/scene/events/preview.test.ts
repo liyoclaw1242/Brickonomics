@@ -45,6 +45,11 @@ describe('event preview query', () => {
     expect(parsePreview('?eventPreview=bubble&lift=5')?.spec).toMatchObject({ lift: 5 })
   })
 
+  it('freeze amount', () => {
+    expect(parsePreview('?eventPreview=freeze')?.spec).toMatchObject({ kind: 'freeze', amount: 0.9 })
+    expect(parsePreview('?eventPreview=freeze&amount=0.3')?.spec).toMatchObject({ kind: 'freeze', amount: 0.3 })
+  })
+
   it('numParam clamps and falls back', () => {
     const q = new URLSearchParams('a=2&b=x&c=-1&d=')
     expect(numParam(q, 'a', 0.5, 0, 1)).toBe(1)

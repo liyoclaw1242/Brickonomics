@@ -5,7 +5,7 @@ import { HIT_TIME, STORM_DONE, STRESSED, slotState, tornadoHitAt, tornadoSlotAt 
 
 describe('event registry', () => {
   it('has a timeline for every kind', () => {
-    expect([...EVENT_KINDS].sort()).toEqual(['bubble', 'lightning', 'quake', 'tornado'])
+    expect([...EVENT_KINDS].sort()).toEqual(['bubble', 'freeze', 'lightning', 'quake', 'tornado'])
     for (const k of EVENT_KINDS) expect(EVENTS[k]).toBeDefined()
   })
 
@@ -65,16 +65,16 @@ describe('kind-neutral aftermath (readout, text fallback, city)', () => {
   })
 
   it('the registry stays light: timelines load no data, baskets or voxels', () => {
-    const sources = import.meta.glob(['./index.ts', './lightning.ts', './tornado.ts', './types.ts', './ease.ts', './quake.ts', './bubble.ts'], {
+    const sources = import.meta.glob(['./index.ts', './lightning.ts', './tornado.ts', './types.ts', './ease.ts', './quake.ts', './bubble.ts', './freeze.ts'], {
       query: '?raw',
       import: 'default',
       eager: true,
     })
-    expect(Object.keys(sources)).toHaveLength(7)
+    expect(Object.keys(sources)).toHaveLength(8)
     for (const [f, raw] of Object.entries(sources)) {
       const src = String(raw)
       const imports = [...src.matchAll(/from '([^']+)'/g)].map((m) => m[1])
-      for (const i of imports) expect(i, `${f} imports ${i}`).toMatch(/^\.\/(lightning|tornado|types|ease|quake|bubble)$|^\.\.\/(quality|camera)$/)
+      for (const i of imports) expect(i, `${f} imports ${i}`).toMatch(/^\.\/(lightning|tornado|types|ease|quake|bubble|freeze)$|^\.\.\/(quality|camera)$/)
     }
   })
 })
