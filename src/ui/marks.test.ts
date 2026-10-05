@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { T } from './strings'
 import { universe } from '../data'
 import { LEVELS } from '../tour/levels'
+import { STEP_POOL } from '../tour/courses'
 import { isVerified } from '../data/verified'
 import { feeRowMarks, holdingsSources, markPlacement, stepMarks, titleRowFits } from './marks'
 
@@ -72,12 +73,12 @@ describe('holdingsSources (r5: derived from the text, no manual holdingsFrom)', 
 describe('title + mark pills stay on one row (walkthrough: f-6 ✎ wrapped under the title)', () => {
   const words = (step: { mark?: 'illustrative' | 'assumption' }) => (step.mark ? [T.marks[step.mark].word] : [])
   it('f-6 (7 characters + ✎ 假設的數字) does not fit at the normal size but fits at the snug size', () => {
-    const f6 = LEVELS.flatMap((l) => l.steps).find((s) => s.id === 'f-6')!
+    const f6 = STEP_POOL.get('f-6')!
     expect(titleRowFits(f6.title, words(f6), 'normal')).toBe(false)
     expect(titleRowFits(f6.title, words(f6), 'snug')).toBe(true)
   })
   it('every marked step fits on one row at one of the two sizes', () => {
-    for (const s of LEVELS.flatMap((l) => l.steps).filter((x) => x.mark)) {
+    for (const s of [...STEP_POOL.values()].filter((x) => x.mark)) {
       expect(titleRowFits(s.title, words(s), 'normal') || titleRowFits(s.title, words(s), 'snug'), s.id).toBe(true)
     }
   })

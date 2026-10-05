@@ -126,7 +126,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .hint--try { font-size: 15px; font-weight: 600; color: var(--em); margin: 8px 0 0; }
 /* 最後一步的回顧清單 */
 .recap { list-style: none; margin: 8px 0 4px; padding: 10px 12px; display: grid; gap: 6px; border-radius: 12px; background: var(--chip); border: 1px solid var(--border); font-size: 15px; line-height: 1.5; }
-.recap li, .recap p { margin: 0; display: flex; gap: 8px; align-items: baseline; word-break: keep-all; overflow-wrap: anywhere; } /* 中文只在標點、空白處換行：不會把「配息型」拆開或讓「型」單獨掉到下一行（m-fin） */
+.recap li, .recap p { margin: 0; display: flex; gap: 8px; align-items: baseline; word-break: keep-all; overflow-wrap: anywhere; } /* 中文只在標點、空白處換行：不會把一個詞拆開，或讓最後一個字單獨掉到下一行（m-fin） */
 .recap__icon { flex: none; width: 1.4em; text-align: center; }
 
 .info {
