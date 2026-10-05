@@ -1,6 +1,6 @@
-import type { BigNumber, Level, Route, RouteIds, TextContext } from './types'
+import type { BigNumber, Level, RecapLine, Step, TextContext } from './types'
 import { movePct, pct0, SHOCK_2330, signedPct, wan } from './context'
-import { DEFAULT_VALUES } from './engine'
+import { DEFAULT_VALUES } from './values'
 import { EXDIV, exDivTimeline, principalTrap, TRAP_DEMO } from '../scene/layout/stages'
 import { T } from '../ui/strings'
 
@@ -33,6 +33,14 @@ const perMillion = (er: number): string => T.yuan(er * 1_000_000)
 
 /** 時間軸上「發金幣那一刻」的位置；s-5 拉到這裡為止（大數字只算到這一刻，合計永遠不變） */
 export const EXDIV_AFTER_PHASE = 0.5
+
+/** 初階口訣：初階結尾（u-6）與中階開頭的複習（m-0）用同一份 */
+const BEGINNER_RECAP: RecapLine[] = [
+  { icon: '🧱', text: '股票＝拿一顆方塊' },
+  { icon: '📜', text: '債券＝借據，固定給金幣' },
+  { icon: '🚜', text: '基金＝怪手幫你挑（要收費）' },
+  { icon: '🧩', text: 'ETF＝照藍圖挑（通常較便宜）' },
+]
 
 export const LEVELS: Level[] = [
   {
@@ -152,7 +160,7 @@ export const LEVELS: Level[] = [
         line: '債券＝**借據**，固定給**金幣|coin**',
         more: '債券＝借錢給別人，換一張借據方塊。它不跟著大樓長高，只固定給你利息。到期時，本金還給你。金幣快慢是示意。',
         mark: 'illustrative',
-        scene: { camera: 'plaza', product: null, stage: { kind: 'bonds', stressed: false } },
+        scene: { camera: 'plaza', product: null, stage: { kind: 'bonds' } },
       },
       {
         id: 'b-2',
@@ -160,16 +168,16 @@ export const LEVELS: Level[] = [
         line: '越**穩**的，利息通常**越少**',
         more: '國家債＝借給政府，像鑽石一樣堅固，利息通常最少。公司債＝借給體質好的公司，金屬材質。高收益債＝借給體質弱的公司，玻璃材質。它利息通常較多，也較容易裂（利息快慢是示意）。',
         mark: 'illustrative',
-        scene: { camera: 'plaza', product: null, stage: { kind: 'bonds', stressed: false, ranks: true } },
+        scene: { camera: 'plaza', product: null, stage: { kind: 'bonds', ranks: true } },
       },
       {
         id: 'b-3',
         title: '經濟風暴',
         line: '利息高的，比較**容易裂**',
-        // 簡單版沒有 b-2（三種借據），所以這裡自己說高收益債是什麼；完整版當作複習
+        // 初階沒有 b-2（三種借據，在中階），所以這裡自己說高收益債是什麼
         more: '高收益債＝借給體質弱的公司，利息較多。假設遇上一場經濟風暴。股票方塊大幅縮水，高收益債裂開、停付利息（紅色）。國家債通常比較穩，這是示意。',
         mark: 'illustrative',
-        scene: { camera: 'plaza', product: null, stage: { kind: 'bonds', stressed: true } },
+        scene: { camera: 'plaza', product: null, stage: { kind: 'bonds' }, event: { kind: 'tornado' } },
       },
     ],
   },
@@ -285,7 +293,7 @@ export const LEVELS: Level[] = [
         // 不說「賠」：示意基金每年真的賺 3%，合計本來就比 100 多；陷阱是配 6% 看起來像賺 6%
         line: '拖**經過年數**。配息裡有些是**你的本金|loss**',
         fallbackLine: '配息裡有些是**你的本金|loss**',
-        // 簡單版沒有 s-5、f-8，第一次聽到配息就在這裡，所以先說配息是什麼
+        // 初階沒有 s-5、f-8（在中階），第一次聽到配息就在這裡，所以先說配息是什麼
         more: () =>
           `配息＝基金發給你的金幣。這檔每年配${pct0(TRAP_DEMO.payoutRate * 100)}%，但只賺${pct0(TRAP_DEMO.incomeYield * 100)}%，不夠的怪手削方塊來補。領到的錢有一部分是你的本金，叫配息來自本金。這是示意基金，不代表任何真實商品。`,
         mark: 'illustrative',
@@ -392,7 +400,7 @@ export const LEVELS: Level[] = [
         title: '假設台積電跌',
         line: () => `假設台積電跌 **${pct0(SHOCK_PCT * 100)}%**`,
         more: () => `來做個假設：台積電跌 ${pct0(SHOCK_PCT * 100)}%。左邊只買台積電，中間是 0050（台灣50大）。右邊是 SPY（美國500大）。`,
-        scene: { camera: 'plaza', product: null, stage: { kind: 'shock', active: false } },
+        scene: { camera: 'plaza', product: null, stage: { kind: 'shock' }, event: { kind: 'lightning', phase: 'gather' } },
       },
       {
         id: 'c-2',
@@ -402,9 +410,9 @@ export const LEVELS: Level[] = [
           `只買台積電：${signedPct(SHOCK_2330['2330']!)}。0050：約 ${signedPct(c.shock('0050'))}。因為台積電佔了一半以上。SPY 沒有台積電，沒有直接影響（${signedPct(c.shock('SPY'))}）。`,
         bigNumber: (c) => {
           const s = c.shock('0050')
-          return { value: movePct(s), label: '假設下的 0050', fraction: Math.abs(s) / SHOCK_PCT }
+          return { value: movePct(s), label: '假設下的 0050', fraction: Math.abs(s) / SHOCK_PCT, note: `整條＝只買台積電跌 ${pct0(SHOCK_PCT * 100)}%` }
         },
-        scene: { camera: 'plaza', product: null, stage: { kind: 'shock', active: true } },
+        scene: { camera: 'plaza', product: null, stage: { kind: 'shock' }, event: { kind: 'lightning', phase: 'strike' } },
       },
       {
         id: 'c-3',
@@ -476,16 +484,11 @@ export const LEVELS: Level[] = [
       {
         id: 'u-6',
         title: '完成！',
-        line: '學完了！按**自由玩**到處看',
+        line: '學完初階！按**自由玩**到處看',
         fallbackLine: '課程**完成**了',
-        more: '恭喜完成課程！自由玩已經解鎖。所有商品都能自由切開、拆開、比較。',
-        fallbackMore: '恭喜完成課程！在支援 3D 的瀏覽器上，還可以自由玩。自由玩裡能切開、拆開、比較。',
-        recap: [
-          { icon: '🧱', text: '股票＝拿一顆方塊' },
-          { icon: '📜', text: '債券＝借據，固定給金幣' },
-          { icon: '🚜', text: '基金＝怪手幫你挑（要收費）' },
-          { icon: '🧩', text: 'ETF＝照藍圖挑（通常較便宜）' },
-        ],
+        more: '恭喜完成初階！自由玩已經解鎖。所有商品都能自由切開、拆開、比較。',
+        fallbackMore: '恭喜完成初階！在支援 3D 的瀏覽器上，還可以自由玩。自由玩裡能切開、拆開、比較。',
+        recap: BEGINNER_RECAP,
         scene: { camera: 'overview', product: '0050' },
       },
     ],
@@ -493,13 +496,31 @@ export const LEVELS: Level[] = [
 ]
 
 /**
- * 路線（課程資料）：完整版走全部步驟；簡單版只留陳伯伯分數最高、最好懂的 17 步，
- * 拿掉除息細節、進門費出門費、重疊、ETF 名稱一大堆、地底岩芯這些難的。照課程順序排。
+ * 課程專用的新步驟（不在 LEVELS 裡，只由 courses.ts 排進課程）：
+ * m-0＝中階開頭的初階口訣複習；m-fin＝中階結尾的口訣卡（高階還沒開放，所以推薦自由玩）。
  */
-export const ROUTES: Record<Route, RouteIds> = {
-  full: null,
-  simple: ['p-1', 'p-2', 's-1', 's-2', 's-3', 'b-1', 'b-3', 'f-1', 'f-5', 'f-9', 'e-1', 'e-2', 'e-3', 'e-5', 'c-1', 'c-2', 'u-6'],
-}
-
-/** 每條路線的步數（開始卡片上的「約 17 步」「35 步」用） */
-export const routeLength = (r: Route): number => ROUTES[r]?.length ?? LEVELS.reduce((n, l) => n + l.steps.length, 0)
+export const COURSE_STEPS: Step[] = [
+  {
+    id: 'm-0',
+    title: '初階口訣複習',
+    line: '先複習**初階**的四句話',
+    more: '這四句是初階學到的重點。中階每一章都多看一點細節。',
+    recap: BEGINNER_RECAP,
+    scene: { camera: 'overview', product: null },
+  },
+  {
+    id: 'm-fin',
+    title: '中階口訣卡',
+    line: '學完中階！按**自由玩**到處看',
+    fallbackLine: '中階課程**完成**了',
+    more: '恭喜完成中階！自由玩已經解鎖。所有商品都能自由切開、拆開、比較。',
+    fallbackMore: '恭喜完成中階！在支援 3D 的瀏覽器上，還可以自由玩。自由玩裡能切開、拆開、比較。',
+    recap: [
+      { icon: '🧱', text: '股票看總報酬：方塊＋金幣' },
+      { icon: '📜', text: '越穩的借據，利息通常越少' },
+      { icon: '🚜', text: '基金費用：進門、出門、每年' },
+      { icon: '🧩', text: 'ETF 拆開看：重疊、產業、高股息' },
+    ],
+    scene: { camera: 'overview', product: null },
+  },
+]

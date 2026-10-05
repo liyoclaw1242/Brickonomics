@@ -1,16 +1,16 @@
-import { useLayoutEffect, useMemo, useRef, type RefObject } from 'react'
+import { useLayoutEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Color, type Group, type InstancedMesh, Object3D } from 'three'
 import { useThemeStore } from '../../store/theme'
 import { T } from '../../ui/strings'
 import { Callout } from '../Callout'
-import { STORM, STORM_COUNTS, funnelRadius, funnelSway, stormAppear, stormPos } from '../layout/storm'
+import { STORM, STORM_COUNTS, funnelRadius, funnelSway, stormAppear, stormPos } from './tornado'
 import { BlockMaterial } from '../materials'
 import { ACCENT_COLORS, SECTOR_COLORS } from '../palette'
-import type { Quality } from '../quality'
 import { THEMES } from '../theme'
-import { atPlaza } from './plaza'
+import { atPlaza } from '../stage/plaza'
 import { StormCloud } from './StormCloud'
+import type { EventProps, SpecOf } from './types'
 
 /** 捲起來的小方塊：城市裡的方塊顏色（積木城市被吹散的碎片） */
 const DEBRIS_COLORS = [SECTOR_COLORS.semiconductor, ACCENT_COLORS.loss, '#ffb300', SECTOR_COLORS.electronics, SECTOR_COLORS.software, '#90a4ae']
@@ -27,19 +27,14 @@ const rand = (i: number, k: number) => {
   return v - Math.floor(v)
 }
 
-type Props = {
-  /** 風暴時間（秒，鏡頭停下後起算）；null＝還沒開始（藏起來）；Infinity＝停在旁邊 */
-  time: RefObject<number | null>
-  quality: Quality
-  /** prefers-reduced-motion：不轉、不移動，只擺一個靜止的龍捲風 */
-  still: boolean
-}
-
 /**
  * 經濟風暴的龍捲風：一圈圈灰藍色的環疊成往地面變細的漏斗（會轉、會扭），頂上一片烏雲，底部捲著幾顆小方塊。
- * 每種材質一個 InstancedMesh；useFrame 內不配置物件。持續繪製由呼叫端（BondShowcase）負責。
+ * 時間來自事件時鐘：t 為 null（鏡頭還沒停下）時藏起來；clock.reduced（減少動態）時不轉、不移動，只擺一個靜止的龍捲風。
+ * 每種材質一個 InstancedMesh；useFrame 內不配置物件。持續繪製由事件時鐘（useEventClock）負責。
  */
-export function Tornado({ time, quality, still }: Props) {
+export function Tornado({ clock, quality }: EventProps<SpecOf<'tornado'>>) {
+  const time = clock.t
+  const still = clock.reduced
   const n = STORM_COUNTS[quality]
   const theme = THEMES[useThemeStore((s) => s.theme)].storm
   const root = useRef<Group>(null)

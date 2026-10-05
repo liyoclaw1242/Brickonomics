@@ -82,6 +82,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 /* 標題＋標示：標題字不折行；標示小膠囊成一組，放不下就整組換到下一行 */
 .step-title { display: flex; flex-wrap: wrap; align-items: center; column-gap: 8px; row-gap: 6px; }
 .step-title__text { white-space: nowrap; }
+.step-title--snug { font-size: 22px; } /* 標題＋膠囊放不下時縮一號（titleRowFits），膠囊不掉到下一行 */
 .step-title__marks { display: inline-flex; flex-wrap: wrap; gap: 6px; }
 .more__text { line-height: 1.7; }
 .more .readout { color: var(--text); }
@@ -125,7 +126,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .hint--try { font-size: 15px; font-weight: 600; color: var(--em); margin: 8px 0 0; }
 /* 最後一步的回顧清單 */
 .recap { list-style: none; margin: 8px 0 4px; padding: 10px 12px; display: grid; gap: 6px; border-radius: 12px; background: var(--chip); border: 1px solid var(--border); font-size: 15px; line-height: 1.5; }
-.recap li, .recap p { margin: 0; display: flex; gap: 8px; align-items: baseline; }
+.recap li, .recap p { margin: 0; display: flex; gap: 8px; align-items: baseline; word-break: keep-all; overflow-wrap: anywhere; } /* 中文只在標點、空白處換行：不會把一個詞拆開，或讓最後一個字單獨掉到下一行（m-fin） */
 .recap__icon { flex: none; width: 1.4em; text-align: center; }
 
 .info {
@@ -197,6 +198,10 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
   .panel.tour > * { flex-shrink: 0; }
   .panel.tour > .step-nav { order: 3; margin-top: auto; } /* 抽屜固定高：內容短時上一步／下一步仍貼底 */
   .panel.tour > .more { order: 2; }
+  /* 結尾步：抽屜高度有限，口訣卡排在「下一階」按鈕之後，按鈕才不會被固定在底部的上一步／下一步蓋住 */
+  .panel.tour > .recap { order: 1; }
+  /* 口訣卡在手機上緊一點：抽屜一打開整張卡就在固定的上一步／下一步上方，不被蓋住（Plan 6 walkthrough） */
+  .recap { margin: 4px 0 2px; padding: 8px 10px; gap: 2px; font-size: 14px; line-height: 1.45; }
   .panel.tour > .link { order: 4; }
   .readout th, .readout td { padding: 2px 0; }
   .step-nav { position: sticky; bottom: -14px; margin: 8px -16px -14px; padding: 8px 16px 14px; background: var(--surface-strong); }
@@ -206,7 +211,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .fallback h2 { font-size: 18px; margin: 28px 0 8px; }
 .fallback ol { padding-left: 20px; }
 .fallback li { margin-bottom: 14px; }
-.fallback__routes { display: flex; gap: 8px; margin: 12px 0; }
+.fallback__courses { display: flex; gap: 8px; margin: 12px 0; }
 
 /* 3D 標註（Callout / NameLabel）與標示圖示（MarkIcon）。--label-scale 由 ViewFraming 依鏡頭 zoom 設定：窄畫面字跟著縮小（設下限以保可讀） */
 .callout { pointer-events: none; display: grid; gap: 2px; padding: 6px 10px; border-radius: 8px; white-space: nowrap;
@@ -264,7 +269,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 /* 圖例列打開時，選取資訊卡往下讓位；品質提示讓出底部時間軸 */
 .legend-bar ~ .info { top: 108px; }
 @media (min-width: 721px) { .notice { bottom: 88px; } }
-/* 窄桌機（≤1000px）放不下 7 個「編號 名稱」：只留圖示，名稱仍在按鈕的無障礙名稱與 title 裡 */
+/* 窄桌機（≤1000px）放不下 6 個「編號 名稱」：只留圖示，名稱仍在按鈕的無障礙名稱與 title 裡 */
 @media (max-width: 1000px) {
   .timeline__name { display: none; }
   .timeline__chapter { min-width: 32px; min-height: 32px; justify-content: center; }
@@ -274,7 +279,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
   .pill { padding: 6px 10px; font-size: 12px; }
   .timeline { left: 8px; right: 8px; bottom: calc(42vh + 8px); padding: 4px 8px; }
   .timeline { bottom: calc(42dvh + 8px); }
-  /* 手機只留 7 個圖示（觸控目標 32×32）；時間軸總高 4+32+4+3+4+2(框) = 49px，加上與抽屜的 8px 間距 = 57px，
+  /* 手機只留 6 個圖示（觸控目標 32×32）；時間軸總高 4+32+4+3+4+2(框) = 49px，加上與抽屜的 8px 間距 = 57px，
      layoutModel 的 bottom = 抽屜 + 60 涵蓋它 */
   .timeline__chapter { min-width: 32px; min-height: 32px; padding: 0 4px; justify-content: center; }
   .timeline__bar { margin-top: 4px; }
@@ -283,18 +288,37 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
   .legend-bar ~ .info { top: auto; }
 }
 
-/* 第一次來：選簡單版或完整版（兩顆大按鈕，各一句白話） */
-.route-start { display: grid; gap: 12px; margin-top: 6px; }
-.route-start .step-title { margin: 4px 0 2px; }
-.route-start__choice {
-  display: grid; gap: 4px; text-align: left; padding: 14px 16px; border-radius: 14px;
+/* 第一次來：選一階（照建議順序，第一顆最醒目；不鎖） */
+.course-start { display: grid; gap: 12px; margin-top: 6px; }
+.course-start .step-title { margin: 4px 0 2px; }
+.course-start__choice {
+  display: grid; gap: 2px; text-align: left; padding: 12px 16px; border-radius: 14px;
   border: 1px solid var(--border); background: var(--chip); color: var(--text); font: inherit; cursor: pointer;
 }
-.route-start__choice--simple { background: var(--accent); color: var(--accent-text); border-color: transparent; }
-.route-start__name { font-size: 19px; font-weight: 700; }
-.route-start__note { font-size: 16px; }
-.route-start .hint { font-size: 14px; }
+.course-start__choice--first { background: var(--accent); color: var(--accent-text); border-color: transparent; }
+.course-start__order { font-size: 13px; opacity: 0.8; }
+.course-start__name { font-size: 21px; font-weight: 700; }
+.course-start__note { font-size: 16px; }
+.course-start .hint { font-size: 14px; }
 
-/* 右上路線切換：兩個名字都在，目前的那個亮 */
-.route-pill__on { font-weight: 700; color: var(--em); }
-.route-pill__off { color: var(--muted); }
+/* 右上換階：膠囊顯示目前階，點開選單 */
+.course-switch { position: relative; }
+.course-switch__pill { font-weight: 700; color: var(--em); }
+.course-switch__menu {
+  position: absolute; top: calc(100% + 6px); left: 0; min-width: 180px; display: grid; gap: 4px; padding: 6px;
+  border-radius: 14px; border: 1px solid var(--border); background: var(--surface-strong); backdrop-filter: blur(10px); z-index: 7;
+}
+.course-switch__item {
+  display: grid; gap: 2px; text-align: left; padding: 8px 12px; border-radius: 10px; border: 1px solid transparent;
+  background: none; color: var(--text); font: inherit; cursor: pointer;
+}
+.course-switch__item:hover, .course-switch__item:focus-visible { background: var(--chip); }
+.course-switch__item[aria-checked='true'] { border-color: var(--accent); }
+.course-switch__name { font-size: 16px; font-weight: 700; }
+.course-switch__note { font-size: 13px; color: var(--muted); }
+
+/* 結尾步：口訣卡下面的「下一階 →」或「去自由玩」 */
+.next-tier {
+  width: 100%; margin: 8px 0 0; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--accent);
+  background: none; color: var(--em); font: inherit; font-size: 16px; font-weight: 700; cursor: pointer;
+}

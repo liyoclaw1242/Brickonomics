@@ -1,20 +1,18 @@
-import type { Level, Position, Progress, RouteIds } from '../tour/types'
+import { chapterOfIndex } from '../tour/engine'
+import type { Course, CoursePosition, Progress } from '../tour/types'
+
+/** index＝章在課程裡的索引（也是時間軸上顯示的編號）；icon、name 照課程資料 */
+export type ChapterState = { index: number; id: string; icon: string; name: string; state: 'done' | 'current' | 'todo'; clickable: boolean }
 
 /**
- * index＝課程裡的章（LEVELS 索引）；number＝時間軸上顯示的編號（只數路線裡有的章）；
- * finish＝這章在路線裡只剩最後的回顧那一步（簡單版的地底章），時間軸改叫「完成」。
+ * 時間軸上目前課程每一章的狀態：done＝這門課已完成的章、current＝目前所在章、其餘 todo；
+ * 解鎖自由玩後每章都能點。每門課的完成狀態分開記（完成初階不會讓中階的章變 done）。
  */
-export type ChapterState = { index: number; number: number; state: 'done' | 'current' | 'todo'; clickable: boolean; finish: boolean }
-
-/** 時間軸上每一章的狀態：done＝已完成、current＝目前所在章、其餘 todo；解鎖沙盒後每章都能點。ids＝路線（null＝全部章）。 */
-export function chapterStates(levels: readonly Level[], pos: Position, progress: Progress, ids?: RouteIds): ChapterState[] {
-  const out: ChapterState[] = []
-  levels.forEach((l, index) => {
-    const steps = l.steps.filter((s) => !ids || ids.includes(s.id))
-    if (steps.length === 0) return
-    const state = index === pos.level ? 'current' : progress.completed.includes(l.id) ? 'done' : 'todo'
-    const finish = steps.length < l.steps.length && steps.every((s) => s.recap !== undefined)
-    out.push({ index, number: out.length, state, clickable: progress.sandboxUnlocked || state !== 'todo', finish })
+export function chapterStates(course: Course, pos: CoursePosition, progress: Progress): ChapterState[] {
+  const here = pos.course === course.id ? chapterOfIndex(course.id, pos.index) : -1
+  const done = progress.completed[course.id] ?? []
+  return course.chapters.map((ch, index) => {
+    const state = index === here ? 'current' : done.includes(ch.id) ? 'done' : 'todo'
+    return { index, id: ch.id, icon: ch.icon, name: ch.name, state, clickable: progress.sandboxUnlocked || state !== 'todo' }
   })
-  return out
 }

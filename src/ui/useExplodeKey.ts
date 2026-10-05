@@ -16,13 +16,15 @@ const matchesFocusVisible = (el: Element) => {
 
 /**
  * 空白鍵要不要拿來「拆開」：
- * - 文字輸入：永遠不攔截。
+ * - 文字輸入、選單（[role=menu]）：永遠不攔截。
  * - 按鈕、連結：鍵盤聚焦時保留原本作用（按下）；滑鼠點過的不保留。
  *   光靠 :focus-visible 不夠（Chromium 在 Space keydown 當下會切成鍵盤模式），所以呼叫端另外傳入「最近一次操作是否為滑鼠」。
  */
 export function spaceExplodes(target: EventTarget | null, pointerModality: boolean): boolean {
   if (!(target instanceof Element)) return true
   if (target.closest(TEXT_ENTRY)) return false
+  // 選單（例如換階）：空白鍵是選取，永遠不拿來拆開
+  if (target.closest('[role=menu]')) return false
   const act = target.closest(ACTIVATABLE)
   if (act && !pointerModality && matchesFocusVisible(act)) return false
   return true

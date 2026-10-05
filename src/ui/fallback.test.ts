@@ -1,39 +1,44 @@
 import { describe, it, expect } from 'vitest'
 import { stepMarks } from './marks'
 import { universe } from '../data'
-import { LEVELS, ROUTES } from '../tour/levels'
 import { makeTextContext } from '../tour/context'
+import { availableCourses, courseSteps, STEP_POOL } from '../tour/courses'
 import { lineOf, moreOf } from '../tour/engine'
-import { fallbackLevels } from './fallback'
+import { fallbackCourse } from './fallback'
 
-describe('fallbackLevels', () => {
-  const out = fallbackLevels(LEVELS, universe)
+const POOL = [...STEP_POOL.values()]
 
-  it('has every level and step with rendered text', () => {
-    expect(out).toHaveLength(LEVELS.length)
-    out.forEach((l, i) => {
-      expect(l.steps).toHaveLength(LEVELS[i]!.steps.length)
-      for (const s of l.steps) {
+describe('fallbackCourse', () => {
+  // 所有可上的課接起來＝步驟池裡的每一步
+  const out = availableCourses().flatMap((c) => fallbackCourse(c, universe))
+
+  it('lists each course by its chapters, every step with rendered text', () => {
+    for (const c of availableCourses()) {
+      const chapters = fallbackCourse(c, universe)
+      expect(chapters.map((l) => l.label), c.id).toEqual(c.chapters.map((ch, i) => `${String(i).padStart(2, '0')} ${ch.name}`))
+      expect(chapters.flatMap((l) => l.steps.map((s) => s.id)), c.id).toEqual(courseSteps(c).map((s) => s.id))
+      for (const s of chapters.flatMap((l) => l.steps)) {
         expect(s.title.length, s.id).toBeGreaterThan(0)
         expect(s.line.length, s.id).toBeGreaterThan(3)
         expect(s.more.length, s.id).toBeGreaterThan(10)
       }
-    })
-    expect(out[0]!.label).toBe('序章')
+    }
+    expect(out[0]!.label).toBe('00 序章')
+    expect(out.flatMap((l) => l.steps)).toHaveLength(POOL.length)
   })
 
   it('carries step-level marks into the text-only version', () => {
-    const steps = LEVELS.flatMap((l) => l.steps).filter((s) => s.mark)
+    const steps = POOL.filter((s) => s.mark)
     expect(steps.length).toBeGreaterThan(0)
     const flat = out.flatMap((l) => l.steps)
     for (const s of steps) expect(flat.find((f) => f.id === s.id)!.marks, s.id).toContain(s.mark)
     // 標題旁的標示和 3D 版一致（含從資料推出來的「還沒查證」）
-    for (const s of LEVELS.flatMap((l) => l.steps)) expect(flat.find((f) => f.id === s.id)!.marks, s.id).toEqual(stepMarks(s, universe))
+    for (const s of POOL) expect(flat.find((f) => f.id === s.id)!.marks, s.id).toEqual(stepMarks(s, universe))
   })
 
   it('u-6 uses its own honest text: no 已經解鎖, no claim that the sandbox is here', () => {
     const u6 = out.flatMap((l) => l.steps).find((s) => s.id === 'u-6')!
-    const step = LEVELS.flatMap((l) => l.steps).find((s) => s.id === 'u-6')!
+    const step = POOL.find((s) => s.id === 'u-6')!
     const ctx = makeTextContext(universe)
     expect(u6.more).not.toBe(moreOf(step, ctx))
     expect(u6.line).not.toBe(lineOf(step, ctx))
@@ -44,13 +49,13 @@ describe('fallbackLevels', () => {
 
   it('shows the closing recap in the text-only version too', () => {
     const u6 = out.flatMap((l) => l.steps).find((s) => s.id === 'u-6')!
-    const step = LEVELS.flatMap((l) => l.steps).find((s) => s.id === 'u-6')!
+    const step = POOL.find((s) => s.id === 'u-6')!
     expect(u6.recap).toEqual(step.recap)
     expect(u6.recap!.length).toBe(4)
   })
 
   it('uses the 3D line and more when a step has no text-only version', () => {
-    const step = LEVELS.flatMap((l) => l.steps).find((s) => s.id === 'e-3')!
+    const step = POOL.find((s) => s.id === 'e-3')!
     const e3 = out.flatMap((l) => l.steps).find((s) => s.id === 'e-3')!
     const ctx = makeTextContext(universe)
     expect(e3.title).toBe(step.title)
@@ -75,16 +80,3 @@ describe('fallbackLevels', () => {
   })
 })
 
-describe('fallbackLevels in the simple route', () => {
-  const simple = ROUTES.simple!
-  const out = fallbackLevels(LEVELS, universe, simple)
-  it('keeps only route steps, in order', () => {
-    expect(out.flatMap((l) => l.steps.map((s) => s.id))).toEqual(simple)
-  })
-  it('the recap-only underground chapter is labelled 完成 without the underground title', () => {
-    const last = out.at(-1)!
-    expect(last.label).toBe('完成')
-    expect(last.title).toBe('')
-    expect(out[0]!.label).toBe('序章')
-  })
-})

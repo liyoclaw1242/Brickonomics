@@ -1,35 +1,28 @@
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { useThemeStore } from '../store/theme'
 import { useTour } from '../store/tour'
+import { availableCourses } from '../tour/courses'
+import { courseById } from '../tour/engine'
+import type { CourseId } from '../tour/types'
 import { T } from './strings'
 
-/** 右上工具列：路線（簡單版／完整版）、主題（重繪由 Lighting 訂閱主題後 invalidate）、標註、圖例；沙盒另有「重看導覽」。 */
+/** 右上工具列：換階、主題（重繪由 Lighting 訂閱主題後 invalidate）、標註、圖例；沙盒另有「重看導覽」。 */
 export function Toolbar() {
   const theme = useThemeStore((s) => s.theme)
   const labels = useThemeStore((s) => s.labels)
   const legend = useThemeStore((s) => s.legend)
   const mode = useTour((s) => s.mode)
-  const route = useTour((s) => s.route)
+  const course = useTour((s) => s.course)
   const { toggleTheme, toggleLabels, toggleLegend } = useThemeStore.getState()
   return (
     <nav className="toolbar" aria-label={T.toolbarLabel}>
       {mode === 'sandbox' && (
-        <button className="pill" onClick={() => useTour.getState().restartTour()}>
+        <button className="pill" onClick={() => useTour.getState().restartCourse()}>
           {T.toolbar.replay}
         </button>
       )}
-      {/* 路線：兩個名字都看得到、目前的那個亮；按下換到另一個（停在新路線裡這一步或它之前最近的一步）。還沒選（開始卡片）時不顯示 */}
-      {route !== null && (
-        <button
-          className="pill route-pill"
-          title={T.route.switchLabel}
-          aria-label={T.route.action(T.route.names[route], T.route.names[route === 'simple' ? 'full' : 'simple'])}
-          onClick={() => useTour.getState().setRoute(route === 'simple' ? 'full' : 'simple')}
-        >
-          <span className={route === 'simple' ? 'route-pill__on' : 'route-pill__off'}>{T.route.names.simple}</span>
-          {T.route.sep}
-          <span className={route === 'full' ? 'route-pill__on' : 'route-pill__off'}>{T.route.names.full}</span>
-        </button>
-      )}
+      {/* 換階：膠囊顯示目前階，點開選單。還沒選課（開場卡）時不顯示 */}
+      {course !== null && <CourseSwitcher current={course} />}
       {/* 文字顯示目前主題，按下切換到另一個 */}
       <button
         className="pill"
@@ -46,5 +39,109 @@ export function Toolbar() {
         {T.toolbar.legend}
       </button>
     </nav>
+  )
+}
+
+const MENU_ID = 'course-menu'
+/** 可上的課（固定資料，放模組層級：每次 render 都是同一個陣列） */
+const COURSE_LIST = availableCourses()
+
+/**
+ * 換階選單（menu button 模式）：Enter／空白／↓ 打開並聚焦目前階，↑↓ Home End 移動，Enter 選，
+ * Escape 或 Tab 關閉、焦點回到膠囊；點選單外面也會關。
+ */
+function CourseSwitcher({ current }: { current: CourseId }) {
+  const [open, setOpen] = useState(false)
+  const trigger = useRef<HTMLButtonElement>(null)
+  const items = useRef<(HTMLButtonElement | null)[]>([])
+  const wrap = useRef<HTMLDivElement>(null)
+  const courses = COURSE_LIST
+  const name = courseById(current).name
+
+  // 打開時聚焦目前這一階，並在點選單外面時關上
+  useEffect(() => {
+    if (!open) return
+    const i = Math.max(0, COURSE_LIST.findIndex((c) => c.id === current))
+    items.current[i]?.focus()
+    const outside = (e: PointerEvent) => {
+      if (!wrap.current?.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('pointerdown', outside)
+    return () => document.removeEventListener('pointerdown', outside)
+  }, [open, current])
+
+  const close = (focusTrigger: boolean) => {
+    setOpen(false)
+    if (focusTrigger) trigger.current?.focus()
+  }
+  const choose = (id: CourseId) => {
+    close(true)
+    if (id !== current || useTour.getState().mode === 'sandbox') useTour.getState().switchCourse(id)
+  }
+  const onMenuKey = (e: KeyboardEvent) => {
+    const n = courses.length
+    const at = items.current.findIndex((el) => el === document.activeElement)
+    const move = (i: number) => {
+      e.preventDefault()
+      items.current[((i % n) + n) % n]?.focus()
+    }
+    if (e.key === 'ArrowDown') move(at + 1)
+    else if (e.key === 'ArrowUp') move(at - 1)
+    else if (e.key === 'Home') move(0)
+    else if (e.key === 'End') move(n - 1)
+    else if (e.key === 'Escape') {
+      // 只關選單：不要再傳出去（例如關掉點選的資訊卡）
+      e.preventDefault()
+      e.stopPropagation()
+      close(true)
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      // 自己處理選取：不讓空白鍵傳到「按住空白鍵拆開」，也不等 keyup 的 click（選單那時已經關了）
+      e.preventDefault()
+      e.stopPropagation()
+      const c = courses[at]
+      if (c) choose(c.id)
+    } else if (e.key === 'Tab') close(false)
+  }
+
+  return (
+    <div className="course-switch" ref={wrap}>
+      <button
+        ref={trigger}
+        className="pill course-switch__pill"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-controls={open ? MENU_ID : undefined}
+        aria-label={T.course.switchLabel(name)}
+        onClick={() => setOpen((o) => !o)}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault()
+            setOpen(true)
+          }
+        }}
+      >
+        {T.course.pill(name)}
+      </button>
+      {open && (
+        <div className="course-switch__menu" role="menu" id={MENU_ID} aria-label={T.course.menuLabel} onKeyDown={onMenuKey}>
+          {courses.map((c, i) => (
+            <button
+              key={c.id}
+              ref={(el) => {
+                items.current[i] = el
+              }}
+              role="menuitemradio"
+              aria-checked={c.id === current}
+              tabIndex={-1}
+              className="course-switch__item"
+              onClick={() => choose(c.id)}
+            >
+              <span className="course-switch__name">{c.name}</span>
+              <span className="course-switch__note">{c.tagline}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }

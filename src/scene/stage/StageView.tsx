@@ -1,6 +1,8 @@
 import { currentStep, useTour } from '../../store/tour'
 import type { Stage } from '../../tour/types'
+import { EventLayer } from '../events/EventLayer'
 import type { Quality } from '../quality'
+import { useEventClock } from '../useEventClock'
 import { AccumulateStage } from './AccumulateStage'
 import { BondShowcase } from './BondShowcase'
 import { Excavator } from './Excavator'
@@ -18,24 +20,27 @@ import { UndergroundStage } from './UndergroundStage'
 
 const NONE: Stage = { kind: 'none' }
 
-/** 依目前步驟顯示教學視覺；沙盒模式不顯示 */
+/** 依目前步驟顯示教學視覺與事件（scene.event）；沙盒模式不顯示。事件時鐘只有一個，事件元件與舞台共用 */
 export function StageView({ quality }: { quality: Quality }) {
   const stage = useTour((s) => (s.mode === 'tour' ? (currentStep(s).scene.stage ?? NONE) : NONE))
+  const event = useTour((s) => (s.mode === 'tour' ? currentStep(s).scene.event : undefined))
+  const clock = useEventClock(event)
   return (
     <>
       {ON_PLAZA.has(stage.kind) && <Plaza />}
       {stage.kind === 'held' && <HeldBlocks items={stage.items} />}
-      {stage.kind === 'bonds' && <BondShowcase stressed={stage.stressed} ranks={stage.ranks} quality={quality} />}
+      {stage.kind === 'bonds' && <BondShowcase ranks={stage.ranks} quality={quality} event={clock} />}
       {stage.kind === 'exdiv' && <ExDividendStage outcome={stage.outcome} quality={quality} />}
       {stage.kind === 'feeRace' && <FeeRaceStage etf={stage.etf} quality={quality} />}
       {stage.kind === 'accumulate' && <AccumulateStage quality={quality} />}
       {stage.kind === 'principalTrap' && <PrincipalTrapStage quality={quality} />}
-      {stage.kind === 'shock' && <ShockStage active={stage.active} quality={quality} />}
+      {stage.kind === 'shock' && <ShockStage quality={quality} event={clock} />}
       {stage.kind === 'overlap' && <OverlapStage a={stage.a} b={stage.b} quality={quality} />}
       {stage.kind === 'underground' && <UndergroundStage show={stage.show} cores={stage.cores} quality={quality} />}
       {stage.kind === 'excavator' && <Excavator other={stage.other} />}
       {stage.kind === 'excavator' && stage.meter && <FeeMeter />}
       {stage.kind === 'ticker' && <PriceTicker />}
+      <EventLayer clock={clock} quality={quality} />
     </>
   )
 }

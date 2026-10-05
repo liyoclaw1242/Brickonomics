@@ -1,27 +1,22 @@
 // 使用者測試截圖：每一步拍「剛進來」，有拉桿的步驟再拍「拉到底之後」
-// 用法：node scripts/usertest-shots.mjs [base] [out] [w] [h] [route]
-//   route＝simple|full（選填）：只拍那條路線的步驟，檔名照路線順序編號；不填＝全部步驟（完整版）
+// 用法：node scripts/usertest-shots.mjs [base] [out] [w] [h] [course]
+//   course＝beginner|intermediate（選填）：只拍那門課的步驟，檔名照課程順序編號；不填＝每門可上的課都拍（檔名前加課程 id）
 import { mkdir } from 'node:fs/promises'
 import { chromium } from 'playwright'
 
-const [base = 'http://localhost:5173', out = '.superpowers/usertest/r1', w = '1280', h = '800', route] = process.argv.slice(2)
-if (route !== undefined && route !== 'simple' && route !== 'full') throw new Error(`unknown route ${route}（simple 或 full）`)
+const [base = 'http://localhost:5173', out = '.superpowers/usertest/r1', w = '1280', h = '800', course] = process.argv.slice(2)
 await mkdir(out, { recursive: true })
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })
 try {
   const page = await browser.newPage({ viewport: { width: Number(w), height: Number(h) } })
-  await page.goto(`${base}/?quality=high&route=${route ?? 'full'}`, { waitUntil: 'networkidle' })
-  const steps = await page.evaluate(() => window.__BCI_STEPS__)
-  const ids = await page.evaluate(() => window.__BCI_STEP_IDS__)
-  const routes = await page.evaluate(() => window.__BCI_ROUTES__)
-  // 每一步的絕對位置
-  const all = []
-  for (let level = 0, n = 0; level < steps.length; level++) for (let step = 0; step < steps[level]; step++, n++) all.push({ id: ids[n], level, step })
-  const keep = route && routes[route] ? all.filter((s) => routes[route].includes(s.id)) : all
-  const q = route ? `&route=${route}` : ''
-  for (const [i, { id, level, step }] of keep.entries()) {
-    const name = `${String(i + 1).padStart(2, '0')}-${id}`
-    await page.goto(`${base}/?level=${level}&step=${step}&quality=high${q}`, { waitUntil: 'networkidle' })
+  await page.goto(`${base}/?quality=high&course=beginner`, { waitUntil: 'networkidle' })
+  const courses = await page.evaluate(() => window.__BCI_COURSES__)
+  if (course !== undefined && !courses[course]) throw new Error(`unknown course ${course}（${Object.keys(courses).join(' 或 ')}）`)
+  const keep = Object.entries(courses)
+    .filter(([c]) => course === undefined || c === course)
+    .flatMap(([c, ids]) => ids.map((id, i) => ({ c, id, name: `${course ? '' : `${c}-`}${String(i + 1).padStart(2, '0')}-${id}` })))
+  for (const { c, id, name } of keep) {
+    await page.goto(`${base}/?course=${c}&step=${id}&quality=high`, { waitUntil: 'networkidle' })
     await page.waitForSelector('body[data-camera-settled="true"]', { timeout: 15000 }).catch(() => {})
     await page.waitForTimeout(1800)
     await page.screenshot({ path: `${out}/${name}-a.png` })

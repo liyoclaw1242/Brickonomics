@@ -16,6 +16,12 @@ describe('spaceExplodes', () => {
     expect(spaceExplodes(el('<div contenteditable="true"><span>x</span></div>').firstElementChild, true)).toBe(false)
   })
 
+  it('never steals Space from a menu, even a mouse-opened one', () => {
+    const menu = el('<div role="menu"><button role="menuitemradio">x</button></div>')
+    expect(spaceExplodes(menu.firstElementChild, true)).toBe(false)
+    expect(spaceExplodes(menu, true)).toBe(false)
+  })
+
   it('explodes on range sliders, plain elements and mouse-focused buttons', () => {
     expect(spaceExplodes(el('<input type="range">'), false)).toBe(true)
     expect(spaceExplodes(el('<div></div>'), false)).toBe(true)

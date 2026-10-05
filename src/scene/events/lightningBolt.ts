@@ -1,16 +1,15 @@
 import { universe } from '../../data'
 import { shockImpact } from '../../sim/scenario'
 import { SHOCK_2330 } from '../../tour/context'
-import type { Stage } from '../../tour/types'
 import type { Vec3 } from '../camera'
 import { QUALITY, type Quality } from '../quality'
-import { basketVoxels } from './basket'
-import { damageFromShocks } from './stages'
-import { damagedVoxels, voxelPosition } from './voxels'
+import { basketVoxels } from '../layout/basket'
+import { damageFromShocks } from '../layout/stages'
+import { damagedVoxels, voxelPosition } from '../layout/voxels'
 
 /**
- * c-1／c-2「假設台積電跌 30%」的閃電（純 TS）：烏雲位置、閃電的路徑（只分岔到有台積電的地方）、時間。
- * 座標都相對廣場中心（呼叫端再加 atPlaza）。時間 t 以秒計，從 c-2 鏡頭停下起算；t = Infinity＝終點（＝原本靜態的 active 畫面）。
+ * c-1／c-2「假設台積電跌 30%」的閃電幾何（純 TS）：烏雲位置、閃電的路徑（只分岔到有台積電的地方）。時間軸在 ./lightning.ts。
+ * 座標都相對廣場中心（呼叫端再加 atPlaza）。
  */
 
 export type ShockKey = 'stock' | '0050' | 'SPY'
@@ -70,47 +69,6 @@ export const BOLT_ORIGIN: Vec3 = [-7, 16.2, 3]
 export const BOLT_FORK: Vec3 = [-7.3, 11.4, 3]
 /** 「假設：台積電被打中」標在雲底、主幹右邊（不靠近左上的面板） */
 export const CLOUD_LABEL_ANCHOR: Vec3 = [-4.5, 16, 3]
-
-export const LIGHTNING = {
-  /** 鏡頭停下後先看雲一下，再打 */
-  delay: 0.6,
-  /** 閃電從雲長到地面的秒數 */
-  grow: 0.2,
-  /** 打中後亮著的秒數 */
-  hold: 0.3,
-  /** 光慢慢退掉的秒數 */
-  fade: 0.8,
-  /** 整個畫面變亮一次：上升、衰減秒數 */
-  flashRise: 0.05,
-  flashDecay: 0.3,
-} as const
-
-/** 打中的那一刻（損傷、跌幅標籤在這時出現） */
-export const IMPACT_TIME = LIGHTNING.delay + LIGHTNING.grow
-/** 動畫結束（之後不再要求重繪） */
-export const STRIKE_END = IMPACT_TIME + LIGHTNING.hold + LIGHTNING.fade
-
-export const isStruck = (t: number): boolean => t >= IMPACT_TIME
-
-const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
-
-/** 閃電長出來的比例 0..1 */
-export const boltReveal = (t: number): number => clamp01((t - LIGHTNING.delay) / LIGHTNING.grow)
-
-/** 閃電亮度 0..1：長出來時全亮，停一下，然後線性退到 0（只有一次） */
-export function boltGlow(t: number): number {
-  if (!(t >= LIGHTNING.delay)) return 0
-  if (t <= IMPACT_TIME + LIGHTNING.hold) return 1
-  return clamp01(1 - (t - IMPACT_TIME - LIGHTNING.hold) / LIGHTNING.fade)
-}
-
-/** 整個畫面的閃光 0..1：打中那一刻一個脈衝，之後歸零（不閃爍） */
-export function flashLevel(t: number): number {
-  const u = t - IMPACT_TIME
-  if (u < -LIGHTNING.flashRise || u > LIGHTNING.flashDecay) return 0
-  if (u <= 0) return 1 + u / LIGHTNING.flashRise
-  return 1 - u / LIGHTNING.flashDecay
-}
 
 /** 0..1 的固定偽亂數 */
 const rand = (i: number, k: number) => {
@@ -207,9 +165,4 @@ export function visibleSegments(segs: readonly BoltSegment[], reveal: number): n
   let n = 0
   while (n < segs.length && segs[n]!.appear < reveal) n++
   return n
-}
-
-/** 有閃電的步驟（c-2）：面板大數字等閃電打中才開始數（毫秒）；其他步驟 0 */
-export function bigNumberDelayMs(stage: Stage | undefined, reducedMotion: boolean): number {
-  return !reducedMotion && stage?.kind === 'shock' && stage.active ? IMPACT_TIME * 1000 : 0
 }

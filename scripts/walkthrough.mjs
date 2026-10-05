@@ -17,18 +17,19 @@ try {
   const page = await browser.newPage({ viewport: { width: Number(w), height: Number(h) }, hasTouch: mobile, isMobile: mobile })
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
   page.on('pageerror', (e) => errors.push(String(e)))
-  await page.goto(`${base}/?quality=high${themeQuery}`, { waitUntil: 'networkidle' })
-  const steps = await page.evaluate(() => window.__BCI_STEPS__)
-  for (let level = 0; level < steps.length; level++) {
-    for (let step = 0; step < steps[level]; step++) {
-      await page.goto(`${base}/?level=${level}&step=${step}&quality=high${themeQuery}`, { waitUntil: 'networkidle' })
+  await page.goto(`${base}/?quality=high&course=beginner${themeQuery}`, { waitUntil: 'networkidle' })
+  // 每門可上的課、照課程順序：檔名＝課程-編號-步驟 id
+  const courses = await page.evaluate(() => window.__BCI_COURSES__)
+  for (const [course, ids] of Object.entries(courses)) {
+    for (const [i, id] of ids.entries()) {
+      await page.goto(`${base}/?course=${course}&step=${id}&quality=high${themeQuery}`, { waitUntil: 'networkidle' })
       await page.waitForSelector('body[data-camera-seq]', { timeout: 15000 }).catch(() => {})
       await page
         .waitForSelector('body[data-camera-settled="true"]', { timeout: 15000 })
         .catch(() => page.waitForTimeout(3500))
       // 鏡頭停下後：文字淡入（每段 80ms）＋大數字長出來（600ms）＋色調漸變（400ms）
       await page.waitForTimeout(1500)
-      await page.screenshot({ path: `${out}/L${level}-S${step}.png`, timeout: 90000 }) // 軟體渲染＋連續繪製的步驟（計費表）截圖較慢
+      await page.screenshot({ path: `${out}/${course}-${String(i).padStart(2, '0')}-${id}.png`, timeout: 90000 }) // 軟體渲染＋連續繪製的步驟（計費表）截圖較慢
     }
   }
 } finally {

@@ -1,43 +1,38 @@
 import { describe, it, expect } from 'vitest'
-import { LEVELS, ROUTES } from '../tour/levels'
-import { positionOf } from '../tour/engine'
+import { COURSES } from '../tour/courses'
+import { emptyProgress, indexOfStep } from '../tour/engine'
 import { chapterStates } from './chapters'
 
-describe('chapterStates', () => {
-  it('marks done, current and todo chapters', () => {
-    const s = chapterStates(LEVELS, { level: 2, step: 0 }, { completed: ['prologue', 'stock'], sandboxUnlocked: false })
-    expect(s.map((c) => c.state)).toEqual(['done', 'done', 'current', 'todo', 'todo', 'todo', 'todo'])
-    expect(s.map((c) => c.clickable)).toEqual([true, true, true, false, false, false, false])
+const beginner = COURSES.find((c) => c.id === 'beginner')!
+const intermediate = COURSES.find((c) => c.id === 'intermediate')!
+const progress = (b: string[], m: string[] = [], sandboxUnlocked = false) => ({ ...emptyProgress(), completed: { beginner: b, intermediate: m, advanced: [] }, sandboxUnlocked })
+
+describe('chapterStates (per course)', () => {
+  it('lists the current course’s chapters with their icons and names', () => {
+    const s = chapterStates(intermediate, { course: 'intermediate', index: 0 }, progress([]))
+    expect(s.map((c) => `${c.icon}${c.name}`)).toEqual(['🔁複習', '🧱股票', '📜債券', '🚜基金', '🧩ETF', '🎓完成'])
+    expect(s.map((c) => c.index)).toEqual([0, 1, 2, 3, 4, 5])
   })
+
+  it('marks done, current and todo chapters', () => {
+    const s = chapterStates(beginner, { course: 'beginner', index: indexOfStep('beginner', 'b-3') }, progress(['prologue', 'stock']))
+    expect(s.map((c) => c.state)).toEqual(['done', 'done', 'current', 'todo', 'todo', 'todo'])
+    expect(s.map((c) => c.clickable)).toEqual([true, true, true, false, false, false])
+  })
+
   it('keeps a revisited completed chapter as current', () => {
-    const s = chapterStates(LEVELS, { level: 1, step: 0 }, { completed: ['prologue', 'stock'], sandboxUnlocked: false })
+    const s = chapterStates(beginner, { course: 'beginner', index: 2 }, progress(['prologue', 'stock']))
     expect(s[1]!.state).toBe('current')
     expect(s[1]!.clickable).toBe(true)
   })
-  it('makes everything clickable once the sandbox is unlocked', () => {
-    const s = chapterStates(LEVELS, { level: 0, step: 0 }, { completed: [], sandboxUnlocked: true })
-    expect(s.every((c) => c.clickable)).toBe(true)
-  })
-})
 
-describe('chapterStates in the simple route', () => {
-  const simple = ROUTES.simple!
-  it('lists only chapters with route steps, numbered in route order, and the recap-only chapter is 完成', () => {
-    const s = chapterStates(LEVELS, positionOf(LEVELS, 'b-3'), { completed: ['prologue', 'stock'], sandboxUnlocked: false }, simple)
-    expect(s.map((c) => c.index)).toEqual([0, 1, 2, 3, 4, 5, 6])
-    expect(s.map((c) => c.number)).toEqual([0, 1, 2, 3, 4, 5, 6])
-    expect(s.map((c) => c.state)).toEqual(['done', 'done', 'current', 'todo', 'todo', 'todo', 'todo'])
-    expect(s.map((c) => c.finish)).toEqual([false, false, false, false, false, false, true])
+  it('completing 初階 does not mark 中階 chapters done', () => {
+    const s = chapterStates(intermediate, { course: 'intermediate', index: 0 }, progress(['prologue', 'stock', 'bond', 'fund', 'etf', 'finish']))
+    expect(s.map((c) => c.state)).toEqual(['current', 'todo', 'todo', 'todo', 'todo', 'todo'])
   })
-  it('the full route never shows 完成', () => {
-    const s = chapterStates(LEVELS, { level: 0, step: 0 }, { completed: [], sandboxUnlocked: false })
-    expect(s.some((c) => c.finish)).toBe(false)
-    expect(s.map((c) => c.number)).toEqual([0, 1, 2, 3, 4, 5, 6])
-  })
-  it('skips chapters without route steps and renumbers the rest', () => {
-    const s = chapterStates(LEVELS, positionOf(LEVELS, 'e-1'), { completed: [], sandboxUnlocked: false }, ['p-1', 'e-1', 'u-6'])
-    expect(s.map((c) => c.index)).toEqual([0, 4, 6])
-    expect(s.map((c) => c.number)).toEqual([0, 1, 2])
-    expect(s[1]!.state).toBe('current')
+
+  it('makes everything clickable once the sandbox is unlocked', () => {
+    const s = chapterStates(intermediate, { course: 'intermediate', index: 0 }, progress([], [], true))
+    expect(s.every((c) => c.clickable)).toBe(true)
   })
 })

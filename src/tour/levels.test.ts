@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { universe } from '../data'
 import { isBasket } from '../data/schema'
 import { overlap } from '../sim/overlap'
-import { EXDIV_AFTER_PHASE, LEVELS, ROUTES } from './levels'
+import { EXDIV_AFTER_PHASE, LEVELS } from './levels'
+import { STEP_POOL } from './courses'
 import { exDivTimeline, principalTrap } from '../scene/layout/stages'
 import { towerTexts, trapTowerSpec } from '../scene/layout/towers'
 import { makeTextContext, pct0, wan } from './context'
@@ -19,7 +20,8 @@ import type { Universe } from '../data'
 import type { Stage, StageValues, Step } from './types'
 
 const ctx = makeTextContext(universe)
-const steps = LEVELS.flatMap((l) => l.steps)
+/** 規則測試遍歷整個步驟池（LEVELS＋課程專用的新步驟 m-0、m-fin） */
+const steps = [...STEP_POOL.values()]
 const PRESETS = ['sky', 'overview', 'tw', 'us', 'exchange', 'exchangeWide', 'exchangeSide', 'plaza', 'plazaNear', 'underground']
 
 /** 測試用：把指定產品的查證旗標清空（模擬「資料尚待查證」），驗證 ？ 的判斷邏輯仍然有效 */
@@ -76,6 +78,8 @@ describe('LEVELS', () => {
     expect(moreOf(byId('c-1'), ctx)).toContain('跌 30%')
     expect(moreOf(byId('c-2'), ctx)).toContain('只買台積電：−30.0%')
     expect(bigOf(byId('c-2'))!.fraction).toBeCloseTo(0.5631, 4) // 0.16893 / 0.3
+    // 色條的滿格＝只買台積電的跌幅：要寫出來，不然「跌 16.9%」配一條 56% 的條會誤會
+    expect(bigOf(byId('c-2'))!.note).toBe('整條＝只買台積電跌 30%')
   })
 
   it('renders every text without errors, non-empty, and never mentions 稅', () => {
@@ -493,9 +497,18 @@ describe('jargon diet (user test r1)', () => {
     expect(byId('f-6').mark).toBe('assumption') // 預設的前收手續費仍是假設值
   })
 
-  it('b-2 ranks the three bonds on the stage; b-3 stresses them', () => {
-    expect(byId('b-2').scene.stage).toEqual({ kind: 'bonds', stressed: false, ranks: true })
-    expect(byId('b-3').scene.stage).toMatchObject({ kind: 'bonds', stressed: true })
+  it('b-2 ranks the three bonds on the stage; b-3 stresses them with the tornado event', () => {
+    expect(byId('b-2').scene.stage).toEqual({ kind: 'bonds', ranks: true })
+    expect(byId('b-2').scene.event).toBeUndefined()
+    expect(byId('b-3').scene.stage).toEqual({ kind: 'bonds' })
+    expect(byId('b-3').scene.event).toEqual({ kind: 'tornado' })
+  })
+
+  it('c-1 gathers the lightning cloud, c-2 strikes', () => {
+    expect(byId('c-1').scene.stage).toEqual({ kind: 'shock' })
+    expect(byId('c-1').scene.event).toEqual({ kind: 'lightning', phase: 'gather' })
+    expect(byId('c-2').scene.stage).toEqual({ kind: 'shock' })
+    expect(byId('c-2').scene.event).toEqual({ kind: 'lightning', phase: 'strike' })
   })
 
   it('names the two biggest layers on f-2 (after the explode) and e-1', () => {
@@ -608,10 +621,14 @@ describe('jargon diet (user test r1)', () => {
   it('u-6 ends with a four-line recap and calls the sandbox 自由玩', () => {
     const u6 = byId('u-6')
     expect(u6.recap).toHaveLength(4)
-    for (const r of u6.recap!) {
+    const recaps = steps.flatMap((s) => s.recap ?? [])
+    expect(recaps.length).toBeGreaterThan(u6.recap!.length) // m-0、m-fin 也照同樣規則
+    for (const r of recaps) {
       expect(r.icon.length).toBeGreaterThan(0)
       expect(Array.from(r.text).length, r.text).toBeLessThanOrEqual(18)
       expect(forbiddenWordsIn(r.text)).toEqual([])
+      expect(r.text.includes('被'), r.text).toBe(false)
+      expect(jargonIn(r.text), r.text).toEqual([])
     }
     expect(T.finish).toBe('自由玩')
     for (const s of steps) for (const t of [lineOf(s, ctx), moreOf(s, ctx), resolve(s.fallbackLine), resolve(s.fallbackMore)]) {
@@ -620,26 +637,7 @@ describe('jargon diet (user test r1)', () => {
   })
 })
 
-describe('ROUTES', () => {
-  const order = steps.map((s) => s.id)
-  it('full walks every step', () => {
-    expect(ROUTES.full).toBeNull()
-  })
-  it('simple is the 17 kept steps, each one exists, in course order', () => {
-    const simple = ROUTES.simple!
-    expect(simple).toEqual(['p-1', 'p-2', 's-1', 's-2', 's-3', 'b-1', 'b-3', 'f-1', 'f-5', 'f-9', 'e-1', 'e-2', 'e-3', 'e-5', 'c-1', 'c-2', 'u-6'])
-    for (const id of simple) expect(order, id).toContain(id)
-    const idx = simple.map((id) => order.indexOf(id))
-    expect([...idx].sort((a, b) => a - b)).toEqual(idx)
-    expect(new Set(simple).size).toBe(simple.length)
-  })
-  it('simple ends with the recap step, and every chapter keeps at least one step', () => {
-    expect(byId(ROUTES.simple!.at(-1)!).recap).toBeDefined()
-    for (const l of LEVELS) expect(l.steps.some((s) => ROUTES.simple!.includes(s.id)), l.id).toBe(true)
-  })
-})
-
-describe('simple route copy stands on its own (no reference to a dropped step)', () => {
+describe('初階 copy stands on its own (no reference to a step that is only in 中階)', () => {
   it('b-3 says what 高收益債 is (b-2 that explained the three kinds is dropped)', () => {
     expect(moreOf(byId('b-3'), ctx)).toContain('高收益債＝')
   })
@@ -653,7 +651,7 @@ describe('simple route copy stands on its own (no reference to a dropped step)',
   })
 })
 
-describe('simple route user test r5', () => {
+describe('初階 user test r5', () => {
   it('f-9 makes the trap visible: the big number is the part of the payout that was your own principal', () => {
     const f9 = byId('f-9')
     const at = (periods: number) => bigOf(f9, { periods })!

@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 import { universe } from '../data'
-import { LEVELS, ROUTES } from '../tour/levels'
-import type { Route } from '../tour/types'
+import { availableCourses } from '../tour/courses'
+import type { CourseId } from '../tour/types'
 import { colorForKey } from '../scene/palette'
 import { parseEmphasis } from './emphasis'
-import { fallbackLevels } from './fallback'
+import { fallbackCourse } from './fallback'
 import { MarkIcon } from './MarkIcon'
 import { markPlacement } from './marks'
 import { T } from './strings'
@@ -28,24 +28,26 @@ function Line({ line }: { line: string }) {
   )
 }
 
-/** 文字版：預設完整版；上方兩顆按鈕可換成簡單版（只留簡單版的步驟） */
+/** 文字版：預設第一門課（初階）；上方按鈕選階，照那門課的章節列出 */
+const courses = availableCourses()
+
 export function FallbackApp() {
-  const [route, setRoute] = useState<Route>('full')
-  const levels = useMemo(() => fallbackLevels(LEVELS, universe, ROUTES[route]), [route])
+  const [id, setId] = useState<CourseId>(courses[0]!.id)
+  const levels = useMemo(() => fallbackCourse(courses.find((c) => c.id === id)!, universe), [id])
   return (
-    <main className="fallback" data-levels={levels.length}>
+    <main className="fallback" data-levels={levels.length} data-course={id}>
       <h1>{T.appTitle}</h1>
       <p className="hint">{T.fallbackIntro}</p>
-      <div className="fallback__routes" role="group" aria-label={T.route.switchLabel}>
-        {(['simple', 'full'] as const).map((r) => (
-          <button key={r} className="pill" aria-pressed={route === r} onClick={() => setRoute(r)}>
-            {T.route.names[r]}
+      <div className="fallback__courses" role="group" aria-label={T.course.pickLabel}>
+        {courses.map((c) => (
+          <button key={c.id} className="pill" aria-pressed={id === c.id} onClick={() => setId(c.id)}>
+            {c.name}
           </button>
         ))}
       </div>
       {levels.map((l) => (
         <section key={l.label} className="fallback__level">
-          <h2>{l.title ? `${l.label}・${l.title}` : l.label}</h2>
+          <h2>{l.label}</h2>
           <ol>
             {l.steps.map((s) => (
               <li key={s.id}>

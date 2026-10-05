@@ -3,6 +3,7 @@ import type { Picked } from '../store/sandbox'
 import type { Sector } from '../scene/layout/underground'
 import type { Mark } from '../ui/marks'
 import type { FeeRaceRow } from '../sim/feeRace'
+import type { EventSpec } from '../scene/events/types'
 
 export type { Mark }
 
@@ -16,8 +17,8 @@ export type Stage =
   | { kind: 'none' }
   | { kind: 'held'; items: HeldItem[] }
   | { kind: 'exdiv'; outcome: 'fill' | 'gap' }
-  /** ranks：每張借據下面寫「穩不穩、利息多少」 */
-  | { kind: 'bonds'; stressed: boolean; ranks?: boolean }
+  /** ranks：每張借據下面寫「穩不穩、利息多少」；受損程度由 scene.event（tornado）決定 */
+  | { kind: 'bonds'; ranks?: boolean }
   /** other：另一位經理人（怪手換顏色、標註不同） */
   | { kind: 'excavator'; meter: boolean; other?: boolean }
   /** etf false：只比同一檔基金的前收、後收兩座塔（導覽在 ETF 那一章之前，還沒教 0050）；預設 true（三座） */
@@ -25,7 +26,8 @@ export type Stage =
   | { kind: 'accumulate' }
   | { kind: 'principalTrap' }
   | { kind: 'ticker' }
-  | { kind: 'shock'; active: boolean }
+  /** 台積電跌 30% 的比較；烏雲與閃電由 scene.event（lightning gather／strike）決定 */
+  | { kind: 'shock' }
   | { kind: 'overlap'; a: string; b: string }
   | { kind: 'underground'; show: 'strata' | 'cores' | 'dig' | 'veins' | 'gold'; cores?: [string, string] }
 
@@ -50,6 +52,8 @@ export type SceneDirective = {
   explode?: number
   picked?: Picked
   stage?: Stage
+  /** 這一步發生的事件（龍捲風、閃電…；src/scene/events）：鏡頭停下後才發生，舞台讀它的進度 */
+  event?: EventSpec
   values?: Partial<StageValues>
   /** 城市大樓名稱標籤，預設 true */
   cityLabels?: boolean
@@ -116,17 +120,28 @@ export type Step = {
 }
 
 export type Level = { id: string; title: string; steps: Step[] }
+
+/** 三門獨立的課（初階／中階／高階） */
+export type CourseId = 'beginner' | 'intermediate' | 'advanced'
+/** 課程裡的一章：id 在同一門課內唯一；stepIds＝步驟池裡的步驟 id（照課程順序） */
+export type CourseChapter = { id: string; icon: string; name: string; stepIds: readonly string[] }
+/** available false＝還沒開放（開場卡、換階選單、網址都不能進入） */
+export type Course = { id: CourseId; name: string; tagline: string; chapters: readonly CourseChapter[]; available: boolean }
+/** 舊版（Plan 5 以前）的絕對位置：LEVELS 的章與步；只剩存檔／網址遷移在用 */
 export type Position = { level: number; step: number }
-/** 路線：簡單版只走一部分步驟（ROUTES.simple），完整版走全部 */
-export type Route = 'simple' | 'full'
-/** 路線裡的步驟 id（照課程順序）；null＝全部步驟 */
-export type RouteIds = readonly string[] | null
+/** 課程裡的位置：index＝課內扁平索引（0 起） */
+export type CoursePosition = { course: CourseId; index: number }
+/** 進度（每門課分開記）；sandboxUnlocked：上完任一門課就解鎖自由玩 */
 export type Progress = {
-  completed: string[]
-  sandboxUnlocked: boolean
-  pos?: Position
-  /** 存檔時所在步驟的 id：課程改版後用它找回位置（比 pos 可靠） */
+  /** 目前選的課；null＝還沒選（第一次來，顯示開場卡） */
+  course: CourseId | null
+  /** 存檔時所在步驟的 id（找回位置用） */
   stepId?: string
-  /** 選過的路線；沒有＝還沒選（第一次來）或舊存檔 */
-  route?: Route
+  /** 每門課已完成的章（章 id） */
+  completed: Record<CourseId, string[]>
+  /** 上完（走過結尾步）的課 */
+  finished: CourseId[]
+  sandboxUnlocked: boolean
+  /** 每門課最後停的步驟 id：換階回到還沒上完的課時從這裡繼續 */
+  lastStep?: Partial<Record<CourseId, string>>
 }

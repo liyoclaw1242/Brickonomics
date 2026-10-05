@@ -1,4 +1,5 @@
 import type { Quality } from '../quality'
+import type { EventTimeline, SpecOf } from './types'
 
 /**
  * b-3「經濟風暴」的龍捲風（純 TS）：路線、時間、每張借據什麼時候被打到、被打到之後長怎樣。
@@ -127,6 +128,18 @@ export const STRESSED: Record<BondKey, SlotState> = {
 
 /** 動畫全部結束（之後只剩龍捲風在旁邊原地轉） */
 export const STORM_DONE = Math.max(HIT_TIME.hy + STORM.damage, HIT_TIME.corp + STORM.shrug, STORM.sweep)
+
+/** 事件時間軸：到 STORM_DONE 所有方塊定型；之後龍捲風停在旁邊原地轉（持續繪製到離開這一步） */
+export const TORNADO_TIMELINE: EventTimeline<SpecOf<'tornado'>> = {
+  duration: () => STORM_DONE,
+  lingers: () => true,
+  numberDelay: () => 0,
+  aftermath: () => true,
+}
+
+/** 舞台讀事件時鐘用：t＝事件時間（null＝龍捲風還沒來） */
+export const tornadoHitAt = (t: number | null, key: BondKey): boolean => t !== null && isHit(key, t)
+export const tornadoSlotAt = (t: number | null, key: BondKey): SlotState => slotState(key, t ?? -Infinity)
 
 /** 進場淡入 0..1（前 0.5 秒長出來） */
 export const stormAppear = (t: number): number => smooth(t / 0.5)

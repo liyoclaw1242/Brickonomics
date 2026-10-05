@@ -1,7 +1,9 @@
 import { create } from 'zustand'
-import { LEVELS, ROUTES } from '../tour/levels'
-import { controlRange, DEFAULT_RANGES, DEFAULT_VALUES, firstPosition, nextPosition, parseProgress, prevPosition, sandboxPatchFor, serializeProgress, snapToRoute, stepAt } from '../tour/engine'
-import type { Position, Progress, Route, RouteIds, StageValues, Step, ValueKey } from '../tour/types'
+import {
+  chapterOfIndex, controlRange, courseById, DEFAULT_RANGES, DEFAULT_VALUES, emptyProgress, firstIndexOfChapter, nextCourse, nextIndex, parseProgress, prevIndex,
+  resumeInCourse, sandboxPatchFor, serializeProgress, stepAtCourse,
+} from '../tour/engine'
+import type { CourseId, CoursePosition, Progress, StageValues, Step, ValueKey } from '../tour/types'
 import { useSandbox } from './sandbox'
 
 const STORAGE_KEY = 'block-city-invest:progress'
@@ -33,80 +35,121 @@ export const VALUE_RANGES: Record<ValueKey, [number, number]> = {
 
 type TourState = {
   mode: 'tour' | 'sandbox'
-  /** 走哪條路線；null＝第一次來、還沒選（面板顯示開始卡片，導覽照完整版算） */
-  route: Route | null
-  pos: Position
+  /**
+   * 目前的課；null＝第一次來、還沒選（面板顯示開場卡，背景照初階第一步）。
+   * 和 progress.course 是同一件事（progress 是存檔用的那份）：選了課之後只由 enterStep 同時寫兩邊；
+   * chooseCourse／switchCourse 先把 course 設成非 null，enterStep 才知道「已選課、可以存」。
+   */
+  course: CourseId | null
+  pos: CoursePosition
   values: StageValues
   progress: Progress
-  enterStep: (pos: Position) => void
+  /** 進入課程裡的某一步（換課也走這裡） */
+  enterStep: (pos: CoursePosition) => void
+  /** 目前課程裡的第 index 步 */
+  enterIndex: (index: number) => void
+  /** 目前課程某一章的第一步（時間軸用） */
+  enterChapter: (chapter: number) => void
   next: () => void
   prev: () => void
   enterSandbox: () => void
-  restartTour: () => void
-  /** 開始卡片：選一條路線，從那條路線的第一步開始 */
-  chooseRoute: (r: Route) => void
-  /** 工具列切換路線：停在新路線裡「這一步或它之前」最近的一步 */
-  setRoute: (r: Route) => void
+  /** 從目前課程第一步重來（還沒選課時回到開場卡） */
+  restartCourse: () => void
+  /** 開場卡：選一門課，從第一步開始 */
+  chooseCourse: (id: CourseId) => void
+  /** 換階：那門課還沒上完、記得停在哪就回到那一步，否則第一步 */
+  switchCourse: (id: CourseId) => void
+  /** 結尾步的「下一階」：記下這門課上完，然後進下一門課（沒有可上的就去自由玩） */
+  goNextCourse: () => void
   setValue: (k: ValueKey, v: number) => void
+}
+
+/** 記下目前這章完成；finish＝整門課上完（同時解鎖自由玩） */
+function markDone(p: Progress, pos: CoursePosition, finish: boolean): Progress {
+  const ch = courseById(pos.course).chapters[chapterOfIndex(pos.course, pos.index)]
+  let out = p
+  const done = out.completed[pos.course]
+  if (ch && !done.includes(ch.id)) out = { ...out, completed: { ...out.completed, [pos.course]: [...done, ch.id] } }
+  if (finish) {
+    if (!out.finished.includes(pos.course)) out = { ...out, finished: [...out.finished, pos.course] }
+    if (!out.sandboxUnlocked) out = { ...out, sandboxUnlocked: true }
+  }
+  return out
 }
 
 export const useTour = create<TourState>()((set, get) => ({
   mode: 'tour',
-  route: 'full',
-  pos: { level: 0, step: 0 },
+  course: 'beginner',
+  pos: { course: 'beginner', index: 0 },
   values: { ...DEFAULT_VALUES },
-  progress: { completed: [], sandboxUnlocked: false },
+  progress: emptyProgress(),
   enterStep: (pos) => {
-    const step = stepAt(LEVELS, pos)
+    const step = stepAtCourse(pos)
     useSandbox.getState().applyScene(sandboxPatchFor(step.scene))
-    const progress = { ...get().progress, pos, stepId: step.id }
-    // 還沒選路線（開始卡片還在）就不存：不然下次來會被當成舊使用者、不再問
-    if (get().route !== null) saveProgress(progress)
-    set({ mode: 'tour', pos, values: { ...DEFAULT_VALUES, ...step.scene.values }, progress })
+    // 還沒選課（開場卡還在）就不存：不然下次來會被當成舊使用者、不再問
+    const chosen = get().course !== null
+    const prev = get().progress
+    const progress = chosen ? { ...prev, course: pos.course, stepId: step.id, lastStep: { ...prev.lastStep, [pos.course]: step.id } } : prev
+    if (chosen) saveProgress(progress)
+    set({ mode: 'tour', pos, ...(chosen ? { course: pos.course } : {}), values: { ...DEFAULT_VALUES, ...step.scene.values }, progress })
+  },
+  enterIndex: (index) => get().enterStep({ course: get().pos.course, index }),
+  enterChapter: (chapter) => {
+    const i = firstIndexOfChapter(get().pos.course, chapter)
+    if (i !== null) get().enterIndex(i)
   },
   next: () => {
     const { pos, progress } = get()
-    const n = nextPosition(LEVELS, pos, routeIds(get().route))
-    let p = progress
-    if (!n || n.level !== pos.level) {
-      const id = LEVELS[pos.level]!.id
-      if (!p.completed.includes(id)) p = { ...p, completed: [...p.completed, id] }
-    }
-    if (!n) p = { ...p, sandboxUnlocked: true }
+    const n = nextIndex(pos)
+    const p = n === null || chapterOfIndex(pos.course, n) !== chapterOfIndex(pos.course, pos.index) ? markDone(progress, pos, n === null) : progress
     if (p !== progress) {
       saveProgress(p)
       set({ progress: p })
     }
-    if (n) get().enterStep(n)
+    if (n !== null) get().enterIndex(n)
     else get().enterSandbox()
   },
   prev: () => {
-    const p = prevPosition(LEVELS, get().pos, routeIds(get().route))
-    if (p) get().enterStep(p)
+    const i = prevIndex(get().pos)
+    if (i !== null) get().enterIndex(i)
   },
   enterSandbox: () => {
     useSandbox.getState().resetSandbox()
     set({ mode: 'sandbox' })
   },
-  restartTour: () => get().enterStep(firstPosition(LEVELS, routeIds(get().route))),
-  chooseRoute: (r) => {
-    set({ route: r, progress: { ...get().progress, route: r } })
-    get().enterStep(firstPosition(LEVELS, ROUTES[r]))
+  restartCourse: () => {
+    if (get().course === null) {
+      // 還沒選過課：回到開場卡
+      set({ mode: 'tour' })
+      return
+    }
+    get().enterStep({ course: get().pos.course, index: 0 })
   },
-  setRoute: (r) => {
-    set({ route: r, progress: { ...get().progress, route: r } })
-    if (get().mode === 'tour') get().enterStep(snapToRoute(LEVELS, get().pos, ROUTES[r]))
-    else saveProgress(get().progress)
+  chooseCourse: (id) => {
+    set({ course: id })
+    get().enterStep({ course: id, index: 0 })
+  },
+  switchCourse: (id) => {
+    set({ course: id })
+    get().enterStep(resumeInCourse(get().progress, id))
+  },
+  goNextCourse: () => {
+    const { pos, progress } = get()
+    const p = markDone(progress, pos, true)
+    if (p !== progress) {
+      saveProgress(p)
+      set({ progress: p })
+    }
+    const to = nextCourse(pos.course)
+    if (to) get().chooseCourse(to)
+    else get().enterSandbox()
   },
   setValue: (k, v) => {
     // 導覽模式依目前步驟的範圍（例如 s-6 的時間軸停在配發那一刻）
-    const [lo, hi] = get().mode === 'tour' ? controlRange(stepAt(LEVELS, get().pos), k) : VALUE_RANGES[k]
+    const [lo, hi] = get().mode === 'tour' ? controlRange(stepAtCourse(get().pos), k) : VALUE_RANGES[k]
     const x = Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : lo
     set({ values: { ...get().values, [k]: x } })
   },
 }))
 
-/** 路線的步驟 id；還沒選路線時照完整版 */
-export const routeIds = (r: Route | null): RouteIds => ROUTES[r ?? 'full']
-
-export const currentStep = (s: { pos: Position }): Step => stepAt(LEVELS, s.pos)
+export const currentStep = (s: { pos: CoursePosition }): Step => stepAtCourse(s.pos)
