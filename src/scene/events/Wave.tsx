@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { BoxGeometry, type Group, type InstancedMesh, type Mesh, Object3D } from 'three'
+import { BoxGeometry, type Group, type InstancedMesh, Object3D } from 'three'
 import { useThemeStore } from '../../store/theme'
 import { THEMES } from '../theme'
 import { atPlaza } from '../stage/plaza'
@@ -9,7 +9,10 @@ import { WAVE, WAVE_DETAIL, surfaceY, waveAt, waveFinal } from './wave'
 import type { EventProps, SpecOf } from './types'
 
 /** 浪頭的泡沫：沿著水面小起伏的波峰排（每道波峰幾顆） */
-const FOAM_SIZE = 0.38
+const FOAM_SIZE = 0.17
+/** 浪湧到這個程度才有白浪；水花被拋到波峰上方多高 */
+const FOAM_FROM = 0.3
+const FOAM_TOSS = 0.9
 /** 浪花：噴多高、往外多遠、每顆多大 */
 const SPRAY_UP = 2.6
 const SPRAY_OUT = 1.6
@@ -19,7 +22,7 @@ const MIN_Y = 0.02
 
 /**
  * 🌊 大浪：一片半透明的水圍住目標的底部，水面一直有小起伏往右走；每道浪整片水湧起再退下（一上一下），
- * 浪頭打到時在目標旁噴一次浪花（不閃光、不加燈）。塔高由舞台依 waveStepAt 沿 leveragedPath 取。
+ * 浪頭打到時在目標旁噴一次浪花（不閃光、不加燈）。白浪與浪花都是圓的半透明水泡（不像浮冰，和 ❄️ 分開）；結束前水面的小起伏慢慢停下，終點是平的水面。塔高由舞台依 waveStepAt 沿 leveragedPath 取。
  * 水是一個分段的方塊：每幀只改頂面（與側面上緣）頂點的高度；flatShading 由著色器算法線，不必每幀重算。
  * 時間來自事件時鐘：t 為 null 時藏起來；clock.reduced 時直接畫終點（平靜的水面）。低畫質分段、泡沫、浪花都少。useFrame 內不配置物件。
  */
@@ -42,7 +45,6 @@ export function Wave({ spec, clock, quality }: EventProps<SpecOf<'wave'>>) {
   useEffect(() => () => geometry.dispose(), [geometry])
 
   const root = useRef<Group>(null)
-  const water = useRef<Mesh>(null)
   const foam = useRef<InstancedMesh>(null)
   const spray = useRef<InstancedMesh>(null)
   const dummy = useMemo(() => new Object3D(), [])
@@ -69,10 +71,12 @@ export function Wave({ spec, clock, quality }: EventProps<SpecOf<'wave'>>) {
     }
     pos.needsUpdate = true
 
-    // 泡沫：每顆固定在某一道波峰、某個 z，跟著波峰往右走；浪湧起時變大
+    // 白浪：每顆小水泡固定在某一道波峰、某個 z，跟著波峰往右走；浪湧得夠高才出現（FOAM_FROM 以下整個藏起來，不留小點）。
+    // 一部分水泡被拋到波峰上方（水花），全部是圓的、半透明：看起來是水，不是浮冰
     const fm = foam.current
+    const lift = Math.max(0, (s.swell - FOAM_FROM) / (1 - FOAM_FROM))
     if (fm) {
-      fm.visible = s.swell > 0.05
+      fm.visible = lift > 0
       for (let i = 0; i < detail.foam; i++) {
         const z = (rand(i, 1) - 0.5) * d * 0.92
         const m = i % crests
@@ -80,11 +84,11 @@ export function Wave({ spec, clock, quality }: EventProps<SpecOf<'wave'>>) {
         const x0 = (Math.PI / 2 + s.phase - 0.35 * z) / WAVE.kx + m * lambda + (rand(i, 2) - 0.5) * 0.6
         const span = crests * lambda
         const x = -w / 2 + ((((x0 + w / 2) % span) + span) % span)
-        // 只在浪湧起時有泡沫（平靜時、浪與浪之間縮成 0）；扁扁的一片浮在波峰上
-        const size = x < w / 2 - 0.2 ? FOAM_SIZE * (0.6 + rand(i, 3) * 0.8) * s.swell : 0
-        dummy.position.set(x, surfaceY(s, x, z) + 0.02, z)
-        dummy.rotation.set(0, i * 0.7, 0)
-        dummy.scale.set(Math.max(0.001, size * 1.6), Math.max(0.001, size * 0.35), Math.max(0.001, size))
+        const size = x < w / 2 - 0.2 ? FOAM_SIZE * (0.5 + rand(i, 3)) * lift : 0
+        const toss = i % 3 === 0 ? FOAM_TOSS * lift * (0.4 + rand(i, 7)) : 0
+        dummy.position.set(x, surfaceY(s, x, z) + size * 0.3 + toss, z)
+        dummy.rotation.set(0, 0, 0)
+        dummy.scale.setScalar(Math.max(0.001, size))
         dummy.updateMatrix()
         fm.setMatrixAt(i, dummy.matrix)
       }
@@ -122,16 +126,16 @@ export function Wave({ spec, clock, quality }: EventProps<SpecOf<'wave'>>) {
   const [px, py, pz] = atPlaza(cx, 0, cz)
   return (
     <group ref={root} position={[px, py, pz]} visible={false}>
-      <mesh ref={water} geometry={geometry} frustumCulled={false} renderOrder={1}>
+      <mesh geometry={geometry} frustumCulled={false} renderOrder={1}>
         <meshStandardMaterial color={theme.water} transparent opacity={theme.opacity} roughness={0.25} metalness={0.1} flatShading depthWrite={false} />
       </mesh>
       <instancedMesh ref={foam} args={[undefined, undefined, detail.foam]} frustumCulled={false} renderOrder={2} visible={false}>
-        <icosahedronGeometry args={[1, 0]} />
-        <meshStandardMaterial color={theme.foam} roughness={0.9} flatShading />
+        <icosahedronGeometry args={[1, 1]} />
+        <meshStandardMaterial color={theme.foam} roughness={0.6} transparent opacity={0.85} depthWrite={false} />
       </instancedMesh>
       <instancedMesh ref={spray} args={[undefined, undefined, sprayCount]} frustumCulled={false} visible={false}>
-        <icosahedronGeometry args={[1, 0]} />
-        <meshStandardMaterial color={theme.foam} roughness={0.9} flatShading />
+        <icosahedronGeometry args={[1, 1]} />
+        <meshStandardMaterial color={theme.foam} roughness={0.6} transparent opacity={0.85} depthWrite={false} />
       </instancedMesh>
     </group>
   )

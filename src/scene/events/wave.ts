@@ -100,7 +100,10 @@ export type WaveState = {
 }
 
 const NOTHING: WaveState = { level: 0, swell: 0, ripple: 0, phase: 0, spray: null }
-const FINAL: WaveState = { level: WAVE.rest, swell: 0, ripple: WAVE.rippleRest, phase: 0, spray: null }
+/** 終點：水面平的（小起伏在結束前 CALM 秒內慢慢停下，所以相位跳回 0 也看不出來） */
+const FINAL: WaveState = { level: WAVE.rest, swell: 0, ripple: 0, phase: 0, spray: null }
+/** 結束前多少秒開始讓小起伏停下 */
+const CALM = 0.8
 
 /** 浪花：浪頭打到後持續的秒數 */
 const SPRAY = 0.7
@@ -118,13 +121,13 @@ export function waveAt(spec: SpecOf<'wave'>, t: number | null): WaveState {
   return {
     level: WAVE.rest * ramp(t, WAVE.fillAt, WAVE.fill) + WAVE.lift * swell,
     swell,
-    ripple: WAVE.rippleRest + WAVE.ripple * swell,
+    ripple: (WAVE.rippleRest + WAVE.ripple * swell) * (1 - ramp(t, waveEnd(spec) - CALM, CALM)),
     phase: t * WAVE.speed,
     spray,
   }
 }
 
-/** 終點（減少動態時直接畫這個）：水面平靜在平時的高度 */
+/** 終點（減少動態時直接畫這個）：水面平靜（平的）在平時的高度 */
 export const waveFinal = (): WaveState => FINAL
 
 /** 水面在 x、z 的高度（相對地面）：平均高度＋沿 x 往右走的小起伏（z 方向稍微錯開） */
@@ -140,6 +143,6 @@ export const WAVE_TIMELINE: EventTimeline<SpecOf<'wave'>> = {
 
 /** 各畫質：水面沿 x、z 的分段數、浪頭的泡沫數、每個目標的浪花數 */
 export const WAVE_DETAIL: Record<Quality, { segX: number; segZ: number; foam: number; spray: number }> = {
-  high: { segX: 56, segZ: 10, foam: 36, spray: 10 },
-  low: { segX: 20, segZ: 4, foam: 12, spray: 4 },
+  high: { segX: 56, segZ: 10, foam: 60, spray: 10 },
+  low: { segX: 20, segZ: 4, foam: 20, spray: 4 },
 }

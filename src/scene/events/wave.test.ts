@@ -24,7 +24,7 @@ describe('wave timeline', () => {
   it('end = the final state: calm water at rest level, every step taken (2 per wave)', () => {
     expect(waveAt(spec, Infinity)).toEqual(waveFinal())
     expect(waveAt(spec, waveEnd(spec))).toEqual(waveFinal())
-    expect(waveFinal()).toEqual({ level: WAVE.rest, swell: 0, ripple: WAVE.rippleRest, phase: 0, spray: null })
+    expect(waveFinal()).toEqual({ level: WAVE.rest, swell: 0, ripple: 0, phase: 0, spray: null })
     expect(waveStepAt(spec, Infinity)).toBe(10)
     expect(waveStepAt(spec, waveEnd(spec))).toBeCloseTo(10, 12)
   })
@@ -130,6 +130,18 @@ describe('every hit knocks the 2× tower down (槓桿塔每次被打矮一截)',
       expect(after).toBeLessThan(before)
       expect(after / before).toBeCloseTo(0.8, 9) // 2 × (−10%) = −20%
     }
+  })
+})
+
+describe('no snap at the end', () => {
+  it('the ripple fades to 0 just before the end, so the surface just before = the flat final surface', () => {
+    const end = waveEnd(spec)
+    const before = waveAt(spec, end - 1e-6)
+    expect(before.ripple).toBeLessThan(1e-6)
+    expect(before.level).toBeCloseTo(waveFinal().level, 9)
+    for (const x of [-9, -3, 0, 4, 8]) expect(surfaceY(before, x, 1)).toBeCloseTo(surfaceY(waveFinal(), x, 1), 5)
+    // 小起伏在 end − 0.8 之前還在
+    expect(waveAt(spec, end - 1).ripple).toBeGreaterThan(0.04)
   })
 })
 
