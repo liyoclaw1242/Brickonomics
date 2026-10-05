@@ -136,34 +136,36 @@ describe('a-dt day-trade drain', () => {
 })
 
 describe('a-dur short vs long seesaw (❄️)', () => {
-  it('durNow: rates 2% → 3% take a 2-year IOU down 1.91% and a 20-year IOU down 14.88% (sim/duration)', () => {
+  it('durNow: rates 2% → 3% take a 2-year IOU down 1.91% and a 20-year IOU down 14.88% (sim/duration); the slider goes up to 5% (adv-r1: +1% was too narrow)', () => {
     expect(durNow(0.02)).toMatchObject({ short: 0, long: 0 })
     const n = durNow(0.03)
     expect(n.short).toBeCloseTo(priceChange(2, 0.02, 0.03), 12)
     expect(n.short).toBeCloseTo(-0.0191, 4)
     expect(n.long).toBeCloseTo(-0.1488, 4)
-    // 拉桿限制在 2%..3%
-    expect(durNow(0.5).rate).toBe(0.03)
+    // 2% → 5%：20 年＝2 × annuity(5%, 20) + 100 ÷ 1.05^20 = 62.61 → −37.4%；2 年＝2/1.05 + 102/1.05² = 94.42 → −5.6%
+    expect(DUR_LAYOUT.rateMax).toBe(0.05)
+    expect(durNow(0.05).long).toBeCloseTo(-0.3739, 3)
+    expect(durNow(0.05).short).toBeCloseTo(-0.0558, 3)
+    expect(durNow(0.5).rate).toBe(0.05)
     expect(durNow(Number.NaN).rate).toBe(0.02)
   })
-  it('durPose: the plank tilts by the price drop × tilt; the long plank is longer, so its end drops much more', () => {
-    const s = durPose('short', 0.03)
-    const l = durPose('long', 0.03)
-    expect(s.theta).toBeCloseTo(0.0191 * DUR_LAYOUT.tilt, 3)
-    expect(l.theta).toBeCloseTo(0.1488 * DUR_LAYOUT.tilt, 3)
+  it('durPose: the plank tilts by the price drop × tilt; the long plank is longer, so its end drops much more — and never below the ground at 5%', () => {
+    const s = durPose('short', 0.05)
+    const l = durPose('long', 0.05)
+    expect(s.theta).toBeCloseTo(0.0558 * DUR_LAYOUT.tilt, 3)
+    expect(l.theta).toBeCloseTo(0.3739 * DUR_LAYOUT.tilt, 3)
     const drop = (p: typeof s) => DUR_LAYOUT.pivotY - p.right[1]
-    expect(drop(l) / drop(s)).toBeGreaterThan(20) // 長板 × 更大的角度
+    expect(drop(l) / drop(s)).toBeGreaterThan(15)
+    expect(l.right[1] - DUR_LAYOUT.thick / 2).toBeGreaterThan(0)
     expect(durPose('long', 0.02).theta).toBe(0)
   })
-  it('the cold front frosts both IOUs where they sit at 3%, the 20-year one by its length (thicker frost)', () => {
+  it('the cold front frosts both IOUs where they sit at the top of the range, the 20-year one by its length (thicker frost)', () => {
     const f = durFreeze()
     expect(f.kind).toBe('freeze')
     expect(f.targets.map((t) => t.length)).toEqual([2, 20])
-    const [sx, sy] = durPose('short', 0.03).right
+    const [sx, sy] = durPose('short', DUR_LAYOUT.rateMax).right
     expect(f.targets[0]!.at[0]).toBeCloseTo(DUR_LAYOUT.x.short + sx, 12)
     expect(f.targets[0]!.at[1]).toBeCloseTo(sy + DUR_LAYOUT.thick / 2, 12)
-    expect(f.targets[0]!.at[2]).toBe(DUR_LAYOUT.z.short)
-    expect(f.targets[1]!.at[2]).toBe(DUR_LAYOUT.z.long)
   })
 })
 

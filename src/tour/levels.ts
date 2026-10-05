@@ -6,7 +6,7 @@ import { T } from '../ui/strings'
 import { DD_DEMO, DD_TROUGH, ddNow, ddQuake, PE_DEMO, peBubble, peYears, RATE_DEMO, rateFreeze, ratePrice, DCA_DEMO, dcaNow, dcaSunny, INFL_DEMO, inflHeat, inflReal } from '../scene/layout/intermediate'
 import { maxDrawdown } from '../sim/drawdown'
 import { STORMS } from '../sim/portfolio'
-import { corrLightning, corrNow, DT_RANGE, dtNow, durFreeze, durNow, feeSunny, feeTreesNow, HEDGE_CASES, hedgeCaseIndex, hedgeQuake, levNow, levWave, PORT_LAYOUT, PORT_MAX_BOND, portNow, rebalNow } from '../scene/layout/advanced'
+import { corrLightning, corrNow, DT_RANGE, DUR_LAYOUT, dtNow, durFreeze, durNow, feeSunny, feeTreesNow, HEDGE_CASES, hedgeCaseIndex, hedgeQuake, levNow, levWave, PORT_LAYOUT, PORT_MAX_BOND, portNow, rebalNow } from '../scene/layout/advanced'
 import { LEVERAGE } from '../sim/leverage'
 import { HEDGE } from '../sim/hedge'
 import { REBALANCE } from '../sim/rebalance'
@@ -714,7 +714,7 @@ export const COURSE_STEPS: Step[] = [
     // 等閃電打中才數（事件的 numberDelay）
     bigNumber: () => {
       const n = corrNow()
-      return { value: `${pct0(Math.abs(n.mixTogether) * 100)}% vs ${pct0(Math.abs(n.mixOpposite) * 100)}%`, label: '⚡ 那天，兩顆合起來跌', note: '一起動 vs 一上一下；各放一半', colorKey: 'loss', mark: 'illustrative' }
+      return { value: `${pct0(Math.abs(n.mixTogether) * 100)}% vs ${pct0(Math.abs(n.mixOpposite) * 100)}%`, label: '⚡ 那天，兩顆合起來跌', note: '各放一半。一起不一起動，這叫相關性', colorKey: 'loss', mark: 'illustrative' }
     },
     scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'correlation' }, event: corrLightning(), cityLabels: false },
   },
@@ -763,9 +763,9 @@ export const COURSE_STEPS: Step[] = [
     id: 'a-dur',
     title: '長短借據',
     line: '拖**市場利率**。**長借據|long**跌更多',
-    fallbackLine: () => `利率漲 ${pct1(DURATION.rateTo - DURATION.rateFrom)}。長借據跌 **${pctAbs1(durNow(DURATION.rateTo).long)}|loss**`,
+    fallbackLine: () => `利率漲 ${pct1(DUR_LAYOUT.rateMax - DURATION.rateFrom)}。長借據跌 **${pctAbs1(durNow(DUR_LAYOUT.rateMax).long)}|loss**`,
     more: () =>
-      `存續期間＝大約還要多久才拿回錢。越長，利率一動，價格動越多。利率跌時，長借據也漲比較多。示意：${DURATION.short} 年和 ${DURATION.long} 年，利率 ${pct1(DURATION.rateFrom)} 漲到 ${pct1(DURATION.rateTo)}。`,
+      `存續期間＝大約還要多久才拿回錢。越長，利率一動，價格動越多。利率跌時，長借據也漲比較多。示意：${DURATION.short} 年和 ${DURATION.long} 年，利率從 ${pct1(DURATION.rateFrom)} 漲上去。`,
     mark: 'illustrative',
     // 還沒拖時不顯示；note 一直提醒到期還是拿回 100
     bigNumber: (_c, v) => {
@@ -774,16 +774,17 @@ export const COURSE_STEPS: Step[] = [
       return {
         value: `${pctAbs1(d.short)} vs ${pctAbs1(d.long)}`,
         label: '短借據 vs 長借據跌',
-        note: `利率 ${pct1(DURATION.rateFrom)}→${T.controls.rateValue(d.rate)}；到期都拿回 100`,
+        // adv-r1：「存續期間」這個詞要在畫面上接起來（先看到翹翹板，再命名）
+        note: `越長晃越大，這叫存續期間。到期都拿回 100`,
         colorKey: 'loss',
         mark: 'illustrative',
       }
     },
     compare: true,
-    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'duration' }, event: durFreeze(), eventWhen: { control: 'rate', min: DURATION.rateTo }, values: { rate: DURATION.rateFrom }, cityLabels: false },
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'duration' }, event: durFreeze(), eventWhen: { control: 'rate', min: DUR_LAYOUT.rateMax }, values: { rate: DURATION.rateFrom }, cityLabels: false },
     controls: ['rate'],
-    ranges: { rate: [DURATION.rateFrom, DURATION.rateTo] },
-    until: { control: 'rate', min: DURATION.rateTo },
+    ranges: { rate: [DURATION.rateFrom, DUR_LAYOUT.rateMax] },
+    until: { control: 'rate', min: DUR_LAYOUT.rateMax },
   },
   {
     // 高階基金章：主動 vs 被動 30 年。扣費前報酬假設一樣（示意 6%），只差每年的內扣費用（資料：1.88% vs 0.14%）；

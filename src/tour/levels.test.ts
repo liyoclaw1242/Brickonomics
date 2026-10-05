@@ -975,7 +975,7 @@ describe('Plan 8 高階: 一起跌或抵消 (a-corr)', () => {
     expect(stripMarkup(lineOf(s(), ctx))).toBe('一起動的一起跌，一上一下的抵消')
   })
   it('big number: half-half, together falls 6% and opposite 0% that day (−8 − 4) ÷ 2, (−8 + 8) ÷ 2', () => {
-    expect(bigOf(s())).toEqual({ value: '6% vs 0%', label: '⚡ 那天，兩顆合起來跌', note: '一起動 vs 一上一下；各放一半', colorKey: 'loss', mark: 'illustrative' })
+    expect(bigOf(s())).toEqual({ value: '6% vs 0%', label: '⚡ 那天，兩顆合起來跌', note: '各放一半。一起不一起動，這叫相關性', colorKey: 'loss', mark: 'illustrative' })
     expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('一起動跌 6%。一上一下 0%')
   })
   it('the more text is honest: correlation changes and in big falls things often fall together', () => {
@@ -1035,23 +1035,24 @@ describe('Plan 8 高階: 當沖的成本 (a-dt)', () => {
 
 describe('Plan 8 高階: 長短借據 (a-dur)', () => {
   const s = () => byId('a-dur')
-  it('drag the market rate 2% → 3%: the gate and the cold front are both at 3%', () => {
-    expect(controlRange(s(), 'rate')).toEqual([0.02, 0.03])
+  it('drag the market rate 2% → 5% (adv-r1: +1% was too narrow); the gate and the cold front are both at 5%', () => {
+    expect(controlRange(s(), 'rate')).toEqual([0.02, 0.05])
     expect(s().scene.values?.rate).toBe(0.02)
-    expect(s().until).toEqual({ control: 'rate', min: 0.03 })
+    expect(s().until).toEqual({ control: 'rate', min: 0.05 })
     expect(s().scene.eventWhen).toEqual(s().until)
     expect(s().scene.event).toMatchObject({ kind: 'freeze' })
     expect(stripMarkup(lineOf(s(), ctx))).toBe('拖市場利率。長借據跌更多')
   })
-  it('big number: 2-year −1.9% vs 20-year −14.9% at 3% (hidden before the drag); held to maturity both return 100', () => {
+  it('big number follows the slider (hidden before the drag): 1.9% vs 14.9% at 3%, 5.6% vs 37.4% at 5%; the note names 存續期間', () => {
     expect(bigOf(s(), { rate: 0.02 })).toBeUndefined()
-    expect(bigOf(s(), { rate: 0.03 })).toEqual({ value: '1.9% vs 14.9%', label: '短借據 vs 長借據跌', note: '利率 2%→3%；到期都拿回 100', colorKey: 'loss', mark: 'illustrative' })
-    expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('利率漲 1%。長借據跌 14.9%')
+    expect(bigOf(s(), { rate: 0.03 })!.value).toBe('1.9% vs 14.9%')
+    expect(bigOf(s(), { rate: 0.05 })).toEqual({ value: '5.6% vs 37.4%', label: '短借據 vs 長借據跌', note: '越長晃越大，這叫存續期間。到期都拿回 100', colorKey: 'loss', mark: 'illustrative' })
+    expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('利率漲 3%。長借據跌 37.4%')
   })
-  it('the more text says both directions (rates falling lift the long IOU more) and the example numbers', () => {
+  it('the more text says both directions (rates falling lift the long IOU more) and the example', () => {
     expect(moreOf(s(), ctx)).toContain('存續期間＝')
     expect(moreOf(s(), ctx)).toContain('利率跌時，長借據也漲比較多')
-    expect(moreOf(s(), ctx)).toContain('示意：2 年和 20 年，利率 2% 漲到 3%')
+    expect(moreOf(s(), ctx)).toContain('示意：2 年和 20 年，利率從 2% 漲上去')
   })
 })
 

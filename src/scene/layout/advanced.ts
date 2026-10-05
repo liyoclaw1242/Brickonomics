@@ -166,10 +166,12 @@ export function dtTower(trades: number, discount = 1, winRate: number = DAY_TRAD
  * half＝板子半長；tilt＝價格每少 100% 斜多少（弧度；放大看得出來，示意）；x、z＝支點的位置。
  */
 export const DUR_LAYOUT = {
-  pivotY: 2.4,
+  /** 市場利率拉桿的上限（從 DURATION.rateFrom 起；adv-r1：只拉 1% 太窄，這幾年動了好幾 %） */
+  rateMax: 0.05,
+  pivotY: 3.2,
   thick: 0.35,
   width: 2.4,
-  tilt: 2,
+  tilt: 0.8,
   half: { short: 3.2, long: 9.5 },
   x: { short: -10.5, long: 6 },
   z: { short: 0, long: 0 },
@@ -180,9 +182,9 @@ export const DUR_LAYOUT = {
 
 export type DurKey = 'short' | 'long'
 
-/** 拉桿值 → 市場利率（限制在 DURATION.rateFrom..rateTo）與兩張借據的價格變動（比例） */
+/** 拉桿值 → 市場利率（限制在 DURATION.rateFrom..DUR_LAYOUT.rateMax）與兩張借據的價格變動（比例） */
 export function durNow(rate: number): { rate: number; short: number; long: number } {
-  const r = Math.min(DURATION.rateTo, Math.max(DURATION.rateFrom, Number.isFinite(rate) ? rate : DURATION.rateFrom))
+  const r = Math.min(DUR_LAYOUT.rateMax, Math.max(DURATION.rateFrom, Number.isFinite(rate) ? rate : DURATION.rateFrom))
   return { rate: r, short: priceChange(DURATION.short, DURATION.rateFrom, r), long: priceChange(DURATION.long, DURATION.rateFrom, r) }
 }
 
@@ -196,13 +198,14 @@ export function durPose(k: DurKey, rate: number): { theta: number; left: [number
   return { theta, left: [-c, DUR_LAYOUT.pivotY + s], right: [c, DUR_LAYOUT.pivotY - s] }
 }
 
-/** 寒流：兩張借據在 3% 時坐的位置；length＝年期（20 年那張霜更厚）。參數固定，拉到 3% 才打開（scene.eventWhen） */
+/** 寒流：兩張借據在拉桿最上面（5%）時坐的位置；length＝年期（20 年那張霜更厚）。參數固定，拉到頂才打開（scene.eventWhen） */
 export function durFreeze(): SpecOf<'freeze'> {
   const target = (k: DurKey) => {
-    const [x, y] = durPose(k, DURATION.rateTo).right
+    const [x, y] = durPose(k, DUR_LAYOUT.rateMax).right
     return { at: [DUR_LAYOUT.x[k] + x, y + DUR_LAYOUT.thick / 2, DUR_LAYOUT.z[k]] as Vec3, size: DUR_LAYOUT.bond, length: DURATION[k] }
   }
-  return { kind: 'freeze', amount: 0.9, targets: [target('short'), target('long')] }
+  // 霜薄一點：借據的顏色還看得出來（adv-r1：結霜後像消失）
+  return { kind: 'freeze', amount: 0.6, targets: [target('short'), target('long')] }
 }
 
 // ───────────── a-fee30 主動 vs 被動 30 年（🌤 晴天大樹） ─────────────
