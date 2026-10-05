@@ -32,12 +32,14 @@ export function InflationStage({ event }: { event: EventClock }) {
     if (!m || !heat) return
     // 半徑不變、只有高度變矮：剩下的高度＝剩下的利息（約 39%）
     const k = Math.max(0.001, coinScaleAt(heat, event.reduced ? Infinity : event.t.current))
-    const r = inflStack(k).radius
+    const { radius: r, height } = inflStack(k)
+    // 每枚金幣的厚度＝整疊高度 ÷ 枚數（高度只從 inflStack 來）
+    const pitch = height / INFL_LAYOUT.perStack
     coins.forEach((c, i) => {
       for (let j = 0; j < INFL_LAYOUT.perStack; j++) {
-        dummy.position.set(...atPlaza(c[0], c[1] + (j + 0.5) * INFL_LAYOUT.coinH * k, c[2]))
+        dummy.position.set(...atPlaza(c[0], c[1] + (j + 0.5) * pitch, c[2]))
         dummy.rotation.set(0, j * 0.4, 0)
-        dummy.scale.set(r, k, r)
+        dummy.scale.set(r, pitch / INFL_LAYOUT.coinH, r)
         dummy.updateMatrix()
         m.setMatrixAt(i * INFL_LAYOUT.perStack + j, dummy.matrix)
       }
