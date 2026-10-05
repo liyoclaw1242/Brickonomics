@@ -13,10 +13,15 @@ import { lookFor } from '../palette'
 import { acquire } from '../continuous'
 import { atPlaza } from './plaza'
 import { displayName } from '../../ui/names'
+import { T } from '../../ui/strings'
 
 const SIZE = 2.4
 const SPACING = 7
 const TARGET_SCALE = HELD_SCALE
+/** 殘影放在晃動幅度的幾倍處（示意：讓靜止畫面也看得出幅度差多少） */
+const GHOST_SPREAD = 2.2
+/** 幅度到這裡算「晃得大」 */
+const BIG_SHAKE = 0.3
 
 function HeldBlock({ item, x }: { item: HeldItem; x: number }) {
   const ref = useRef<Mesh>(null)
@@ -60,6 +65,18 @@ function HeldBlock({ item, x }: { item: HeldItem; x: number }) {
         <boxGeometry args={[SIZE, SIZE, SIZE]} />
         <meshStandardMaterial color={look.color} emissive={item.motion === 'up' ? look.color : '#000000'} emissiveIntensity={item.motion === 'up' ? 0.25 : 0} />
       </mesh>
+      {/* 晃動的兩端留下淡淡的殘影（mid-r1：靜止截圖裡看不出誰在晃）：晃得越兇，兩個殘影分得越開 */}
+      {item.motion === 'shake' &&
+        [-1, 1].map((side) => {
+          const amp = item.amplitude ?? 0.15
+          return (
+            <mesh key={side} position={[side * amp * GHOST_SPREAD, SIZE / 2, 0]} rotation-z={side * amp * 0.15 * GHOST_SPREAD}>
+              <boxGeometry args={[SIZE, SIZE, SIZE]} />
+              <meshBasicMaterial color={look.color} transparent opacity={0.16} depthWrite={false} />
+              <Edges color={look.color} />
+            </mesh>
+          )
+        })}
       {/* 原來大小的虛線框：變大、變小有個比較的基準（r3：只大一點點看不出來）；不被方塊擋住 */}
       {(item.motion === 'up' || item.motion === 'down') && (
         <mesh position={[0, SIZE / 2, 0]}>
@@ -69,7 +86,7 @@ function HeldBlock({ item, x }: { item: HeldItem; x: number }) {
         </mesh>
       )}
       {/* 標註放在方塊前方的地上（鏡頭從上往下看，放頭頂會蓋住方塊）；示意標示只在面板標題旁出現一次 */}
-      <Callout anchor={[0, 0.1, (SIZE * TARGET_SCALE[item.motion]) / 2]} offset={[0, -0.3, 1.6]} title={displayName(universe, item.assetId)} persistent={item.motion !== 'still'} />
+      <Callout anchor={[0, 0.1, (SIZE * TARGET_SCALE[item.motion]) / 2]} offset={[0, -0.3, 1.6]} title={displayName(universe, item.assetId)} sub={item.motion === 'shake' ? ((item.amplitude ?? 0.15) >= BIG_SHAKE ? T.stage.shake.big : T.stage.shake.small) : undefined} persistent={item.motion !== 'still'} />
     </group>
   )
 }

@@ -110,6 +110,8 @@ export const T = {
   },
   stage: {
     held: '你手上的方塊',
+    /** s-4：殘影分得多開（示意） */
+    shake: { small: '晃得小', big: '晃得大' },
     bonds: { stock: '股票方塊', gov: '國家債', corp: '公司債', hy: '高收益債' },
     bondRanks: { gov: '最穩・利息少', corp: '中間', hy: '不穩・利息多' },
     /** 借給誰（r5：初階沒有 b-2，三個名字一次出現卻沒說借給誰） */

@@ -500,6 +500,7 @@ describe('jargon diet (user test r1)', () => {
 
   it('renames s-4 and drops the frontLoad slider from f-6', () => {
     expect(byId('s-4').title).toBe('有的晃很兇')
+    expect(stripMarkup(lineOf(byId('s-4'), ctx))).toBe('晃越兇，跌起來通常越深') // mid-r1：接到最大跌幅
     expect(byId('f-6').controls).toEqual(['years'])
     expect(byId('f-6').mark).toBe('assumption') // 預設的前收手續費仍是假設值
   })
