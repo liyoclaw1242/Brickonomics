@@ -556,7 +556,7 @@ export const COURSE_STEPS: Step[] = [
       `利率漲，舊借據的價格就跌，像翹翹板。新借據給更多利息，舊的只好便宜賣。借的人沒出問題，到期拿回 100 元。這是示意，舉例 ${RATE_DEMO.years} 年、每年利息 ${pct1(RATE_DEMO.coupon)}。`,
     mark: 'illustrative',
     // 跟著拉桿：舊借據現在值多少（面額 100）；note 一直提醒到期還是拿回 100
-    bigNumber: (_c, v) => ({ value: `約 ${n0(ratePrice(v.rate))} 元`, label: '舊借據現在值', note: '借的人沒出問題，到期拿回 100 元。中途要賣，才會吃虧', mark: 'illustrative' }),
+    bigNumber: (_c, v) => ({ value: `約 ${n0(ratePrice(v.rate))} 元`, label: '舊借據現在值', note: '借的人沒出問題，到期拿回 100 元。中途要賣，價格才會比較低', mark: 'illustrative' }),
     scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'seesaw' }, event: rateFreeze(), eventWhen: { control: 'rate', min: RATE_DEMO.to }, values: { rate: RATE_DEMO.from }, cityLabels: false },
     controls: ['rate'],
     ranges: { rate: [RATE_DEMO.from, RATE_DEMO.to] },
@@ -588,7 +588,7 @@ export const COURSE_STEPS: Step[] = [
     fallbackLine: () => `平均成本約 **${dcaNow(DCA_DEMO.prices.length).result.avgCost.toFixed(1)} 元**`,
     more: () => {
       const r = dcaNow(DCA_DEMO.prices.length).result
-      return `定期定額＝每月投入一樣的錢，這是示意。平均成本 ${r.avgCost.toFixed(1)} 元，比平均價格 ${r.avgPrice.toFixed(1)} 元低。這是算術，只是讓成本平均，不比一次買完好。不保證賺錢，價格一路跌，一樣會賠。`
+      return `定期定額＝每月投入一樣的錢，這是示意。平均成本 ${r.avgCost.toFixed(1)} 元，比平均價格 ${r.avgPrice.toFixed(1)} 元低。這是算術，只是讓成本平均，不一定比一次買完好。不保證賺錢，價格一路跌，一樣會賠。`
     },
     mark: 'illustrative',
     bigNumber: (_c, v) => {
