@@ -6,7 +6,10 @@ import { T } from '../ui/strings'
 import { DD_DEMO, DD_TROUGH, ddNow, ddQuake, PE_DEMO, peBubble, peYears, RATE_DEMO, rateFreeze, ratePrice, DCA_DEMO, dcaNow, dcaSunny, INFL_DEMO, inflHeat, inflReal } from '../scene/layout/intermediate'
 import { maxDrawdown } from '../sim/drawdown'
 import { STORM } from '../sim/portfolio'
-import { corrLightning, corrNow, PORT_LAYOUT, PORT_MAX_BOND, portNow } from '../scene/layout/advanced'
+import { corrLightning, corrNow, dtNow, PORT_LAYOUT, PORT_MAX_BOND, portNow } from '../scene/layout/advanced'
+import { DAY_TRADE, DAY_TRADE_COST, dayTradeCostVerified } from '../sim/dayTrade'
+import { DAY_TRADE_RESEARCH, researchVerified, type ResearchId } from '../data/research'
+import type { ResearchRow } from './types'
 
 /**
  * 課程內文。數字一律由 TextContext 即時計算。
@@ -21,6 +24,9 @@ const n0 = (v: number): string => v.toFixed(0)
 /** 0.015 → '1.5%' */
 const pct1 = (r: number): string => `${Number((r * 100).toFixed(2))}%`
 const NICK = T.nick
+/** 0.00435 → '0.435%'；0.001425 → '0.1425%'（交易成本要看到小數） */
+const pct3 = (r: number): string => `${(r * 100).toFixed(3)}%`
+const pct4 = (r: number): string => `${Number((r * 100).toFixed(4))}%`
 /** 股票＋借據以外剩下的（現金等）：標註寫出來，加起來才看得到 100（mid-r2：34＋64＝98，剩下的呢） */
 const restPct = (c: TextContext, productId: string): number => Math.max(0, 100 - c.assetClassPct(productId, 'stock') - c.assetClassPct(productId, 'bond'))
 /** f-6 的後收級別（出門費＝遞延手續費 CDSC） */
@@ -39,6 +45,13 @@ const perMillion = (er: number): string => T.yuan(er * 1_000_000)
 
 /** 時間軸上「發金幣那一刻」的位置；s-5 拉到這裡為止（大數字只算到這一刻，合計永遠不變） */
 export const EXDIV_AFTER_PHASE = 0.5
+
+/** 研究數據卡的一列：數字從資料（不到／剛好），沒查證就標 ？ */
+const researchRow = (id: ResearchId, text: string): ResearchRow => {
+  const f = DAY_TRADE_RESEARCH[id]
+  const v = `${pct0(f.value * 100)}%`
+  return { value: f.bound === 'lessThan' ? `不到 ${v}` : v, text, ...(researchVerified(id) ? {} : { mark: 'unverified' as const }) }
+}
 
 /** 初階口訣：初階結尾（u-6）與中階開頭的複習（m-0）用同一份 */
 const BEGINNER_RECAP: RecapLine[] = [
@@ -671,5 +684,37 @@ export const COURSE_STEPS: Step[] = [
       return { value: `${pct0(Math.abs(n.mixTogether) * 100)}% vs ${pct0(Math.abs(n.mixOpposite) * 100)}%`, label: '⚡ 那天，兩顆合起來跌', note: '一起動 vs 一上一下；各放一半', colorKey: 'loss', mark: 'illustrative' }
     },
     scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'correlation' }, event: corrLightning(), cityLabels: false },
+  },
+  {
+    // 高階股票章：當沖的成本。勝率五五波、賺賠都 1%（示意）：不算成本是公平的遊戲；
+    // 每次進出付兩次手續費（公告上限）＋賣出的交易成本（TW_TRADING），本金一路磨掉。不教怎麼當沖，只說為什麼多數人賠
+    id: 'a-dt',
+    title: '當沖的成本',
+    line: '拖**進出次數**。看**交易成本|loss**吃掉多少',
+    fallbackLine: () => `進出 ${DAY_TRADE.trades} 次。本金剩 **${wan(dtNow(DAY_TRADE.trades).capital)}**`,
+    more: () =>
+      `每次進出共付 ${pct3(DAY_TRADE.costPerTrade)} 的交易成本。手續費用公告上限 ${pct4(DAY_TRADE_COST.buyFee)}，常打折。賺賠各 ${pct1(DAY_TRADE.avgWin)}、一年 ${DAY_TRADE.trades} 次是示意。勝率五五波，成本照樣把本金磨掉。`,
+    mark: 'illustrative',
+    // 還沒拖時不顯示；成本有一項沒查證就標 ？
+    bigNumber: (_c, v) => {
+      const d = dtNow(v.trades)
+      if (d.n === 0) return undefined
+      return {
+        value: `剩 ${wan(d.capital)}`,
+        label: `進出 ${d.n} 次後的本金`,
+        fraction: d.capital / 100,
+        note: `每次 ${pct3(d.costPerTrade)}・手續費按上限算`,
+        colorKey: 'stock',
+        mark: dayTradeCostVerified() ? 'illustrative' : 'unverified',
+      }
+    },
+    research: () => ({
+      rows: [researchRow('reliablyProfitable', '能穩定賺錢的人（扣掉交易成本後）'), researchRow('likelyToLose', '未來可能賠錢的人')],
+      cite: `Barber 等 ${DAY_TRADE_RESEARCH.reliablyProfitable.year}、${DAY_TRADE_RESEARCH.likelyToLose.year}・台灣當沖客`,
+    }),
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'dayTrade' }, values: { trades: 0 }, cityLabels: false },
+    controls: ['trades'],
+    ranges: { trades: [0, DAY_TRADE.trades] },
+    until: { control: 'trades', min: DAY_TRADE.trades },
   },
 ]

@@ -4,6 +4,7 @@ import { PORT_LAYOUT, PORT_MAX_BOND, portDamageAt, portNow, portTower } from './
 import { CORR_LAYOUT, corrBlocks, corrDropAt, corrLightning, corrNow } from './advanced'
 import { IMPACT_TIME } from '../events/lightning'
 import { PAIRS, combine, volatility } from '../../sim/correlation'
+import { DT_LAYOUT, dtNow, dtTower } from './advanced'
 
 describe('a-port portfolio tower (🌪)', () => {
   it('portNow: 100 split by the bond slider; the example storm takes stocks −40%, bonds +5% (sim/portfolio STORM)', () => {
@@ -78,5 +79,27 @@ describe('a-corr two linked pairs (⚡)', () => {
     expect(b1[0]!.h).toBeCloseTo(CORR_LAYOUT.height * 0.92, 12)
     expect(b1[1]!.h).toBeCloseTo(CORR_LAYOUT.height * 0.96, 12)
     expect(b1[3]!.h).toBeCloseTo(CORR_LAYOUT.height * 1.08, 12)
+  })
+})
+
+describe('a-dt day-trade drain', () => {
+  it('dtNow follows the slider: 250 trades at a 50% win rate (±1%) and 0.435% cost each leave 33.63; the rest went to costs', () => {
+    expect(dtNow(0)).toMatchObject({ n: 0, capital: 100, costPaid: 0 })
+    const n = dtNow(250)
+    expect(n.costPerTrade).toBeCloseTo(0.001425 * 2 + 0.0015, 12) // 手續費買賣各一次（公告上限）＋賣出交易成本
+    expect(n.capital).toBeCloseTo(100 * (1 - 0.00435) ** 250, 9) // 33.63
+    expect(n.capital).toBeCloseTo(33.63, 2)
+    expect(n.capital + n.costPaid).toBeCloseTo(100, 9) // 賺賠互相抵銷：少掉的全部付給了交易成本
+    expect(dtNow(20).capital).toBeCloseTo(91.65, 2)
+    expect(dtNow(123).n).toBe(120) // 取到 10 的倍數
+    expect(dtNow(999).n).toBe(250)
+    expect(dtNow(Number.NaN).n).toBe(0)
+  })
+  it('dtTower: the capital tower and the red cost pile always add up to the original height', () => {
+    for (const t of [0, 50, 250]) {
+      const h = dtTower(t)
+      expect(h.capital + h.cost).toBeCloseTo(DT_LAYOUT.height, 9)
+    }
+    expect(dtTower(0).cost).toBe(0)
   })
 })

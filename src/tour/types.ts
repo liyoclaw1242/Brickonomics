@@ -42,6 +42,8 @@ export type Stage =
   | { kind: 'portfolio' }
   /** a-corr 兩組用彈簧連著的方塊（一起動、一上一下）；⚡ 閃電（scene.event lightning＋targets）打兩組的 A */
   | { kind: 'correlation' }
+  /** a-dt 當沖：本金塔＋一堆付掉的交易成本（trades 拉桿）；前面一排賺、賠各一半的小圓片 */
+  | { kind: 'dayTrade' }
   | { kind: 'overlap'; a: string; b: string }
   | { kind: 'underground'; show: 'strata' | 'cores' | 'dig' | 'veins' | 'gold'; cores?: [string, string] }
 
@@ -50,7 +52,8 @@ export type StageKind = Stage['kind']
 /** 舞台用的拉桿值（由導覽 store 持有） */
 /** tick＝價格路徑上的第幾個點（s-dd）；rate＝市場利率（b-rate）；months＝定期定額買了幾個月（e-dca） */
 /** bondPct：a-port 組合塔裡債券佔幾 %（其餘是股票） */
-export type StageValues = { years: number; periods: number; phase: number; frontLoad: number; tick: number; rate: number; months: number; bondPct: number }
+/** trades：a-dt 當沖進出了幾次（一次＝買進再賣出） */
+export type StageValues = { years: number; periods: number; phase: number; frontLoad: number; tick: number; rate: number; months: number; bondPct: number; trades: number }
 export type ValueKey = keyof StageValues
 export type Control = 'slice' | 'explode' | ValueKey
 /** 要讓「下一步」可按，control 的值必須 ≥ min */
@@ -113,6 +116,10 @@ export type CalloutSpec = {
   when?: Condition
 }
 
+/** 研究數據卡（a-dt）：一手出處的研究數字；mark 'unverified'＝這個數字沒查證（？，從資料推出來） */
+export type ResearchRow = { value: string; text: string; mark?: Mark }
+export type ResearchCard = { rows: ResearchRow[]; cite: string }
+
 /** 課程最後的回顧：一個圖示＋一句短話 */
 export type RecapLine = { icon: string; text: string }
 
@@ -139,6 +146,8 @@ export type Step = {
   /** 回傳 undefined 時不顯示大數字（例如資料沒有內扣費用）；values＝導覽目前的拉桿值（跟著拉桿即時變） */
   bigNumber?: (c: TextContext, values: Readonly<StageValues>) => BigNumber | undefined
   focus?: { holdings?: string[] }
+  /** 研究數據卡（附出處；過了門檻才顯示，文字版一直顯示） */
+  research?: (c: TextContext) => ResearchCard
   /** 面板上的回顧清單（最後一步用；文字版也顯示） */
   recap?: RecapLine[]
   callouts?: CalloutSpec[]

@@ -4,6 +4,7 @@ import { DEFAULT_VALUES } from '../tour/engine'
 import { makeTextContext } from '../tour/context'
 import type { Step, TextContext } from '../tour/types'
 import { feeRaceRows } from '../sim/feeRace'
+import { dayTradeCostVerified } from '../sim/dayTrade'
 
 export type Mark = 'illustrative' | 'assumption' | 'unverified'
 
@@ -27,6 +28,14 @@ export function stepMarks(step: Step, u: Universe): Mark[] {
   if (st?.kind === 'excavator' && st.meter && step.scene.product) {
     const p = u.get(step.scene.product)
     if (p?.fees?.expenseRatio !== undefined && !isVerified(p, 'fees.expenseRatio')) out.push('unverified')
+  }
+  // 當沖的成本（手續費、賣出交易成本）來自 TW_TRADING：有一項沒查證就加 ？
+  if (st?.kind === 'dayTrade' && !dayTradeCostVerified()) out.push('unverified')
+  // 研究數據卡：有一個數字沒查證就加 ？（卡片上那一列也有）
+  if (step.research) {
+    let c = contexts.get(u)
+    if (!c) contexts.set(u, (c = makeTextContext(u)))
+    if (step.research(c).rows.some((r) => r.mark === 'unverified')) out.push('unverified')
   }
   // 這一步顯示的比例來自持股資料，持股沒查證就加 ？（用到哪些產品，從文字實際讀的資料推出來）
   if (holdingsSources(step, u).some((id) => { const a = u.get(id); return !a || !isVerified(a, 'holdings') })) out.push('unverified')

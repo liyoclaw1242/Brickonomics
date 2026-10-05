@@ -75,6 +75,14 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .bignum__bar { margin-top: 8px; height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
 .compare-note { margin: -4px 0 10px; font-size: 13px; color: var(--soft-text); border-left: 3px solid var(--border); padding-left: 8px; }
 .bignum__bar span { display: block; height: 100%; background: var(--accent); }
+/* 研究數據卡（a-dt）：比大數字卡小一號，出處小字 */
+.research { margin: 0 0 12px; padding: 10px 14px; border-radius: 12px; background: var(--chip); border: 1px solid var(--border); }
+.research__title { margin: 0 0 4px; font-size: 13px; color: var(--soft-text); letter-spacing: 0.04em; }
+.research__rows { display: grid; gap: 4px; }
+.research__rows > div { display: flex; gap: 10px; align-items: baseline; }
+.research__value { flex: none; min-width: 4.2em; font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; display: inline-flex; gap: 6px; align-items: center; }
+.research__text { font-size: 14px; line-height: 1.35; }
+.research__cite { margin: 6px 0 0; font-size: 12px; color: var(--soft-text); }
 .more { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 8px; font-size: 14px; color: var(--muted); }
 .more summary { cursor: pointer; color: var(--text); }
 

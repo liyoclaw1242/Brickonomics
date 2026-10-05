@@ -40,7 +40,7 @@ const byId = (id: string): Step => steps.find((s) => s.id === id)!
 /** Plan 7 的舉例舞台：一定要標 ≈、多說一點寫「示意」 */
 const PLAN7_STAGES: string[] = ['drawdown', 'pe', 'seesaw', 'dca', 'inflation']
 /** Plan 8 的高階舞台：都是舉例（≈、多說一點寫「示意」） */
-const PLAN8_STAGES: string[] = ['portfolio', 'correlation']
+const PLAN8_STAGES: string[] = ['portfolio', 'correlation', 'dayTrade']
 /** 大數字跟著即時拉桿值；測試預設用進入該步驟時的值 */
 const bigOf = (s: Step, values: Partial<StageValues> = {}) => s.bigNumber?.(ctx, { ...DEFAULT_VALUES, ...s.scene.values, ...values })
 const resolve = (t: Step['line'] | undefined): string | undefined => (t === undefined ? undefined : typeof t === 'function' ? t(ctx) : t)
@@ -982,5 +982,51 @@ describe('Plan 8 高階: 一起跌或抵消 (a-corr)', () => {
   it('the readout gives how much each one swings over the example: 10%, 8%, 2%', () => {
     const rows = stageReadout({ kind: 'correlation' }, { ...DEFAULT_VALUES, slice: 0, explode: 0 }, universe, null)
     expect(rows.map((r) => r.value)).toEqual(['10.0%', '8.0%', '2.0%'])
+  })
+})
+
+describe('Plan 8 高階: 當沖的成本 (a-dt)', () => {
+  const s = () => byId('a-dt')
+  it('drag the trades 0 → 250 (gate); the card is hidden before the drag', () => {
+    expect(s().controls).toEqual(['trades'])
+    expect(controlRange(s(), 'trades')).toEqual([0, 250])
+    expect(s().until).toEqual({ control: 'trades', min: 250 })
+    expect(bigOf(s(), { trades: 0 })).toBeUndefined()
+    expect(stripMarkup(lineOf(s(), ctx))).toBe('拖進出次數。看交易成本吃掉多少')
+  })
+  it('big number: 100 × (1 − 0.435%)^250 ≈ 33.6 left; the note names the cost per trade and that the broker fee is the cap', () => {
+    expect(bigOf(s(), { trades: 250 })).toEqual({
+      value: '剩 33.6 萬',
+      label: '進出 250 次後的本金',
+      fraction: (100 * (1 - 0.00435) ** 250) / 100,
+      note: '每次 0.435%・手續費按上限算',
+      colorKey: 'stock',
+      mark: 'illustrative',
+    })
+    expect(bigOf(s(), { trades: 20 })!.value).toBe('剩 91.7 萬') // 100 × 0.99565^20 = 91.65
+    expect(stripMarkup(resolve(s().fallbackLine)!)).toBe('進出 250 次。本金剩 33.6 萬')
+  })
+  it('the more text: cost per round trip from the data, the posted cap, the ≈ example, and no 稅', () => {
+    const more = moreOf(s(), ctx)
+    expect(more).toContain('每次進出共付 0.435% 的交易成本') // 0.1425% × 2 + 0.15%
+    expect(more).toContain('手續費用公告上限 0.1425%，常打折')
+    expect(more).toContain('賺賠各 1%、一年 250 次是示意')
+    expect(more).not.toContain('稅')
+  })
+  it('the research card: < 1% reliably profitable, 97% likely to lose, cited with the years; no ？ while verified; no 稅', () => {
+    const card = s().research!(ctx)
+    expect(card.rows.map((r) => r.value)).toEqual(['不到 1%', '97%'])
+    expect(card.rows.every((r) => r.mark === undefined)).toBe(true)
+    expect(card.cite).toBe('Barber 等 2014、2020・台灣當沖客')
+    expect(stepMarks(s(), universe)).toEqual(['illustrative'])
+    for (const t of [...card.rows.flatMap((r) => [r.value, r.text]), card.cite]) {
+      expect(t).not.toContain('稅')
+      expect(t.includes('被')).toBe(false)
+      expect(forbiddenWordsIn(t)).toEqual([])
+    }
+    for (const r of card.rows) expect(Array.from(r.text).length, r.text).toBeLessThanOrEqual(18)
+    expect(Array.from(card.cite).length).toBeLessThanOrEqual(28) // 出處一行
+    expect(card.rows[0]!.text).toContain('穩定') // 不是「當年有賺的人」
+    expect(card.rows[1]!.text).toContain('可能') // 不是「已經賠了」
   })
 })

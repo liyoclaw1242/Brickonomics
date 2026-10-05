@@ -36,6 +36,8 @@ export const T = {
     /** 文字版選階的群組名 */
     pickLabel: '選擇課程',
   },
+  /** 研究數據卡（a-dt）：一手出處的研究數字 */
+  research: { title: '研究怎麼說', source: (cite: string) => `出處：${cite}` },
   /** 比較步驟的提醒（mid-r1：比較結果一面倒，被讀成投資建議） */
   compareNote: '只是比較，不是叫你買或賣',
   /** 課內的第幾步（mid-r1：章的編號在同一章裡不動，她以為按壞了） */
@@ -107,6 +109,9 @@ export const T = {
     /** e-dca：定期定額買了幾個月 */
     months: '經過月數',
     monthsValue: (v: number) => `${v} 個月`,
+    /** a-dt 當沖進出了幾次（一次＝買進再賣出） */
+    trades: '進出次數',
+    tradesValue: (v: number) => `${v} 次`,
     /** a-port 組合塔裡債券佔幾 %（其餘是股票） */
     bondPct: '債券比例',
     bondPctValue: (v: number) => `${v}%`,
@@ -184,6 +189,15 @@ export const T = {
     /** 方塊頭上的名字；打中之後加上漲跌 */
     a: (move: string) => (move ? `A ${move}` : 'A'),
     b: (move: string) => (move ? `B ${move}` : 'B'),
+  },
+  /** a-dt 當沖的 3D 標註（高階）：只說「交易成本」 */
+  dt: {
+    ghost: '原本 100 萬',
+    capital: (n: number) => `進出 ${n} 次後的本金`,
+    left: (v: string) => `剩 ${v}`,
+    cost: '付掉的交易成本',
+    chips: '勝率五五波',
+    chipsSub: (win: string, loss: string) => `賺 ${win}、賠 ${loss}，各一半`,
   },
   /** 基金那一章的錢：投入 100＝100 萬（和計費表同一個底），一位小數、去掉「.0」 */
   wan,
@@ -272,6 +286,10 @@ export const T = {
     portStock: '股票那一截',
     portBond: '債券那一截',
     portRemaining: '風暴後整座塔',
+    dtTrades: '進出次數',
+    dtCost: '每次進出的交易成本',
+    dtCapital: '本金剩',
+    dtPaid: '付掉的交易成本',
     corrAlone: '只放 A：平常晃多大',
     corrTogether: 'A＋一起動的，各一半',
     corrOpposite: 'A＋一上一下的，各一半',

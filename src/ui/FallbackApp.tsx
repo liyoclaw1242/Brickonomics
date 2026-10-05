@@ -6,6 +6,7 @@ import { colorForKey } from '../scene/palette'
 import { parseEmphasis } from './emphasis'
 import { fallbackCourse } from './fallback'
 import { MarkIcon } from './MarkIcon'
+import { ResearchCardView } from './panel/ResearchCard'
 import { markPlacement } from './marks'
 import { T } from './strings'
 import './ui.css'
@@ -67,6 +68,7 @@ export function FallbackApp() {
                     ))}
                   </p>
                 )}
+                {s.research && <ResearchCardView card={s.research} />}
                 {/* 回顧不用 li：e2e 以 li 數步驟 */}
                 {s.recap && (
                   <div className="recap" role="list" aria-label={T.recapLabel}>

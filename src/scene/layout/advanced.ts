@@ -4,6 +4,7 @@ import { clamp01, ramp, smooth } from '../events/ease'
 import { IMPACT_TIME } from '../events/lightning'
 import type { SpecOf } from '../events/types'
 import { PAIRS, combine, volatility } from '../../sim/correlation'
+import { DAY_TRADE, dayTradeDrain } from '../../sim/dayTrade'
 
 /**
  * 高階步驟（Plan 8）的舞台幾何與拉桿 → 數值（純 TS；課文 levels.ts、3D 舞台、讀數共用同一份）。
@@ -113,4 +114,25 @@ export function corrBlocks(drop: number): CorrBlock[] {
     b('oppositeA', pairs.opposite - half, n.a),
     b('oppositeB', pairs.opposite + half, n.opposite),
   ]
+}
+
+// ───────────── a-dt 當沖的成本 ─────────────
+
+/** 左邊一座塔＝本金（100 萬＝height 高）；右邊一堆紅色＝一路付掉的交易成本；前面一排小圓片＝賺、賠各一半 */
+export const DT_LAYOUT = { towerX: -3.6, pileX: 3.6, w: 4, height: 10, chipsZ: 4.2, chips: 10, chipR: 0.5, chipGap: 1.3 } as const
+
+export type DtNow = { n: number; capital: number; costPaid: number; costPerTrade: number }
+
+/** 拉桿值 → 進出幾次（10 的倍數、0..DAY_TRADE.trades）與期望的本金、付掉的成本（起點 100） */
+export function dtNow(trades: number): DtNow {
+  const n = Math.min(DAY_TRADE.trades, Math.max(0, Math.round((Number.isFinite(trades) ? trades : 0) / 10) * 10))
+  const r = dayTradeDrain({ ...DAY_TRADE, trades: n })
+  return { n, capital: r.capitalAfter, costPaid: r.costPaid, costPerTrade: DAY_TRADE.costPerTrade }
+}
+
+/** 塔高與紅色那堆的高度（世界單位）：兩個加起來永遠＝原本的高度 */
+export function dtTower(trades: number): { capital: number; cost: number } {
+  const d = dtNow(trades)
+  const k = DT_LAYOUT.height / 100
+  return { capital: d.capital * k, cost: d.costPaid * k }
 }

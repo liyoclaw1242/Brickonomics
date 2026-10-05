@@ -14,6 +14,7 @@ import { InflationStage } from './InflationStage'
 import { PeStage } from './PeStage'
 import { PortfolioStage } from './PortfolioStage'
 import { CorrelationStage } from './CorrelationStage'
+import { DayTradeStage } from './DayTradeStage'
 import { SeesawStage } from './SeesawStage'
 import { ExDividendStage } from './ExDividendStage'
 import { FeeMeter } from './FeeMeter'
@@ -55,6 +56,7 @@ export function StageView({ quality }: { quality: Quality }) {
       {stage.kind === 'inflation' && <InflationStage event={clock} />}
       {stage.kind === 'portfolio' && <PortfolioStage event={clock} />}
       {stage.kind === 'correlation' && <CorrelationStage event={clock} quality={quality} />}
+      {stage.kind === 'dayTrade' && <DayTradeStage />}
       {stage.kind === 'overlap' && <OverlapStage a={stage.a} b={stage.b} quality={quality} />}
       {stage.kind === 'underground' && <UndergroundStage show={stage.show} cores={stage.cores} quality={quality} />}
       {stage.kind === 'excavator' && <Excavator other={stage.other} />}

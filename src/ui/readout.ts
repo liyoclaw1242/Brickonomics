@@ -4,7 +4,7 @@ import { sectorBreakdown } from '../scene/layout/underground'
 import { accumulateVsPayout, exDivTimeline, principalTrap } from '../scene/layout/stages'
 import { feeRaceLeader, feeRaceRows } from '../sim/feeRace'
 import { DCA_DEMO, dcaNow, ddNow, INFL_DEMO, inflReal, PE_DEMO, peYears, ratePrice } from '../scene/layout/intermediate'
-import { corrNow, portNow } from '../scene/layout/advanced'
+import { corrNow, dtNow, portNow } from '../scene/layout/advanced'
 import { overlap } from '../sim/overlap'
 import { shockImpact } from '../sim/scenario'
 import { SHOCK_2330, signedPct } from '../tour/context'
@@ -112,6 +112,15 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
         { label: T.readout.portStock, value: `${T.wan(n.before.stock)} → ${T.wan(n.after.stock)}`, marks: ['illustrative'] },
         { label: T.readout.portBond, value: `${T.wan(n.before.bond)} → ${T.wan(n.after.bond)}` },
         { label: T.readout.portRemaining, value: T.wan(n.after.remaining) },
+      ]
+    }
+    case 'dayTrade': {
+      const d = dtNow(v.trades)
+      return [
+        { label: T.readout.dtTrades, value: T.controls.tradesValue(d.n), marks: ['illustrative'] },
+        { label: T.readout.dtCost, value: `${(d.costPerTrade * 100).toFixed(3)}%` },
+        { label: T.readout.dtCapital, value: T.wan(d.capital) },
+        { label: T.readout.dtPaid, value: T.wan(d.costPaid) },
       ]
     }
     case 'correlation': {
