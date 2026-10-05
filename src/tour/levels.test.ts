@@ -779,7 +779,8 @@ describe('Plan 7 中階: 利率翹翹板 (b-rate)', () => {
     expect(bigOf(s(), { rate: 0.02 })!.value).toBe('約 100 元')
     expect(bigOf(s(), { rate: 0.05 })!.value).toBe(`約 ${(2 * ((1 - 1.05 ** -10) / 0.05) + 100 / 1.05 ** 10).toFixed(0)} 元`)
     expect(bigOf(s(), { rate: 0.05 })!.value).toBe('約 77 元')
-    expect(bigOf(s())!.note).toBe('借的人沒出問題，到期拿回 100 元')
+    expect(bigOf(s())!.note).toBe('借的人沒出問題，到期拿回 100 元。中途要賣，才會吃虧') // mid-r2：那為什麼要怕
+    expect(stripMarkup(lineOf(s(), ctx))).toBe('拖市場利率。新借據利息多，舊借據就跌') // 先原因、後結果
   })
   it('talks about the price of an existing bond, which goes back to 100 at maturity', () => {
     const more = moreOf(s(), ctx)

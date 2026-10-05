@@ -547,13 +547,14 @@ export const COURSE_STEPS: Step[] = [
     // 中階債券章（Plan 7）：市場利率漲，已經發行的舊借據價格就跌；拉到 5% 時 ❄️ 寒流讓舊借據結霜。說的是「舊借據現在的價格」，到期仍拿回 100
     id: 'b-rate',
     title: '利率翹翹板',
-    line: '拖**市場利率**。舊借據價格就**跌|loss**',
+    // mid-r2：先講原因再講結果——新借據利息多，沒人要用 100 買舊的
+    line: '拖**市場利率**。新借據利息多，舊借據就**跌|loss**',
     fallbackLine: () => `利率到 ${pct1(RATE_DEMO.to)}，舊借據約 **${n0(ratePrice(RATE_DEMO.to))} 元|loss**`,
     more: () =>
       `利率漲，舊借據的價格就跌，像翹翹板。新借據給更多利息，舊的只好便宜賣。借的人沒出問題，到期拿回 100 元。這是示意，舉例 ${RATE_DEMO.years} 年、每年利息 ${pct1(RATE_DEMO.coupon)}。`,
     mark: 'illustrative',
     // 跟著拉桿：舊借據現在值多少（面額 100）；note 一直提醒到期還是拿回 100
-    bigNumber: (_c, v) => ({ value: `約 ${n0(ratePrice(v.rate))} 元`, label: '舊借據現在值', note: '借的人沒出問題，到期拿回 100 元', mark: 'illustrative' }),
+    bigNumber: (_c, v) => ({ value: `約 ${n0(ratePrice(v.rate))} 元`, label: '舊借據現在值', note: '借的人沒出問題，到期拿回 100 元。中途要賣，才會吃虧', mark: 'illustrative' }),
     scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'seesaw' }, event: rateFreeze(), eventWhen: { control: 'rate', min: RATE_DEMO.to }, values: { rate: RATE_DEMO.from }, cityLabels: false },
     controls: ['rate'],
     ranges: { rate: [RATE_DEMO.from, RATE_DEMO.to] },

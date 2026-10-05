@@ -78,7 +78,7 @@ export function SeesawStage({ event }: { event: EventClock }) {
         anchor={atPlaza(pose.left[0], pose.left[1] + half + rateH, 0)}
         offset={[1.4, 1.8, 0]}
         title={T.seesaw.rate(T.controls.rateValue(rate))}
-        sub={freeze ? T.seesaw.cold : undefined}
+        sub={freeze ? T.seesaw.cold : T.seesaw.rateIs}
         color={RATE_COLOR}
         persistent
       />
