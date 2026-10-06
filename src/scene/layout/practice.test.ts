@@ -143,6 +143,15 @@ describe('x-perf two towers a year (perfLayout)', () => {
     expect(y23.bench.y).toBeCloseTo(PERF_LAYOUT.zeroY + (16.14 * PERF_LAYOUT.unit) / 2, 10)
     expect(PERF_LAYOUT.zeroY - 13.16 * PERF_LAYOUT.unit).toBeGreaterThan(0) // 最深的柱子也不會穿過地面
   })
+  it('adds this year so far (to 2026-08-31, not a full year) as a last pair: 7.73 vs 6.02', () => {
+    expect(L.ytd).toMatchObject({ asOf: '2026-08-31' })
+    expect(L.ytd.fund.pct).toBe(7.73)
+    expect(L.ytd.bench.pct).toBe(6.02)
+    expect(L.ytd.x).toBeGreaterThan(L.years.at(-1)!.x)
+    // 五對平均排開、中心在廣場中間：x = (i − 2) × yearGap
+    expect(L.years[0]!.x).toBeCloseTo(-2 * PERF_LAYOUT.yearGap, 10)
+    expect(L.ytd.x).toBeCloseTo(2 * PERF_LAYOUT.yearGap, 10)
+  })
   it('the 🌋 quake sits under the worst year, as deep as its fall', () => {
     expect(L.quake).toEqual({ kind: 'quake', depth: 0.1193, at: [L.years[0]!.x, PERF_LAYOUT.pitZ], width: PERF_LAYOUT.pitWidth })
   })

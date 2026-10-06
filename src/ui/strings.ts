@@ -290,16 +290,16 @@ export const T = {
   currency: (code: string): string => ({ USD: '美元', EUR: '歐元', TWD: '新台幣' } as Record<string, string>)[code] ?? code,
   /** x-pay 每月配息 vs 淨值的 3D 標註（實戰；真資料） */
   np: {
-    /** 第一根柱子的副標：每一份多少美元，以及柱子從哪裡起畫（不是從 0） */
-    firstSub: (nav: string, floor: number) => `每一份 ${nav} 美元・柱子從 ${floor} 起畫`,
+    /** prac-r1：一頁六個數字太多；畫面上只留日期、少了多少、本金佔幾 %（74.99、從 70 起畫放在即時數字） */
+    start: (date: string) => `起點 ${date}`,
     navAt: (date: string) => date,
-    navSub: (nav: string) => `每一份 ${nav} 美元`,
-    shorter: (v: string) => `比起點矮 ${v}`,
-    income: '金色＝收益',
-    incomeSub: (from: string, to: string) => `${from}–${to} 全是收益`,
+    shorter: (v: string) => `比起點少 ${v}`,
+    income: '金色＝賺來的收益',
+    incomeSub: (n: number) => `前 ${n} 次`,
     capital: '紅色＝本金',
-    capitalSub: (since: string, min: number, max: number) => `${since} 起每次 ${min}–${max}%`,
+    capitalSub: (since: string, min: number, max: number) => `${since} 起每次佔 ${min}–${max}%`,
   },
+
   /** 實戰課：一檔真基金的體檢（3D 標註、體檢表的日期） */
   checkup: {
     /** 名片：塔上的名字、註冊地與成立日 */
@@ -308,22 +308,29 @@ export const T = {
     sizeSub: (yi: string, cur: string, date: string) => `${yi} 億${cur}・${date}`,
     /** x-mix：三大類與掩護性買權那一層 */
     group: { stock: (pct: string) => `股票 ${pct}%`, bond: (pct: string) => `借據＋特別股 ${pct}%`, cash: (pct: string) => `現金 ${pct}%` },
-    groupSub: { stock: '含掩護性買權', bond: '特別股算在這邊', cash: '' },
-    coveredCall: '掩護性買權',
-    pct: (pct: string) => `${pct}%`,
+    /** 股票那一類的副標：掩護性買權是股票裡的一層（prac-r1：9.6% 和 49.7% 對不起來） */
+    stockSub: (cc: string) => `其中 ${cc}% 用掩護性買權`,
+    bondSub: '特別股：介於股票和借據之間',
+    /** 每一層的小標（prac-r1：好幾層沒有名字） */
+    layer: (zh: string, pct: string) => `${zh} ${pct}%`,
     /** x-hy：高收益債那幾層 */
     hy: (pct: string) => `高收益債 ${pct}%`,
     hySub: '借給體質弱的公司',
     hyHit: '風暴裡裂開（裂多少是舉例）',
     /** x-where：區域的島 */
     region: (name: string, pct: string) => `${name} ${pct}%`,
-    regionNote: '島越大越亮＝錢越多',
     /** x-perf：每年兩座塔 */
     fund: '這檔基金',
-    bench: '它自己的藍圖',
+    bench: '它自己的指標',
     zero: '0%',
     year: (y: number, down: boolean) => (down ? `${y} 🌋` : String(y)),
     yearSub: (fund: string, bench: string) => `${fund} / ${bench}`,
+    /** 跌的那年跌得比指標少（好的一面也寫在畫面上） */
+    fellLess: '跌得比指標少',
+    ytd: (date: string) => `${date.slice(0, 4)} 到 ${date.slice(5)}`,
+    ytdSub: '不滿一年',
+    /** 一個標註裡接兩件事 */
+    and: (a: string, b: string) => `${a}・${b}`,
     /** 體檢表每一行的資料日期 */
     asOf: (date: string) => `資料 ${date}`,
     cardLabel: '體檢表',
@@ -438,8 +445,10 @@ export const T = {
     npStart: (date: string) => `起點（${date}）`,
     npEnd: (date: string) => `最後（${date}）`,
     npChange: '同期淨值變化',
+    npNet: '配息＋淨值變化（每一份）',
+    npFloor: '柱子從這個數字起畫（不是從 0）',
     npPaid: '一年配息合計（12 次）',
-    npCapital: (since: string) => `${since} 起，本金佔每次配息`,
+    npCapital: (since: string) => `基準日 ${since} 起，本金佔每次配息`,
     npIncomeOnly: (from: string, to: string) => `${from}–${to}，本金佔每次配息`,
     npYield: (date: string) => `年化配息率（${date}）`,
     npYieldNote: '配出去的比例，不是報酬',
@@ -461,8 +470,9 @@ export const T = {
     ckFeeTrading: '交易成本（官方文件估，另外算）',
     ckFeeSales: '申購手續費（最高）',
     ckFeeSalesNote: '實際看通路',
-    ckYear: (y: number) => `${y} 年：基金 / 藍圖`,
-    ckTotal: (n: number) => `${n} 年合起來：基金 / 藍圖`,
+    ckYear: (y: number) => `${y} 年：基金 / 指標`,
+    ckYtd: (date: string) => `今年到 ${date}：基金 / 指標（不滿一年）`,
+    ckTotal: (n: number) => `${n} 年合起來：基金 / 指標`,
     ckRegion: (zh: string) => zh,
     rebalStage: '進度',
     rebalStock: '股票',

@@ -174,3 +174,29 @@ export function fundSizeYi(f: FundCheckup): string {
 export function riskRank(f: FundCheckup): { level: number; of: number } {
   return { level: Number(need(f.basics.riskLevelTW.value, 'riskLevelTW').slice(2)), of: 5 }
 }
+
+/** 一年下來每一份多了多少：配息合計＋同期淨值變化（不含再投入）；pct＝÷ 起點淨值 */
+export function netPerUnit(f: FundCheckup) {
+  const payouts = payoutTotal(f)
+  const c = navChange(f)
+  const net = round(payouts + c.change, 3)
+  return { payouts, change: c.change, net, pct: net / c.from.nav, from: c.from, to: c.to }
+}
+
+/** 股票大約一半（|股票 − 50| < 2 個百分點）：50.2% 這種差距在四捨五入和分法（特別股）以內，不說「一半以上」 */
+export const NEAR_HALF_BAND = 2
+export function nearHalf(g: { stock: number }): boolean {
+  return Math.abs(g.stock - 50) < NEAR_HALF_BAND
+}
+
+/** 今年到資料日（不滿一年）：基金 vs 指標 */
+export function yearToDate(f: FundCheckup) {
+  const a = need(f.calendarYearReturns.value, 'calendarYearReturns').ytd
+  const b = need(f.benchmarkCalendarYearReturns.value, 'benchmarkCalendarYearReturns').ytd
+  return { fund: a.pct, bench: b.pct, asOf: a.asOf }
+}
+
+/** 跌的年份裡，基金跌得比指標少的那幾年 */
+export function fellLess(f: FundCheckup): number[] {
+  return annualReturns(f).rows.filter((r) => r.fund < 0 && r.fund > r.bench).map((r) => r.year)
+}

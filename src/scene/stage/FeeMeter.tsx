@@ -27,7 +27,8 @@ export function FeeMeter({ rate, at }: { rate?: number; at?: Vec3 } = {}) {
   const product = productId ? universe.get(productId) : undefined
   const er = rate ?? product?.fees?.expenseRatio
   if (!ready || er === undefined || (rate === undefined && !product)) return null
-  const years = elapsed / SECONDS_PER_YEAR
+  // 顯示的年數取到 0.1 年，金額用同一個年數算（prac-r1：「1.0 年」旁邊寫 14,980 元，和大數字 14,500 對不起來）
+  const years = Math.floor((elapsed / SECONDS_PER_YEAR) * 10) / 10
   const ground = PRINCIPAL * (1 - Math.pow(1 - er, years))
   const [x, , z] = EXCHANGE_POSITION
   return (

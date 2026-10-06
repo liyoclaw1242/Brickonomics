@@ -1176,18 +1176,21 @@ describe('Plan 9 實戰: 每月配息 (x-pay, real data)', () => {
   const s = () => byId('x-pay')
   const live = new Map(CHECKUPS)
   const patched = (patch: (f: FundCheckup) => FundCheckup) => new Map([['LU2347655073', patch(live.get('LU2347655073')!)]])
-  it('the card puts a year of payouts next to how much the tower shrank, same unit, with the dates', () => {
-    // 12 次配息合計 8.254 → 8.25；淨值 74.99 → 72.87 ＝ −2.12
-    expect(bigOf(s())).toEqual({ value: '8.25 vs 2.12', label: '一年配息 vs 塔矮了', note: '每一份・美元・2025/9/30–2026/9/30', colorKey: 'coin' })
+  it('one neutral headline: payouts + NAV change per unit (+6.13, ≈ +8.2%), with the two parts in the note (prac-r1: 「vs」 read as a contest)', () => {
+    // 12 次配息合計 8.254；淨值 74.99 → 72.87 ＝ −2.12；8.254 − 2.12 = 6.134 → +6.13；6.134 ÷ 74.99 = 8.18% → +8.2%
+    expect(bigOf(s())).toEqual({ value: '+6.13 美元', label: '配息＋塔高變化（每一份）', note: '約 +8.2%・其中配出 8.25，塔少 2.12', colorKey: 'coin' })
+    expect(bigOf(s())!.value).not.toContain('vs')
     expect(s().mark).toBeUndefined() // 真資料，不是示意
     expect(s().scene.stage).toEqual({ kind: 'navPayout', fund: 'LU2347655073' })
   })
-  it('the more text gives the numbers with dates, says the payout rate is not a return, and asks for 總報酬', () => {
+  it('the more text gives the year, the record date the capital started, the share, and says the payout rate is not a return', () => {
     const more = moreOf(s(), ctx)
-    expect(more).toContain('每一份一年配 8.25 美元，塔矮了 2.12')
-    expect(more).toContain('2026/2 起，每次 56–76% 是本金') // 配息組成表，2026-02-09 起
+    expect(more).toContain('一年下來每一份多了 6.13 美元，約 8.2%')
+    expect(more).toContain('基準日 2026/2/9 起，配息裡有本金') // 配息組成表：基準日 2026-02-09 那次起
+    expect(more).toContain('本金佔 56–76%')
     expect(more).toContain('年化配息率 11.7% 是配出的比例，不是報酬')
-    expect(more).toContain('總報酬')
+    // 畫面上的字變少：柱子從哪裡起畫放在即時數字
+    expect(Object.values(T.np).some((v) => typeof v === 'function' && String(v).includes('起畫'))).toBe(false)
   })
   it('the payout rate never appears as a return anywhere in the practice steps', () => {
     for (const st of steps.filter((x) => x.id.startsWith('x-'))) {
@@ -1203,7 +1206,8 @@ describe('Plan 9 實戰: 每月配息 (x-pay, real data)', () => {
   })
   it('the readout lists the start and end NAV, the change, the payouts and the yield as a payout rate', () => {
     const rows = stageReadout({ kind: 'navPayout', fund: 'LU2347655073' }, { ...DEFAULT_VALUES, slice: 0, explode: 0 }, universe, null)
-    expect(rows.map((r) => r.value)).toEqual(['74.99', '72.87', '−2.12', '8.254', '0%', '56–76%', '11.70%'])
+    expect(rows.map((r) => r.value)).toEqual(['74.99', '72.87', '−2.12', '8.254', '+6.13', '70', '0%', '56–76%', '11.70%'])
+    expect(rows[4]!.label).toBe('配息＋淨值變化（每一份）')
     expect(rows.at(-1)!.note).toBe('配出去的比例，不是報酬')
   })
 })
@@ -1235,13 +1239,18 @@ describe('Plan 9 實戰: the other steps of the fund checkup (numbers from the s
     expect(stepMarks(s, universe, new Map([['LU2347655073', { ...live, basics: { ...live.basics, fundSize: { ...live.basics.fundSize, verified: false } } }]]))).toEqual(['unverified'])
   })
 
-  it('x-mix: the line follows the computed grouping (50.2% non-stock), and says how preferreds are counted', () => {
+  it('x-mix: 股票 49.7% is within 2 points of half → 「大約各一半」; the line follows the data; preferreds named once', () => {
     const s = byId('x-mix')
-    expect(lineOf(s, ctx)).toBe('拆開看：一半以上不是**股票|stock**')
-    // 股票多 4 個百分點（29.0 → 33.0、27.3 → 23.3）：股票 53.7% → 一句話跟著改
+    expect(lineOf(s, ctx)).toBe('拆開看：股票和借據**大約各一半**') // |49.7 − 50| = 0.3 < 2
+    // 股票多 4 個百分點（29.0 → 33.0、27.3 → 23.3）：股票 53.7% → 一半以上是股票
     expect(lineOf(s, ctxWith((f) => setItems(f, { 'Global Equity': 33.0, 'US High Yield': 23.3 })))).toBe('拆開看：一半以上是**股票|stock**')
-    expect(bigOf(s)).toMatchObject({ value: '50.2%', label: '不是股票的部分', note: '股票 49.7%・特別股算在借據這邊' })
-    expect(moreOf(s, ctx)).toContain('特別股算借據；算股票的話，股票是 54.6%')
+    // 股票少 4 個百分點：45.7% → 一半以上不是股票
+    expect(lineOf(s, ctxWith((f) => setItems(f, { 'Global Equity': 25.0, 'US High Yield': 31.3 })))).toBe('拆開看：一半以上不是**股票|stock**')
+    expect(bigOf(s)).toMatchObject({ value: '49.7%', label: '股票的部分', note: '借據＋特別股 44.4%・現金 5.8%' })
+    expect(moreOf(s, ctx)).toContain('其中 9.6% 用掩護性買權')
+    expect(moreOf(s, ctx)).toContain('特別股：介於股票和借據之間，這裡算借據')
+    expect(moreOf(s, ctx)).toContain('算股票就是 54.6%')
+    expect(T.checkup.stockSub('9.6')).toBe('其中 9.6% 用掩護性買權')
     expect(s.scene.explode).toBe(1)
   })
 
@@ -1282,15 +1291,19 @@ describe('Plan 9 實戰: the other steps of the fund checkup (numbers from the s
 
   it('x-perf: the line counts the years from the data (1 higher, 3 lower), the card compounds the four years, 🌋 under 2022', () => {
     const s = byId('x-perf')
-    expect(lineOf(s, ctx)).toBe('和**藍圖|passive**比：1 年高、3 年低')
+    expect(lineOf(s, ctx)).toBe('和**指標|passive**比：1 年高、3 年低')
     // 指標每年都低 20 個百分點 → 4 年都比較高
     const lower = ctxWith((f) => ({ ...f, benchmarkCalendarYearReturns: { ...f.benchmarkCalendarYearReturns, value: { ...f.benchmarkCalendarYearReturns.value!, items: f.benchmarkCalendarYearReturns.value!.items.map((i) => ({ ...i, pct: i.pct - 20 })) } } }))
-    expect(lineOf(s, lower)).toBe('和**藍圖|passive**比：4 年都比較高')
+    expect(lineOf(s, lower)).toBe('和**指標|passive**比：4 年都比較高')
     // (0.8807 × 1.0835 × 1.0816 × 1.109) − 1 = 14.46% → 14%；(0.8684 × 1.1614 × 1.1189²) − 1 = 26.27% → 26%
-    expect(bigOf(s)).toMatchObject({ value: '14% vs 26%', label: '漲幅：基金 vs 藍圖', note: '2022–2025 4 年合起來（含配息）' })
+    // 好的一面也在卡片上：2022 跌得比指標少（−11.93 > −13.16）
+    expect(bigOf(s)).toMatchObject({ value: '14% vs 26%', label: '漲幅：基金 vs 指標', note: '2022–2025 合起來（含配息）・2022 跌得比指標少' })
+    expect(moreOf(s, ctx)).toContain('2026 到 8/31：7.7% 對 6.0%') // 今年到資料日，不滿一年
+    // 「藍圖」在這門課會讓人以為有 ETF 可以買：一律叫指標
+    for (const t of [lineOf(s, ctx), moreOf(s, ctx), bigOf(s)!.label, T.checkup.bench]) expect(t).not.toContain('藍圖')
     expect(s.scene.event).toMatchObject({ kind: 'quake', depth: 0.1193 })
     expect(s.compare).toBe(true)
-    expect(moreOf(s, ctx)).toContain('2022 年跌 11.9%，藍圖跌 13.2%')
+    expect(moreOf(s, ctx)).toContain('2022 跌 11.9%，比指標的 13.2% 少')
     expect(stepMarks(s, universe, unverified('benchmarkCalendarYearReturns'))).toEqual(['unverified'])
   })
 
@@ -1298,7 +1311,8 @@ describe('Plan 9 實戰: the other steps of the fund checkup (numbers from the s
     const s = byId('x-fin')
     expect(stripMarkup(lineOf(s, ctx))).toBe('只是體檢，不是叫你買或賣')
     const lines = s.checkupCard!(ctx)
-    expect(lines.map((l) => l.text)).toEqual(['怪手挑的平衡型', '一半以上不是股票（50.2%）', '容易裂的借據約 30%', '一年配 8.25，塔矮了 2.12', '每年先扣約 1.45%', '近 4 年和藍圖比：1 高 3 低'])
+    // 好處（每月現金流、2022 跌較少）和要注意的放在同一張卡；金額帶單位
+    expect(lines.map((l) => l.text)).toEqual(['怪手挑的平衡型，股債約各半', '有：每月現金流、2022 跌較少', '容易裂的借據約 30%', '每份多 6.13 美元，配息含本金', '每年先扣約 1.45%', '近 4 年和指標比：1 高 3 低'])
     expect(lines.map((l) => l.asOf)).toEqual(['2026-08-31', '2026-08-31', '2026-08-31', '2026-09-30', '2026-04-27', '2026-08-31'])
     for (const l of lines) {
       expect(Array.from(l.text).length, l.text).toBeLessThanOrEqual(18)

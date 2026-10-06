@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import raw from '../data/snapshot/practice/LU2347655073.json'
 import { checkupOf, parseFundCheckup } from '../data/fundCheckup'
-import { annualReturns, ASSET_GROUP_OF, assetGroups, capitalRun, compound, feeSummary, fundSizeYi, navChange, payoutSources, payoutTotal, riskRank, shortName, sortedAssets, sortedRegions } from './checkup'
+import { annualReturns, ASSET_GROUP_OF, assetGroups, capitalRun, compound, feeSummary, fundSizeYi, navChange, payoutSources, payoutTotal, riskRank, shortName, sortedAssets, sortedRegions, netPerUnit, nearHalf, yearToDate, fellLess } from './checkup'
 
 const f = checkupOf('LU2347655073')
 const clone = (): Record<string, unknown> => JSON.parse(JSON.stringify(raw)) as Record<string, unknown>
@@ -135,5 +135,27 @@ describe('names and sizes for the name card', () => {
   })
   it('riskRank: RR3 is level 3 of 5', () => {
     expect(riskRank(f)).toEqual({ level: 3, of: 5 })
+  })
+})
+
+describe('balance: what the year added up to, near-half, this year so far', () => {
+  it('netPerUnit: payouts 8.254 + NAV change −2.12 = +6.134 per unit, ÷ 74.99 ≈ +8.18%', () => {
+    const n = netPerUnit(f)
+    expect(n.payouts).toBe(8.254)
+    expect(n.change).toBe(-2.12)
+    expect(n.net).toBe(6.134) // 8.254 − 2.12
+    expect(n.pct).toBeCloseTo(6.134 / 74.99, 12)
+    expect(n.pct).toBeCloseTo(0.0818, 4)
+  })
+  it('nearHalf: |stock − 50| < 2 → 49.7 is near half; 53.7 is not', () => {
+    expect(nearHalf(assetGroups(f))).toBe(true)
+    expect(nearHalf({ stock: 53.7 })).toBe(false)
+    expect(nearHalf({ stock: 48.1 })).toBe(true)
+  })
+  it('yearToDate: 7.73 vs 6.02 to 2026-08-31 (not a full year)', () => {
+    expect(yearToDate(f)).toEqual({ fund: 7.73, bench: 6.02, asOf: '2026-08-31' })
+  })
+  it('fellLess: the down years in which the fund fell less than its benchmark: 2022', () => {
+    expect(fellLess(f)).toEqual([2022]) // −11.93 > −13.16
   })
 })

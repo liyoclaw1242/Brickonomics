@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useThree } from '@react-three/fiber'
 import { checkupOf } from '../../data/fundCheckup'
 import { assetGroups, feeSummary, fundSizeYi, shortName } from '../../sim/checkup'
 import { effectiveExplode, useSandbox } from '../../store/sandbox'
@@ -22,7 +23,11 @@ export type CheckupShow = 'card' | 'mix' | 'hy' | 'fee' | 'final'
 
 const NO_DAMAGE: Readonly<Record<string, number>> = {}
 const RIGHT: Vec3 = [3, 1.2, 0]
-const LEFT: Vec3 = [-4, 1.2, 0]
+const LEFT: Vec3 = [-2.4, 0, 0]
+const LEFT_FAR: Vec3 = [-12, 0, 0]
+/** 窄畫面（手機）的寬度門檻與要標名字的最薄層 */
+const NARROW_PX = 600
+const NARROW_MIN_PCT = 4
 
 /**
  * 實戰課的體檢塔（真資料）：快照的資產大類變成一座基金塔（layout/practice checkupBasket），站在交易所台座上（和 f-1、f-2 的基金塔同一個位置與鏡頭）。
@@ -34,6 +39,7 @@ export function CheckupStage({ fund, show, quality, event }: { fund: string; sho
   const b = useMemo(() => checkupBasket(f), [f])
   const groups = useMemo(() => assetGroups(f), [f])
   const explode = useSandbox(effectiveExplode)
+  const narrow = useThree((s) => s.size.width) < NARROW_PX
   const spec = basketSpec(b.universe, b.productId, quality)
   const voxels = useMemo(() => basketVoxels(b.universe, b.productId, spec), [b, spec])
   const position: Vec3 = [EXCHANGE_POSITION[0], PEDESTAL_HEIGHT, EXCHANGE_POSITION[2]]
@@ -91,18 +97,24 @@ export function CheckupStage({ fund, show, quality, event }: { fund: string; sho
           />
         </>
       )}
+      {/* 三大類寫在右邊；掩護性買權是股票裡的一層（寫在股票的副標）；每一層的名字寫在左邊（prac-r1：好幾層沒有名字） */}
       {show === 'mix' &&
         (['stock', 'bond', 'cash'] as const).map((g) => {
           const h = firstOf(g)
           const a = h && anchorOf(h.id)
           if (!a) return null
-          const sub = T.checkup.groupSub[g]
-          return <Callout key={g} anchor={a} offset={RIGHT} title={T.checkup.group[g](groups[g].toFixed(1))} sub={sub || undefined} color={b.looks[b.holdings.indexOf(h)]!.color} persistent />
+          const sub = g === 'stock' ? (cc ? T.checkup.stockSub(cc.pct.toFixed(1)) : undefined) : g === 'bond' ? T.checkup.bondSub : undefined
+          return <Callout key={g} anchor={a} offset={RIGHT} title={T.checkup.group[g](groups[g].toFixed(1))} sub={sub} color={b.looks[b.holdings.indexOf(h)]!.color} persistent />
         })}
-      {show === 'mix' && cc && (() => {
-        const a = anchorOf(cc.id, -1)
-        return a ? <Callout anchor={a} offset={LEFT} title={T.checkup.coveredCall} sub={T.checkup.pct(cc.pct.toFixed(1))} color={b.looks[b.holdings.indexOf(cc)]!.color} persistent /> : null
-      })()}
+      {show === 'mix' &&
+        b.holdings.map((h, i) => {
+          if (h.group === 'cash') return null
+          // 手機畫面窄：遠的那一排會跑出畫面，只標比較厚的層（全部的名字在即時數字）
+          if (narrow && (i % 2 === 1 || h.pct < NARROW_MIN_PCT)) return null
+          const a = anchorOf(h.id, -1)
+          // 薄的層上下挨在一起：一個近、一個遠地交錯，名字才不會疊
+          return a ? <Callout key={h.id} anchor={a} offset={i % 2 === 0 || narrow ? LEFT : LEFT_FAR} title={T.checkup.layer(h.zh, h.pct.toFixed(1))} color={b.looks[i]!.color} compact persistent /> : null
+        })}
       {show === 'hy' && hy && (() => {
         const a = anchorOf(hy.id)
         return a ? (

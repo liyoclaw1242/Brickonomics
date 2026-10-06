@@ -89,25 +89,25 @@ export function NavPayoutStage({ fund }: { fund: string }) {
         </mesh>
       )}
       {/* 標註往裡面、往上長（手機畫面窄，往外長的會跑出畫面）；柱子從哪裡起畫寫在第一根的副標 */}
-      <Callout anchor={atPlaza(first.x, first.h, 0)} offset={[1.2, 5.2, 0]} title={T.np.navAt(T.date(first.date))} sub={T.np.firstSub(first.nav.toFixed(2), L.floor)} color={BAR_COLOR} persistent />
+      <Callout anchor={atPlaza(first.x, first.h, 0)} offset={[1.2, 5.2, 0]} title={T.np.start(T.date(first.date))} color={BAR_COLOR} persistent />
       <Callout
         anchor={atPlaza(last.x + barW / 2, (L.startY + L.endY) / 2, 0)}
         offset={[-1.2, 2.4, 0]}
         title={T.np.navAt(T.date(last.date))}
-        sub={drop > 1e-3 ? T.np.shorter(Math.abs(change.change).toFixed(2)) : T.np.navSub(last.nav.toFixed(2))}
+        sub={drop > 1e-3 ? T.np.shorter(Math.abs(change.change).toFixed(2)) : undefined}
         color={ACCENT_COLORS.loss}
         subColor={ACCENT_COLORS.loss}
         persistent
       />
       {run.firstIncomeOnly && run.lastIncomeOnly && (
-        <Callout anchor={atPlaza(incomeCoin.x, 0.1, coinZ + coinR)} offset={[0.6, -0.4, 4.2]} title={T.np.income} sub={T.np.incomeSub(T.ym(run.firstIncomeOnly), T.ym(run.lastIncomeOnly))} color={ACCENT_COLORS.coin} persistent />
+        <Callout anchor={atPlaza(incomeCoin.x, 0.1, coinZ + coinR)} offset={[0.6, -0.4, 4.2]} title={T.np.income} sub={T.np.incomeSub(run.incomeOnly)} color={ACCENT_COLORS.coin} persistent />
       )}
       {capitalCoin && run.since && (
         <Callout
           anchor={atPlaza(capitalCoin.x, capitalCoin.incomeH + capitalCoin.capitalH, coinZ + coinR)}
           offset={[-0.6, -0.6, 4.2]}
           title={T.np.capital}
-          sub={T.np.capitalSub(T.ym(run.since), run.min, run.max)}
+          sub={T.np.capitalSub(T.date(run.since), run.min, run.max)}
           color={ACCENT_COLORS.loss}
           persistent
         />

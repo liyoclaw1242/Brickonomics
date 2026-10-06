@@ -11,7 +11,7 @@ import { LEVERAGE } from '../sim/leverage'
 import { HEDGE } from '../sim/hedge'
 import { COVERED_CALL } from '../sim/coveredCall'
 import { CC_RISE_MIN, ccNow, ccSunny } from '../scene/layout/practice'
-import { annualReturns, assetGroups, capitalRun, feeSummary, fundSizeYi, fundStyle, navChange, payoutTotal, riskRank, shortName, sortedRegions } from '../sim/checkup'
+import { annualReturns, assetGroups, capitalRun, feeSummary, fellLess, fundSizeYi, fundStyle, nearHalf, netPerUnit, riskRank, shortName, sortedRegions, yearToDate } from '../sim/checkup'
 import { perfLayout } from '../scene/layout/practice'
 import { checkupOf } from '../data/fundCheckup'
 import type { CheckupLine } from './types'
@@ -970,25 +970,24 @@ export const COURSE_STEPS: Step[] = [
     id: 'x-pay',
     title: '每月配息',
     line: '每月有**金幣|coin**，要看**塔有沒有變矮|loss**',
+    // prac-r1／review：不用「8.25 vs 2.12」（像在比大小）；一個中性的總數＝配息＋塔的高低（每一份），真的有現金流也照實寫
     more: (c) => {
       const f = fundOf(c)
-      const ch = navChange(f)
+      const n = netPerUnit(f)
       const run = capitalRun(f)
       const y = f.annualisedDividendYield.value
       return [
-        `每一份一年配 ${usd2(payoutTotal(f))} 美元，塔${ch.change < 0 ? '矮了' : '高了'} ${usd2(Math.abs(ch.change))}。`,
-        ...(run.since ? [`${T.ym(run.since)} 起，每次 ${run.min}–${run.max}% 是本金。`] : []),
+        `一年下來每一份${n.net >= 0 ? '多了' : '少了'} ${usd2(Math.abs(n.net))} 美元，約 ${(Math.abs(n.pct) * 100).toFixed(1)}%。`,
+        ...(run.since ? [`基準日 ${T.date(run.since)} 起，配息裡有本金。`, `那之後每次配息，本金佔 ${run.min}–${run.max}%。`] : []),
         ...(y ? [`年化配息率 ${y.pct.toFixed(1)}% 是配出的比例，不是報酬。`] : []),
-        '金幣加上塔，合起來才是總報酬。',
       ].join('')
     },
     bigNumber: (c) => {
-      const f = fundOf(c)
-      const ch = navChange(f)
+      const n = netPerUnit(fundOf(c))
       return {
-        value: `${usd2(payoutTotal(f))} vs ${usd2(Math.abs(ch.change))}`,
-        label: ch.change < 0 ? '一年配息 vs 塔矮了' : '一年配息 vs 塔高了',
-        note: `每一份・${T.currency(f.navMonthEnd.value!.currency)}・${T.date(ch.from.date)}–${T.date(ch.to.date)}`,
+        value: `${T.signed2(n.net)} 美元`,
+        label: '配息＋塔高變化（每一份）',
+        note: `約 ${n.pct >= 0 ? '+' : '−'}${(Math.abs(n.pct) * 100).toFixed(1)}%・其中配出 ${usd2(n.payouts)}，塔${n.change < 0 ? '少' : '多'} ${usd2(Math.abs(n.change))}`,
         colorKey: 'coin',
       }
     },
@@ -1022,19 +1021,23 @@ export const COURSE_STEPS: Step[] = [
     // 拆開：三大類（股票含掩護性買權│借據與特別股│現金，分法在 sim/checkup）。一句話由算出來的結果決定
     id: 'x-mix',
     title: '裡面裝什麼',
-    line: (c) => (assetGroups(fundOf(c)).nonStockMajority ? '拆開看：一半以上不是**股票|stock**' : '拆開看：一半以上是**股票|stock**'),
+    // review：50.2% 在四捨五入和特別股的分法以內 → 股票離 50% 不到 2 個百分點時說「大約各一半」
+    line: (c) => {
+      const g = assetGroups(fundOf(c))
+      return nearHalf(g) ? '拆開看：股票和借據**大約各一半**' : g.nonStockMajority ? '拆開看：一半以上不是**股票|stock**' : '拆開看：一半以上是**股票|stock**'
+    },
     more: (c) => {
       const g = assetGroups(fundOf(c))
       return [
-        `股票 ${p1(g.stock)}，含掩護性買權 ${p1(g.coveredCall)}。`,
+        `股票 ${p1(g.stock)}，其中 ${p1(g.coveredCall)} 用掩護性買權。`,
         `借據與特別股 ${p1(g.bond)}，現金 ${p1(g.cash)}。`,
-        `特別股算借據；算股票的話，股票是 ${p1(g.stockWithPreferred)}。`,
-        `資料日 ${T.date(fundOf(c).assetAllocation.value?.asOf ?? '')}，加起來 ${p1(g.total)}。`,
+        '特別股：介於股票和借據之間，這裡算借據。',
+        `算股票就是 ${p1(g.stockWithPreferred)}（${T.date(fundOf(c).assetAllocation.value?.asOf ?? '')}）。`,
       ].join('')
     },
     bigNumber: (c) => {
       const g = assetGroups(fundOf(c))
-      return { value: p1(g.nonStock), label: '不是股票的部分', fraction: g.nonStock / 100, note: `股票 ${p1(g.stock)}・特別股算在借據這邊`, colorKey: 'bond' }
+      return { value: p1(g.stock), label: '股票的部分', fraction: g.stock / 100, note: `借據＋特別股 ${p1(g.bond)}・現金 ${p1(g.cash)}`, colorKey: 'stock' }
     },
     scene: { cityDim: true, camera: 'exchangeWide', product: null, explode: 1, stage: { kind: 'checkup', fund: PRACTICE_FUND, show: 'mix' }, cityLabels: false },
   },
@@ -1110,28 +1113,37 @@ export const COURSE_STEPS: Step[] = [
     // 績效：每年兩座塔（基金、它自己選的藍圖＝指標），最差那年 🌋。一句話由算出來的高低年數決定（不下結論）
     id: 'x-perf',
     title: '歷年績效',
+    // review：「藍圖」在這門課會讓人想到 ETF；混合指標就叫「它自己的指標」。好的年份（跌得比指標少、今年到目前）也寫在看得到的地方
     line: (c) => {
       const r = annualReturns(fundOf(c))
-      return `和**藍圖|passive**比：${aheadBehind(r.ahead, r.behind, r.rows.length)}`
+      return `和**指標|passive**比：${aheadBehind(r.ahead, r.behind, r.rows.length)}`
     },
     more: (c) => {
-      const r = annualReturns(fundOf(c))
+      const f = fundOf(c)
+      const r = annualReturns(f)
       const w = r.rows.find((x) => x.year === r.worst.year)!
+      const y = yearToDate(f)
       return [
-        '藍圖＝這檔基金自己選的比較指標。',
-        `${w.year} 年跌 ${Math.abs(w.fund).toFixed(1)}%，藍圖跌 ${Math.abs(w.bench).toFixed(1)}%。`,
-        '報酬含配息再投入，用美元算。',
-        '基金說它不以贏過指標為目標。',
+        '指標＝這檔基金自己選的比較對象。',
+        `${w.year} 跌 ${Math.abs(w.fund).toFixed(1)}%，比指標的 ${Math.abs(w.bench).toFixed(1)}% ${w.fund > w.bench ? '少' : '多'}。`,
+        `${y.asOf.slice(0, 4)} 到 ${T.date(y.asOf).slice(5)}：${y.fund.toFixed(1)}% 對 ${y.bench.toFixed(1)}%。`,
+        '報酬含配息再投入，用美元算；它不以贏過指標為目標。',
       ].join('')
     },
     bigNumber: (c) => {
-      const r = annualReturns(fundOf(c))
+      const f = fundOf(c)
+      const r = annualReturns(f)
+      const less = fellLess(f)
       const first = r.rows[0]!.year
       const last = r.rows.at(-1)!.year
       // 卡片放得下一行：整數 %（一位小數在多說一點的即時數字）；兩個都漲時標籤說「漲幅」，有跌的才帶正負號
       const up = r.fundTotal >= 0 && r.benchTotal >= 0
       const v = (x: number) => (up ? `${pct0(x * 100)}%` : `${x < 0 ? '−' : '+'}${pct0(Math.abs(x) * 100)}%`)
-      return { value: `${v(r.fundTotal)} vs ${v(r.benchTotal)}`, label: up ? '漲幅：基金 vs 藍圖' : '基金 vs 藍圖', note: `${first}–${last} ${r.rows.length} 年合起來（含配息）` }
+      return {
+        value: `${v(r.fundTotal)} vs ${v(r.benchTotal)}`,
+        label: up ? '漲幅：基金 vs 指標' : '基金 vs 指標',
+        note: `${first}–${last} 合起來（含配息）${less.length ? `・${less.join('、')} 跌得比指標少` : ''}`,
+      }
     },
     compare: true,
     scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'perf', fund: PRACTICE_FUND }, event: perfLayout(checkupOf(PRACTICE_FUND)).quake, cityLabels: false },
@@ -1142,20 +1154,24 @@ export const COURSE_STEPS: Step[] = [
     title: '體檢表',
     line: '**只是體檢**，不是叫你買或賣',
     more: '每一行都附資料日期。數字會變，要看最新的月報。這不是推薦，也不是唱衰。',
+    // 好處和要注意的放在同一張卡（prac-r1：整堂課讀起來一面倒）；每一行帶單位與資料日期
     checkupCard: (c): CheckupLine[] => {
       const f = fundOf(c)
       const g = assetGroups(f)
-      const ch = navChange(f)
+      const n = netPerUnit(f)
+      const run = capitalRun(f)
       const r = annualReturns(f)
+      const less = fellLess(f)
       const alloc = f.assetAllocation.value?.asOf ?? f.assetAllocation.source.date
+      const style = STYLE_WORD[fundStyle(f)]
+      const good = [...(f.basics.distributionFrequency.value === 'monthly' ? ['每月現金流'] : []), ...less.map((y) => `${y} 跌較少`)]
       return [
-        // 股票和借據都有才叫平衡型（f-3 的定義）
-        { icon: '🚜', text: `怪手挑的${STYLE_WORD[fundStyle(f)]}`, asOf: alloc },
-        { icon: '🧱', text: g.nonStockMajority ? `一半以上不是股票（${p1(g.nonStock)}）` : `一半以上是股票（${p1(g.stock)}）`, asOf: alloc },
+        { icon: '🚜', text: nearHalf(g) ? `怪手挑的${style}，股債約各半` : `怪手挑的${style}`, asOf: alloc },
+        ...(good.length ? [{ icon: '✅', text: `有：${good.join('、')}`, asOf: f.calendarYearReturns.source.date }] : []),
         { icon: '📜', text: `容易裂的借據約 ${pct0(g.highYield)}%`, asOf: alloc },
-        { icon: '🪙', text: `一年配 ${usd2(payoutTotal(f))}，塔${ch.change < 0 ? '矮了' : '高了'} ${usd2(Math.abs(ch.change))}`, asOf: ch.to.date },
+        { icon: '🪙', text: `每份${n.net >= 0 ? '多' : '少'} ${usd2(Math.abs(n.net))} 美元${run.since ? '，配息含本金' : ''}`, asOf: n.to.date },
         { icon: '🚪', text: `每年先扣約 ${feeSummary(f).ongoing.toFixed(2)}%`, asOf: f.basics.ongoingCharges.source.date },
-        { icon: '📈', text: `近 ${r.rows.length} 年和藍圖比：${r.ahead} 高 ${r.behind} 低`, asOf: f.calendarYearReturns.source.date },
+        { icon: '📈', text: `近 ${r.rows.length} 年和指標比：${r.ahead} 高 ${r.behind} 低`, asOf: f.calendarYearReturns.source.date },
       ]
     },
     scene: { cityDim: true, camera: 'exchange', product: null, stage: { kind: 'checkup', fund: PRACTICE_FUND, show: 'final' }, cityLabels: false },

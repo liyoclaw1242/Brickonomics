@@ -3,7 +3,7 @@ import type { SpecOf } from '../events/types'
 import type { AssetKind, FundCheckup } from '../../data/fundCheckup'
 import type { Asset, AssetType } from '../../data/schema'
 import type { Universe } from '../../data/universe'
-import { annualReturns, ASSET_GROUP_OF, payoutSources, sortedRegions, type AssetGroup } from '../../sim/checkup'
+import { annualReturns, ASSET_GROUP_OF, payoutSources, sortedRegions, yearToDate, type AssetGroup } from '../../sim/checkup'
 import { ACCENT_COLORS, varyLooks, type BlockLook } from '../palette'
 
 /**
@@ -75,14 +75,14 @@ export function navPayoutLayout(f: FundCheckup) {
 export const CHECKUP_LAYOUT = { hyCrack: 0.5 } as const
 
 /** 體檢塔每種內容的顏色（股票沿用組合塔的股票藍；掩護性買權自己一個紫色，x-mix 標得出來；高收益債用玻璃，和 b-2 一樣「容易裂」） */
-export const CHECKUP_COLORS = { coveredCall: '#a78bfa', highYield: '#ffb300', bond: '#9fb3c8', preferred: '#b0bec5' } as const
+export const CHECKUP_COLORS = { coveredCall: '#a78bfa', highYield: '#ffb300', bond: '#9fb3c8', preferred: '#d98c7a' } as const
 
 const BASE_LOOK: Record<AssetKind, BlockLook> = {
   equity: { color: ACCENT_COLORS.stock, kind: 'matte' },
   coveredCall: { color: CHECKUP_COLORS.coveredCall, kind: 'matte' },
   highYield: { color: CHECKUP_COLORS.highYield, kind: 'glass' },
   bond: { color: CHECKUP_COLORS.bond, kind: 'metal' },
-  preferred: { color: CHECKUP_COLORS.preferred, kind: 'metal' },
+  preferred: { color: CHECKUP_COLORS.preferred, kind: 'matte' },
   cash: { color: ACCENT_COLORS.cash, kind: 'matte' },
 }
 /** 只給 Basket 用的資產類型（方塊數與塔的尺寸；顏色另外給） */
@@ -130,7 +130,7 @@ export const REGION_LAYOUT = {
   spots: {
     'United States': [-10, 1],
     Canada: [-18.5, -2.5],
-    UK: [-2, -3],
+    UK: [-3.5, -3],
     'Europe ex-UK': [2.5, -2.5],
     EM: [3, 3.5],
     Japan: [11, -2.5],
@@ -154,11 +154,12 @@ export function regionTiles(f: FundCheckup) {
 // ───────────── x-perf 每年兩座塔（基金 vs 它自己的藍圖） ─────────────
 
 /** 每年一對柱子（左＝基金、右＝指標），從零線往上（漲）或往下（跌）；最差那年下面 🌋 */
-export const PERF_LAYOUT = { yearGap: 7, pairGap: 1.1, barW: 1.6, unit: 0.22, zeroY: 3.4, pitZ: 3.2, pitWidth: 4.5 } as const
+export const PERF_LAYOUT = { yearGap: 6, pairGap: 1.1, barW: 1.6, unit: 0.22, zeroY: 3.4, pitZ: 3.2, pitWidth: 4.5 } as const
 
 export function perfLayout(f: FundCheckup) {
   const r = annualReturns(f)
-  const mid = (r.rows.length - 1) / 2
+  // 曆年一年一對，最後多一對「今年到資料日」（不滿一年，畫成半透明）
+  const mid = r.rows.length / 2
   const bar = (x: number, pct: number) => {
     const h = Math.abs(pct) * PERF_LAYOUT.unit
     return { x, pct, h, y: pct >= 0 ? PERF_LAYOUT.zeroY + h / 2 : PERF_LAYOUT.zeroY - h / 2 }
@@ -167,7 +168,10 @@ export function perfLayout(f: FundCheckup) {
     const x = (i - mid) * PERF_LAYOUT.yearGap
     return { year: row.year, x, fund: bar(x - PERF_LAYOUT.pairGap, row.fund), bench: bar(x + PERF_LAYOUT.pairGap, row.bench), down: row.fund < 0 }
   })
+  const y = yearToDate(f)
+  const yx = (r.rows.length - mid) * PERF_LAYOUT.yearGap
+  const ytd = { asOf: y.asOf, x: yx, fund: bar(yx - PERF_LAYOUT.pairGap, y.fund), bench: bar(yx + PERF_LAYOUT.pairGap, y.bench) }
   const worst = years.find((y) => y.year === r.worst.year)!
   const quake: SpecOf<'quake'> = { kind: 'quake', depth: Number((Math.abs(Math.min(0, r.worst.pct)) / 100).toFixed(4)), at: [worst.x, PERF_LAYOUT.pitZ], width: PERF_LAYOUT.pitWidth }
-  return { years, quake, span: (r.rows.length - 1) * PERF_LAYOUT.yearGap + 2 * (PERF_LAYOUT.pairGap + PERF_LAYOUT.barW) }
+  return { years, ytd, quake, span: r.rows.length * PERF_LAYOUT.yearGap + 2 * (PERF_LAYOUT.pairGap + PERF_LAYOUT.barW) }
 }

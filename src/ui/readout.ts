@@ -8,7 +8,8 @@ import { corrNow, dtNow, durNow, feeTreesNow, hedgeCaseIndex, hedgeTowers, levNo
 import { hedgeExample } from '../sim/hedge'
 import { ccNow } from '../scene/layout/practice'
 import { checkupOf } from '../data/fundCheckup'
-import { annualReturns, assetGroups, capitalRun, feeSummary, fundSizeYi, navChange, payoutTotal, sortedAssets, sortedRegions } from '../sim/checkup'
+import { annualReturns, assetGroups, capitalRun, feeSummary, fundSizeYi, navChange, netPerUnit, payoutTotal, sortedAssets, sortedRegions, yearToDate } from '../sim/checkup'
+import { navPayoutLayout } from '../scene/layout/practice'
 import type { FundCheckup } from '../data/fundCheckup'
 import { FEE_DRAG } from '../sim/feeDrag'
 import { LEVERAGE } from '../sim/leverage'
@@ -214,6 +215,10 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
       const p2 = (v: number) => `${T.signed2(v)}%`
       return [
         ...r.rows.map((y) => ({ label: T.readout.ckYear(y.year), value: `${p2(y.fund)} / ${p2(y.bench)}` })),
+        (() => {
+          const y = yearToDate(checkupOf(stage.fund))
+          return { label: T.readout.ckYtd(T.date(y.asOf)), value: `${p2(y.fund)} / ${p2(y.bench)}` }
+        })(),
         { label: T.readout.ckTotal(r.rows.length), value: `${p2(r.fundTotal * 100)} / ${p2(r.benchTotal * 100)}` },
       ]
     }
@@ -229,8 +234,10 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
         { label: T.readout.npEnd(T.date(c.to.date)), value: c.to.nav.toFixed(2) },
         { label: T.readout.npChange, value: T.signed2(c.change) },
         { label: T.readout.npPaid, value: payoutTotal(f).toFixed(3) },
+        { label: T.readout.npNet, value: T.signed2(netPerUnit(f).net) },
+        { label: T.readout.npFloor, value: String(navPayoutLayout(f).floor) },
         ...(run.firstIncomeOnly && run.lastIncomeOnly ? [{ label: T.readout.npIncomeOnly(T.ym(run.firstIncomeOnly), T.ym(run.lastIncomeOnly)), value: '0%' }] : []),
-        ...(run.since ? [{ label: T.readout.npCapital(T.ym(run.since)), value: `${run.min}–${run.max}%` }] : []),
+        ...(run.since ? [{ label: T.readout.npCapital(T.date(run.since)), value: `${run.min}–${run.max}%` }] : []),
         ...(y ? [{ label: T.readout.npYield(T.date(y.forRecordDate)), value: `${y.pct.toFixed(2)}%`, note: T.readout.npYieldNote }] : []),
       ]
     }

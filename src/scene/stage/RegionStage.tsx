@@ -65,7 +65,7 @@ export function RegionStage({ fund }: { fund: string }) {
         <Callout key={t.name} anchor={atPlaza(t.x, THICK, t.z)} offset={i === 0 ? [0, 2.4, 0] : [0, 2.2, 0]} title={T.checkup.region(t.zh, pct(t.pct))} color={LIT} persistent />
       ))}
       {[...land.slice(CALLOUT_TOP), ...(cash ? [cash] : [])].map((t) => (
-        <NameLabel key={t.name} position={atPlaza(t.x, THICK + 0.2, t.z + t.side / 2 + 1.3)} text={T.checkup.region(t.zh, pct(t.pct))} className="name-label--city" />
+        <NameLabel key={t.name} position={atPlaza(t.x, THICK + 0.2, t.z + t.side / 2 + 1.3)} text={T.checkup.region(t.zh, pct(t.pct))} className="name-label--island" />
       ))}
     </>
   )
