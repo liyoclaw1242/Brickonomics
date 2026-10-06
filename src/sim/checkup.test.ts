@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import raw from '../data/snapshot/practice/JFZN3.json'
 import { checkupOf, parseFundCheckup } from '../data/fundCheckup'
-import { annualReturns, ASSET_GROUP_OF, assetGroups, capitalRun, compound, feeSummary, navChange, payoutSources, payoutTotal, sortedAssets, sortedRegions } from './checkup'
+import { annualReturns, ASSET_GROUP_OF, assetGroups, capitalRun, compound, feeSummary, fundSizeYi, navChange, payoutSources, payoutTotal, riskRank, shortName, sortedAssets, sortedRegions } from './checkup'
 
 const f = checkupOf('JFZN3')
 const clone = (): Record<string, unknown> => JSON.parse(JSON.stringify(raw)) as Record<string, unknown>
@@ -122,5 +122,18 @@ describe('calendar-year returns vs the fund’s own benchmark', () => {
     const c = clone()
     ;(c.benchmarkCalendarYearReturns as { value: { items: unknown[] } }).value.items.pop()
     expect(() => annualReturns(parseFundCheckup(c))).toThrow(/2025/)
+  })
+})
+
+describe('names and sizes for the name card', () => {
+  it('shortName: the sub-fund part of the Chinese share-class name', () => {
+    // 「摩根投資基金－多重收益基金 - (美元對沖)-A股(穩定月配)」→ 全形破折號後、級別前
+    expect(shortName(f)).toBe('多重收益基金')
+  })
+  it('fundSizeYi: whole-fund size in 億 of the currency (USD million ÷ 100, one decimal): 22,185.5 → 221.9', () => {
+    expect(fundSizeYi(f)).toBe('221.9')
+  })
+  it('riskRank: RR3 is level 3 of 5', () => {
+    expect(riskRank(f)).toEqual({ level: 3, of: 5 })
   })
 })

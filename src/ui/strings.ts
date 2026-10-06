@@ -19,6 +19,15 @@ export const T = {
   ],
   /** 課程的開頭章（中階以上：上一階口訣複習）與結尾章（口訣卡）；序章與四個內容章沿用 chapters */
   courseChapters: { review: { icon: '🔁', name: '複習' }, finish: { icon: '🎓', name: '完成' } },
+  /** 實戰課（拆解一檔真基金）的章 */
+  practiceChapters: {
+    card: { icon: '🪪', name: '名片' },
+    apart: { icon: '🔍', name: '拆開' },
+    payout: { icon: '🪙', name: '配息' },
+    fee: { icon: '🚪', name: '費用' },
+    perf: { icon: '📈', name: '績效' },
+    checkup: { icon: '🩺', name: '體檢表' },
+  },
   /** 公開版的免責聲明（開場卡、自由玩面板、文字版）：教學示意，不是投資建議 */
   disclaimer: '教學示意，不構成投資建議。商品資料為 2026 年 10 月的公開資料快照，可能已經變動。',
   /** 課程（初階／中階／高階）：開場卡、右上角換階、結尾的下一階 */
@@ -28,6 +37,8 @@ export const T = {
     note: (tagline: string, n: number) => `${tagline}・${n} 步`,
     /** 開場卡上建議的順序（不鎖，任何一階都能先看） */
     order: (i: number) => `第 ${i + 1} 階`,
+    /** 開場卡上實戰課的小標（它不是第幾階） */
+    standalone: '真實案例',
     later: '右上角隨時可以換階',
     /** 工具列膠囊的無障礙名稱：先念看得到的目前階 */
     switchLabel: (current: string) => `${current}，換階`,
@@ -285,6 +296,34 @@ export const T = {
     capital: '紅色＝本金',
     capitalSub: (since: string, min: number, max: number) => `${since} 起每次 ${min}–${max}%`,
   },
+  /** 實戰課：一檔真基金的體檢（3D 標註、體檢表的日期） */
+  checkup: {
+    /** 名片：塔上的名字、註冊地與成立日 */
+    cardSub: (domicile: string, inception: string) => `${domicile}註冊・${inception} 成立`,
+    size: '整檔基金規模',
+    sizeSub: (yi: string, cur: string, date: string) => `${yi} 億${cur}・${date}`,
+    /** x-mix：三大類與掩護性買權那一層 */
+    group: { stock: (pct: string) => `股票 ${pct}%`, bond: (pct: string) => `借據＋特別股 ${pct}%`, cash: (pct: string) => `現金 ${pct}%` },
+    groupSub: { stock: '含掩護性買權', bond: '特別股算在這邊', cash: '' },
+    coveredCall: '掩護性買權',
+    pct: (pct: string) => `${pct}%`,
+    /** x-hy：高收益債那幾層 */
+    hy: (pct: string) => `高收益債 ${pct}%`,
+    hySub: '借給體質弱的公司',
+    hyHit: '經濟風暴：裂開',
+    /** x-where：區域的島 */
+    region: (name: string, pct: string) => `${name} ${pct}%`,
+    regionNote: '島越大越亮＝錢越多',
+    /** x-perf：每年兩座塔 */
+    fund: '這檔基金',
+    bench: '它自己的藍圖',
+    zero: '0%',
+    year: (y: number, down: boolean) => (down ? `${y} 🌋` : String(y)),
+    yearSub: (fund: string, bench: string) => `${fund} / ${bench}`,
+    /** 體檢表每一行的資料日期 */
+    asOf: (date: string) => `資料 ${date}`,
+    cardLabel: '體檢表',
+  },
   /** a-rebal 組合塔的 3D 標註（高階） */
   rebal: {
     stock: (v: string, pct: string) => `股票 ${v}（${pct}）`,
@@ -400,6 +439,26 @@ export const T = {
     npYield: (date: string) => `年化配息率（${date}）`,
     npYieldNote: '配出去的比例，不是報酬',
     npUnit: (cur: string) => `每一份，${cur}`,
+    ckCompany: '基金公司',
+    ckDomicile: '註冊地',
+    ckCurrency: '計價',
+    ckInception: '這個級別成立',
+    ckSize: (date: string) => `整檔基金規模（${date}）`,
+    ckSizeValue: (yi: string, cur: string) => `${yi} 億${cur}`,
+    ckRisk: '台灣風險等級',
+    ckSri: '歐盟 KID 風險（1–7）',
+    ckPayout: '配息',
+    ckPayoutValue: { monthly: '每月', quarterly: '每季', semiannual: '半年', annual: '每年', none: '不配息' },
+    ckGroup: { stock: '股票（含掩護性買權）', bond: '借據＋特別股', cash: '現金' },
+    ckFeeMgmt: '經理費（每年）',
+    ckFeeCustody: '保管費（每年，上限）',
+    ckFeeOngoing: '每年先扣（KID）',
+    ckFeeTrading: '交易成本（KID 估，另外算）',
+    ckFeeSales: '申購手續費（最高）',
+    ckFeeSalesNote: '實際看通路',
+    ckYear: (y: number) => `${y} 年：基金 / 藍圖`,
+    ckTotal: (n: number) => `${n} 年合起來：基金 / 藍圖`,
+    ckRegion: (zh: string) => zh,
     rebalStage: '進度',
     rebalStock: '股票',
     rebalBond: '債券',

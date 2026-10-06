@@ -15,7 +15,7 @@ export const EXCHANGE_POSITION: Vec3 = [0, 0, 14]
 export const PEDESTAL_HEIGHT = 0.6
 
 /** 擺在廣場上的舞台 */
-export const ON_PLAZA: ReadonlySet<Stage['kind']> = new Set<Stage['kind']>(['held', 'exdiv', 'bonds', 'feeRace', 'accumulate', 'principalTrap', 'shock', 'overlap', 'drawdown', 'pe', 'seesaw', 'dca', 'inflation', 'portfolio', 'correlation', 'dayTrade', 'duration', 'feeTrees', 'leverage', 'hedge', 'rebalance', 'coveredCall', 'navPayout'])
+export const ON_PLAZA: ReadonlySet<Stage['kind']> = new Set<Stage['kind']>(['held', 'exdiv', 'bonds', 'feeRace', 'accumulate', 'principalTrap', 'shock', 'overlap', 'drawdown', 'pe', 'seesaw', 'dca', 'inflation', 'portfolio', 'correlation', 'dayTrade', 'duration', 'feeTrees', 'leverage', 'hedge', 'rebalance', 'coveredCall', 'navPayout', 'regions', 'perf'])
 
 /**
  * 廣場舞台時城市只是背景：大樓與島的名稱小字一律收起（少字；也避免遠處名稱擠到工具列底下、和舞台標註互撞）。
@@ -25,9 +25,9 @@ export function cityNamesOnPlaza(kind: Stage['kind']): boolean {
   return !ON_PLAZA.has(kind)
 }
 
-/** 交易所台座：上面有東西（籃子）或在自由玩時才顯示（r3：空著的黑板子像壞掉、沒收乾淨） */
-export function showPedestal(mode: 'tour' | 'sandbox', productId: string | null): boolean {
-  return mode === 'sandbox' || productId !== null
+/** 交易所台座：上面有東西（籃子，或實戰課的體檢塔）或在自由玩時才顯示（r3：空著的黑板子像壞掉、沒收乾淨） */
+export function showPedestal(mode: 'tour' | 'sandbox', productId: string | null, stageKind?: Stage['kind']): boolean {
+  return mode === 'sandbox' || productId !== null || (mode === 'tour' && stageKind === 'checkup')
 }
 
 /**

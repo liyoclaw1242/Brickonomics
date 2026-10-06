@@ -60,6 +60,15 @@ export type Stage =
   | { kind: 'coveredCall' }
   /** x-pay 每月配息 vs 淨值（真資料）：一排月底淨值柱＋每月配息金幣（金色收益、紅色本金）；fund＝體檢資料的基金 id */
   | { kind: 'navPayout'; fund: string }
+  /**
+   * 實戰課的體檢塔（真資料的資產大類，廣場上）：card＝怪手＋名片、mix＝拆開標三大類、hy＝🌪 高收益債裂開（scene.event tornado）、
+   * fee＝怪手＋計費表、final＝只有塔（體檢表）
+   */
+  | { kind: 'checkup'; fund: string; show: 'card' | 'mix' | 'hy' | 'fee' | 'final' }
+  /** x-where 錢放在哪：每個區域一座島，越大越亮 */
+  | { kind: 'regions'; fund: string }
+  /** x-perf 歷年績效：每年兩座塔（基金、它自己的藍圖），最差那年 🌋（scene.event quake） */
+  | { kind: 'perf'; fund: string }
   | { kind: 'overlap'; a: string; b: string }
   | { kind: 'underground'; show: 'strata' | 'cores' | 'dig' | 'veins' | 'gold'; cores?: [string, string] }
 
@@ -149,6 +158,8 @@ export type ResearchCard = { rows: ResearchRow[]; cite: string; refs?: { citatio
 
 /** 課程最後的回顧：一個圖示＋一句短話 */
 export type RecapLine = { icon: string; text: string }
+/** 實戰課的體檢表一行：一個圖示＋一句短話＋這一行的資料日期（ISO） */
+export type CheckupLine = { icon: string; text: string; asOf: string }
 
 export type LessonText = string | ((c: TextContext) => string)
 
@@ -177,6 +188,8 @@ export type Step = {
   research?: (c: TextContext) => ResearchCard
   /** 面板上的回顧清單（最後一步用；文字版也顯示） */
   recap?: RecapLine[]
+  /** 體檢表（實戰課結尾；文字版也顯示）：每一行附資料日期，數字從體檢資料（c.checkup）算 */
+  checkupCard?: (c: TextContext) => CheckupLine[]
   callouts?: CalloutSpec[]
   scene: SceneDirective
   controls?: Control[]
@@ -191,8 +204,11 @@ export type Level = { id: string; title: string; steps: Step[] }
 export type CourseId = 'beginner' | 'intermediate' | 'advanced' | 'practice'
 /** 課程裡的一章：id 在同一門課內唯一；stepIds＝步驟池裡的步驟 id（照課程順序） */
 export type CourseChapter = { id: string; icon: string; name: string; stepIds: readonly string[] }
-/** available false＝還沒開放（開場卡、換階選單、網址都不能進入） */
-export type Course = { id: CourseId; name: string; tagline: string; chapters: readonly CourseChapter[]; available: boolean }
+/**
+ * available false＝還沒開放（開場卡、換階選單、網址都不能進入）。
+ * standalone＝不在初→中→高的順序裡（實戰課）：開場卡不寫「第幾階」，前一門課的結尾也不推薦它當下一階
+ */
+export type Course = { id: CourseId; name: string; tagline: string; chapters: readonly CourseChapter[]; available: boolean; standalone?: boolean }
 /** 舊版（Plan 5 以前）的絕對位置：LEVELS 的章與步；只剩存檔／網址遷移在用 */
 export type Position = { level: number; step: number }
 /** 課程裡的位置：index＝課內扁平索引（0 起） */

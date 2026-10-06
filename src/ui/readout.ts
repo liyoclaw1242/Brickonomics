@@ -8,7 +8,8 @@ import { corrNow, dtNow, durNow, feeTreesNow, hedgeCaseIndex, hedgeTowers, levNo
 import { hedgeExample } from '../sim/hedge'
 import { ccNow } from '../scene/layout/practice'
 import { checkupOf } from '../data/fundCheckup'
-import { capitalRun, navChange, payoutTotal } from '../sim/checkup'
+import { annualReturns, assetGroups, capitalRun, feeSummary, fundSizeYi, navChange, payoutTotal, sortedAssets, sortedRegions } from '../sim/checkup'
+import type { FundCheckup } from '../data/fundCheckup'
 import { FEE_DRAG } from '../sim/feeDrag'
 import { LEVERAGE } from '../sim/leverage'
 import { DURATION } from '../sim/duration'
@@ -24,6 +25,23 @@ import { T } from './strings'
 export type ReadoutRow = { label: string; value: string; marks?: Mark[]; note?: string }
 
 const n1 = (x: number) => x.toFixed(1)
+const pctRow = (v: number, digits = 1) => `${v.toFixed(digits)}%`
+
+/** 體檢的名片（x-card、x-fin）：基本資料，每列的資料日期寫在 note */
+function cardRows(f: FundCheckup): ReadoutRow[] {
+  const b = f.basics
+  const on = (d: string) => T.checkup.asOf(T.date(d))
+  return [
+    { label: T.readout.ckCompany, value: b.managementCompany.value?.zh ?? '', note: on(b.managementCompany.source.date) },
+    { label: T.readout.ckDomicile, value: b.domicile.value ?? '' },
+    { label: T.readout.ckCurrency, value: T.currency(b.currency.value ?? '') },
+    { label: T.readout.ckInception, value: T.date(b.inceptionDate.value ?? '') },
+    { label: T.readout.ckSize(T.date(b.fundSize.value?.asOf ?? b.fundSize.source.date)), value: T.readout.ckSizeValue(fundSizeYi(f), T.currency('USD')) },
+    { label: T.readout.ckRisk, value: b.riskLevelTW.value ?? '', note: on(b.riskLevelTW.source.date) },
+    { label: T.readout.ckSri, value: String(b.sri.value ?? ''), note: on(b.sri.source.date) },
+    { label: T.readout.ckPayout, value: T.readout.ckPayoutValue[b.distributionFrequency.value ?? 'none'] },
+  ]
+}
 
 /** 每個舞台在面板上的即時數字（純函式，畫面與測試共用） */
 export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId: string | null, event?: EventSpec): ReadoutRow[] {
@@ -164,6 +182,39 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
         { label: T.readout.ccPlain, value: p(n.plain) },
         { label: T.readout.ccPremium, value: p(n.coin / 100) },
         { label: T.readout.ccCovered, value: p(n.covered) },
+      ]
+    }
+    case 'checkup': {
+      const f = checkupOf(stage.fund)
+      if (stage.show === 'mix') {
+        const g = assetGroups(f)
+        return [
+          ...(['stock', 'bond', 'cash'] as const).map((k) => ({ label: T.readout.ckGroup[k], value: pctRow(g[k]) })),
+          // 現金只有一項，上面三大類已經列了
+          ...sortedAssets(f).filter((i) => i.kind !== 'cash').map((i) => ({ label: i.zh, value: pctRow(i.pct) })),
+        ]
+      }
+      if (stage.show === 'hy') return sortedAssets(f).filter((i) => i.kind === 'highYield' || i.kind === 'bond' || i.kind === 'preferred').map((i) => ({ label: i.zh, value: pctRow(i.pct) }))
+      if (stage.show === 'fee') {
+        const s = feeSummary(f)
+        return [
+          { label: T.readout.ckFeeMgmt, value: pctRow(s.management, 2) },
+          { label: T.readout.ckFeeCustody, value: pctRow(s.custody, 2) },
+          { label: T.readout.ckFeeOngoing, value: pctRow(s.ongoing, 2) },
+          { label: T.readout.ckFeeTrading, value: pctRow(s.transaction, 2) },
+          { label: T.readout.ckFeeSales, value: pctRow(s.maxSales, 0), marks: ['assumption'], note: T.readout.ckFeeSalesNote },
+        ]
+      }
+      return cardRows(f)
+    }
+    case 'regions':
+      return sortedRegions(checkupOf(stage.fund)).map((r) => ({ label: T.readout.ckRegion(r.zh), value: pctRow(r.pct) }))
+    case 'perf': {
+      const r = annualReturns(checkupOf(stage.fund))
+      const p2 = (v: number) => `${T.signed2(v)}%`
+      return [
+        ...r.rows.map((y) => ({ label: T.readout.ckYear(y.year), value: `${p2(y.fund)} / ${p2(y.bench)}` })),
+        { label: T.readout.ckTotal(r.rows.length), value: `${p2(r.fundTotal * 100)} / ${p2(r.benchTotal * 100)}` },
       ]
     }
     case 'navPayout': {

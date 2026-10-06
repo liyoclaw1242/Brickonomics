@@ -101,6 +101,10 @@ export function checkupSources(step: Step, funds: ReadonlyMap<string, FundChecku
     const big = step.bigNumber
     run(() => big(rec, { ...DEFAULT_VALUES, ...step.scene.values }))
   }
+  if (step.checkupCard) {
+    const card = step.checkupCard
+    run(() => card(rec))
+  }
   const out = [...seen.values()]
   byStep.set(step, out)
   return out

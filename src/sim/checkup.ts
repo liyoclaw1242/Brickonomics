@@ -151,3 +151,20 @@ export function annualReturns(f: FundCheckup) {
     benchTotal: compound(rows.map((r) => r.bench)),
   }
 }
+
+/** 名片上的短名：中文級別名稱裡，全形破折號（－）後面、級別說明（「 - 」）前面那段 */
+export function shortName(f: FundCheckup): string {
+  const zh = need(f.basics.shareClassName.value, 'shareClassName').zh
+  const after = zh.split('－')[1] ?? zh
+  return after.split(' - ')[0]!.trim()
+}
+
+/** 整檔基金規模（百萬 → 億，一位小數）：22,185.5 百萬 → '221.9' */
+export function fundSizeYi(f: FundCheckup): string {
+  return (need(f.basics.fundSize.value, 'fundSize').amount / 100).toFixed(1)
+}
+
+/** 台灣風險報酬等級：RR3 → 第 3 級，共 5 級 */
+export function riskRank(f: FundCheckup): { level: number; of: number } {
+  return { level: Number(need(f.basics.riskLevelTW.value, 'riskLevelTW').slice(2)), of: 5 }
+}
