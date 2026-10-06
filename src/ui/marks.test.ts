@@ -4,7 +4,9 @@ import { universe } from '../data'
 import { LEVELS } from '../tour/levels'
 import { STEP_POOL } from '../tour/courses'
 import { isVerified } from '../data/verified'
-import { feeRowMarks, holdingsSources, markPlacement, stepMarks, titleRowFits } from './marks'
+import { checkupSources, feeRowMarks, holdingsSources, markPlacement, stepMarks, titleRowFits } from './marks'
+import { CHECKUPS, checkupOf, type FundCheckup } from '../data/fundCheckup'
+import type { Step } from '../tour/types'
 
 describe('mark words (user test r2: 示意／假設／待查 were not understood)', () => {
   it('uses plain words on the pills', () => {
@@ -97,5 +99,31 @@ describe('高階: ？ from the research card and the day-trade cost data (Plan 8
   })
   it('the day-trade stage is ？-free while every cost item in TW_TRADING is verified', () => {
     expect(stepMarks({ ...base, mark: 'illustrative', scene: { camera: 'plaza', stage: { kind: 'dayTrade' } } }, universe)).toEqual(['illustrative'])
+  })
+})
+
+describe('stepMarks for the practice course (fund checkup data)', () => {
+  // 一個假的步驟：大數字讀一年配息（dividends），多說一點讀每年持續費用（basics.ongoingCharges）
+  const step: Step = {
+    id: 'x-test',
+    title: '測試',
+    line: '測試一句話',
+    more: (c) => `每年 ${c.checkup('JFZN3').basics.ongoingCharges.value}%`,
+    bigNumber: (c) => ({ value: String(c.checkup('JFZN3').dividends.value!.items.length), label: '次數' }),
+    scene: { camera: 'plaza' },
+  }
+  const f = checkupOf('JFZN3')
+  const withFlag = (patch: (x: FundCheckup) => FundCheckup): ReadonlyMap<string, FundCheckup> => new Map([[f.id, patch(f)]])
+
+  it('records which checkup fields the texts read, from the texts themselves', () => {
+    expect(checkupSources(step, CHECKUPS)).toEqual([['JFZN3', 'basics.ongoingCharges'], ['JFZN3', 'dividends']])
+  })
+
+  it('adds ？ when a field the step reads is unverified or null, and only then', () => {
+    expect(stepMarks(step, universe)).toEqual([])
+    expect(stepMarks(step, universe, withFlag((x) => ({ ...x, dividends: { ...x.dividends, verified: false } })))).toEqual(['unverified'])
+    expect(stepMarks(step, universe, withFlag((x) => ({ ...x, basics: { ...x.basics, ongoingCharges: { ...x.basics.ongoingCharges, verified: false } } })))).toEqual(['unverified'])
+    // 沒讀的欄位沒查證：不影響
+    expect(stepMarks(step, universe, withFlag((x) => ({ ...x, topHoldings: { ...x.topHoldings, verified: false } })))).toEqual([])
   })
 })

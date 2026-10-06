@@ -1,0 +1,720 @@
+{
+  "id": "JFZN3",
+  "researchedOn": "2026-10-06",
+  "basics": {
+    "shareClassName": {
+      "value": {
+        "zh": "摩根投資基金－多重收益基金 - (美元對沖)-A股(穩定月配)",
+        "en": "JPM Global Income A (icdiv) - USD (hedged)"
+      },
+      "source": {
+        "url": "https://jp.techrules.com/rebrandingPDF/LoadPdf.aspx?ShareClassId=14634&country=LU&lang=EN&paramMIFID=YES",
+        "doc": "J.P. Morgan AM Factsheet, JPM Global Income A (icdiv) - USD (hedged) (linked from am.jpmorgan.com/lu product page)",
+        "date": "2026-08-31"
+      },
+      "verified": true
+    },
+    "isin": {
+      "value": "LU2347655073",
+      "source": {
+        "url": "https://jp.techrules.com/rebrandingPDF/LoadPdf.aspx?ShareClassId=14634&country=LU&lang=EN&paramMIFID=YES",
+        "doc": "J.P. Morgan AM Factsheet, JPM Global Income A (icdiv) - USD (hedged) (linked from am.jpmorgan.com/lu product page)",
+        "date": "2026-08-31"
+      },
+      "verified": true
+    },
+    "managementCompany": {
+      "value": {
+        "zh": "摩根資產管理(歐洲)有限公司",
+        "en": "JPMorgan Asset Management (Europe) S.à r.l."
+      },
+      "source": {
+        "url": "https://am.jpmorgan.com/content/dam/jpm-am-aem/asiapacific/tw/zh/regulatory/investor-disclosure-document/mk01-0z.pdf",
+        "doc": "摩根投資基金–多重收益基金 投資人須知【第一部分：基金專屬資訊】（刊印日期 115年7月31日）",
+        "date": "2026-07-31"
+      },
+      "verified": true
+    },
+    "taiwanMasterAgent": {
+      "value": "摩根證券投資信託股份有限公司",
+      "source": {
+        "url": "https://am.jpmorgan.com/content/dam/jpm-am-aem/asiapacific/tw/zh/regulatory/investor-disclosure-document/mk01-0z.pdf",
+        "doc": "摩根投資基金–多重收益基金 投資人須知【第一部分：基金專屬資訊】（刊印日期 115年7月31日）",
+        "date": "2026-07-31"
+      },
+      "verified": true
+    },
+    "domicile": {
+      "value": "盧森堡",
+      "source": {
+        "url": "https://am.jpmorgan.com/content/dam/jpm-am-aem/asiapacific/tw/zh/regulatory/investor-disclosure-document/mk01-0z.pdf",
+        "doc": "摩根投資基金–多重收益基金 投資人須知【第一部分：基金專屬資訊】（刊印日期 115年7月31日）",
+        "date": "2026-07-31"
+      },
+      "verified": true
+    },
+    "currency": {
+      "value": "USD",
+      "source": {
+        "url": "https://jp.techrules.com/rebrandingPDF/LoadPdf.aspx?ShareClassId=14634&country=LU&lang=EN&paramMIFID=YES",
+        "doc": "J.P. Morgan AM Factsheet, JPM Global Income A (icdiv) - USD (hedged) (linked from am.jpmorgan.com/lu product page)",
+        "date": "2026-08-31"
+      },
+      "verified": true,
+      "note": "Share class currency USD; fund reference/base currency EUR (hedged class)."
+    },
+    "inceptionDate": {
+      "value": "2021-07-02",
+      "source": {
+        "url": "https://jp.techrules.com/rebrandingPDF/LoadPdf.aspx?ShareClassId=14634&country=LU&lang=EN&paramMIFID=YES",
+        "doc": "J.P. Morgan AM Factsheet, JPM Global Income A (icdiv) - USD (hedged) (linked from am.jpmorgan.com/lu product page)",
+        "date": "2026-08-31"
+      },
+      "verified": true,
+      "note": "Also 成立日期 2021.07.02 in the TW 月報."
+    },
+    "fundSize": {
+      "value": {
+        "amount": 22185.5,
+        "unit": "USD million",
+        "scope": "whole sub-fund, all share classes",
+        "asOf": "2026-08-31"
+      },
+      "source": {
+        "url": "https://am.jpmorgan.com/content/dam/jpm-am-aem/asiapacific/tw/zh/literature/fact-sheet/01-0z.pdf",
+        "doc": "摩根投資基金-多重收益基金 A股 基金月報（美元對沖穩定月配）",
+        "date": "2026-08-31"
+      },
+      "verified": true,
+      "note": "LU factsheet states EUR 19,129.6m at the same date (fund reference currency). Share-class size not stated."
+    },
+    "riskLevelTW": {
+      "value": "RR3",
+      "source": {
+        "url": "https://am.jpmorgan.com/content/dam/jpm-am-aem/asiapacific/tw/zh/literature/fact-sheet/01-0z.pdf",
+        "doc": "摩根投資基金-多重收益基金 A股 基金月報（美元對沖穩定月配）",
+        "date": "2026-08-31"
+      },
+      "verified": true,
+      "note": "「風險報酬等級：中(RR3)」; 投資人須知 also states RR3."
+    },
+    "sri": {
+      "value": 3,
+      "source": {
+        "url": "https://wl.fundsquare.net/serv/down-doc/request?cdClient=jpmorgan&isin=LU2347655073&docTypeCode=KIDD&docLang=EN&docCountry=LU",
+        "doc": "PRIIPs Key Information Document, JPM Global Income A (icdiv) - USD (hedged) (linked from am.jpmorgan.com/lu product page)",
+        "date": "2026-04-27"
+      },
+      "verified": true,
+      "note": "\"We have classified this product as 3 out of 7\". LU factsheet also shows SRI 3. The TW product-data feed field srriValue=4 conflicts; not used."
+    },
+    "distributionFrequency": {
+      "value": "monthly",
+      "source": {
+        "url": "https://am.jpmorgan.com/content/dam/jpm-am-aem/asiapacific/tw/zh/regulatory/investor-disclosure-document/mk01-0z.pdf",
+        "doc": "摩根投資基金–多重收益基金 投資人須知【第一部分：基金專屬資訊】（刊印日期 115年7月31日）",
+        "date": "2026-07-31"
+      },
+      "verified": true
+    },
+    "managementFee": {
+      "value": 1.25,
+      "source": {
+        "url": "https://am.jpmorgan.com/content/dam/jpm-am-aem/asiapacific/tw/zh/regulatory/investor-disclosure-document/mk01-0z.pdf",
+        "doc": "摩根投資基金–多重收益基金 投資人須知【第一部分：基金專屬資訊】（刊印日期 115年7月31日）",
+        "date": "2026-07-31"
+      },
+      "verified": true,
+      "note": "% p.a. of NAV, A class"
+    },
+    "custodyAdminFee": {
+      "value": 0.2,
+      "source": {
+        "url": "https://am.jpmorgan.com/content/dam/jpm-am-aem/asiapacific/tw/zh/regulatory/investor-disclosure-document/mk01-0z.pdf",
+        "doc": "摩根投資基金–多重收益基金 投資人須知【第一部分：基金專屬資訊】（刊印日期 115年7月31日）",
+        "date": "2026-07-31"
+      },
+      "verified": true,
+      "note": "保管費(或行政管理費) A class 0.20% Max p.a. (a cap, not the actual charge)"
+    },
+    "maxSalesCharge": {
+      "value": 5,
+      "source": {
+        "url": "https://am.jpmorgan.com/content/dam/jpm-am-aem/asiapacific/tw/zh/regulatory/investor-disclosure-document/mk01-0z.pdf",
+        "doc": "摩根投資基金–多重收益基金 投資人須知【第一部分：基金專屬資訊】（刊印日期 115年7月31日）",
+        "date": "2026-07-31"
+      },
+      "verified": true,
+      "note": "A級別 最高5%; actual rate depends on the distributor"
+    },
+    "ongoingCharges": {
+      "value": 1.45,
+      "source": {
+        "url": "https://wl.fundsquare.net/serv/down-doc/request?cdClient=jpmorgan&isin=LU2347655073&docTypeCode=KIDD&docLang=EN&docCountry=LU",
+        "doc": "PRIIPs Key Information Document, JPM Global Income A (icdiv) - USD (hedged) (linked from am.jpmorgan.com/lu product page)",
+        "date": "2026-04-27"
+      },
+      "verified": true,
+      "note": "KID: management fees and other administrative or operating costs 1.45% p.a.; LU factsheet shows 1.46% (31 Aug 2026); 投資人須知 費用率 114年(2025) 1.45%."
+    },
+    "transactionCosts": {
+      "value": 0.22,
+      "source": {
+        "url": "https://wl.fundsquare.net/serv/down-doc/request?cdClient=jpmorgan&isin=LU2347655073&docTypeCode=KIDD&docLang=EN&docCountry=LU",
+        "doc": "PRIIPs Key Information Document, JPM Global Income A (icdiv) - USD (hedged) (linked from am.jpmorgan.com/lu product page)",
+        "date": "2026-04-27"
+      },
+      "verified": true,
+      "note": "estimate, % p.a."
+    }
+  },
+  "assetAllocation": {
+    "value": {
+      "asOf": "2026-08-31",
+      "items": [
+        {
+          "name": "Global Equity",
+          "zh": "環球股票",
+          "pct": 29,
+          "kind": "equity"
+        },
+        {
+          "name": "US High Yield",
+          "zh": "美國非投資等級債",
+          "pct": 27.3,
+          "kind": "highYield"
+        },
+        {
+          "name": "US Equity covered call",
+          "zh": "美國股票掩護性買權",
+          "pct": 9.6,
+          "kind": "coveredCall"
+        },
+        {
+          "name": "European Equity",
+          "zh": "歐洲股票",
+          "pct": 6.6,
+          "kind": "equity"
+        },
+        {
+          "name": "Preferred Equity",
+          "zh": "特別股",
+          "pct": 4.9,
+          "kind": "preferred"
+        },
+        {
+          "name": "Emerging Markets Debt",
+          "zh": "新興市場債券",
+          "pct": 4.5,
+          "kind": "bond"
+        },
+        {
+          "name": "Emerging Markets Equity",
+          "zh": "新興市場股票",
+          "pct": 4.5,
+          "kind": "equity"
+        },
+        {
+          "name": "Non-Agency Securitized",
+          "zh": "非機構證券",
+          "pct": 4.3,
+          "kind": "bond"
+        },
+        {
+          "name": "European High Yield",
+          "zh": "歐洲非投資等級債券",
+          "pct": 2.2,
+          "kind": "highYield"
+        },
+        {
+          "name": "Global Investment Grade Credit",
+          "zh": "全球投資等級信貸",
+          "pct": 1,
+          "kind": "bond"
+        },
+        {
+          "name": "Short Duration Fixed Income",
+          "zh": "短期固定收益",
+          "pct": 0.2,
+          "kind": "bond"
+        },
+        {
+          "name": "Cash",
+          "zh": "現金",
+          "pct": 5.8,
+          "kind": "cash"
+        }
+      ]
+    },
+    "source": {
+      "url": "https://jp.techrules.com/rebrandingPDF/LoadPdf.aspx?ShareClassId=14634&country=LU&lang=EN&paramMIFID=YES",
+      "doc": "J.P. Morgan AM Factsheet, JPM Global Income A (icdiv) - USD (hedged) (linked from am.jpmorgan.com/lu product page)",
+      "date": "2026-08-31"
+    },
+    "verified": true,
+    "note": "Same figures in TW 月報 <行業分布>."
+  },
+  "regionAllocation": {
+    "value": {
+      "asOf": "2026-08-31",
+      "items": [
+        {
+          "name": "United States",
+          "zh": "美國",
+          "pct": 61.9
+        },
+        {
+          "name": "Europe ex-UK",
+          "zh": "歐洲(不含英國)",
+          "pct": 12.8
+        },
+        {
+          "name": "EM",
+          "zh": "新興市場",
+          "pct": 9.9
+        },
+        {
+          "name": "UK",
+          "zh": "英國",
+          "pct": 3.4
+        },
+        {
+          "name": "Canada",
+          "zh": "加拿大",
+          "pct": 2.9
+        },
+        {
+          "name": "Japan",
+          "zh": "日本",
+          "pct": 2
+        },
+        {
+          "name": "Asia ex-Japan",
+          "zh": "亞洲(不含日本)",
+          "pct": 1.4
+        },
+        {
+          "name": "Cash",
+          "zh": "現金",
+          "pct": 5.8
+        }
+      ]
+    },
+    "source": {
+      "url": "https://jp.techrules.com/rebrandingPDF/LoadPdf.aspx?ShareClassId=14634&country=LU&lang=EN&paramMIFID=YES",
+      "doc": "J.P. Morgan AM Factsheet, JPM Global Income A (icdiv) - USD (hedged) (linked from am.jpmorgan.com/lu product page)",
+      "date": "2026-08-31"
+    },
+    "verified": true,
+    "note": "TW 月報 has the same current-month values (plus 其他 0.0); its prior-month column in parentheses looks misaligned (其他 75.2, 美國 0.0) and should not be used."
+  },
+  "topHoldings": {
+    "value": {
+      "asOf": "2026-08-31",
+      "items": [
+        {
+          "name": "JPM NASDAQ EQUITY PREMIUM INCOME ACTIVE UCITS ETF",
+          "type": "Equity",
+          "pct": 6.4
+        },
+        {
+          "name": "Microsoft",
+          "type": "Equity",
+          "pct": 1.1
+        },
+        {
+          "name": "Taiwan Semiconductor",
+          "type": "Equity",
+          "pct": 1
+        }
+      ]
+    },
+    "source": {
+      "url": "https://jp.techrules.com/rebrandingPDF/LoadPdf.aspx?ShareClassId=14634&country=LU&lang=EN&paramMIFID=YES",
+      "doc": "J.P. Morgan AM Factsheet, JPM Global Income A (icdiv) - USD (hedged) (linked from am.jpmorgan.com/lu product page)",
+      "date": "2026-08-31"
+    },
+    "verified": true
+  },
+  "coveredCallSleeve": {
+    "value": {
+      "label": "US Equity covered call / 美國股票掩護性買權",
+      "pct": 9.6,
+      "asOf": "2026-08-31",
+      "relatedHolding": "JPM NASDAQ EQUITY PREMIUM INCOME ACTIVE UCITS ETF 6.4%",
+      "description": null
+    },
+    "source": {
+      "url": "https://jp.techrules.com/rebrandingPDF/LoadPdf.aspx?ShareClassId=14634&country=LU&lang=EN&paramMIFID=YES",
+      "doc": "J.P. Morgan AM Factsheet, JPM Global Income A (icdiv) - USD (hedged) (linked from am.jpmorgan.com/lu product page)",
+      "date": "2026-08-31"
+    },
+    "verified": true,
+    "note": "The factsheet gives only the label and weight; it has no sentence explaining the sleeve. KID: \"may invest up to 20% of its assets in equity linked notes\". Whether the ETF is inside the 9.6% is not stated."
+  },
+  "navMonthEnd": {
+    "value": {
+      "currency": "USD",
+      "baseline": {
+        "date": "2025-09-30",
+        "nav": 74.99
+      },
+      "items": [
+        {
+          "date": "2025-10-31",
+          "nav": 75.18
+        },
+        {
+          "date": "2025-11-28",
+          "nav": 74.88
+        },
+        {
+          "date": "2025-12-31",
+          "nav": 74.68
+        },
+        {
+          "date": "2026-01-30",
+          "nav": 75.2
+        },
+        {
+          "date": "2026-02-27",
+          "nav": 75.88
+        },
+        {
+          "date": "2026-03-31",
+          "nav": 72.5
+        },
+        {
+          "date": "2026-04-30",
+          "nav": 74.81
+        },
+        {
+          "date": "2026-05-29",
+          "nav": 76.1
+        },
+        {
+          "date": "2026-06-30",
+          "nav": 75.8
+        },
+        {
+          "date": "2026-07-31",
+          "nav": 74.37
+        },
+        {
+          "date": "2026-08-31",
+          "nav": 74.76
+        },
+        {
+          "date": "2026-09-30",
+          "nav": 72.87
+        }
+      ]
+    },
+    "source": {
+      "url": "https://am.jpmorgan.com/tw/zh/asset-management/per/products/jpm-global-income-a-icdiv-usd-hedged-lu2347655073",
+      "doc": "摩根台灣官網產品頁資料（FundsMarketingHandler/historicalData：歷史淨值、配息紀錄）",
+      "date": "2026-10-05"
+    },
+    "verified": true,
+    "note": "2025-12-31 value 74.68 is from the LU-site feed of the same product (TW feed has no 12-31 row; last TW row 2025-12-30 = 74.74). 2026-08-31 74.76 matches both factsheets."
+  },
+  "dividends": {
+    "value": {
+      "currency": "USD",
+      "items": [
+        {
+          "recordDate": "2025-10-09",
+          "exDate": "2025-10-10",
+          "payDate": "2025-10-17",
+          "amount": 0.691,
+          "annualisedYieldPct": 11.68
+        },
+        {
+          "recordDate": "2025-11-07",
+          "exDate": "2025-11-10",
+          "payDate": "2025-11-17",
+          "amount": 0.684,
+          "annualisedYieldPct": 11.61
+        },
+        {
+          "recordDate": "2025-12-08",
+          "exDate": "2025-12-09",
+          "payDate": "2025-12-16",
+          "amount": 0.687,
+          "annualisedYieldPct": 11.69
+        },
+        {
+          "recordDate": "2026-01-07",
+          "exDate": "2026-01-08",
+          "payDate": "2026-01-15",
+          "amount": 0.691,
+          "annualisedYieldPct": 11.72
+        },
+        {
+          "recordDate": "2026-02-09",
+          "exDate": "2026-02-10",
+          "payDate": "2026-02-20",
+          "amount": 0.693,
+          "annualisedYieldPct": 11.6
+        },
+        {
+          "recordDate": "2026-03-09",
+          "exDate": "2026-03-10",
+          "payDate": "2026-03-17",
+          "amount": 0.68,
+          "annualisedYieldPct": 11.54
+        },
+        {
+          "recordDate": "2026-04-07",
+          "exDate": "2026-04-08",
+          "payDate": "2026-04-15",
+          "amount": 0.672,
+          "annualisedYieldPct": 11.49
+        },
+        {
+          "recordDate": "2026-05-07",
+          "exDate": "2026-05-08",
+          "payDate": "2026-05-15",
+          "amount": 0.696,
+          "annualisedYieldPct": 11.7
+        },
+        {
+          "recordDate": "2026-06-08",
+          "exDate": "2026-06-09",
+          "payDate": "2026-06-16",
+          "amount": 0.69,
+          "annualisedYieldPct": 11.63
+        },
+        {
+          "recordDate": "2026-07-07",
+          "exDate": "2026-07-08",
+          "payDate": "2026-07-15",
+          "amount": 0.693,
+          "annualisedYieldPct": 11.75
+        },
+        {
+          "recordDate": "2026-08-11",
+          "exDate": "2026-08-12",
+          "payDate": "2026-08-19",
+          "amount": 0.692,
+          "annualisedYieldPct": 11.67
+        },
+        {
+          "recordDate": "2026-09-08",
+          "exDate": "2026-09-09",
+          "payDate": "2026-09-16",
+          "amount": 0.685,
+          "annualisedYieldPct": 11.7
+        }
+      ]
+    },
+    "source": {
+      "url": "https://am.jpmorgan.com/tw/zh/asset-management/per/products/jpm-global-income-a-icdiv-usd-hedged-lu2347655073",
+      "doc": "摩根台灣官網產品頁資料（FundsMarketingHandler/historicalData：歷史淨值、配息紀錄）",
+      "date": "2026-10-05"
+    },
+    "verified": true,
+    "note": "Amounts agree with the 配息組成表 (all 12) and the LU factsheet Dividend History (May–Sep 2026, record dates and annualised yield). Ex-dates only appear in the product-page feed."
+  },
+  "annualisedDividendYield": {
+    "value": {
+      "pct": 11.7,
+      "forRecordDate": "2026-09-08"
+    },
+    "source": {
+      "url": "https://jp.techrules.com/rebrandingPDF/LoadPdf.aspx?ShareClassId=14634&country=LU&lang=EN&paramMIFID=YES",
+      "doc": "J.P. Morgan AM Factsheet, JPM Global Income A (icdiv) - USD (hedged) (linked from am.jpmorgan.com/lu product page)",
+      "date": "2026-08-31"
+    },
+    "verified": true,
+    "note": "Factsheet \"Annualised yield\" column; this is a payout rate, not a return."
+  },
+  "dividendComposition": {
+    "value": {
+      "basis": "可分配淨利益÷配息 / 本金÷配息",
+      "items": [
+        {
+          "twMonthLabel": "2025-09",
+          "amount": 0.691,
+          "incomePct": 100,
+          "capitalPct": 0
+        },
+        {
+          "twMonthLabel": "2025-10",
+          "amount": 0.684,
+          "incomePct": 100,
+          "capitalPct": 0
+        },
+        {
+          "twMonthLabel": "2025-11",
+          "amount": 0.687,
+          "incomePct": 100,
+          "capitalPct": 0
+        },
+        {
+          "twMonthLabel": "2025-12",
+          "amount": 0.691,
+          "incomePct": 100,
+          "capitalPct": 0
+        },
+        {
+          "twMonthLabel": "2026-01",
+          "amount": 0.693,
+          "incomePct": 24,
+          "capitalPct": 76
+        },
+        {
+          "twMonthLabel": "2026-02",
+          "amount": 0.68,
+          "incomePct": 24,
+          "capitalPct": 76
+        },
+        {
+          "twMonthLabel": "2026-03",
+          "amount": 0.672,
+          "incomePct": 44,
+          "capitalPct": 56
+        },
+        {
+          "twMonthLabel": "2026-04",
+          "amount": 0.696,
+          "incomePct": 34,
+          "capitalPct": 66
+        },
+        {
+          "twMonthLabel": "2026-05",
+          "amount": 0.69,
+          "incomePct": 35,
+          "capitalPct": 65
+        },
+        {
+          "twMonthLabel": "2026-06",
+          "amount": 0.693,
+          "incomePct": 31,
+          "capitalPct": 69
+        },
+        {
+          "twMonthLabel": "2026-07",
+          "amount": 0.692,
+          "incomePct": 28,
+          "capitalPct": 72
+        },
+        {
+          "twMonthLabel": "2026-08",
+          "amount": 0.685,
+          "incomePct": 32,
+          "capitalPct": 68
+        }
+      ]
+    },
+    "source": {
+      "url": "https://am.jpmorgan.com/tw/zh/asset-management/per/funds/announcements/dividend-distributions/",
+      "doc": "摩根資產管理旗下基金配息組成表（境外基金）",
+      "date": "2026-09-30"
+    },
+    "verified": true,
+    "note": "The TW table labels each payout one month before its record date (e.g. 2026-08 label 0.685 = record 2026-09-08). Aligned to the dividends by amount in code (sim/checkup payoutSources)."
+  },
+  "annualDistributionsHistory": {
+    "value": {
+      "currency": "USD",
+      "items": [
+        {
+          "year": 2021,
+          "amount": 1.485
+        },
+        {
+          "year": 2022,
+          "amount": 7.779
+        },
+        {
+          "year": 2023,
+          "amount": 7.913
+        },
+        {
+          "year": 2024,
+          "amount": 8.477
+        },
+        {
+          "year": 2025,
+          "amount": 8.171
+        }
+      ]
+    },
+    "source": {
+      "url": "https://am.jpmorgan.com/content/dam/jpm-am-aem/asiapacific/tw/zh/regulatory/investor-disclosure-document/mk01-0z.pdf",
+      "doc": "摩根投資基金–多重收益基金 投資人須知【第一部分：基金專屬資訊】（刊印日期 115年7月31日）",
+      "date": "2026-07-31"
+    },
+    "verified": true,
+    "note": "最近十年度各年度每受益權單位收益分配之金額 (民國110–114年)"
+  },
+  "calendarYearReturns": {
+    "value": {
+      "currency": "USD",
+      "items": [
+        {
+          "year": 2022,
+          "pct": -11.93
+        },
+        {
+          "year": 2023,
+          "pct": 8.35
+        },
+        {
+          "year": 2024,
+          "pct": 8.16
+        },
+        {
+          "year": 2025,
+          "pct": 10.9
+        }
+      ],
+      "ytd": {
+        "pct": 7.73,
+        "asOf": "2026-08-31"
+      }
+    },
+    "source": {
+      "url": "https://jp.techrules.com/rebrandingPDF/LoadPdf.aspx?ShareClassId=14634&country=LU&lang=EN&paramMIFID=YES",
+      "doc": "J.P. Morgan AM Factsheet, JPM Global Income A (icdiv) - USD (hedged) (linked from am.jpmorgan.com/lu product page)",
+      "date": "2026-08-31"
+    },
+    "verified": true,
+    "note": "TW 月報 (rounded): -11.9, 8.4, 8.2, 10.9; YTD 7.7."
+  },
+  "benchmarkCalendarYearReturns": {
+    "value": {
+      "name": "40% Bloomberg US High Yield 2% Issuer Cap (TR Gross) Hedged to USD / 35% MSCI World (TR Net) Hedged to USD / 25% Bloomberg Global Credit (TR Gross) Hedged to USD",
+      "items": [
+        {
+          "year": 2022,
+          "pct": -13.16
+        },
+        {
+          "year": 2023,
+          "pct": 16.14
+        },
+        {
+          "year": 2024,
+          "pct": 11.89
+        },
+        {
+          "year": 2025,
+          "pct": 11.89
+        }
+      ],
+      "ytd": {
+        "pct": 6.02,
+        "asOf": "2026-08-31"
+      }
+    },
+    "source": {
+      "url": "https://jp.techrules.com/rebrandingPDF/LoadPdf.aspx?ShareClassId=14634&country=LU&lang=EN&paramMIFID=YES",
+      "doc": "J.P. Morgan AM Factsheet, JPM Global Income A (icdiv) - USD (hedged) (linked from am.jpmorgan.com/lu product page)",
+      "date": "2026-08-31"
+    },
+    "verified": true,
+    "note": "2024 and 2025 are both 11.89; cross-checked against the excess returns in the product-page feed (-3.33%, -0.88%). Factsheet: \"the portfolio does not have a target of outperforming the benchmark\"."
+  }
+}

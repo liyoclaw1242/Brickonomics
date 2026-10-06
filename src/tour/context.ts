@@ -7,6 +7,7 @@ import { sectorBreakdown } from '../scene/layout/underground'
 import { feeRaceRows } from '../sim/feeRace'
 import { hedgeExample } from '../sim/hedge'
 import { T } from '../ui/strings'
+import { CHECKUPS, type FundCheckup } from '../data/fundCheckup'
 
 /** 第 5 關的假設情境：台積電下跌 30% */
 export const SHOCK_2330: Readonly<Record<string, number>> = { '2330': -0.3 }
@@ -22,7 +23,7 @@ const CLASS_OF: Partial<Record<AssetType, 'stock' | 'bond'>> = {
   bondMixed: 'bond',
 }
 
-export function makeTextContext(u: Universe): TextContext {
+export function makeTextContext(u: Universe, funds: ReadonlyMap<string, FundCheckup> = CHECKUPS): TextContext {
   return {
     weightPct: (productId, holdingId) => {
       const w = u.get(productId)?.holdings?.find((h) => h.id === holdingId)?.weightPct
@@ -45,6 +46,11 @@ export function makeTextContext(u: Universe): TextContext {
       return f?.distributionFee !== undefined && f.distributionFeeYears !== undefined ? { rate: f.distributionFee, years: f.distributionFeeYears } : undefined
     },
     hedge: () => hedgeExample(u),
+    checkup: (id) => {
+      const f = funds.get(id)
+      if (!f) throw new Error(`no checkup data for ${id}`)
+      return f
+    },
   }
 }
 

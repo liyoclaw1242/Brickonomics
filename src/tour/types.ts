@@ -5,6 +5,7 @@ import type { Mark } from '../ui/marks'
 import type { FeeRaceRow } from '../sim/feeRace'
 import type { HedgeExample } from '../sim/hedge'
 import type { EventSpec } from '../scene/events/types'
+import type { FundCheckup } from '../data/fundCheckup'
 
 export type { Mark }
 
@@ -123,6 +124,8 @@ export type TextContext = {
   distributionFee: (productId: string) => { rate: number; years: number } | undefined
   /** a-hedge 的對沖舉例（sim/hedge；0050 的費用從資料讀） */
   hedge: () => HedgeExample
+  /** 實戰課：一檔真基金的體檢資料（data/fundCheckup）；沒有這檔時丟錯。讀了哪些欄位由 ui/marks 記下來，沒查證就標 ？ */
+  checkup: (id: string) => FundCheckup
 }
 
 /** 大數字卡：value 已格式化；fraction（0–1）畫色條；colorKey 對應物體顏色；note＝標籤下一行白話補充（例如為什麼是「至少」） */
