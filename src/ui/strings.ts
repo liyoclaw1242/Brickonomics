@@ -136,6 +136,9 @@ export const T = {
     /** a-port 組合塔裡債券佔幾 %（其餘是股票） */
     bondPct: '債券比例',
     bondPctValue: (v: number) => `${v}%`,
+    /** x-cc 股票這段期間漲跌幾 %（整數） */
+    ccMove: '漲幅',
+    ccMoveValue: (v: number) => (v > 0 ? `漲 ${v}%` : v < 0 ? `跌 ${-v}%` : '不漲不跌'),
   },
   stage: {
     held: '你手上的方塊',
@@ -254,6 +257,15 @@ export const T = {
     inverse: '0050＋反向',
     cash: '少買 0050＋現金',
   },
+  /** x-cc 掩護性買權的 3D 標註（實戰；示意） */
+  cc: {
+    ceiling: (pct: string) => `天花板：漲 ${pct}`,
+    tower: '你的股票',
+    cut: '賣掉的上半截',
+    coin: '權利金',
+    /** 整數 %：5 → '+5%'；−15 → '−15%'（U+2212）；0 → '0%' */
+    signed: (v: number) => (v > 0 ? `+${v}%` : v < 0 ? `−${-v}%` : '0%'),
+  },
   /** a-rebal 組合塔的 3D 標註（高階） */
   rebal: {
     stock: (v: string, pct: string) => `股票 ${v}（${pct}）`,
@@ -357,6 +369,9 @@ export const T = {
     levAfter: (name: string, rounds: number) => `${name}：來回 ${rounds} 次後`,
     levNaive: '以為的 2 倍（大盤跌幅 × 2）',
     hedgeCase: '情境',
+    ccPlain: '一般持有',
+    ccCovered: '掩護（含權利金）',
+    ccPremium: '權利金',
     rebalStage: '進度',
     rebalStock: '股票',
     rebalBond: '債券',

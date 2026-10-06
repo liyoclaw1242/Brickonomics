@@ -60,6 +60,16 @@ export const COURSES: readonly Course[] = [
       chapter('finish', T.courseChapters.finish, ['a-fin']),
     ],
   },
+  {
+    // Plan 9 實戰課的骨架（暫時）：Task 2 先把 x-cc 放進步驟池，步驟池的每一步都要屬於一門課；
+    // 還沒開放（available false：開場卡、換階選單、網址都進不來）。Task 3 換成正式的名稱、章節與 9 步並開放
+    id: 'practice',
+    name: '實戰',
+    tagline: '拆解一檔真基金',
+    available: false,
+    // 章名暫時借用「完成」（看不到：未開放的課不出現在任何選單）；Task 3 換成名片、拆開、配息…
+    chapters: [chapter('payout', T.courseChapters.finish, ['x-cc'])],
+  },
 ]
 
 /** 課程裡的步驟（照課程順序）；id 不在步驟池時丟錯（courses.test 保證不會發生） */

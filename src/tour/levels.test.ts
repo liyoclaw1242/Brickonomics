@@ -41,6 +41,8 @@ const byId = (id: string): Step => steps.find((s) => s.id === id)!
 const PLAN7_STAGES: string[] = ['drawdown', 'pe', 'seesaw', 'dca', 'inflation']
 /** Plan 8 的高階舞台：都是舉例（≈、多說一點寫「示意」） */
 const PLAN8_STAGES: string[] = ['portfolio', 'correlation', 'dayTrade', 'duration', 'feeTrees', 'leverage', 'hedge', 'rebalance']
+/** Plan 9 實戰課的新舞台（示意） */
+const PLAN9_STAGES: string[] = ['coveredCall']
 /** 大數字跟著即時拉桿值；測試預設用進入該步驟時的值 */
 const bigOf = (s: Step, values: Partial<StageValues> = {}) => s.bigNumber?.(ctx, { ...DEFAULT_VALUES, ...s.scene.values, ...values })
 const resolve = (t: Step['line'] | undefined): string | undefined => (t === undefined ? undefined : typeof t === 'function' ? t(ctx) : t)
@@ -113,7 +115,7 @@ describe('LEVELS', () => {
   })
 
   it('illustrative stages carry the illustrative mark', () => {
-    const illustrative = new Set(['exdiv', 'bonds', 'accumulate', 'principalTrap', 'ticker', ...PLAN7_STAGES, ...PLAN8_STAGES])
+    const illustrative = new Set(['exdiv', 'bonds', 'accumulate', 'principalTrap', 'ticker', ...PLAN7_STAGES, ...PLAN8_STAGES, ...PLAN9_STAGES])
     for (const s of steps) {
       const st = s.scene.stage
       const needs =
@@ -863,12 +865,12 @@ describe('mid-r1: comparisons never read as advice', () => {
     if (!st) return false
     if (st.kind === 'held') return st.items.length >= 2
     if (st.kind === 'underground') return (st.cores ?? []).length >= 2
-    return ['bonds', 'feeRace', 'accumulate', 'overlap', 'shock', 'pe', 'duration', 'feeTrees', 'hedge'].includes(st.kind)
+    return ['bonds', 'feeRace', 'accumulate', 'overlap', 'shock', 'pe', 'duration', 'feeTrees', 'hedge', 'coveredCall'].includes(st.kind)
   }
 
   it('the compare note sits only where a side-by-side outcome could be read as a pick (mid-r2: on 15 steps it became wallpaper)', () => {
     const flagged = steps.filter((s) => s.compare).map((s) => s.id).sort()
-    expect(flagged).toEqual(['a-dur', 'a-fee30', 'a-hedge', 'c-3', 'e-dca', 'f-6', 'f-8', 's-pe'].sort())
+    expect(flagged).toEqual(['a-dur', 'a-fee30', 'a-hedge', 'c-3', 'e-dca', 'f-6', 'f-8', 's-pe', 'x-cc'].sort())
     for (const id of flagged) if (id !== 'e-dca') expect(sideBySide(byId(id)), id).toBe(true)
     expect(T.compareNote).toBe('只是比較，不是叫你買或賣')
     expect(forbiddenWordsIn(T.compareNote)).toEqual([])

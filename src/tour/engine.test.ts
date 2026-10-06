@@ -191,14 +191,14 @@ describe('course navigation (never crosses into another course)', () => {
 
 describe('progress persistence (per course)', () => {
   it('round-trips the new format and tolerates garbage', () => {
-    const p = { course: 'intermediate' as const, stepId: 'b-2', completed: { beginner: ['prologue'], intermediate: ['review'], advanced: [] }, finished: ['beginner' as const], sandboxUnlocked: true }
+    const p = { course: 'intermediate' as const, stepId: 'b-2', completed: { beginner: ['prologue'], intermediate: ['review'], advanced: [], practice: [] }, finished: ['beginner' as const], sandboxUnlocked: true }
     expect(parseProgress(serializeProgress(p))).toEqual(p)
     expect(parseProgress(null)).toEqual(emptyProgress())
     expect(parseProgress('{oops')).toEqual(emptyProgress())
     expect(parseProgress('[1,2]')).toEqual(emptyProgress())
     // 高階開放後，finished 裡的 advanced 也留著（不認得的 x 丟掉）
     expect(parseProgress('{"course":"weird","completed":{"beginner":[1,"stock"]},"finished":["x","beginner","advanced"]}')).toEqual({
-      course: null, completed: { beginner: ['stock'], intermediate: [], advanced: [] }, finished: ['beginner', 'advanced'], sandboxUnlocked: true,
+      course: null, completed: { beginner: ['stock'], intermediate: [], advanced: [], practice: [] }, finished: ['beginner', 'advanced'], sandboxUnlocked: true,
     })
   })
 

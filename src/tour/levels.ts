@@ -9,6 +9,8 @@ import { STORMS } from '../sim/portfolio'
 import { corrLightning, corrNow, DT_RANGE, DUR_LAYOUT, dtNow, durFreeze, durNow, feeSunny, feeTreesNow, HEDGE_CASES, hedgeCaseIndex, hedgeQuake, levNow, levWave, PORT_LAYOUT, PORT_MAX_BOND, portNow, rebalNow } from '../scene/layout/advanced'
 import { LEVERAGE } from '../sim/leverage'
 import { HEDGE } from '../sim/hedge'
+import { COVERED_CALL } from '../sim/coveredCall'
+import { CC_RISE_MIN, ccNow, ccSunny } from '../scene/layout/practice'
 import { REBALANCE } from '../sim/rebalance'
 import { FEE_DRAG } from '../sim/feeDrag'
 import { DURATION } from '../sim/duration'
@@ -908,5 +910,26 @@ export const COURSE_STEPS: Step[] = [
       { icon: '🧩', text: '槓桿會耗損；對沖有代價；歪了剪高補低' },
     ],
     scene: { camera: 'overview', product: null },
+  },
+  {
+    // 實戰（Plan 9 Task 2；Task 3 排進實戰課）：掩護性買權。賣掉天花板以上的漲幅，換一枚金幣（權利金）。
+    // 拖漲幅：大漲少賺、平盤多一點、下跌一樣跌（只少跌權利金）；上漲時 🌤 放晴（eventWhen 門檻，參數固定）
+    id: 'x-cc',
+    title: '掩護性買權',
+    line: '先賣掉**上半截|loss**，換固定收入',
+    fallbackLine: () => `大漲 ${COVERED_CALL.maxMovePct}% 時只拿 **${T.cc.signed(Math.round(ccNow(COVERED_CALL.maxMovePct).covered * 100))}|loss**`,
+    more: () =>
+      `掩護性買權＝持有股票，再賣掉漲超過天花板的部分。換到的金幣叫權利金，平盤時多賺這一點。大漲時少賺；下跌一樣會跌，只少跌金幣那一點。這是示意：天花板漲 ${pct1(COVERED_CALL.cap)}、權利金 ${pct1(COVERED_CALL.premium)}。`,
+    mark: 'illustrative',
+    // 跟著漲幅：掩護（含權利金）vs 一般持有
+    bigNumber: (_c, v) => {
+      const n = ccNow(v.ccMove)
+      const p = (r: number) => T.cc.signed(Math.round(r * 100))
+      return { value: `約 ${p(n.covered)}`, label: `${T.controls.ccMoveValue(n.movePct)}：掩護`, note: `一般持有：${p(n.plain)}`, colorKey: n.diff < 0 ? 'loss' : 'coin', mark: 'illustrative' }
+    },
+    compare: true,
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'coveredCall' }, event: ccSunny(), eventWhen: { control: 'ccMove', min: CC_RISE_MIN }, values: { ccMove: 0 }, cityLabels: false },
+    controls: ['ccMove'],
+    ranges: { ccMove: [COVERED_CALL.minMovePct, COVERED_CALL.maxMovePct] },
   },
 ]

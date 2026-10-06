@@ -22,6 +22,7 @@ export const DEFAULT_RANGES: Record<Control, [number, number]> = {
   hedgeCase: [0, 2],
   trades: [0, 250],
   bondPct: [0, 100],
+  ccMove: [-20, 20],
   slice: [0, 1],
   explode: [0, 1],
 }
@@ -271,7 +272,7 @@ export function resumeCoursePosition(saved: unknown): CoursePosition | null {
   return locate(LEVELS[old.level]!.steps[old.step]!.id, route)
 }
 
-const emptyCompleted = (): Record<CourseId, string[]> => ({ beginner: [], intermediate: [], advanced: [] })
+const emptyCompleted = (): Record<CourseId, string[]> => ({ beginner: [], intermediate: [], advanced: [], practice: [] })
 
 export const emptyProgress = (): Progress => ({ course: null, completed: emptyCompleted(), finished: [], sandboxUnlocked: false })
 

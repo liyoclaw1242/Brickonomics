@@ -55,6 +55,8 @@ export type Stage =
   | { kind: 'hedge' }
   /** a-rebal 剪高補低：一座組合塔＋目標線（rebal 拉桿：一開始、股票漲了、剪高補低） */
   | { kind: 'rebalance' }
+  /** x-cc 掩護性買權：一座塔＋天花板虛線（ccMove 拉桿）；漲超過天花板的部分賣掉（空框），換到的權利金是塔旁一枚金幣；上漲時 🌤（scene.event sunnyTree＋eventWhen） */
+  | { kind: 'coveredCall' }
   | { kind: 'overlap'; a: string; b: string }
   | { kind: 'underground'; show: 'strata' | 'cores' | 'dig' | 'veins' | 'gold'; cores?: [string, string] }
 
@@ -69,7 +71,8 @@ export type StageKind = Stage['kind']
 /** storm：a-port 選哪一種示意風暴（0 股跌債漲、1 股債一起跌） */
 /** feeDiscount：a-dt 券商手續費打幾折（1＝公告費率不打折） */
 /** winRate：a-dt 每次進出賺錢的機率（示意） */
-export type StageValues = { years: number; periods: number; phase: number; frontLoad: number; tick: number; rate: number; months: number; bondPct: number; trades: number; hedgeCase: number; rebal: number; storm: number; feeDiscount: number; winRate: number }
+/** ccMove：x-cc 股票這段期間漲跌幾 %（整數，負的＝跌） */
+export type StageValues = { years: number; periods: number; phase: number; frontLoad: number; tick: number; rate: number; months: number; bondPct: number; trades: number; hedgeCase: number; rebal: number; storm: number; feeDiscount: number; winRate: number; ccMove: number }
 export type ValueKey = keyof StageValues
 export type Control = 'slice' | 'explode' | ValueKey
 /** 要讓「下一步」可按，control 的值必須 ≥ min */
@@ -180,7 +183,7 @@ export type Step = {
 export type Level = { id: string; title: string; steps: Step[] }
 
 /** 三門獨立的課（初階／中階／高階） */
-export type CourseId = 'beginner' | 'intermediate' | 'advanced'
+export type CourseId = 'beginner' | 'intermediate' | 'advanced' | 'practice'
 /** 課程裡的一章：id 在同一門課內唯一；stepIds＝步驟池裡的步驟 id（照課程順序） */
 export type CourseChapter = { id: string; icon: string; name: string; stepIds: readonly string[] }
 /** available false＝還沒開放（開場卡、換階選單、網址都不能進入） */

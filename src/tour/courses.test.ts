@@ -13,21 +13,25 @@ const FINISH = 'finish'
 const PLAN7 = ['s-dd', 's-pe', 'b-rate', 'b-infl', 'e-dca']
 /** Plan 8 的高階步驟（課程專用；照課程順序） */
 const PLAN8 = ['a-0', 'a-port', 'a-corr', 'a-dt', 'a-dur', 'a-fee30', 'a-lev', 'a-hedge', 'a-rebal', 'a-fin']
+/** Plan 9 實戰課的步驟（暫時放在還沒開放的實戰課骨架裡；Task 3 開放） */
+const PLAN9 = ['x-cc']
 /** 內容章＝扣掉開頭（序章／複習）與結尾的章 */
 const contentChapters = (c: Course) => c.chapters.filter((ch) => !OPENING.has(ch.id) && ch.id !== FINISH)
 
 describe('STEP_POOL', () => {
   it('holds every LEVELS step plus the new recap and finish steps, each id once', () => {
     const levelIds = LEVELS.flatMap((l) => l.steps.map((s) => s.id))
-    expect([...STEP_POOL.keys()]).toEqual([...levelIds, ...PLAN7, 'm-0', 'm-fin', ...PLAN8])
+    expect([...STEP_POOL.keys()]).toEqual([...levelIds, ...PLAN7, 'm-0', 'm-fin', ...PLAN8, ...PLAN9])
     for (const [id, s] of STEP_POOL) expect(s.id).toBe(id)
   })
 })
 
 describe('COURSES', () => {
   it('lists 初、中、高 in order; all three are open (Plan 8 opened 高階)', () => {
-    expect(COURSES.map((c) => c.id)).toEqual(['beginner', 'intermediate', 'advanced'])
+    expect(COURSES.map((c) => c.id)).toEqual(['beginner', 'intermediate', 'advanced', 'practice'])
     expect(course('advanced').available).toBe(true)
+    // Plan 9 Task 2：實戰課只是骨架，還沒開放（Task 3 開放）
+    expect(course('practice').available).toBe(false)
     expect(availableCourses().map((c) => c.id)).toEqual(['beginner', 'intermediate', 'advanced'])
   })
 
@@ -89,11 +93,13 @@ describe('COURSES', () => {
     ])
   })
 
-  it('every pool step belongs to exactly one available course', () => {
+  it('every pool step belongs to exactly one available course (Plan 9 steps: the unopened 實戰 skeleton until Task 3)', () => {
     for (const id of STEP_POOL.keys()) {
       const n = availableCourses().filter((c) => ids(c).includes(id)).length
-      expect(n, id).toBe(1)
+      expect(n, id).toBe(PLAN9.includes(id) ? 0 : 1)
+      expect(COURSES.filter((c) => ids(c).includes(id)).length, id).toBe(1)
     }
+    for (const id of PLAN9) expect(courseOfStep(id), id).toBe('practice')
   })
 
   it('a-fin recaps 高階 in four lines with the words its steps use, and is the last course (no next tier)', () => {

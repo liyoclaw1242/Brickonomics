@@ -6,6 +6,7 @@ import { feeRaceLeader, feeRaceRows } from '../sim/feeRace'
 import { DCA_DEMO, dcaNow, ddNow, INFL_DEMO, inflReal, PE_DEMO, peYears, ratePrice } from '../scene/layout/intermediate'
 import { corrNow, dtNow, durNow, feeTreesNow, hedgeCaseIndex, hedgeTowers, levNow, portNow, rebalNow } from '../scene/layout/advanced'
 import { hedgeExample } from '../sim/hedge'
+import { ccNow } from '../scene/layout/practice'
 import { FEE_DRAG } from '../sim/feeDrag'
 import { LEVERAGE } from '../sim/leverage'
 import { DURATION } from '../sim/duration'
@@ -150,6 +151,17 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
       return [
         { label: T.readout.hedgeCase, value: T.controls.hedgeCaseValue(c), marks: ['illustrative'] },
         ...hedgeTowers(ex, c, 1).map((t) => ({ label: T.hedge[t.id], value: T.wan(t.total), ...(t.id === 'inverse' ? { marks: ['assumption' as const] } : {}) })),
+      ]
+    }
+    case 'coveredCall': {
+      // 一段期間：一般持有＝漲跌；掩護＝漲到天花板為止＋權利金（≈ 示意）
+      const n = ccNow(v.ccMove)
+      const p = (r: number) => T.cc.signed(Math.round(r * 100))
+      return [
+        { label: T.controls.ccMove, value: T.controls.ccMoveValue(n.movePct), marks: ['illustrative'] },
+        { label: T.readout.ccPlain, value: p(n.plain) },
+        { label: T.readout.ccPremium, value: p(n.coin / 100) },
+        { label: T.readout.ccCovered, value: p(n.covered) },
       ]
     }
     case 'leverage': {
