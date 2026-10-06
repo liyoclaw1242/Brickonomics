@@ -11,7 +11,10 @@ import { LEVERAGE } from '../sim/leverage'
 import { HEDGE } from '../sim/hedge'
 import { COVERED_CALL } from '../sim/coveredCall'
 import { CC_RISE_MIN, ccNow, ccSunny } from '../scene/layout/practice'
-import { capitalRun, navChange, payoutTotal } from '../sim/checkup'
+import { annualReturns, assetGroups, capitalRun, feeSummary, fundSizeYi, navChange, payoutTotal, riskRank, shortName, sortedRegions } from '../sim/checkup'
+import { perfLayout } from '../scene/layout/practice'
+import { checkupOf } from '../data/fundCheckup'
+import type { CheckupLine } from './types'
 import { REBALANCE } from '../sim/rebalance'
 import { FEE_DRAG } from '../sim/feeDrag'
 import { DURATION } from '../sim/duration'
@@ -90,6 +93,18 @@ const PRACTICE_FUND = 'JFZN3'
 const fundOf = (c: TextContext) => c.checkup(PRACTICE_FUND)
 /** 每一份的美元金額：8.254 → '8.25' */
 const usd2 = (v: number): string => v.toFixed(2)
+/** 比例（%）一位小數：49.7 → '49.7%' */
+const p1 = (v: number): string => `${v.toFixed(1)}%`
+const CHENG = ['', '一', '兩', '三', '四', '五', '六', '七', '八', '九'] as const
+/** 61.9 → '六成多'；60 → '六成'；8 → '不到一成'（一句話用的大概說法） */
+export const chengOf = (pct: number): string => {
+  const n = Math.min(9, Math.floor(pct / 10))
+  if (n === 0) return '不到一成'
+  return pct - n * 10 < 0.05 ? `${CHENG[n]}成` : `${CHENG[n]}成多`
+}
+/** x-perf 和藍圖比幾年高、幾年低（都高、都低時換說法，不寫「0 年」） */
+const aheadBehind = (ahead: number, behind: number, n: number): string =>
+  ahead === 0 ? `${n} 年都比較低` : behind === 0 ? `${n} 年都比較高` : `${ahead} 年高、${behind} 年低`
 
 /** 初階口訣：初階結尾（u-6）與中階開頭的複習（m-0）用同一份 */
 const BEGINNER_RECAP: RecapLine[] = [
@@ -968,5 +983,171 @@ export const COURSE_STEPS: Step[] = [
       }
     },
     scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'navPayout', fund: PRACTICE_FUND }, cityLabels: false },
+  },
+  // ───────────── 實戰（Plan 9）：拆解一檔真基金。數字一律從體檢資料（c.checkup）算，沒查證的欄位自動標 ？ ─────────────
+  {
+    // 名片：誰、在哪、多大、多晃。怪手＋塔（初階的基金比喻），名字與規模寫在塔旁
+    id: 'x-card',
+    title: '基金名片',
+    line: '這是一檔**請怪手挑**的平衡型基金',
+    more: (c) => {
+      const f = fundOf(c)
+      const b = f.basics
+      const freq = b.distributionFrequency.value === 'monthly' ? '每月配息' : '會配息'
+      return [
+        `這是摩根投資基金－${shortName(f)}。`,
+        `A 股、${T.currency(b.currency.value ?? '')}計價，${freq}。`,
+        `整檔基金規模 ${fundSizeYi(f)} 億${T.currency('USD')}，所有級別合計。`,
+        `${b.domicile.value}註冊，${T.date(b.inceptionDate.value ?? '')} 成立，風險 ${b.riskLevelTW.value}。`,
+      ].join('')
+    },
+    bigNumber: (c) => {
+      const f = fundOf(c)
+      const r = riskRank(f)
+      return { value: f.basics.riskLevelTW.value ?? '', label: '風險等級（1–5）', fraction: r.level / r.of, note: `台灣分 ${r.of} 級，這檔是第 ${r.level} 級・${T.date(f.basics.riskLevelTW.source.date)}` }
+    },
+    scene: { cityDim: true, camera: 'exchange', product: null, stage: { kind: 'checkup', fund: PRACTICE_FUND, show: 'card' }, cityLabels: false },
+  },
+  {
+    // 拆開：三大類（股票含掩護性買權│借據與特別股│現金，分法在 sim/checkup）。一句話由算出來的結果決定
+    id: 'x-mix',
+    title: '裡面裝什麼',
+    line: (c) => (assetGroups(fundOf(c)).nonStockMajority ? '拆開看：一半以上不是**股票|stock**' : '拆開看：一半以上是**股票|stock**'),
+    more: (c) => {
+      const g = assetGroups(fundOf(c))
+      return [
+        `股票 ${p1(g.stock)}，含掩護性買權 ${p1(g.coveredCall)}。`,
+        `借據與特別股 ${p1(g.bond)}，現金 ${p1(g.cash)}。`,
+        `特別股算借據；算股票的話，股票是 ${p1(g.stockWithPreferred)}。`,
+        `資料日 ${T.date(fundOf(c).assetAllocation.value?.asOf ?? '')}，加起來 ${p1(g.total)}。`,
+      ].join('')
+    },
+    bigNumber: (c) => {
+      const g = assetGroups(fundOf(c))
+      return { value: p1(g.nonStock), label: '不是股票的部分', fraction: g.nonStock / 100, note: `股票 ${p1(g.stock)}・特別股算在借據這邊`, colorKey: 'bond' }
+    },
+    scene: { cityDim: true, camera: 'exchangeWide', product: null, explode: 1, stage: { kind: 'checkup', fund: PRACTICE_FUND, show: 'mix' }, cityLabels: false },
+  },
+  {
+    // 錢放在哪：區域的島，面積 ∝ 比例、最大的最亮
+    id: 'x-where',
+    title: '錢放在哪',
+    line: (c) => {
+      const top = sortedRegions(fundOf(c))[0]!
+      return `${chengOf(top.pct)}的錢在**${top.zh}**`
+    },
+    more: (c) => {
+      const [a, b] = sortedRegions(fundOf(c))
+      return [
+        `區域配置：最多是${a!.zh} ${p1(a!.pct)}。`,
+        `其次是${b!.zh} ${p1(b!.pct)}。`,
+        '島越大越亮，錢越多；位置只是大概。',
+        `資料日 ${T.date(fundOf(c).regionAllocation.value?.asOf ?? '')}。`,
+      ].join('')
+    },
+    bigNumber: (c) => {
+      const [a, b] = sortedRegions(fundOf(c))
+      return { value: p1(a!.pct), label: `放在${a!.zh}`, fraction: a!.pct / 100, note: `其次：${b!.zh} ${p1(b!.pct)}` }
+    },
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'regions', fund: PRACTICE_FUND }, cityLabels: false },
+  },
+  {
+    // 容易裂的借據：🌪 經濟風暴掃過，高收益債那幾層裂開（重用 b-3 的事件；裂多少是示意，比例是真資料）
+    id: 'x-hy',
+    title: '容易裂的借據',
+    line: (c) => `裡面約 **${pct0(assetGroups(fundOf(c)).highYield)}%** 是**容易裂|loss**的借據`,
+    more: (c) => {
+      const items = fundOf(c).assetAllocation.value?.items ?? []
+      const hy = items.filter((i) => i.kind === 'highYield').sort((x, y) => y.pct - x.pct)
+      const emd = items.find((i) => i.name === 'Emerging Markets Debt')
+      return [
+        '高收益債＝借給體質弱的公司，利息較多。',
+        `這檔有${hy.map((i) => `${i.zh.slice(0, 2)} ${p1(i.pct)}`).join('、')}。`,
+        '龍捲風＝經濟風暴，裂開多少是示意。',
+        ...(emd ? [`新興市場債 ${p1(emd.pct)} 裡有沒有，資料沒寫。`] : []),
+      ].join('')
+    },
+    mark: 'illustrative',
+    bigNumber: (c) => {
+      const f = fundOf(c)
+      const g = assetGroups(f)
+      return { value: p1(g.highYield), label: '高收益債（美國＋歐洲）', fraction: g.highYield / 100, note: `資料日 ${T.date(f.assetAllocation.value?.asOf ?? '')}`, colorKey: 'loss' }
+    },
+    scene: { cityDim: true, camera: 'exchange', product: null, stage: { kind: 'checkup', fund: PRACTICE_FUND, show: 'hy' }, event: { kind: 'tornado' }, cityLabels: false },
+  },
+  {
+    // 費用：計費表一直在跑（和 f-5 同一個算法：100 萬一年約扣多少元）。
+    // 最高申購手續費 5% 是查到的上限，實際看通路：✎ 標在即時數字那一列（不標整步，免得像 1.45% 也是假設的）
+    id: 'x-fee',
+    title: '每年先扣',
+    line: (c) => `每年先扣約 **${feeSummary(fundOf(c)).ongoing.toFixed(2)}%|loss**`,
+    more: (c) => {
+      const s = feeSummary(fundOf(c))
+      return [
+        `經理費 ${s.management.toFixed(2)}%，保管費最多 ${s.custody.toFixed(2)}%。`,
+        `合起來 ${s.ongoing.toFixed(2)}%，每年從塔上先扣。`,
+        `交易成本約 ${s.transaction.toFixed(2)}%，另外算。`,
+        `買的時候另付手續費，最高 ${s.maxSales}%，看通路。`,
+      ].join('')
+    },
+    bigNumber: (c) => {
+      const s = feeSummary(fundOf(c))
+      return { value: perMillion(s.ongoing / 100), label: '100 萬放一年，約扣', note: `經理費 ${s.management.toFixed(2)}%＋保管費 ${s.custody.toFixed(2)}%`, colorKey: 'loss' }
+    },
+    scene: { cityDim: true, camera: 'exchange', product: null, stage: { kind: 'checkup', fund: PRACTICE_FUND, show: 'fee' }, cityLabels: false },
+  },
+  {
+    // 績效：每年兩座塔（基金、它自己選的藍圖＝指標），最差那年 🌋。一句話由算出來的高低年數決定（不下結論）
+    id: 'x-perf',
+    title: '歷年績效',
+    line: (c) => {
+      const r = annualReturns(fundOf(c))
+      return `和**藍圖|passive**比：${aheadBehind(r.ahead, r.behind, r.rows.length)}`
+    },
+    more: (c) => {
+      const r = annualReturns(fundOf(c))
+      const w = r.rows.find((x) => x.year === r.worst.year)!
+      return [
+        '藍圖＝這檔基金自己選的比較指標。',
+        `${w.year} 年跌 ${Math.abs(w.fund).toFixed(1)}%，藍圖跌 ${Math.abs(w.bench).toFixed(1)}%。`,
+        '報酬含配息再投入，用美元算。',
+        '基金說它不以贏過指標為目標。',
+      ].join('')
+    },
+    bigNumber: (c) => {
+      const r = annualReturns(fundOf(c))
+      const first = r.rows[0]!.year
+      const last = r.rows.at(-1)!.year
+      // 卡片放得下一行：整數 %（一位小數在多說一點的即時數字）；兩個都漲時標籤說「漲幅」，有跌的才帶正負號
+      const up = r.fundTotal >= 0 && r.benchTotal >= 0
+      const v = (x: number) => (up ? `${pct0(x * 100)}%` : `${x < 0 ? '−' : '+'}${pct0(Math.abs(x) * 100)}%`)
+      return { value: `${v(r.fundTotal)} vs ${v(r.benchTotal)}`, label: up ? '漲幅：基金 vs 藍圖' : '基金 vs 藍圖', note: `${first}–${last} ${r.rows.length} 年合起來（含配息）` }
+    },
+    compare: true,
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'perf', fund: PRACTICE_FUND }, event: perfLayout(checkupOf(PRACTICE_FUND)).quake, cityLabels: false },
+  },
+  {
+    // 體檢表：5–6 行，每行附資料日期；只是體檢，不是叫你買或賣
+    id: 'x-fin',
+    title: '體檢表',
+    line: '**只是體檢**，不是叫你買或賣',
+    more: '每一行都附資料日期。數字會變，要看最新的月報。這不是推薦，也不是唱衰。',
+    checkupCard: (c): CheckupLine[] => {
+      const f = fundOf(c)
+      const g = assetGroups(f)
+      const ch = navChange(f)
+      const r = annualReturns(f)
+      const alloc = f.assetAllocation.value?.asOf ?? f.assetAllocation.source.date
+      return [
+        // 股票和借據都有才叫平衡型（f-3 的定義）
+        { icon: '🚜', text: g.stock > 0 && g.bond > 0 ? '怪手挑的平衡型（股＋債）' : g.stock > 0 ? '怪手挑的股票型' : '怪手挑的債券型', asOf: alloc },
+        { icon: '🧱', text: g.nonStockMajority ? `一半以上不是股票（${p1(g.nonStock)}）` : `一半以上是股票（${p1(g.stock)}）`, asOf: alloc },
+        { icon: '📜', text: `容易裂的借據約 ${pct0(g.highYield)}%`, asOf: alloc },
+        { icon: '🪙', text: `一年配 ${usd2(payoutTotal(f))}，塔${ch.change < 0 ? '矮了' : '高了'} ${usd2(Math.abs(ch.change))}`, asOf: ch.to.date },
+        { icon: '🚪', text: `每年先扣約 ${feeSummary(f).ongoing.toFixed(2)}%`, asOf: f.basics.ongoingCharges.source.date },
+        { icon: '📈', text: `近 ${r.rows.length} 年和藍圖比：${r.ahead} 高 ${r.behind} 低`, asOf: f.calendarYearReturns.source.date },
+      ]
+    },
+    scene: { cityDim: true, camera: 'exchange', product: null, stage: { kind: 'checkup', fund: PRACTICE_FUND, show: 'final' }, cityLabels: false },
   },
 ]

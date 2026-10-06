@@ -12,7 +12,7 @@ export function CourseStart({ onChoose }: { onChoose: (id: CourseId) => void }) 
       </h1>
       {availableCourses().map((c, i) => (
         <button key={c.id} className={i === 0 ? 'course-start__choice course-start__choice--first' : 'course-start__choice'} onClick={() => onChoose(c.id)}>
-          <span className="course-start__order">{T.course.order(i)}</span>
+          <span className="course-start__order">{c.standalone ? T.course.standalone : T.course.order(i)}</span>
           <span className="course-start__name">{c.name}</span>
           <span className="course-start__note">{T.course.note(c.tagline, stepsOf(c.id).length)}</span>
         </button>

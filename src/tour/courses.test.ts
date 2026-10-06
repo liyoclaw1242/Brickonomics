@@ -4,6 +4,8 @@ import { LEVELS } from './levels'
 import { forbiddenWordsIn } from './glossary'
 import { T } from '../ui/strings'
 import type { Course, CourseId } from './types'
+import { makeTextContext } from './context'
+import { universe } from '../data'
 
 const course = (id: CourseId): Course => COURSES.find((c) => c.id === id)!
 const ids = (c: Course): string[] => c.chapters.flatMap((ch) => [...ch.stepIds])
@@ -13,8 +15,10 @@ const FINISH = 'finish'
 const PLAN7 = ['s-dd', 's-pe', 'b-rate', 'b-infl', 'e-dca']
 /** Plan 8 的高階步驟（課程專用；照課程順序） */
 const PLAN8 = ['a-0', 'a-port', 'a-corr', 'a-dt', 'a-dur', 'a-fee30', 'a-lev', 'a-hedge', 'a-rebal', 'a-fin']
-/** Plan 9 實戰課的步驟（暫時放在還沒開放的實戰課骨架裡；Task 3 開放） */
-const PLAN9 = ['x-cc', 'x-pay']
+/** Plan 9 實戰課的步驟（步驟池裡的順序） */
+const PLAN9 = ['x-cc', 'x-pay', 'x-card', 'x-mix', 'x-where', 'x-hy', 'x-fee', 'x-perf', 'x-fin']
+/** 初→中→高三階（實戰課 standalone 不在這個順序裡） */
+const tiers = () => availableCourses().filter((c) => !c.standalone)
 /** 內容章＝扣掉開頭（序章／複習）與結尾的章 */
 const contentChapters = (c: Course) => c.chapters.filter((ch) => !OPENING.has(ch.id) && ch.id !== FINISH)
 
@@ -27,12 +31,20 @@ describe('STEP_POOL', () => {
 })
 
 describe('COURSES', () => {
-  it('lists 初、中、高 in order; all three are open (Plan 8 opened 高階)', () => {
+  it('lists 初、中、高 in order, then 實戰; all four are open (Plan 9 opened 實戰, outside the tier order)', () => {
     expect(COURSES.map((c) => c.id)).toEqual(['beginner', 'intermediate', 'advanced', 'practice'])
     expect(course('advanced').available).toBe(true)
-    // Plan 9 Task 2：實戰課只是骨架，還沒開放（Task 3 開放）
-    expect(course('practice').available).toBe(false)
-    expect(availableCourses().map((c) => c.id)).toEqual(['beginner', 'intermediate', 'advanced'])
+    expect(course('practice')).toMatchObject({ name: '實戰', tagline: '拆解一檔真基金', available: true, standalone: true })
+    expect(availableCourses().map((c) => c.id)).toEqual(['beginner', 'intermediate', 'advanced', 'practice'])
+    expect(tiers().map((c) => c.id)).toEqual(['beginner', 'intermediate', 'advanced'])
+  })
+
+  it('實戰 walks one real fund: 名片 → 拆開 → 配息 → 費用 → 績效 → 體檢表, 9 steps', () => {
+    const p = course('practice')
+    expect(p.chapters.map((ch) => ch.name)).toEqual(['名片', '拆開', '配息', '費用', '績效', '體檢表'])
+    expect(p.chapters.map((ch) => `${ch.icon}${ch.name}`)).toEqual(Object.values(T.practiceChapters).map((x) => `${x.icon}${x.name}`))
+    expect(ids(p)).toEqual(['x-card', 'x-mix', 'x-where', 'x-hy', 'x-cc', 'x-pay', 'x-fee', 'x-perf', 'x-fin'])
+    expect([...ids(p)].sort()).toEqual([...PLAN9].sort())
   })
 
   it('every step id exists in STEP_POOL', () => {
@@ -50,8 +62,8 @@ describe('COURSES', () => {
     for (const c of availableCourses()) for (const ch of c.chapters) expect(ch.stepIds.length, `${c.id}/${ch.id}`).toBeGreaterThan(0)
   })
 
-  it('available courses teach 股票 → 債券 → 基金 → ETF between the opening and the finish', () => {
-    for (const c of availableCourses()) {
+  it('the three tiers teach 股票 → 債券 → 基金 → ETF between the opening and the finish', () => {
+    for (const c of tiers()) {
       expect(contentChapters(c).map((ch) => ch.id), c.id).toEqual(['stock', 'bond', 'fund', 'etf'])
       expect(contentChapters(c).map((ch) => `${ch.icon}${ch.name}`), c.id).toEqual(T.chapters.slice(1, 5).map((x) => `${x.icon}${x.name}`))
       expect(OPENING.has(c.chapters[0]!.id), c.id).toBe(true)
@@ -93,11 +105,10 @@ describe('COURSES', () => {
     ])
   })
 
-  it('every pool step belongs to exactly one available course (Plan 9 steps: the unopened 實戰 skeleton until Task 3)', () => {
+  it('every pool step belongs to exactly one available course', () => {
     for (const id of STEP_POOL.keys()) {
       const n = availableCourses().filter((c) => ids(c).includes(id)).length
-      expect(n, id).toBe(PLAN9.includes(id) ? 0 : 1)
-      expect(COURSES.filter((c) => ids(c).includes(id)).length, id).toBe(1)
+      expect(n, id).toBe(1)
     }
     for (const id of PLAN9) expect(courseOfStep(id), id).toBe('practice')
   })
@@ -130,11 +141,17 @@ describe('COURSES', () => {
     expect(a0.scene.camera).toBe('overview')
   })
 
-  it('every available course ends with a four-line recap card', () => {
-    for (const c of availableCourses()) {
+  it('every tier ends with a four-line recap card; 實戰 ends with a 5–6 line checkup card, each line dated', () => {
+    for (const c of tiers()) {
       const last = courseSteps(c).at(-1)!
       expect(last.recap, c.id).toHaveLength(4)
     }
+    const fin = courseSteps(course('practice')).at(-1)!
+    expect(fin.id).toBe('x-fin')
+    const lines = fin.checkupCard!(makeTextContext(universe))
+    expect(lines.length).toBeGreaterThanOrEqual(5)
+    expect(lines.length).toBeLessThanOrEqual(6)
+    for (const l of lines) expect(l.asOf, l.text).toMatch(/^\d{4}-\d{2}-\d{2}$/)
   })
 
   it('m-0 repeats the 初階 recap (u-6) and opens on the city overview', () => {

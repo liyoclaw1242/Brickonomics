@@ -178,7 +178,8 @@ describe('course navigation (never crosses into another course)', () => {
   it('the next course follows course order and skips nothing that is unavailable', () => {
     expect(nextCourse('beginner')).toBe('intermediate')
     expect(nextCourse('intermediate')).toBe('advanced') // Plan 8 開放高階
-    expect(nextCourse('advanced')).toBeNull() // 最後一門：結尾推薦自由玩
+    expect(nextCourse('advanced')).toBeNull() // 最後一階：結尾推薦自由玩（實戰課不在階的順序裡，不推薦它當下一階）
+    expect(nextCourse('practice')).toBeNull()
   })
 
   it('switching course keeps the step when the new course has it, else the first step', () => {

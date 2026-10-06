@@ -201,10 +201,11 @@ export function indexOfStep(course: CourseId, stepId: string): number {
   return stepsOf(course).findIndex((s) => s.id === stepId)
 }
 
-/** 照課程順序的下一門課；沒有下一門或還沒開放時 null（結尾步改推薦自由玩） */
+/** 照課程順序的下一門課；沒有下一門、還沒開放或不在階的順序裡（實戰課）時 null（結尾步改推薦自由玩） */
 export function nextCourse(course: CourseId): CourseId | null {
+  if (courseById(course).standalone) return null
   const n = COURSES[COURSE_IDS.indexOf(course) + 1]
-  return n && n.available ? n.id : null
+  return n && n.available && !n.standalone ? n.id : null
 }
 
 /** 解析網址與舊存檔用：新課裡有這一步就停那步，否則新課第一步（換階選單改走各課上次停的位置，不用這個） */

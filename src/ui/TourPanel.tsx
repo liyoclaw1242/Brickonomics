@@ -100,6 +100,20 @@ function StepPanel() {
           ))}
         </ul>
       )}
+      {/* 實戰課的體檢表：每一行附資料日期 */}
+      {step.checkupCard && (
+        <ul className="recap checkup-card" aria-label={T.checkup.cardLabel}>
+          {step.checkupCard(ctx).map((r) => (
+            <li key={r.text}>
+              <span className="recap__icon" aria-hidden="true">
+                {r.icon}
+              </span>
+              <span className="checkup-card__text">{r.text}</span>
+              <small className="checkup-card__date">{T.checkup.asOf(T.date(r.asOf))}</small>
+            </li>
+          ))}
+        </ul>
+      )}
       {/* 有下一階才推薦；最後一門課的結尾步只留「自由玩」（下一步按鈕） */}
       {upNext && (
         <button className="next-tier" onClick={() => ok && goNextCourse()} disabled={!ok}>

@@ -142,6 +142,10 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .recap { list-style: none; margin: 8px 0 4px; padding: 10px 12px; display: grid; gap: 6px; border-radius: 12px; background: var(--chip); border: 1px solid var(--border); font-size: 15px; line-height: 1.5; }
 .recap li, .recap p { margin: 0; display: flex; gap: 8px; align-items: baseline; word-break: keep-all; overflow-wrap: anywhere; } /* 中文只在標點、空白處換行：不會把一個詞拆開，或讓最後一個字單獨掉到下一行（m-fin） */
 .recap__icon { flex: none; width: 1.4em; text-align: center; }
+/* 實戰課的體檢表：每一行下面一行小小的資料日期 */
+.checkup-card li, .checkup-card p { flex-wrap: wrap; }
+.checkup-card__text { flex: 1 1 auto; }
+.checkup-card__date { flex: 0 0 100%; padding-left: calc(1.4em + 8px); margin-top: -4px; font-size: 12px; opacity: 0.7; white-space: nowrap; }
 
 .info {
   position: fixed; top: 56px; right: 12px; width: 280px; padding: 14px 16px; border-radius: 14px;

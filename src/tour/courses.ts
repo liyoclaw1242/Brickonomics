@@ -3,7 +3,8 @@ import { COURSE_STEPS, LEVELS } from './levels'
 import { T } from '../ui/strings'
 
 /**
- * 課程資料（純資料）：三門獨立的課，每門課＝開頭章＋股票→債券→基金→ETF＋結尾章（口訣卡）。
+ * 課程資料（純資料）：三門獨立的課，每門課＝開頭章＋股票→債券→基金→ETF＋結尾章（口訣卡）；
+ * 另有一門實戰課（standalone）：名片→拆開→配息→費用→績效→體檢表。
  * 步驟本身放在步驟池（LEVELS＋COURSE_STEPS），這裡只排 id。規格 §2.1、§2.2（Plan 6 欄）。
  */
 
@@ -61,14 +62,20 @@ export const COURSES: readonly Course[] = [
     ],
   },
   {
-    // Plan 9 實戰課的骨架（暫時）：Task 2 先把 x-cc 放進步驟池，步驟池的每一步都要屬於一門課；
-    // 還沒開放（available false：開場卡、換階選單、網址都進不來）。Task 3 換成正式的名稱、章節與 9 步並開放
+    // Plan 9 實戰課：拆解一檔真基金（體檢資料 data/fundCheckup）。不在初→中→高的順序裡（standalone），初階詞彙
     id: 'practice',
     name: '實戰',
     tagline: '拆解一檔真基金',
-    available: false,
-    // 章名暫時借用「完成」（看不到：未開放的課不出現在任何選單）；Task 3 換成名片、拆開、配息…
-    chapters: [chapter('payout', T.courseChapters.finish, ['x-cc', 'x-pay'])],
+    available: true,
+    standalone: true,
+    chapters: [
+      chapter('card', T.practiceChapters.card, ['x-card']),
+      chapter('apart', T.practiceChapters.apart, ['x-mix', 'x-where', 'x-hy']),
+      chapter('payout', T.practiceChapters.payout, ['x-cc', 'x-pay']),
+      chapter('fee', T.practiceChapters.fee, ['x-fee']),
+      chapter('perf', T.practiceChapters.perf, ['x-perf']),
+      chapter('checkup', T.practiceChapters.checkup, ['x-fin']),
+    ],
   },
 ]
 
