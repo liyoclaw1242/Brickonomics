@@ -68,7 +68,7 @@ export const COURSES: readonly Course[] = [
     tagline: '拆解一檔真基金',
     available: false,
     // 章名暫時借用「完成」（看不到：未開放的課不出現在任何選單）；Task 3 換成名片、拆開、配息…
-    chapters: [chapter('payout', T.courseChapters.finish, ['x-cc'])],
+    chapters: [chapter('payout', T.courseChapters.finish, ['x-cc', 'x-pay'])],
   },
 ]
 

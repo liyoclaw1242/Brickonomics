@@ -266,6 +266,25 @@ export const T = {
     /** 整數 %：5 → '+5%'；−15 → '−15%'（U+2212）；0 → '0%' */
     signed: (v: number) => (v > 0 ? `+${v}%` : v < 0 ? `−${-v}%` : '0%'),
   },
+  /** 資料日期：'2025-09-30' → '2025/9/30'；年月：'2026-02-09' → '2026/2' */
+  date: (iso: string): string => iso.split('-').map(Number).join('/'),
+  ym: (iso: string): string => iso.split('-').slice(0, 2).map(Number).join('/'),
+  /** 兩位小數、帶正負號（負號用 U+2212）：−2.12 → '−2.12'；0 → '0.00' */
+  signed2: (v: number): string => (v > 0 ? `+${v.toFixed(2)}` : v < 0 ? `−${(-v).toFixed(2)}` : '0.00'),
+  /** 幣別代碼 → 中文 */
+  currency: (code: string): string => ({ USD: '美元', EUR: '歐元', TWD: '新台幣' } as Record<string, string>)[code] ?? code,
+  /** x-pay 每月配息 vs 淨值的 3D 標註（實戰；真資料） */
+  np: {
+    /** 第一根柱子的副標：每一份多少美元，以及柱子從哪裡起畫（不是從 0） */
+    firstSub: (nav: string, floor: number) => `每一份 ${nav} 美元・柱子從 ${floor} 起畫`,
+    navAt: (date: string) => date,
+    navSub: (nav: string) => `每一份 ${nav} 美元`,
+    shorter: (v: string) => `比起點矮 ${v}`,
+    income: '金色＝收益',
+    incomeSub: (from: string, to: string) => `${from}–${to} 全是收益`,
+    capital: '紅色＝本金',
+    capitalSub: (since: string, min: number, max: number) => `${since} 起每次 ${min}–${max}%`,
+  },
   /** a-rebal 組合塔的 3D 標註（高階） */
   rebal: {
     stock: (v: string, pct: string) => `股票 ${v}（${pct}）`,
@@ -372,6 +391,15 @@ export const T = {
     ccPlain: '一般持有',
     ccCovered: '掩護（含權利金）',
     ccPremium: '權利金',
+    npStart: (date: string) => `起點（${date}）`,
+    npEnd: (date: string) => `最後（${date}）`,
+    npChange: '同期淨值變化',
+    npPaid: '一年配息合計（12 次）',
+    npCapital: (since: string) => `${since} 起，本金佔每次配息`,
+    npIncomeOnly: (from: string, to: string) => `${from}–${to}，本金佔每次配息`,
+    npYield: (date: string) => `年化配息率（${date}）`,
+    npYieldNote: '配出去的比例，不是報酬',
+    npUnit: (cur: string) => `每一份，${cur}`,
     rebalStage: '進度',
     rebalStock: '股票',
     rebalBond: '債券',

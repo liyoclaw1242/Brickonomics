@@ -11,6 +11,7 @@ import { LEVERAGE } from '../sim/leverage'
 import { HEDGE } from '../sim/hedge'
 import { COVERED_CALL } from '../sim/coveredCall'
 import { CC_RISE_MIN, ccNow, ccSunny } from '../scene/layout/practice'
+import { capitalRun, navChange, payoutTotal } from '../sim/checkup'
 import { REBALANCE } from '../sim/rebalance'
 import { FEE_DRAG } from '../sim/feeDrag'
 import { DURATION } from '../sim/duration'
@@ -83,6 +84,12 @@ const hedgeGaps = (c: TextContext) => {
   }
 }
 const n1 = (v: number): string => v.toFixed(1)
+
+/** 實戰課拆解的那一檔（體檢資料 data/fundCheckup；數字一律從 c.checkup 讀，沒查證的欄位自動標 ？） */
+const PRACTICE_FUND = 'JFZN3'
+const fundOf = (c: TextContext) => c.checkup(PRACTICE_FUND)
+/** 每一份的美元金額：8.254 → '8.25' */
+const usd2 = (v: number): string => v.toFixed(2)
 
 /** 初階口訣：初階結尾（u-6）與中階開頭的複習（m-0）用同一份 */
 const BEGINNER_RECAP: RecapLine[] = [
@@ -931,5 +938,35 @@ export const COURSE_STEPS: Step[] = [
     scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'coveredCall' }, event: ccSunny(), eventWhen: { control: 'ccMove', min: CC_RISE_MIN }, values: { ccMove: 0 }, cityLabels: false },
     controls: ['ccMove'],
     ranges: { ccMove: [COVERED_CALL.minMovePct, COVERED_CALL.maxMovePct] },
+  },
+  {
+    // 實戰：穩定月配（真資料，不是示意）。一排月底淨值柱＋每月配息金幣（金色收益、紅色本金）；
+    // 大數字把一年配了多少和塔矮了多少並排（同一個單位：每一份、美元），不替它下結論
+    id: 'x-pay',
+    title: '每月配息',
+    line: '每月有**金幣|coin**，要看**塔有沒有變矮|loss**',
+    more: (c) => {
+      const f = fundOf(c)
+      const ch = navChange(f)
+      const run = capitalRun(f)
+      const y = f.annualisedDividendYield.value
+      return [
+        `每一份一年配 ${usd2(payoutTotal(f))} 美元，塔${ch.change < 0 ? '矮了' : '高了'} ${usd2(Math.abs(ch.change))}。`,
+        ...(run.since ? [`${T.ym(run.since)} 起，每次 ${run.min}–${run.max}% 是本金。`] : []),
+        ...(y ? [`年化配息率 ${y.pct.toFixed(1)}% 是配出的比例，不是報酬。`] : []),
+        '金幣加上塔，合起來才是總報酬。',
+      ].join('')
+    },
+    bigNumber: (c) => {
+      const f = fundOf(c)
+      const ch = navChange(f)
+      return {
+        value: `${usd2(payoutTotal(f))} vs ${usd2(Math.abs(ch.change))}`,
+        label: ch.change < 0 ? '一年配息 vs 塔矮了' : '一年配息 vs 塔高了',
+        note: `每一份・${T.currency(f.navMonthEnd.value!.currency)}・${T.date(ch.from.date)}–${T.date(ch.to.date)}`,
+        colorKey: 'coin',
+      }
+    },
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'navPayout', fund: PRACTICE_FUND }, cityLabels: false },
   },
 ]

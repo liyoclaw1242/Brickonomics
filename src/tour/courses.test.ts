@@ -14,7 +14,7 @@ const PLAN7 = ['s-dd', 's-pe', 'b-rate', 'b-infl', 'e-dca']
 /** Plan 8 的高階步驟（課程專用；照課程順序） */
 const PLAN8 = ['a-0', 'a-port', 'a-corr', 'a-dt', 'a-dur', 'a-fee30', 'a-lev', 'a-hedge', 'a-rebal', 'a-fin']
 /** Plan 9 實戰課的步驟（暫時放在還沒開放的實戰課骨架裡；Task 3 開放） */
-const PLAN9 = ['x-cc']
+const PLAN9 = ['x-cc', 'x-pay']
 /** 內容章＝扣掉開頭（序章／複習）與結尾的章 */
 const contentChapters = (c: Course) => c.chapters.filter((ch) => !OPENING.has(ch.id) && ch.id !== FINISH)
 

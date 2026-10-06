@@ -7,6 +7,8 @@ import { DCA_DEMO, dcaNow, ddNow, INFL_DEMO, inflReal, PE_DEMO, peYears, ratePri
 import { corrNow, dtNow, durNow, feeTreesNow, hedgeCaseIndex, hedgeTowers, levNow, portNow, rebalNow } from '../scene/layout/advanced'
 import { hedgeExample } from '../sim/hedge'
 import { ccNow } from '../scene/layout/practice'
+import { checkupOf } from '../data/fundCheckup'
+import { capitalRun, navChange, payoutTotal } from '../sim/checkup'
 import { FEE_DRAG } from '../sim/feeDrag'
 import { LEVERAGE } from '../sim/leverage'
 import { DURATION } from '../sim/duration'
@@ -162,6 +164,23 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
         { label: T.readout.ccPlain, value: p(n.plain) },
         { label: T.readout.ccPremium, value: p(n.coin / 100) },
         { label: T.readout.ccCovered, value: p(n.covered) },
+      ]
+    }
+    case 'navPayout': {
+      // 真資料（體檢快照）：沒查證的欄位由 stepMarks 在標題旁標 ？
+      const f = checkupOf(stage.fund)
+      const c = navChange(f)
+      const run = capitalRun(f)
+      const y = f.annualisedDividendYield.value
+      const unit = T.readout.npUnit(f.navMonthEnd.value!.currency)
+      return [
+        { label: T.readout.npStart(T.date(c.from.date)), value: c.from.nav.toFixed(2), note: unit },
+        { label: T.readout.npEnd(T.date(c.to.date)), value: c.to.nav.toFixed(2) },
+        { label: T.readout.npChange, value: T.signed2(c.change) },
+        { label: T.readout.npPaid, value: payoutTotal(f).toFixed(3) },
+        ...(run.firstIncomeOnly && run.lastIncomeOnly ? [{ label: T.readout.npIncomeOnly(T.ym(run.firstIncomeOnly), T.ym(run.lastIncomeOnly)), value: '0%' }] : []),
+        ...(run.since ? [{ label: T.readout.npCapital(T.ym(run.since)), value: `${run.min}–${run.max}%` }] : []),
+        ...(y ? [{ label: T.readout.npYield(T.date(y.forRecordDate)), value: `${y.pct.toFixed(2)}%`, note: T.readout.npYieldNote }] : []),
       ]
     }
     case 'leverage': {

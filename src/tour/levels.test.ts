@@ -19,7 +19,8 @@ import { colorForKey } from '../scene/palette'
 import { isVerified } from '../data/verified'
 import { T } from '../ui/strings'
 import { CAMERA_PRESETS } from '../scene/camera'
-import { stepMarks } from '../ui/marks'
+import { checkupSources, stepMarks } from '../ui/marks'
+import { CHECKUPS, checkupVerified, type FundCheckup } from '../data/fundCheckup'
 import type { VerifiedKey } from '../data/schema'
 import type { Universe } from '../data'
 import type { Stage, StageValues, Step } from './types'
@@ -175,6 +176,12 @@ describe('LEVELS', () => {
       const bn = bigOf(s)
       if (!bn) continue
       if (bn.mark) continue
+      // 實戰課：大數字來自體檢快照，來源由 checkupSources 從文字實際讀的欄位推出來（不手動宣告），每個都要已查證
+      const fromCheckup = checkupSources(s, CHECKUPS)
+      if (fromCheckup.length > 0 && !SOURCES[s.id]) {
+        for (const [id, key] of fromCheckup) expect(checkupVerified(CHECKUPS.get(id)!, key), `${s.id}: ${id} ${key}`).toBe(true)
+        continue
+      }
       const src = SOURCES[s.id]
       expect(src, `${s.id}: list its data source or mark it`).toBeDefined()
       for (const [id, key] of src!) expect(isVerified(universe.get(id)!, key), `${s.id}: ${id} ${key}`).toBe(true)
@@ -1162,5 +1169,41 @@ describe('Plan 8 高階: 剪高補低 (a-rebal)', () => {
   it('honest: rebalancing does not promise more profit, and moving money has trading costs', () => {
     expect(moreOf(s(), ctx)).toContain('不保證賺比較多')
     expect(moreOf(s(), ctx)).toContain('交易成本')
+  })
+})
+
+describe('Plan 9 實戰: 每月配息 (x-pay, real data)', () => {
+  const s = () => byId('x-pay')
+  const live = new Map(CHECKUPS)
+  const patched = (patch: (f: FundCheckup) => FundCheckup) => new Map([['JFZN3', patch(live.get('JFZN3')!)]])
+  it('the card puts a year of payouts next to how much the tower shrank, same unit, with the dates', () => {
+    // 12 次配息合計 8.254 → 8.25；淨值 74.99 → 72.87 ＝ −2.12
+    expect(bigOf(s())).toEqual({ value: '8.25 vs 2.12', label: '一年配息 vs 塔矮了', note: '每一份・美元・2025/9/30–2026/9/30', colorKey: 'coin' })
+    expect(s().mark).toBeUndefined() // 真資料，不是示意
+    expect(s().scene.stage).toEqual({ kind: 'navPayout', fund: 'JFZN3' })
+  })
+  it('the more text gives the numbers with dates, says the payout rate is not a return, and asks for 總報酬', () => {
+    const more = moreOf(s(), ctx)
+    expect(more).toContain('每一份一年配 8.25 美元，塔矮了 2.12')
+    expect(more).toContain('2026/2 起，每次 56–76% 是本金') // 配息組成表，2026-02-09 起
+    expect(more).toContain('年化配息率 11.7% 是配出的比例，不是報酬')
+    expect(more).toContain('總報酬')
+  })
+  it('the payout rate never appears as a return anywhere in the practice steps', () => {
+    for (const st of steps.filter((x) => x.id.startsWith('x-'))) {
+      const texts = [lineOf(st, ctx), moreOf(st, ctx), resolve(st.fallbackLine), resolve(st.fallbackMore), bigOf(st)?.value, bigOf(st)?.label, bigOf(st)?.note]
+      for (const t of texts) if (t?.includes('11.7')) expect(t, st.id).toContain('不是報酬')
+    }
+  })
+  it('derives ？ from the checkup fields it reads: dividends, composition, NAV', () => {
+    expect(stepMarks(s(), universe)).toEqual([])
+    for (const key of ['dividends', 'dividendComposition', 'navMonthEnd'] as const) {
+      expect(stepMarks(s(), universe, patched((f) => ({ ...f, [key]: { ...f[key], verified: false } }))), key).toEqual(['unverified'])
+    }
+  })
+  it('the readout lists the start and end NAV, the change, the payouts and the yield as a payout rate', () => {
+    const rows = stageReadout({ kind: 'navPayout', fund: 'JFZN3' }, { ...DEFAULT_VALUES, slice: 0, explode: 0 }, universe, null)
+    expect(rows.map((r) => r.value)).toEqual(['74.99', '72.87', '−2.12', '8.254', '0%', '56–76%', '11.70%'])
+    expect(rows.at(-1)!.note).toBe('配出去的比例，不是報酬')
   })
 })

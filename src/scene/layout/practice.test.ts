@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { CC_RISE_MIN, ccNow, ccSunny } from './practice'
+import { navPayoutLayout, NP_LAYOUT, CC_RISE_MIN, ccNow, ccSunny } from './practice'
+import { checkupOf } from '../../data/fundCheckup'
 
 describe('x-cc covered-call tower (ceiling +5%, premium 2%; ≈)', () => {
   it('big rise +20%: tower kept at 105, the plain tower would reach 120 (15 sold away), coin 2', () => {
@@ -38,5 +39,34 @@ describe('x-cc covered-call tower (ceiling +5%, premium 2%; ≈)', () => {
     expect(CC_RISE_MIN).toBe(1)
     expect(ccSunny()).toEqual(ccSunny())
     expect(ccSunny().kind).toBe('sunnyTree')
+  })
+})
+
+describe('x-pay NAV bars and payout coins (navPayoutLayout)', () => {
+  const f = checkupOf('JFZN3')
+  const L = navPayoutLayout(f)
+  it('draws 13 month-end bars from a floor 2 below the lowest NAV: floor(72.50) − 2 = 70', () => {
+    expect(L.floor).toBe(70)
+    expect(L.bars).toHaveLength(13) // 起點 2025-09-30 ＋ 12 個月底
+    expect(L.bars[0]).toMatchObject({ date: '2025-09-30', nav: 74.99 })
+    expect(L.bars[0]!.h).toBeCloseTo((74.99 - 70) * NP_LAYOUT.unit, 10)
+    // 平均排開，中間那根在廣場中心：x = (i − 6) × spacing
+    expect(L.bars[0]!.x).toBeCloseTo(-6 * NP_LAYOUT.spacing, 10)
+    expect(L.bars[12]!.x).toBeCloseTo(6 * NP_LAYOUT.spacing, 10)
+  })
+  it('puts each payout in front of the bar of its record month, split into income (bottom) and capital (top) at the same per-dollar scale', () => {
+    expect(L.coins).toHaveLength(12)
+    expect(L.coins[0]).toMatchObject({ recordDate: '2025-10-09', capitalPct: 0 })
+    expect(L.coins[0]!.x).toBe(L.bars[1]!.x) // 2025-10-09 → 2025-10-31 那根
+    expect(L.coins[0]!.capitalH).toBe(0)
+    // 2026-02-09：0.693，本金 76%
+    expect(L.coins[4]!.x).toBe(L.bars[5]!.x)
+    expect(L.coins[4]!.incomeH).toBeCloseTo(0.693 * 0.24 * NP_LAYOUT.unit, 10)
+    expect(L.coins[4]!.capitalH).toBeCloseTo(0.693 * 0.76 * NP_LAYOUT.unit, 10)
+  })
+  it('marks how much shorter the last bar is than the start (74.99 → 72.87, 2.12 × unit)', () => {
+    expect(L.startY).toBeCloseTo((74.99 - 70) * NP_LAYOUT.unit, 10)
+    expect(L.endY).toBeCloseTo((72.87 - 70) * NP_LAYOUT.unit, 10)
+    expect(L.startY - L.endY).toBeCloseTo(2.12 * NP_LAYOUT.unit, 10)
   })
 })
