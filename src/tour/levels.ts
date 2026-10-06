@@ -944,9 +944,10 @@ export const COURSE_STEPS: Step[] = [
     line: '先賣掉**上半截|loss**，換一筆**金幣|coin**',
     fallbackLine: () => `大漲 ${COVERED_CALL.maxMovePct}% 時只拿 **${T.cc.signed(Math.round(ccNow(COVERED_CALL.maxMovePct).covered * 100))}|loss**`,
     more: (c) => {
-      const s = fundOf(c).coveredCallSleeve.value
+      // 9.6% 讀資產配置（已查證）；掩護性買權那一層的說明月報沒寫，照實說
+      const cc = assetGroups(fundOf(c)).coveredCall
       return [
-        ...(s ? [`這檔有 ${p1(s.pct)} 是這種做法；月報沒有寫細節。`] : []),
+        ...(cc > 0 ? [`這檔有 ${p1(cc)} 是這種做法；月報沒有寫細節。`] : []),
         '掩護性買權＝持有股票，再賣掉漲超過天花板的部分。',
         '換到的金幣叫權利金；大漲時少賺，下跌一樣會跌。',
         `這是示意：天花板漲 ${pct1(COVERED_CALL.cap)}、權利金 ${pct1(COVERED_CALL.premium)}。`,
@@ -987,7 +988,7 @@ export const COURSE_STEPS: Step[] = [
       return {
         value: `${T.signed2(n.net)} 美元`,
         label: '配息＋塔高變化（每一份）',
-        note: `約 ${n.pct >= 0 ? '+' : '−'}${(Math.abs(n.pct) * 100).toFixed(1)}%・其中配出 ${usd2(n.payouts)}，塔${n.change < 0 ? '少' : '多'} ${usd2(Math.abs(n.change))}`,
+        note: `約 ${n.pct >= 0 ? '+' : '−'}${(Math.abs(n.pct) * 100).toFixed(1)}%・其中配出 ${usd2(n.payouts)}，塔${n.change < 0 ? '少' : '多'} ${usd2(Math.abs(n.change))}・${T.date(n.from.date)}–${T.date(n.to.date)}`,
         colorKey: 'coin',
       }
     },
@@ -1021,10 +1022,10 @@ export const COURSE_STEPS: Step[] = [
     // 拆開：三大類（股票含掩護性買權│借據與特別股│現金，分法在 sim/checkup）。一句話由算出來的結果決定
     id: 'x-mix',
     title: '裡面裝什麼',
-    // review：50.2% 在四捨五入和特別股的分法以內 → 股票離 50% 不到 2 個百分點時說「大約各一半」
+    // review：50.2% 在四捨五入和特別股的分法以內 → 股票離 50% 不到 2 個百分點時說「股票大約一半」（借據＋特別股 44.4%、現金 5.8%，不是各半）
     line: (c) => {
       const g = assetGroups(fundOf(c))
-      return nearHalf(g) ? '拆開看：股票和借據**大約各一半**' : g.nonStockMajority ? '拆開看：一半以上不是**股票|stock**' : '拆開看：一半以上是**股票|stock**'
+      return nearHalf(g) ? '拆開看：**股票|stock**大約一半' : g.nonStockMajority ? '拆開看：一半以上不是**股票|stock**' : '拆開看：一半以上是**股票|stock**'
     },
     more: (c) => {
       const g = assetGroups(fundOf(c))
@@ -1098,7 +1099,7 @@ export const COURSE_STEPS: Step[] = [
       const s = feeSummary(fundOf(c))
       return [
         `經理費 ${s.management.toFixed(2)}%，保管費最多 ${s.custody.toFixed(2)}%。`,
-        `KID 寫每年約 ${s.ongoing.toFixed(2)}%，從塔上先扣。`,
+        `官方文件（KID）寫每年約 ${s.ongoing.toFixed(2)}%。`,
         `交易成本約 ${s.transaction.toFixed(2)}%，另外算。`,
         `買的時候另付手續費，最高 ${s.maxSales}%，看通路。`,
       ].join('')
@@ -1124,10 +1125,10 @@ export const COURSE_STEPS: Step[] = [
       const w = r.rows.find((x) => x.year === r.worst.year)!
       const y = yearToDate(f)
       return [
-        '指標＝這檔基金自己選的比較對象。',
+        '指標＝它自己選的比較對象；報酬含配息。',
         `${w.year} 跌 ${Math.abs(w.fund).toFixed(1)}%，比指標的 ${Math.abs(w.bench).toFixed(1)}% ${w.fund > w.bench ? '少' : '多'}。`,
         `${y.asOf.slice(0, 4)} 到 ${T.date(y.asOf).slice(5)}：${y.fund.toFixed(1)}% 對 ${y.bench.toFixed(1)}%。`,
-        '報酬含配息再投入，用美元算；它不以贏過指標為目標。',
+        '這段不滿一年；它不以贏過指標為目標。',
       ].join('')
     },
     bigNumber: (c) => {
@@ -1164,10 +1165,11 @@ export const COURSE_STEPS: Step[] = [
       const less = fellLess(f)
       const alloc = f.assetAllocation.value?.asOf ?? f.assetAllocation.source.date
       const style = STYLE_WORD[fundStyle(f)]
-      const good = [...(f.basics.distributionFrequency.value === 'monthly' ? ['每月現金流'] : []), ...less.map((y) => `${y} 跌較少`)]
+      const good = [...(f.basics.distributionFrequency.value === 'monthly' ? ['每月現金流'] : []), ...less.map((y) => `${y} 比指標少跌`)]
       return [
-        { icon: '🚜', text: nearHalf(g) ? `怪手挑的${style}，股債約各半` : `怪手挑的${style}`, asOf: alloc },
-        ...(good.length ? [{ icon: '✅', text: `有：${good.join('、')}`, asOf: f.calendarYearReturns.source.date }] : []),
+        { icon: '🚜', text: nearHalf(g) ? `怪手挑的${style}，股票約一半` : `怪手挑的${style}`, asOf: alloc },
+        // 日期取這一行用到的資料裡最早的（每月配息出自投資人須知、2022 出自月報）
+        ...(good.length ? [{ icon: '✅', text: `有：${good.join('、')}`, asOf: [...(good.length > less.length ? [f.basics.distributionFrequency.source.date] : []), ...(less.length ? [f.calendarYearReturns.source.date] : [])].sort()[0]! }] : []),
         { icon: '📜', text: `容易裂的借據約 ${pct0(g.highYield)}%`, asOf: alloc },
         { icon: '🪙', text: `每份${n.net >= 0 ? '多' : '少'} ${usd2(Math.abs(n.net))} 美元${run.since ? '，配息含本金' : ''}`, asOf: n.to.date },
         { icon: '🚪', text: `每年先扣約 ${feeSummary(f).ongoing.toFixed(2)}%`, asOf: f.basics.ongoingCharges.source.date },

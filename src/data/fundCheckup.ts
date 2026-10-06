@@ -127,13 +127,13 @@ export function checkupField(f: FundCheckup, key: CheckupKey): CheckupField {
   return f[key as TopKey]
 }
 
-/** 值裡面有沒有查不到（null）的部分，例如掩護性買權那一層只有名稱和比例、沒有說明 */
-const hasNull = (v: unknown): boolean => v === null || (typeof v === 'object' && Object.values(v as object).some(hasNull))
-
-/** 這個欄位能不能當成已查證的事實（明確 verified，而且值裡面沒有查不到的部分） */
+/**
+ * 這個欄位能不能當成已查證的事實（明確 verified，而且有值）。
+ * 值裡面可以有 schema 允許的空白說明（例如掩護性買權那一層的 description）：查到的數字照樣算已查證，課文要另外照實說「沒寫」。
+ */
 export function checkupVerified(f: FundCheckup, key: CheckupKey): boolean {
   const x = checkupField(f, key)
-  return x.verified && !hasNull(x.value)
+  return x.verified && x.value !== null
 }
 
 /** 實戰課的基金（載入時驗證） */

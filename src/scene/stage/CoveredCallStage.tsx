@@ -127,7 +127,7 @@ export function CoveredCallStage({ fund }: { fund?: string } = {}) {
         />
       )}
       {sleeve && (
-        <Callout anchor={atPlaza(X - W / 2, 0.1, -W / 2)} offset={[-3.4, 3.4, 0]} title={T.cc.fund(`${sleeve.pct.toFixed(1)}%`)} sub={T.cc.fundSub} color={ACCENT_COLORS.stock} persistent />
+        <Callout anchor={atPlaza(X - W / 2, 4, 0)} offset={[-1.6, 1.2, 0]} title={T.cc.fund(`${sleeve.pct.toFixed(1)}%`)} sub={T.cc.fundSub} color={ACCENT_COLORS.stock} persistent />
       )}
       <Callout anchor={atPlaza(coinX, 0.1, coinR)} offset={[0.8, -0.3, 2.4]} title={T.cc.coin} sub={T.cc.signed(Math.round(n.coin))} color={ACCENT_COLORS.coin} persistent />
     </>

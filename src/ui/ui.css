@@ -144,7 +144,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); }
 .recap__icon { flex: none; width: 1.4em; text-align: center; }
 /* 實戰課的體檢表：每一行下面一行小小的資料日期 */
 .checkup-card li, .checkup-card p { flex-wrap: wrap; }
-.checkup-card__text { flex: 1 1 auto; }
+.checkup-card__text { flex: 1 1 0; min-width: 0; }
 .checkup-card__date { flex: 0 0 100%; padding-left: calc(1.4em + 8px); margin-top: -4px; font-size: 12px; opacity: 0.7; white-space: nowrap; }
 
 .info {

@@ -1178,7 +1178,7 @@ describe('Plan 9 實戰: 每月配息 (x-pay, real data)', () => {
   const patched = (patch: (f: FundCheckup) => FundCheckup) => new Map([['LU2347655073', patch(live.get('LU2347655073')!)]])
   it('one neutral headline: payouts + NAV change per unit (+6.13, ≈ +8.2%), with the two parts in the note (prac-r1: 「vs」 read as a contest)', () => {
     // 12 次配息合計 8.254；淨值 74.99 → 72.87 ＝ −2.12；8.254 − 2.12 = 6.134 → +6.13；6.134 ÷ 74.99 = 8.18% → +8.2%
-    expect(bigOf(s())).toEqual({ value: '+6.13 美元', label: '配息＋塔高變化（每一份）', note: '約 +8.2%・其中配出 8.25，塔少 2.12', colorKey: 'coin' })
+    expect(bigOf(s())).toEqual({ value: '+6.13 美元', label: '配息＋塔高變化（每一份）', note: '約 +8.2%・其中配出 8.25，塔少 2.12・2025/9/30–2026/9/30', colorKey: 'coin' })
     expect(bigOf(s())!.value).not.toContain('vs')
     expect(s().mark).toBeUndefined() // 真資料，不是示意
     expect(s().scene.stage).toEqual({ kind: 'navPayout', fund: 'LU2347655073' })
@@ -1221,11 +1221,13 @@ describe('Plan 9 實戰: the other steps of the fund checkup (numbers from the s
     assetAllocation: { ...f.assetAllocation, value: { ...f.assetAllocation.value!, items: f.assetAllocation.value!.items.map((i) => ({ ...i, pct: pcts[i.name] ?? i.pct })) } },
   })
 
-  it('x-cc: says this fund has 9.6% in it and that the description is missing (？ from the null description); one new term on screen', () => {
+  it('x-cc: says this fund has 9.6% in it (from the verified allocation, so no ？) and that the factsheet has no details; one new term on screen', () => {
     const s = byId('x-cc')
     expect(lineOf(s, ctx)).toBe('先賣掉**上半截|loss**，換一筆**金幣|coin**')
     expect(moreOf(s, ctx)).toContain('這檔有 9.6% 是這種做法；月報沒有寫細節')
-    expect(stepMarks(s, universe)).toEqual(['illustrative', 'unverified'])
+    expect(stepMarks(s, universe)).toEqual(['illustrative'])
+    // 9.6% 來自資產配置：那個欄位沒查證時才標 ？
+    expect(stepMarks(s, universe, unverified('assetAllocation'))).toEqual(['illustrative', 'unverified'])
     expect(s.scene.stage).toEqual({ kind: 'coveredCall', fund: 'LU2347655073' })
     expect(T.cc.coin).not.toContain('權利金')
   })
@@ -1239,9 +1241,9 @@ describe('Plan 9 實戰: the other steps of the fund checkup (numbers from the s
     expect(stepMarks(s, universe, new Map([['LU2347655073', { ...live, basics: { ...live.basics, fundSize: { ...live.basics.fundSize, verified: false } } }]]))).toEqual(['unverified'])
   })
 
-  it('x-mix: 股票 49.7% is within 2 points of half → 「大約各一半」; the line follows the data; preferreds named once', () => {
+  it('x-mix: 股票 49.7% is within 2 points of half → 「股票大約一半」 (借據＋特別股 44.4%, 現金 5.8%: not 各半); the line follows the data; preferreds named once', () => {
     const s = byId('x-mix')
-    expect(lineOf(s, ctx)).toBe('拆開看：股票和借據**大約各一半**') // |49.7 − 50| = 0.3 < 2
+    expect(lineOf(s, ctx)).toBe('拆開看：**股票|stock**大約一半') // |49.7 − 50| = 0.3 < 2
     // 股票多 4 個百分點（29.0 → 33.0、27.3 → 23.3）：股票 53.7% → 一半以上是股票
     expect(lineOf(s, ctxWith((f) => setItems(f, { 'Global Equity': 33.0, 'US High Yield': 23.3 })))).toBe('拆開看：一半以上是**股票|stock**')
     // 股票少 4 個百分點：45.7% → 一半以上不是股票
@@ -1277,7 +1279,7 @@ describe('Plan 9 實戰: the other steps of the fund checkup (numbers from the s
     const s = byId('x-fee')
     expect(lineOf(s, ctx)).toBe('每年先扣約 **1.45%|loss**')
     expect(bigOf(s)).toMatchObject({ value: '14,500 元', label: '100 萬放一年，約扣', note: '經理費 1.25%＋保管費最多 0.20%' })
-    expect(moreOf(s, ctx)).toContain('KID 寫每年約 1.45%')
+    expect(moreOf(s, ctx)).toContain('官方文件（KID）寫每年約 1.45%')
     expect(moreOf(s, ctx)).toContain('交易成本約 0.22%，另外算')
     // 計費表寫已經過幾年（prac-r1：「第 2 年 22,148」看起來像 2 × 14,500 算錯）：100 萬 × (1 − 0.9855^1.53) ≈ 22,148
     expect(T.feeMeter.elapsed(1.53)).toBe('已過 1.5 年')
@@ -1298,7 +1300,7 @@ describe('Plan 9 實戰: the other steps of the fund checkup (numbers from the s
     // (0.8807 × 1.0835 × 1.0816 × 1.109) − 1 = 14.46% → 14%；(0.8684 × 1.1614 × 1.1189²) − 1 = 26.27% → 26%
     // 好的一面也在卡片上：2022 跌得比指標少（−11.93 > −13.16）
     expect(bigOf(s)).toMatchObject({ value: '14% vs 26%', label: '漲幅：基金 vs 指標', note: '2022–2025 合起來（含配息）・2022 跌得比指標少' })
-    expect(moreOf(s, ctx)).toContain('2026 到 8/31：7.7% 對 6.0%') // 今年到資料日，不滿一年
+    expect(moreOf(s, ctx)).toContain('2026 到 8/31：7.7% 對 6.0%。這段不滿一年') // 今年到資料日
     // 「藍圖」在這門課會讓人以為有 ETF 可以買：一律叫指標
     for (const t of [lineOf(s, ctx), moreOf(s, ctx), bigOf(s)!.label, T.checkup.bench]) expect(t).not.toContain('藍圖')
     expect(s.scene.event).toMatchObject({ kind: 'quake', depth: 0.1193 })
@@ -1312,8 +1314,9 @@ describe('Plan 9 實戰: the other steps of the fund checkup (numbers from the s
     expect(stripMarkup(lineOf(s, ctx))).toBe('只是體檢，不是叫你買或賣')
     const lines = s.checkupCard!(ctx)
     // 好處（每月現金流、2022 跌較少）和要注意的放在同一張卡；金額帶單位
-    expect(lines.map((l) => l.text)).toEqual(['怪手挑的平衡型，股債約各半', '有：每月現金流、2022 跌較少', '容易裂的借據約 30%', '每份多 6.13 美元，配息含本金', '每年先扣約 1.45%', '近 4 年和指標比：1 高 3 低'])
-    expect(lines.map((l) => l.asOf)).toEqual(['2026-08-31', '2026-08-31', '2026-08-31', '2026-09-30', '2026-04-27', '2026-08-31'])
+    expect(lines.map((l) => l.text)).toEqual(['怪手挑的平衡型，股票約一半', '有：每月現金流、2022 比指標少跌', '容易裂的借據約 30%', '每份多 6.13 美元，配息含本金', '每年先扣約 1.45%', '近 4 年和指標比：1 高 3 低'])
+    // ✅ 那一行：每月配息出自投資人須知（2026-07-31），2022 出自月報（2026-08-31）→ 寫較早的那個
+    expect(lines.map((l) => l.asOf)).toEqual(['2026-08-31', '2026-07-31', '2026-08-31', '2026-09-30', '2026-04-27', '2026-08-31'])
     for (const l of lines) {
       expect(Array.from(l.text).length, l.text).toBeLessThanOrEqual(18)
       expect(forbiddenWordsIn(l.text)).toEqual([])

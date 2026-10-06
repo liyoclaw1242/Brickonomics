@@ -14,13 +14,14 @@ import { atPlaza } from './plaza'
 
 const { barW, zeroY } = PERF_LAYOUT
 /** 年份標註往前拉多遠（一排一排交錯） */
-const ROW_Z = [1.8, 5.4, 9.0] as const
-/** 手機：第一年（2022）和下一年隔兩排，「跌得比指標少」那行不會被蓋住 */
-const NARROW_ROWS = [0, 2, 1, 0, 2] as const
+const ROW_Z = [1.8, 5.4] as const
+/** 手機：一排一個高度、排與排之間不重疊（框比排距高時，上下兩排會互相蓋住） */
+const NARROW_ROW_Z = [1.8, 7.4] as const
+const NARROW_ROWS = [0, 1, 0, 1, 0] as const
 const FUND = ACCENT_COLORS.active
 const BENCH = ACCENT_COLORS.passive
 /** −11.93 → '−11.9%'；8.35 → '+8.4%'（負號 U+2212） */
-const signed1 = (v: number) => (v > 0 ? `+${v.toFixed(1)}` : v < 0 ? `−${(-v).toFixed(1)}` : '0')
+const signed1 = (v: number) => (v > 0 ? `+${v.toFixed(1)}%` : v < 0 ? `−${(-v).toFixed(1)}%` : '0%')
 
 /**
  * x-perf 歷年績效（真資料）：每年兩座塔，左＝這檔基金、右＝它自己選的指標（藍圖）；從零線往上是漲、往下是跌。
@@ -92,14 +93,15 @@ export function PerfStage({ fund, event }: { fund: string; event: EventClock }) 
       <Callout anchor={atPlaza(first.fund.x - barW / 2 - 0.6, zeroY, 0)} offset={[-1.2, 0, 0]} title={T.checkup.zero} persistent />
       {/* 年份標註一高一低交錯（手機畫面窄，並排會疊在一起）；跌的那年跌得比指標少，直接寫在那年的標註上 */}
       {[...L.years.map((y) => ({ key: String(y.year), x: y.x, title: T.checkup.year(y.year, y.down), sub: T.checkup.yearSub(signed1(y.fund.pct), signed1(y.bench.pct)), less: y.down && y.fund.pct > y.bench.pct, down: y.down })),
-        { key: 'ytd', x: L.ytd.x, title: T.checkup.ytd(T.date(L.ytd.asOf)), sub: T.checkup.and(T.checkup.yearSub(signed1(L.ytd.fund.pct), signed1(L.ytd.bench.pct)), T.checkup.ytdSub), less: false, down: false },
+        { key: 'ytd', x: L.ytd.x, title: T.checkup.ytd(T.date(L.ytd.asOf)), sub: narrow ? T.checkup.yearSub(signed1(L.ytd.fund.pct), signed1(L.ytd.bench.pct)) : T.checkup.and(T.checkup.yearSub(signed1(L.ytd.fund.pct), signed1(L.ytd.bench.pct)), T.checkup.ytdSub), less: false, down: false },
       ].map((y, i) => (
         <Callout
           key={y.key}
           anchor={atPlaza(y.x, 0.1, barW / 2 + 0.2)}
-          offset={[0, -0.4, ROW_Z[narrow ? NARROW_ROWS[i % NARROW_ROWS.length]! : i % 2]!]}
+          offset={[0, -0.4, narrow ? NARROW_ROW_Z[NARROW_ROWS[i % NARROW_ROWS.length]!] : ROW_Z[i % 2]!]}
           title={y.title}
-          sub={y.less ? T.checkup.and(y.sub, T.checkup.fellLess) : y.sub}
+          // 手機：框放不下第二件事（「跌得比指標少」「不滿一年」也寫在面板的大數字與多說一點）
+          sub={y.less && !narrow ? T.checkup.and(y.sub, T.checkup.fellLess) : y.sub}
           color={y.down ? ACCENT_COLORS.loss : undefined}
           persistent
         />

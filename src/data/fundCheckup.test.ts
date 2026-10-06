@@ -59,9 +59,9 @@ describe('FundCheckup schema', () => {
     ;(empty.topHoldings as { value: unknown }).value = null
     expect(checkupVerified(parseFundCheckup(empty), 'topHoldings')).toBe(false)
     expect(checkupField(f, 'basics.sri' as CheckupKey).value).toBe(3)
-    // 掩護性買權那一層：名稱和 9.6% 查到了，一句話的說明查不到（null）→ 整個欄位不算已查證
-    expect(f.coveredCallSleeve.verified).toBe(true)
-    expect(checkupVerified(f, 'coveredCallSleeve')).toBe(false)
+    // 掩護性買權那一層：名稱和 9.6% 查到了，一句話的說明查不到（null）→ 數字照樣算已查證（說明另外照實寫「沒寫」）
+    expect(f.coveredCallSleeve.value!.description).toBeNull()
+    expect(checkupVerified(f, 'coveredCallSleeve')).toBe(true)
   })
 
   it('records the facts the course relies on, from primary sources', () => {
@@ -82,9 +82,10 @@ describe('FundCheckup schema', () => {
   it('never names the third-party site or its fund code: not in the snapshot, the sources or any source file; the data id is the ISIN', () => {
     expect(JSON.stringify(raw)).not.toMatch(/moneydj|jfzn3/i)
     // 所有原始碼（含這份 JSON、strings、課文）與資料來源文件；這支測試自己（正規式裡有這個字）除外
-    const files = import.meta.glob(['../**/*.{ts,tsx,json,css}', '!./fundCheckup.test.ts', '../../docs/data-sources.md'], { query: '?raw', import: 'default', eager: true }) as Record<string, string>
+    const files = import.meta.glob(['../**/*.{ts,tsx,json,css}', '!./fundCheckup.test.ts', '../../docs/data-sources.md', '../../docs/superpowers/**/*.md'], { query: '?raw', import: 'default', eager: true }) as Record<string, string>
     expect(Object.keys(files).length).toBeGreaterThan(50)
     expect(Object.keys(files).some((p) => p.endsWith('data-sources.md'))).toBe(true)
+    expect(Object.keys(files).some((p) => p.includes('docs/superpowers/specs/'))).toBe(true)
     expect(Object.entries(files).filter(([, text]) => /moneydj|jfzn3/i.test(text)).map(([p]) => p)).toEqual([])
     // 資料 id ＝ ISIN（不用第三方網站的代碼）
     expect(f.id).toBe(f.basics.isin.value)

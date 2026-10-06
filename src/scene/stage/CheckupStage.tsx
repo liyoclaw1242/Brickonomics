@@ -24,10 +24,11 @@ export type CheckupShow = 'card' | 'mix' | 'hy' | 'fee' | 'final'
 const NO_DAMAGE: Readonly<Record<string, number>> = {}
 const RIGHT: Vec3 = [3, 1.2, 0]
 const LEFT: Vec3 = [-2.4, 0, 0]
-const LEFT_FAR: Vec3 = [-12, 0, 0]
+const LEFT_FAR: Vec3 = [-16, 0, 0]
 /** 窄畫面（手機）的寬度門檻與要標名字的最薄層 */
 const NARROW_PX = 600
 const NARROW_MIN_PCT = 4
+const MIN_LABEL_PCT = 2
 
 /**
  * 實戰課的體檢塔（真資料）：快照的資產大類變成一座基金塔（layout/practice checkupBasket），站在交易所台座上（和 f-1、f-2 的基金塔同一個位置與鏡頭）。
@@ -103,7 +104,7 @@ export function CheckupStage({ fund, show, quality, event }: { fund: string; sho
           const h = firstOf(g)
           const a = h && anchorOf(h.id)
           if (!a) return null
-          const sub = g === 'stock' ? (cc ? T.checkup.stockSub(cc.pct.toFixed(1)) : undefined) : g === 'bond' ? T.checkup.bondSub : undefined
+          const sub = g === 'stock' ? (cc ? T.checkup.stockSub(cc.pct.toFixed(1)) : undefined) : g === 'bond' && !narrow ? T.checkup.bondSub : undefined
           return <Callout key={g} anchor={a} offset={RIGHT} title={T.checkup.group[g](groups[g].toFixed(1))} sub={sub} color={b.looks[b.holdings.indexOf(h)]!.color} persistent />
         })}
       {show === 'mix' &&
@@ -111,6 +112,8 @@ export function CheckupStage({ fund, show, quality, event }: { fund: string; sho
           if (h.group === 'cash') return null
           // 手機畫面窄：遠的那一排會跑出畫面，只標比較厚的層（全部的名字在即時數字）
           if (narrow && (i % 2 === 1 || h.pct < NARROW_MIN_PCT)) return null
+          // 不到 2% 的薄層：名字和隔壁疊在一起，只寫在即時數字
+          if (h.pct < MIN_LABEL_PCT) return null
           const a = anchorOf(h.id, -1)
           // 薄的層上下挨在一起：一個近、一個遠地交錯，名字才不會疊
           return a ? <Callout key={h.id} anchor={a} offset={i % 2 === 0 || narrow ? LEFT : LEFT_FAR} title={T.checkup.layer(h.zh, h.pct.toFixed(1))} color={b.looks[i]!.color} compact persistent /> : null
