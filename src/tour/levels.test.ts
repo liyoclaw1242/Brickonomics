@@ -1217,6 +1217,15 @@ describe('Plan 9 實戰: the other steps of the fund checkup (numbers from the s
     assetAllocation: { ...f.assetAllocation, value: { ...f.assetAllocation.value!, items: f.assetAllocation.value!.items.map((i) => ({ ...i, pct: pcts[i.name] ?? i.pct })) } },
   })
 
+  it('x-cc: says this fund has 9.6% in it and that the description is missing (？ from the null description); one new term on screen', () => {
+    const s = byId('x-cc')
+    expect(lineOf(s, ctx)).toBe('先賣掉**上半截|loss**，換一筆**金幣|coin**')
+    expect(moreOf(s, ctx)).toContain('這檔有 9.6% 是這種做法；月報沒有寫細節')
+    expect(stepMarks(s, universe)).toEqual(['illustrative', 'unverified'])
+    expect(s.scene.stage).toEqual({ kind: 'coveredCall', fund: 'LU2347655073' })
+    expect(T.cc.coin).not.toContain('權利金')
+  })
+
   it('x-card: a name card with the whole-fund size and the TW risk level (RR3 = level 3 of 5)', () => {
     const s = byId('x-card')
     expect(lineOf(s, ctx)).toBe('這是一檔**請怪手挑**的平衡型基金')
@@ -1243,25 +1252,31 @@ describe('Plan 9 實戰: the other steps of the fund checkup (numbers from the s
     expect(byId('x-where').scene.stage).toEqual({ kind: 'regions', fund: 'LU2347655073' })
   })
 
-  it('x-hy: about 30% high yield (27.3 + 2.2 = 29.5); the tornado crack is ≈, the share is data', () => {
+  it('x-hy: about 30% high yield (27.3 + 2.2 = 29.5); only the tornado crack is ≈ (more text and 3D label), the share is data', () => {
     const s = byId('x-hy')
     expect(lineOf(s, ctx)).toBe('裡面約 **30%** 是**容易裂|loss**的借據')
     expect(bigOf(s)).toMatchObject({ value: '29.5%', label: '高收益債（美國＋歐洲）', colorKey: 'loss' })
-    expect(s.mark).toBe('illustrative')
+    expect(s.mark).toBeUndefined() // prac-r1／review：29.5% 是真資料，不標整步
+    expect(T.checkup.hyHit).toContain('舉例')
     expect(s.scene.event).toEqual({ kind: 'tornado' })
     expect(moreOf(s, ctx)).toContain('裂開多少是示意')
+    expect(moreOf(s, ctx)).toContain('新興市場債 4.5%：有沒有高收益債，資料沒寫')
     expect(moreOf(s, ctx)).toContain('這檔有美國 27.3%、歐洲 2.2%')
   })
 
   it('x-fee: 1.45% a year, 14,500 per 100 萬 (0.0145 × 1,000,000); trading costs separate; the 5% max is ✎ on its own row, not on the step', () => {
     const s = byId('x-fee')
     expect(lineOf(s, ctx)).toBe('每年先扣約 **1.45%|loss**')
-    expect(bigOf(s)).toMatchObject({ value: '14,500 元', label: '100 萬放一年，約扣', note: '經理費 1.25%＋保管費 0.20%' })
+    expect(bigOf(s)).toMatchObject({ value: '14,500 元', label: '100 萬放一年，約扣', note: '經理費 1.25%＋保管費最多 0.20%' })
+    expect(moreOf(s, ctx)).toContain('KID 寫每年約 1.45%')
     expect(moreOf(s, ctx)).toContain('交易成本約 0.22%，另外算')
+    // 計費表寫已經過幾年（prac-r1：「第 2 年 22,148」看起來像 2 × 14,500 算錯）：100 萬 × (1 − 0.9855^1.53) ≈ 22,148
+    expect(T.feeMeter.elapsed(1.53)).toBe('已過 1.5 年')
     expect(moreOf(s, ctx)).toContain('最高 5%，看通路')
     expect(s.mark).toBeUndefined()
     const rows = stageReadout(s.scene.stage!, { ...DEFAULT_VALUES, slice: 0, explode: 0 }, universe, null)
     expect(rows.at(-1)).toMatchObject({ value: '5%', marks: ['assumption'], note: '實際看通路' })
+    expect(rows.find((r) => r.label.includes('KID'))).toBeUndefined() // 即時數字不用 KID 這個詞
     expect(stepMarks(s, universe, new Map([['LU2347655073', { ...live, basics: { ...live.basics, ongoingCharges: { ...live.basics.ongoingCharges, verified: false } } }]]))).toEqual(['unverified'])
   })
 
@@ -1283,7 +1298,7 @@ describe('Plan 9 實戰: the other steps of the fund checkup (numbers from the s
     const s = byId('x-fin')
     expect(stripMarkup(lineOf(s, ctx))).toBe('只是體檢，不是叫你買或賣')
     const lines = s.checkupCard!(ctx)
-    expect(lines.map((l) => l.text)).toEqual(['怪手挑的平衡型（股＋債）', '一半以上不是股票（50.2%）', '容易裂的借據約 30%', '一年配 8.25，塔矮了 2.12', '每年先扣約 1.45%', '近 4 年和藍圖比：1 高 3 低'])
+    expect(lines.map((l) => l.text)).toEqual(['怪手挑的平衡型', '一半以上不是股票（50.2%）', '容易裂的借據約 30%', '一年配 8.25，塔矮了 2.12', '每年先扣約 1.45%', '近 4 年和藍圖比：1 高 3 低'])
     expect(lines.map((l) => l.asOf)).toEqual(['2026-08-31', '2026-08-31', '2026-08-31', '2026-09-30', '2026-04-27', '2026-08-31'])
     for (const l of lines) {
       expect(Array.from(l.text).length, l.text).toBeLessThanOrEqual(18)

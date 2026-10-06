@@ -522,12 +522,12 @@
       "forRecordDate": "2026-09-08"
     },
     "source": {
-      "url": "https://jp.techrules.com/rebrandingPDF/LoadPdf.aspx?ShareClassId=14634&country=LU&lang=EN&paramMIFID=YES",
-      "doc": "J.P. Morgan AM Factsheet, JPM Global Income A (icdiv) - USD (hedged) (linked from am.jpmorgan.com/lu product page)",
-      "date": "2026-08-31"
+      "url": "https://am.jpmorgan.com/tw/zh/asset-management/per/products/jpm-global-income-a-icdiv-usd-hedged-lu2347655073",
+      "doc": "摩根台灣官網產品頁資料（FundsMarketingHandler/historicalData：歷史淨值、配息紀錄）",
+      "date": "2026-10-05"
     },
     "verified": true,
-    "note": "Factsheet \"Annualised yield\" column; this is a payout rate, not a return."
+    "note": "Annualised yield of the 2026-09-08 payout, from the product-page dividend history (each payout carries its annualised yield); the LU factsheet Dividend History shows the same 11.70. This is a payout rate, not a return."
   },
   "dividendComposition": {
     "value": {

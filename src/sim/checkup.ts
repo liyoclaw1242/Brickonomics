@@ -74,6 +74,12 @@ export function assetGroups(f: FundCheckup) {
   }
 }
 
+/** 基金類型：股票和借據都有＝平衡型（f-3 的定義）；只有其中一種就照那一種 */
+export function fundStyle(f: FundCheckup): 'balanced' | 'stock' | 'bond' {
+  const g = assetGroups(f)
+  return g.stock > 0 && g.bond > 0 ? 'balanced' : g.stock > 0 ? 'stock' : 'bond'
+}
+
 /** 一年（12 次）配息合計（每單位，原幣） */
 export function payoutTotal(f: FundCheckup): number {
   return round(sum(need(f.dividends.value, 'dividends').items.map((d) => d.amount)), 3)

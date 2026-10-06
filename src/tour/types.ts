@@ -57,7 +57,8 @@ export type Stage =
   /** a-rebal 剪高補低：一座組合塔＋目標線（rebal 拉桿：一開始、股票漲了、剪高補低） */
   | { kind: 'rebalance' }
   /** x-cc 掩護性買權：一座塔＋天花板虛線（ccMove 拉桿）；漲超過天花板的部分賣掉（空框），換到的權利金是塔旁一枚金幣；上漲時 🌤（scene.event sunnyTree＋eventWhen） */
-  | { kind: 'coveredCall' }
+  /** fund：實戰課拆的那一檔（畫面上多一個標註：這檔有幾 % 用這種做法、下一步看配息） */
+  | { kind: 'coveredCall'; fund?: string }
   /** x-pay 每月配息 vs 淨值（真資料）：一排月底淨值柱＋每月配息金幣（金色收益、紅色本金）；fund＝體檢資料的基金 id */
   | { kind: 'navPayout'; fund: string }
   /**

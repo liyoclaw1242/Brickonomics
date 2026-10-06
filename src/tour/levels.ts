@@ -11,7 +11,7 @@ import { LEVERAGE } from '../sim/leverage'
 import { HEDGE } from '../sim/hedge'
 import { COVERED_CALL } from '../sim/coveredCall'
 import { CC_RISE_MIN, ccNow, ccSunny } from '../scene/layout/practice'
-import { annualReturns, assetGroups, capitalRun, feeSummary, fundSizeYi, navChange, payoutTotal, riskRank, shortName, sortedRegions } from '../sim/checkup'
+import { annualReturns, assetGroups, capitalRun, feeSummary, fundSizeYi, fundStyle, navChange, payoutTotal, riskRank, shortName, sortedRegions } from '../sim/checkup'
 import { perfLayout } from '../scene/layout/practice'
 import { checkupOf } from '../data/fundCheckup'
 import type { CheckupLine } from './types'
@@ -95,6 +95,8 @@ const fundOf = (c: TextContext) => c.checkup(PRACTICE_FUND)
 const usd2 = (v: number): string => v.toFixed(2)
 /** 比例（%）一位小數：49.7 → '49.7%' */
 const p1 = (v: number): string => `${v.toFixed(1)}%`
+/** 基金類型的說法（sim/checkup fundStyle；x-card、x-fin 同一個算法） */
+const STYLE_WORD = { balanced: '平衡型', stock: '股票型', bond: '債券型' } as const
 const CHENG = ['', '一', '兩', '三', '四', '五', '六', '七', '八', '九'] as const
 /** 61.9 → '六成多'；60 → '六成'；8 → '不到一成'（一句話用的大概說法） */
 export const chengOf = (pct: number): string => {
@@ -938,10 +940,18 @@ export const COURSE_STEPS: Step[] = [
     // 拖漲幅：大漲少賺、平盤多一點、下跌一樣跌（只少跌權利金）；上漲時 🌤 放晴（eventWhen 門檻，參數固定）
     id: 'x-cc',
     title: '掩護性買權',
-    line: '先賣掉**上半截|loss**，換固定收入',
+    // prac-r1：「固定收入」不對（權利金每次不同）；新詞一次一個：畫面上只說天花板，權利金叫金幣（名稱留在多說一點）
+    line: '先賣掉**上半截|loss**，換一筆**金幣|coin**',
     fallbackLine: () => `大漲 ${COVERED_CALL.maxMovePct}% 時只拿 **${T.cc.signed(Math.round(ccNow(COVERED_CALL.maxMovePct).covered * 100))}|loss**`,
-    more: () =>
-      `掩護性買權＝持有股票，再賣掉漲超過天花板的部分。換到的金幣叫權利金，平盤時多賺這一點。大漲時少賺；下跌一樣會跌，只少跌金幣那一點。這是示意：天花板漲 ${pct1(COVERED_CALL.cap)}、權利金 ${pct1(COVERED_CALL.premium)}。`,
+    more: (c) => {
+      const s = fundOf(c).coveredCallSleeve.value
+      return [
+        ...(s ? [`這檔有 ${p1(s.pct)} 是這種做法；月報沒有寫細節。`] : []),
+        '掩護性買權＝持有股票，再賣掉漲超過天花板的部分。',
+        '換到的金幣叫權利金；大漲時少賺，下跌一樣會跌。',
+        `這是示意：天花板漲 ${pct1(COVERED_CALL.cap)}、權利金 ${pct1(COVERED_CALL.premium)}。`,
+      ].join('')
+    },
     mark: 'illustrative',
     // 跟著漲幅：掩護（含權利金）vs 一般持有
     bigNumber: (_c, v) => {
@@ -950,7 +960,7 @@ export const COURSE_STEPS: Step[] = [
       return { value: `約 ${p(n.covered)}`, label: `${T.controls.ccMoveValue(n.movePct)}：掩護`, note: `一般持有：${p(n.plain)}`, colorKey: n.diff < 0 ? 'loss' : 'coin', mark: 'illustrative' }
     },
     compare: true,
-    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'coveredCall' }, event: ccSunny(), eventWhen: { control: 'ccMove', min: CC_RISE_MIN }, values: { ccMove: 0 }, cityLabels: false },
+    scene: { cityDim: true, camera: 'plaza', product: null, stage: { kind: 'coveredCall', fund: PRACTICE_FUND }, event: ccSunny(), eventWhen: { control: 'ccMove', min: CC_RISE_MIN }, values: { ccMove: 0 }, cityLabels: false },
     controls: ['ccMove'],
     ranges: { ccMove: [COVERED_CALL.minMovePct, COVERED_CALL.maxMovePct] },
   },
@@ -989,7 +999,7 @@ export const COURSE_STEPS: Step[] = [
     // 名片：誰、在哪、多大、多晃。怪手＋塔（初階的基金比喻），名字與規模寫在塔旁
     id: 'x-card',
     title: '基金名片',
-    line: '這是一檔**請怪手挑**的平衡型基金',
+    line: (c) => `這是一檔**請怪手挑**的${STYLE_WORD[fundStyle(fundOf(c))]}基金`,
     more: (c) => {
       const f = fundOf(c)
       const b = f.basics
@@ -1063,17 +1073,17 @@ export const COURSE_STEPS: Step[] = [
       return [
         '高收益債＝借給體質弱的公司，利息較多。',
         `這檔有${hy.map((i) => `${i.zh.slice(0, 2)} ${p1(i.pct)}`).join('、')}。`,
-        '龍捲風＝經濟風暴，裂開多少是示意。',
-        ...(emd ? [`新興市場債 ${p1(emd.pct)} 裡有沒有，資料沒寫。`] : []),
+        '龍捲風＝經濟風暴；裂開多少是示意，不是預測。',
+        ...(emd ? [`新興市場債 ${p1(emd.pct)}：有沒有高收益債，資料沒寫。`] : []),
       ].join('')
     },
-    mark: 'illustrative',
+    // 29.5% 是真資料，不標整步 ≈；只有「裂開多少」是舉例（多說一點與 3D 標註寫出來）
     bigNumber: (c) => {
       const f = fundOf(c)
       const g = assetGroups(f)
       return { value: p1(g.highYield), label: '高收益債（美國＋歐洲）', fraction: g.highYield / 100, note: `資料日 ${T.date(f.assetAllocation.value?.asOf ?? '')}`, colorKey: 'loss' }
     },
-    scene: { cityDim: true, camera: 'exchange', product: null, stage: { kind: 'checkup', fund: PRACTICE_FUND, show: 'hy' }, event: { kind: 'tornado' }, cityLabels: false },
+    scene: { cityDim: true, camera: 'exchangeWide', product: null, stage: { kind: 'checkup', fund: PRACTICE_FUND, show: 'hy' }, event: { kind: 'tornado' }, cityLabels: false },
   },
   {
     // 費用：計費表一直在跑（和 f-5 同一個算法：100 萬一年約扣多少元）。
@@ -1085,14 +1095,14 @@ export const COURSE_STEPS: Step[] = [
       const s = feeSummary(fundOf(c))
       return [
         `經理費 ${s.management.toFixed(2)}%，保管費最多 ${s.custody.toFixed(2)}%。`,
-        `合起來 ${s.ongoing.toFixed(2)}%，每年從塔上先扣。`,
+        `KID 寫每年約 ${s.ongoing.toFixed(2)}%，從塔上先扣。`,
         `交易成本約 ${s.transaction.toFixed(2)}%，另外算。`,
         `買的時候另付手續費，最高 ${s.maxSales}%，看通路。`,
       ].join('')
     },
     bigNumber: (c) => {
       const s = feeSummary(fundOf(c))
-      return { value: perMillion(s.ongoing / 100), label: '100 萬放一年，約扣', note: `經理費 ${s.management.toFixed(2)}%＋保管費 ${s.custody.toFixed(2)}%`, colorKey: 'loss' }
+      return { value: perMillion(s.ongoing / 100), label: '100 萬放一年，約扣', note: `經理費 ${s.management.toFixed(2)}%＋保管費最多 ${s.custody.toFixed(2)}%`, colorKey: 'loss' }
     },
     scene: { cityDim: true, camera: 'exchange', product: null, stage: { kind: 'checkup', fund: PRACTICE_FUND, show: 'fee' }, cityLabels: false },
   },
@@ -1140,7 +1150,7 @@ export const COURSE_STEPS: Step[] = [
       const alloc = f.assetAllocation.value?.asOf ?? f.assetAllocation.source.date
       return [
         // 股票和借據都有才叫平衡型（f-3 的定義）
-        { icon: '🚜', text: g.stock > 0 && g.bond > 0 ? '怪手挑的平衡型（股＋債）' : g.stock > 0 ? '怪手挑的股票型' : '怪手挑的債券型', asOf: alloc },
+        { icon: '🚜', text: `怪手挑的${STYLE_WORD[fundStyle(f)]}`, asOf: alloc },
         { icon: '🧱', text: g.nonStockMajority ? `一半以上不是股票（${p1(g.nonStock)}）` : `一半以上是股票（${p1(g.stock)}）`, asOf: alloc },
         { icon: '📜', text: `容易裂的借據約 ${pct0(g.highYield)}%`, asOf: alloc },
         { icon: '🪙', text: `一年配 ${usd2(payoutTotal(f))}，塔${ch.change < 0 ? '矮了' : '高了'} ${usd2(Math.abs(ch.change))}`, asOf: ch.to.date },

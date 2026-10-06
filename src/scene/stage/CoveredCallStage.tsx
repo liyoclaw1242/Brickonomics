@@ -3,6 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { Edges } from '@react-three/drei'
 import { type InstancedMesh, type Mesh, Object3D } from 'three'
 import { COVERED_CALL } from '../../sim/coveredCall'
+import { checkupOf } from '../../data/fundCheckup'
 import { useTour } from '../../store/tour'
 import { useThemeStore } from '../../store/theme'
 import { T } from '../../ui/strings'
@@ -26,7 +27,8 @@ const [PX, PY, PZ] = PLAZA
  * 塔右邊立著一枚金幣＝賣掉上半截換到的權利金（不管漲跌都拿到）。上漲時天氣放晴（步驟的 scene.event sunnyTree＋eventWhen）。
  * 每種材質一個 mesh；useFrame 裡不配置物件；數字全部來自 sim/coveredCall（≈ 示意）。
  */
-export function CoveredCallStage() {
+export function CoveredCallStage({ fund }: { fund?: string } = {}) {
+  const sleeve = fund ? checkupOf(fund).assetAllocation.value?.items.find((i) => i.kind === 'coveredCall') : undefined
   const n = ccNow(useTour((s) => s.values.ccMove))
   const line = THEMES[useThemeStore((s) => s.theme)].calloutLine
   const [reduced] = useState(prefersReducedMotion)
@@ -123,6 +125,9 @@ export function CoveredCallStage() {
           subColor={ACCENT_COLORS.loss}
           persistent
         />
+      )}
+      {sleeve && (
+        <Callout anchor={atPlaza(X - W / 2, 0.1, -W / 2)} offset={[-3.4, 3.4, 0]} title={T.cc.fund(`${sleeve.pct.toFixed(1)}%`)} sub={T.cc.fundSub} color={ACCENT_COLORS.stock} persistent />
       )}
       <Callout anchor={atPlaza(coinX, 0.1, coinR)} offset={[0.8, -0.3, 2.4]} title={T.cc.coin} sub={T.cc.signed(Math.round(n.coin))} color={ACCENT_COLORS.coin} persistent />
     </>

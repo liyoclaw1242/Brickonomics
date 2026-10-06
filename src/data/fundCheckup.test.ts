@@ -59,6 +59,9 @@ describe('FundCheckup schema', () => {
     ;(empty.topHoldings as { value: unknown }).value = null
     expect(checkupVerified(parseFundCheckup(empty), 'topHoldings')).toBe(false)
     expect(checkupField(f, 'basics.sri' as CheckupKey).value).toBe(3)
+    // 掩護性買權那一層：名稱和 9.6% 查到了，一句話的說明查不到（null）→ 整個欄位不算已查證
+    expect(f.coveredCallSleeve.verified).toBe(true)
+    expect(checkupVerified(f, 'coveredCallSleeve')).toBe(false)
   })
 
   it('records the facts the course relies on, from primary sources', () => {

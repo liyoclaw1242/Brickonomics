@@ -273,7 +273,11 @@ export const T = {
     ceiling: (pct: string) => `天花板：漲 ${pct}`,
     tower: '你的股票',
     cut: '賣掉的上半截',
-    coin: '權利金',
+    /** 畫面上不再多一個新詞（prac-r1：天花板、權利金、上半截一起來）；權利金這個名稱在多說一點 */
+    coin: '換到的金幣',
+    /** 實戰課：這檔基金有幾 % 用這種做法，下一步看它的配息 */
+    fund: (pct: string) => `這檔基金：${pct} 這樣做`,
+    fundSub: '下一步看它的配息',
     /** 整數 %：5 → '+5%'；−15 → '−15%'（U+2212）；0 → '0%' */
     signed: (v: number) => (v > 0 ? `+${v}%` : v < 0 ? `−${-v}%` : '0%'),
   },
@@ -310,7 +314,7 @@ export const T = {
     /** x-hy：高收益債那幾層 */
     hy: (pct: string) => `高收益債 ${pct}%`,
     hySub: '借給體質弱的公司',
-    hyHit: '經濟風暴：裂開',
+    hyHit: '風暴裡裂開（裂多少是舉例）',
     /** x-where：區域的島 */
     region: (name: string, pct: string) => `${name} ${pct}%`,
     regionNote: '島越大越亮＝錢越多',
@@ -374,7 +378,8 @@ export const T = {
   excavatorOther: '另一位經理人（怪手）',
   feeMeter: {
     title: '計費表',
-    elapsed: (year: number) => `第 ${year} 年`,
+    /** 已經過幾年（一位小數）：prac-r1 把「第 2 年 22,148」讀成 2 × 14,500 算錯 */
+    elapsed: (years: number) => `已過 ${years.toFixed(1)} 年`,
     ground: (amount: number) => `已磨掉約 ${Math.round(amount).toLocaleString('zh-TW')} 元`,
     base: '假設投入 100 萬',
     fastForward: '6 秒＝1 年',
@@ -452,8 +457,8 @@ export const T = {
     ckGroup: { stock: '股票（含掩護性買權）', bond: '借據＋特別股', cash: '現金' },
     ckFeeMgmt: '經理費（每年）',
     ckFeeCustody: '保管費（每年，上限）',
-    ckFeeOngoing: '每年先扣（KID）',
-    ckFeeTrading: '交易成本（KID 估，另外算）',
+    ckFeeOngoing: '每年先扣（官方文件）',
+    ckFeeTrading: '交易成本（官方文件估，另外算）',
     ckFeeSales: '申購手續費（最高）',
     ckFeeSalesNote: '實際看通路',
     ckYear: (y: number) => `${y} 年：基金 / 藍圖`,

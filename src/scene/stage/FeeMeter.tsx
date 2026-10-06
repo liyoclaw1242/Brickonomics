@@ -34,7 +34,7 @@ export function FeeMeter({ rate, at }: { rate?: number; at?: Vec3 } = {}) {
     // 費率本身已是面板的大數字，這裡只留計費表在跑的結果（少字）；放在台座前緣，手機上不會壓到時間軸
     <Html position={at ?? [x, 1.2, z + 9]} center className="callout callout--wrap">
       <span className="callout__title">
-        {T.feeMeter.title}・{T.feeMeter.elapsed(Math.floor(years) + 1)}
+        {T.feeMeter.title}・{T.feeMeter.elapsed(years)}
       </span>
       <span>
         {/* 費率沒查證時的 ？ 標在面板標題旁（stepMarks），這裡不重複 */}

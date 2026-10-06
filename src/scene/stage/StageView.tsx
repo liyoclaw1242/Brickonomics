@@ -72,7 +72,7 @@ export function StageView({ quality }: { quality: Quality }) {
       {stage.kind === 'leverage' && <LeverageStage event={clock} />}
       {stage.kind === 'hedge' && <HedgeStage event={clock} />}
       {stage.kind === 'rebalance' && <RebalanceStage />}
-      {stage.kind === 'coveredCall' && <CoveredCallStage />}
+      {stage.kind === 'coveredCall' && <CoveredCallStage fund={stage.fund} />}
       {stage.kind === 'navPayout' && <NavPayoutStage fund={stage.fund} />}
       {stage.kind === 'checkup' && <CheckupStage fund={stage.fund} show={stage.show} quality={quality} event={clock} />}
       {stage.kind === 'regions' && <RegionStage fund={stage.fund} />}
