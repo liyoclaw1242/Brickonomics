@@ -71,7 +71,7 @@
 - ALLIANZ_TAIWAN expenseRatio：經理費 1.6% + 保管費 0.15% = 1.75%（和）。
 - SCHRODER U 級別 expenseRatio：TER 2.38% − 分銷費 1.00% = 1.38%（差）。
 
-## 實戰課：基金體檢快照（`src/data/snapshot/practice/JFZN3.json`）
+## 實戰課：基金體檢快照（`src/data/snapshot/practice/LU2347655073.json`）
 
 摩根投資基金－多重收益基金 (美元對沖) A 股（穩定月配），ISIN LU2347655073。研究日 2026-10-06。schema 在 `src/data/fundCheckup.ts`（zod，載入時驗證）；每個欄位都有 `source`（網址、文件、資料日）與 `verified`。數字一律由 `src/sim/checkup.ts` 從快照計算。**只用一手來源**（J.P. Morgan 資產管理的月報、投資人須知、KID、官網配息組成表與產品頁資料）；第三方基金網站不引用、不作為出處。
 

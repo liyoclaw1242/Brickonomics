@@ -108,15 +108,15 @@ describe('stepMarks for the practice course (fund checkup data)', () => {
     id: 'x-test',
     title: '測試',
     line: '測試一句話',
-    more: (c) => `每年 ${c.checkup('JFZN3').basics.ongoingCharges.value}%`,
-    bigNumber: (c) => ({ value: String(c.checkup('JFZN3').dividends.value!.items.length), label: '次數' }),
+    more: (c) => `每年 ${c.checkup('LU2347655073').basics.ongoingCharges.value}%`,
+    bigNumber: (c) => ({ value: String(c.checkup('LU2347655073').dividends.value!.items.length), label: '次數' }),
     scene: { camera: 'plaza' },
   }
-  const f = checkupOf('JFZN3')
+  const f = checkupOf('LU2347655073')
   const withFlag = (patch: (x: FundCheckup) => FundCheckup): ReadonlyMap<string, FundCheckup> => new Map([[f.id, patch(f)]])
 
   it('records which checkup fields the texts read, from the texts themselves', () => {
-    expect(checkupSources(step, CHECKUPS)).toEqual([['JFZN3', 'basics.ongoingCharges'], ['JFZN3', 'dividends']])
+    expect(checkupSources(step, CHECKUPS)).toEqual([['LU2347655073', 'basics.ongoingCharges'], ['LU2347655073', 'dividends']])
   })
 
   it('adds ？ when a field the step reads is unverified or null, and only then', () => {

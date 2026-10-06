@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 新增第四門課「實戰」，用 9 步拆解摩根多重收益基金（JFZN3），資料全部來自一手來源快照並標示查證狀態，結尾體檢表即樣板。
+**Goal:** 新增第四門課「實戰」，用 9 步拆解摩根多重收益基金（LU2347655073），資料全部來自一手來源快照並標示查證狀態，結尾體檢表即樣板。
 
 **規格：** `docs/superpowers/specs/2026-10-06-fund-checkup-design.md`
 
@@ -19,7 +19,7 @@
 ### Task 1：資料快照與 schema
 
 - `src/data/fundCheckup.ts`：zod schema `FundCheckup`（欄位見規格 §3；每欄 `{ value, source:{url,doc,date}, verified }`，value 可為 null）。
-- `src/data/snapshot/practice/JFZN3.json`：由研究結果（`.superpowers/sdd/p9-jfzn3-research.md`／`p9-jfzn3-draft.json`）填入；載入時 schema 驗證；`docs/data-sources.md` 加一節。
+- `src/data/snapshot/practice/LU2347655073.json`：由研究結果（`.superpowers/sdd/p9-lu2347655073-research.md`／`p9-lu2347655073-draft.json`）填入；載入時 schema 驗證；`docs/data-sources.md` 加一節。
 - 純函式（`src/sim/checkup.ts`）：費用合計、資產大類排序、區域排序、一年配息合計、同期淨值變化、年度報酬序列、（若有）配息組成比例、與指標指數的差額。
 - 測試：schema、每個函式（公式寫在測試註解）、未查證欄位推導 ？。
 

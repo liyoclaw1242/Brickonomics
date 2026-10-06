@@ -1,13 +1,13 @@
 import { describe, it, expect } from 'vitest'
-import raw from './snapshot/practice/JFZN3.json'
+import raw from './snapshot/practice/LU2347655073.json'
 import { CHECKUPS, checkupField, checkupOf, checkupVerified, parseFundCheckup, type CheckupKey } from './fundCheckup'
 
 const clone = (): Record<string, unknown> => JSON.parse(JSON.stringify(raw)) as Record<string, unknown>
-const f = checkupOf('JFZN3')
+const f = checkupOf('LU2347655073')
 
 describe('FundCheckup schema', () => {
-  it('loads the JFZN3 snapshot and registers it by id', () => {
-    expect(CHECKUPS.has('JFZN3')).toBe(true)
+  it('loads the LU2347655073 snapshot and registers it by id', () => {
+    expect(CHECKUPS.has('LU2347655073')).toBe(true)
     expect(f.basics.isin.value).toBe('LU2347655073')
     expect(() => checkupOf('NOPE')).toThrow(/NOPE/)
   })
@@ -76,12 +76,14 @@ describe('FundCheckup schema', () => {
     expect(f.dividendComposition.value!.items).toHaveLength(12)
   })
 
-  it('never names the third-party site: not in the snapshot, the sources or any source file', () => {
-    expect(JSON.stringify(raw)).not.toMatch(/moneydj/i)
+  it('never names the third-party site or its fund code: not in the snapshot, the sources or any source file; the data id is the ISIN', () => {
+    expect(JSON.stringify(raw)).not.toMatch(/moneydj|jfzn3/i)
     // 所有原始碼（含這份 JSON、strings、課文）與資料來源文件；這支測試自己（正規式裡有這個字）除外
     const files = import.meta.glob(['../**/*.{ts,tsx,json,css}', '!./fundCheckup.test.ts', '../../docs/data-sources.md'], { query: '?raw', import: 'default', eager: true }) as Record<string, string>
     expect(Object.keys(files).length).toBeGreaterThan(50)
     expect(Object.keys(files).some((p) => p.endsWith('data-sources.md'))).toBe(true)
-    expect(Object.entries(files).filter(([, text]) => /moneydj/i.test(text)).map(([p]) => p)).toEqual([])
+    expect(Object.entries(files).filter(([, text]) => /moneydj|jfzn3/i.test(text)).map(([p]) => p)).toEqual([])
+    // 資料 id ＝ ISIN（不用第三方網站的代碼）
+    expect(f.id).toBe(f.basics.isin.value)
   })
 })

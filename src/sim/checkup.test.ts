@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import raw from '../data/snapshot/practice/JFZN3.json'
+import raw from '../data/snapshot/practice/LU2347655073.json'
 import { checkupOf, parseFundCheckup } from '../data/fundCheckup'
 import { annualReturns, ASSET_GROUP_OF, assetGroups, capitalRun, compound, feeSummary, fundSizeYi, navChange, payoutSources, payoutTotal, riskRank, shortName, sortedAssets, sortedRegions } from './checkup'
 
-const f = checkupOf('JFZN3')
+const f = checkupOf('LU2347655073')
 const clone = (): Record<string, unknown> => JSON.parse(JSON.stringify(raw)) as Record<string, unknown>
 
 describe('feeSummary', () => {

@@ -46,7 +46,7 @@ describe('x-cc covered-call tower (ceiling +5%, premium 2%; ≈)', () => {
 })
 
 describe('x-pay NAV bars and payout coins (navPayoutLayout)', () => {
-  const f = checkupOf('JFZN3')
+  const f = checkupOf('LU2347655073')
   const L = navPayoutLayout(f)
   it('draws 13 month-end bars from a floor 2 below the lowest NAV: floor(72.50) − 2 = 70', () => {
     expect(L.floor).toBe(70)
@@ -75,7 +75,7 @@ describe('x-pay NAV bars and payout coins (navPayoutLayout)', () => {
 })
 
 describe('checkup tower (checkupBasket): the asset mix as a fund tower', () => {
-  const f = checkupOf('JFZN3')
+  const f = checkupOf('LU2347655073')
   const b = checkupBasket(f)
   it('one layer per asset item, stocks at the bottom, then bonds and preferreds, cash on top; big to small inside a group', () => {
     expect(b.holdings.map((h) => h.group)).toEqual(['stock', 'stock', 'stock', 'stock', 'bond', 'bond', 'bond', 'bond', 'bond', 'bond', 'bond', 'cash'])
@@ -110,7 +110,7 @@ describe('checkup tower (checkupBasket): the asset mix as a fund tower', () => {
 })
 
 describe('x-where region islands (regionTiles)', () => {
-  const tiles = regionTiles(checkupOf('JFZN3'))
+  const tiles = regionTiles(checkupOf('LU2347655073'))
   it('one island per region; area ∝ share (side = k·√pct); the biggest is the brightest', () => {
     expect(tiles).toHaveLength(8)
     const us = tiles.find((t) => t.zh === '美國')!
@@ -130,7 +130,7 @@ describe('x-where region islands (regionTiles)', () => {
 })
 
 describe('x-perf two towers a year (perfLayout)', () => {
-  const L = perfLayout(checkupOf('JFZN3'))
+  const L = perfLayout(checkupOf('LU2347655073'))
   it('a pair per calendar year: fund on the left, benchmark on the right; up from the zero line when positive, down when negative', () => {
     expect(L.years.map((y) => y.year)).toEqual([2022, 2023, 2024, 2025])
     const y22 = L.years[0]!

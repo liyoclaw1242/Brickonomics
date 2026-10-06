@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import jfzn3 from './snapshot/practice/JFZN3.json'
+import lu2347655073 from './snapshot/practice/LU2347655073.json'
 
 /**
  * 實戰課（Plan 9）的基金體檢資料：一檔真基金的快照（規格 2026-10-06-fund-checkup-design §3）。
@@ -134,7 +134,7 @@ export function checkupVerified(f: FundCheckup, key: CheckupKey): boolean {
 }
 
 /** 實戰課的基金（載入時驗證） */
-export const CHECKUPS: ReadonlyMap<string, FundCheckup> = new Map([jfzn3].map((raw) => {
+export const CHECKUPS: ReadonlyMap<string, FundCheckup> = new Map([lu2347655073].map((raw) => {
   const f = parseFundCheckup(raw)
   return [f.id, f] as const
 }))

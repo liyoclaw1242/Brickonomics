@@ -1175,12 +1175,12 @@ describe('Plan 8 高階: 剪高補低 (a-rebal)', () => {
 describe('Plan 9 實戰: 每月配息 (x-pay, real data)', () => {
   const s = () => byId('x-pay')
   const live = new Map(CHECKUPS)
-  const patched = (patch: (f: FundCheckup) => FundCheckup) => new Map([['JFZN3', patch(live.get('JFZN3')!)]])
+  const patched = (patch: (f: FundCheckup) => FundCheckup) => new Map([['LU2347655073', patch(live.get('LU2347655073')!)]])
   it('the card puts a year of payouts next to how much the tower shrank, same unit, with the dates', () => {
     // 12 次配息合計 8.254 → 8.25；淨值 74.99 → 72.87 ＝ −2.12
     expect(bigOf(s())).toEqual({ value: '8.25 vs 2.12', label: '一年配息 vs 塔矮了', note: '每一份・美元・2025/9/30–2026/9/30', colorKey: 'coin' })
     expect(s().mark).toBeUndefined() // 真資料，不是示意
-    expect(s().scene.stage).toEqual({ kind: 'navPayout', fund: 'JFZN3' })
+    expect(s().scene.stage).toEqual({ kind: 'navPayout', fund: 'LU2347655073' })
   })
   it('the more text gives the numbers with dates, says the payout rate is not a return, and asks for 總報酬', () => {
     const more = moreOf(s(), ctx)
@@ -1202,16 +1202,16 @@ describe('Plan 9 實戰: 每月配息 (x-pay, real data)', () => {
     }
   })
   it('the readout lists the start and end NAV, the change, the payouts and the yield as a payout rate', () => {
-    const rows = stageReadout({ kind: 'navPayout', fund: 'JFZN3' }, { ...DEFAULT_VALUES, slice: 0, explode: 0 }, universe, null)
+    const rows = stageReadout({ kind: 'navPayout', fund: 'LU2347655073' }, { ...DEFAULT_VALUES, slice: 0, explode: 0 }, universe, null)
     expect(rows.map((r) => r.value)).toEqual(['74.99', '72.87', '−2.12', '8.254', '0%', '56–76%', '11.70%'])
     expect(rows.at(-1)!.note).toBe('配出去的比例，不是報酬')
   })
 })
 
 describe('Plan 9 實戰: the other steps of the fund checkup (numbers from the snapshot)', () => {
-  const live = CHECKUPS.get('JFZN3')!
-  const ctxWith = (patch: (f: FundCheckup) => FundCheckup) => makeTextContext(universe, new Map([['JFZN3', patch(live)]]))
-  const unverified = (key: keyof FundCheckup) => new Map([['JFZN3', { ...live, [key]: { ...(live[key] as object), verified: false } } as FundCheckup]])
+  const live = CHECKUPS.get('LU2347655073')!
+  const ctxWith = (patch: (f: FundCheckup) => FundCheckup) => makeTextContext(universe, new Map([['LU2347655073', patch(live)]]))
+  const unverified = (key: keyof FundCheckup) => new Map([['LU2347655073', { ...live, [key]: { ...(live[key] as object), verified: false } } as FundCheckup]])
   const setItems = (f: FundCheckup, pcts: Record<string, number>): FundCheckup => ({
     ...f,
     assetAllocation: { ...f.assetAllocation, value: { ...f.assetAllocation.value!, items: f.assetAllocation.value!.items.map((i) => ({ ...i, pct: pcts[i.name] ?? i.pct })) } },
@@ -1223,7 +1223,7 @@ describe('Plan 9 實戰: the other steps of the fund checkup (numbers from the s
     expect(bigOf(s)).toMatchObject({ value: 'RR3', label: '風險等級（1–5）', fraction: 0.6 })
     expect(moreOf(s, ctx)).toContain('整檔基金規模 221.9 億美元，所有級別合計') // 22,185.5 百萬 ÷ 100
     expect(stepMarks(s, universe)).toEqual([])
-    expect(stepMarks(s, universe, new Map([['JFZN3', { ...live, basics: { ...live.basics, fundSize: { ...live.basics.fundSize, verified: false } } }]]))).toEqual(['unverified'])
+    expect(stepMarks(s, universe, new Map([['LU2347655073', { ...live, basics: { ...live.basics, fundSize: { ...live.basics.fundSize, verified: false } } }]]))).toEqual(['unverified'])
   })
 
   it('x-mix: the line follows the computed grouping (50.2% non-stock), and says how preferreds are counted', () => {
@@ -1240,7 +1240,7 @@ describe('Plan 9 實戰: the other steps of the fund checkup (numbers from the s
     expect(lineOf(byId('x-where'), ctx)).toBe('六成多的錢在**美國**')
     expect([chengOf(61.9), chengOf(60), chengOf(12.8), chengOf(8)]).toEqual(['六成多', '六成', '一成多', '不到一成'])
     expect(bigOf(byId('x-where'))).toMatchObject({ value: '61.9%', label: '放在美國' })
-    expect(byId('x-where').scene.stage).toEqual({ kind: 'regions', fund: 'JFZN3' })
+    expect(byId('x-where').scene.stage).toEqual({ kind: 'regions', fund: 'LU2347655073' })
   })
 
   it('x-hy: about 30% high yield (27.3 + 2.2 = 29.5); the tornado crack is ≈, the share is data', () => {
@@ -1262,7 +1262,7 @@ describe('Plan 9 實戰: the other steps of the fund checkup (numbers from the s
     expect(s.mark).toBeUndefined()
     const rows = stageReadout(s.scene.stage!, { ...DEFAULT_VALUES, slice: 0, explode: 0 }, universe, null)
     expect(rows.at(-1)).toMatchObject({ value: '5%', marks: ['assumption'], note: '實際看通路' })
-    expect(stepMarks(s, universe, new Map([['JFZN3', { ...live, basics: { ...live.basics, ongoingCharges: { ...live.basics.ongoingCharges, verified: false } } }]]))).toEqual(['unverified'])
+    expect(stepMarks(s, universe, new Map([['LU2347655073', { ...live, basics: { ...live.basics, ongoingCharges: { ...live.basics.ongoingCharges, verified: false } } }]]))).toEqual(['unverified'])
   })
 
   it('x-perf: the line counts the years from the data (1 higher, 3 lower), the card compounds the four years, 🌋 under 2022', () => {

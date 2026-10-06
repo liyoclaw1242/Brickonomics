@@ -89,7 +89,7 @@ const hedgeGaps = (c: TextContext) => {
 const n1 = (v: number): string => v.toFixed(1)
 
 /** 實戰課拆解的那一檔（體檢資料 data/fundCheckup；數字一律從 c.checkup 讀，沒查證的欄位自動標 ？） */
-const PRACTICE_FUND = 'JFZN3'
+const PRACTICE_FUND = 'LU2347655073'
 const fundOf = (c: TextContext) => c.checkup(PRACTICE_FUND)
 /** 每一份的美元金額：8.254 → '8.25' */
 const usd2 = (v: number): string => v.toFixed(2)
