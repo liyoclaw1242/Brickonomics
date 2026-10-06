@@ -48,7 +48,7 @@ export function Scene({ quality }: { quality: Quality }) {
       </mesh>
       <ViewFraming />
       <City labels={labels} islandLabels={mode !== 'tour' || tourNames} shrink={shrink} dim={mode === 'tour' && tourScene.cityDim === true} />
-      {showPedestal(mode, productId) && <Pedestal />}
+      {showPedestal(mode, productId, tourScene.stage?.kind) && <Pedestal />}
       <StageView quality={quality} />
       {productId && (
         <BasketView

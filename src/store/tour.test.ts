@@ -26,7 +26,7 @@ describe('useTour', () => {
     go('beginner', 'p-2')
     useTour.getState().next()
     expect(idOf()).toBe('s-1')
-    expect(useTour.getState().progress.completed).toEqual({ beginner: ['prologue'], intermediate: [], advanced: [] })
+    expect(useTour.getState().progress.completed).toEqual({ beginner: ['prologue'], intermediate: [], advanced: [], practice: [] })
   })
 
   it('finishing a course unlocks the sandbox, marks only that course finished, and switches mode', () => {
@@ -74,10 +74,10 @@ describe('useTour', () => {
   })
 
   it('enterStep preserves completed/finished/sandboxUnlocked and remembers course + stepId', () => {
-    useTour.setState({ progress: { ...emptyProgress(), course: 'beginner', completed: { beginner: ['prologue'], intermediate: [], advanced: [] }, sandboxUnlocked: true } })
+    useTour.setState({ progress: { ...emptyProgress(), course: 'beginner', completed: { beginner: ['prologue'], intermediate: [], advanced: [], practice: [] }, sandboxUnlocked: true } })
     go('intermediate', 'b-2')
     expect(useTour.getState().progress).toEqual({
-      course: 'intermediate', stepId: 'b-2', completed: { beginner: ['prologue'], intermediate: [], advanced: [] }, finished: [], sandboxUnlocked: true, lastStep: { intermediate: 'b-2' },
+      course: 'intermediate', stepId: 'b-2', completed: { beginner: ['prologue'], intermediate: [], advanced: [], practice: [] }, finished: [], sandboxUnlocked: true, lastStep: { intermediate: 'b-2' },
     })
     expect(useTour.getState().course).toBe('intermediate')
   })

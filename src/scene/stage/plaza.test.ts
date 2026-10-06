@@ -19,6 +19,9 @@ describe('showPedestal (r3: an empty dark board looked broken / unfinished)', ()
     expect(showPedestal('tour', null)).toBe(false)
     expect(showPedestal('tour', '0050')).toBe(true)
     expect(showPedestal('sandbox', null)).toBe(true)
+    // 實戰課的體檢塔站在交易所台座上（沒有 sandbox 籃子）
+    expect(showPedestal('tour', null, 'checkup')).toBe(true)
+    expect(showPedestal('tour', null, 'navPayout')).toBe(false)
   })
 })
 

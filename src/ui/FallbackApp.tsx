@@ -92,6 +92,19 @@ export function FallbackApp() {
                     ))}
                   </div>
                 )}
+                {s.checkupCard && (
+                  <div className="recap checkup-card" role="list" aria-label={T.checkup.cardLabel}>
+                    {s.checkupCard.map((r) => (
+                      <p key={r.text} role="listitem">
+                        <span className="recap__icon" aria-hidden="true">
+                          {r.icon}
+                        </span>
+                        <span className="checkup-card__text">{r.text}</span>
+                        <small className="checkup-card__date">{T.checkup.asOf(T.date(r.asOf))}</small>
+                      </p>
+                    ))}
+                  </div>
+                )}
                 <details className="fallback__more">
                   <summary>{T.more}</summary>
                   <p>{s.more}</p>

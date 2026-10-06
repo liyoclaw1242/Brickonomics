@@ -12,6 +12,14 @@ const unverify = (ids: string[]): Universe => {
 const v = (over: Partial<typeof DEFAULT_VALUES> = {}) => ({ ...DEFAULT_VALUES, slice: 0, explode: 0, ...over })
 
 describe('stageReadout', () => {
+  it('x-cc covered call: move, plain, premium, covered (≈); rise +20 → +20%, +2%, +7%; fall −20 → −18%', () => {
+    const up = stageReadout({ kind: 'coveredCall' }, v({ ccMove: 20 }), universe, null)
+    expect(up.map((r) => r.value)).toEqual(['漲 20%', '+20%', '+2%', '+7%'])
+    expect(up[0]!.marks).toEqual(['illustrative'])
+    const down = stageReadout({ kind: 'coveredCall' }, v({ ccMove: -20 }), universe, null)
+    expect(down.map((r) => r.value)).toEqual(['跌 20%', '−20%', '+2%', '−18%'])
+  })
+
   it('shows the conservation equation for ex-dividend', () => {
     const rows = stageReadout({ kind: 'exdiv', outcome: 'fill' }, v({ phase: 0.5 }), universe, null)
     expect(rows.map((r) => r.value)).toEqual(['95.0', '5.0', '100.0'])

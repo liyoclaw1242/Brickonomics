@@ -70,3 +70,27 @@
 - 0050 expenseRatio：經理費約 0.069% + 保管費約 0.027% + 指數授權費 0.04% ≈ 0.136%，取 0.14%（和）。
 - ALLIANZ_TAIWAN expenseRatio：經理費 1.6% + 保管費 0.15% = 1.75%（和）。
 - SCHRODER U 級別 expenseRatio：TER 2.38% − 分銷費 1.00% = 1.38%（差）。
+
+## 實戰課：基金體檢快照（`src/data/snapshot/practice/LU2347655073.json`）
+
+摩根投資基金－多重收益基金 (美元對沖) A 股（穩定月配），ISIN LU2347655073。研究日 2026-10-06。schema 在 `src/data/fundCheckup.ts`（zod，載入時驗證）；每個欄位都有 `source`（網址、文件、資料日）與 `verified`。數字一律由 `src/sim/checkup.ts` 從快照計算。**只用一手來源**（J.P. Morgan 資產管理的月報、投資人須知、KID、官網配息組成表與產品頁資料）；第三方基金網站不引用、不作為出處。
+
+| 來源 | 文件 | 資料日 |
+|---|---|---|
+| 台灣月報 | 摩根投資基金-多重收益基金 A股 基金月報（美元對沖穩定月配）https://am.jpmorgan.com/content/dam/jpm-am-aem/asiapacific/tw/zh/literature/fact-sheet/01-0z.pdf | 2026-08-31 |
+| 盧森堡月報 | J.P. Morgan AM Factsheet, JPM Global Income A (icdiv) - USD (hedged)（am.jpmorgan.com/lu 產品頁連結）https://jp.techrules.com/rebrandingPDF/LoadPdf.aspx?ShareClassId=14634&country=LU&lang=EN&paramMIFID=YES | 2026-08-31 |
+| KID | PRIIPs KID, LU2347655073 https://wl.fundsquare.net/serv/down-doc/request?cdClient=jpmorgan&isin=LU2347655073&docTypeCode=KIDD&docLang=EN&docCountry=LU | 2026-04-27 |
+| 投資人須知 | 摩根投資基金–多重收益基金 投資人須知【第一部分】https://am.jpmorgan.com/content/dam/jpm-am-aem/asiapacific/tw/zh/regulatory/investor-disclosure-document/mk01-0z.pdf | 刊印 115-07-31 |
+| 配息組成表 | 摩根資產管理旗下基金配息組成表（境外基金）https://am.jpmorgan.com/tw/zh/asset-management/per/funds/announcements/dividend-distributions/ | 2026-09-30 |
+| 產品頁資料 | 摩根台灣官網產品頁（FundsMarketingHandler/historicalData：歷史淨值、配息紀錄）https://am.jpmorgan.com/tw/zh/asset-management/per/products/jpm-global-income-a-icdiv-usd-hedged-lu2347655073 | 淨值到 2026-10-05 |
+
+做法與決定：
+- **規模**：22,185.5 百萬美元是**整檔基金**（所有級別合計，2026-08-31），不是這個級別；畫面寫「整檔基金規模」。
+- **風險**：台灣 RR3；KID 的 SRI 3/7。產品頁資料的 `srriValue` 寫 4，和 KID 衝突，不用。
+- **費用**：經理費 1.25%＋保管費（行政管理費）0.20%（上限）＝ 1.45%，和 KID 的每年持續費用 1.45% 一致；畫面的「每年先扣」用 1.45%。KID 的交易成本 0.22% 另外列（多說一點），不加進去。最高申購手續費 5%，實際看通路（✎）。
+- **資產三大類**（`sim/checkup` 的 `ASSET_GROUP_OF`）：股票（環球、歐洲、新興市場股票，含美國股票掩護性買權）49.7%；借據與特別股（美國／歐洲非投資等級債、新興市場債、非機構證券、投資等級信貸、短期固定收益、特別股）44.4%；現金 5.8%；各項之和 99.9%（四捨五入）。不是股票＝ 50.2%，超過一半。特別股若算股票，股票是 54.6%，結論就相反——課文寫出用哪種分法。
+- **近 12 個月**：月底淨值 74.99（2025-09-30）→ 72.87（2026-09-30），變化 −2.12；12 次配息合計 8.254（各項之和）。2025-12-31 的 74.68 來自同一產品的盧森堡站資料（台灣站沒有 12-31 這一列）。
+- **年化配息率** 11.70%（2026-09-08 那次）是配出去的比例，不是報酬；畫面不把它當報酬。
+- **配息組成**：台灣的表把每次配息標在基準日的前一個月（標「2026年08月 0.6850」＝基準日 2026-09-08）；`payoutSources` 以「下個月＋金額相同」對到配息紀錄，金額不同就丟錯。2025-10 到 2026-01 的 4 次全是可分配淨利益；2026-02-09 起每次 56–76% 是本金。這一年跨過財務年度，不算整年平均。
+- **曆年報酬 vs 基金自己的指標**（盧森堡月報，美元、含配息再投入）：2022 −11.93 vs −13.16；2023 8.35 vs 16.14；2024 8.16 vs 11.89；2025 10.90 vs 11.89。指標＝40% Bloomberg US High Yield 2% Issuer Cap / 35% MSCI World / 25% Bloomberg Global Credit（皆避險至美元）。月報註明這檔「不以贏過指標為目標」。
+- **掩護性買權**：月報只寫名稱與 9.6%，沒有一句說明；說明欄位是 null（未查證），課程用 x-cc 的示意舞台講觀念。

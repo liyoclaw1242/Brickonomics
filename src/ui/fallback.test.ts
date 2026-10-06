@@ -80,3 +80,14 @@ describe('fallbackCourse', () => {
   })
 })
 
+
+describe('fallbackCourse for 實戰', () => {
+  it('carries the dated checkup card on x-fin and the readout rows of the real-data stages', () => {
+    const steps = fallbackCourse(COURSES.find((c) => c.id === 'practice')!, universe).flatMap((l) => l.steps)
+    const fin = steps.find((s) => s.id === 'x-fin')!
+    expect(fin.checkupCard).toHaveLength(6)
+    expect(fin.checkupCard!.every((l) => /^\d{4}-\d{2}-\d{2}$/.test(l.asOf))).toBe(true)
+    expect(steps.find((s) => s.id === 'x-pay')!.rows.length).toBeGreaterThan(0)
+    expect(steps.find((s) => s.id === 'x-fee')!.rows.at(-1)!.marks).toEqual(['assumption']) // 最高申購手續費：實際看通路
+  })
+})

@@ -19,6 +19,11 @@ import { DurationStage } from './DurationStage'
 import { FeeTreesStage } from './FeeTreesStage'
 import { LeverageStage } from './LeverageStage'
 import { HedgeStage } from './HedgeStage'
+import { CoveredCallStage } from './CoveredCallStage'
+import { NavPayoutStage } from './NavPayoutStage'
+import { CheckupStage } from './CheckupStage'
+import { RegionStage } from './RegionStage'
+import { PerfStage } from './PerfStage'
 import { RebalanceStage } from './RebalanceStage'
 import { SeesawStage } from './SeesawStage'
 import { ExDividendStage } from './ExDividendStage'
@@ -67,6 +72,11 @@ export function StageView({ quality }: { quality: Quality }) {
       {stage.kind === 'leverage' && <LeverageStage event={clock} />}
       {stage.kind === 'hedge' && <HedgeStage event={clock} />}
       {stage.kind === 'rebalance' && <RebalanceStage />}
+      {stage.kind === 'coveredCall' && <CoveredCallStage fund={stage.fund} />}
+      {stage.kind === 'navPayout' && <NavPayoutStage fund={stage.fund} />}
+      {stage.kind === 'checkup' && <CheckupStage fund={stage.fund} show={stage.show} quality={quality} event={clock} />}
+      {stage.kind === 'regions' && <RegionStage fund={stage.fund} />}
+      {stage.kind === 'perf' && <PerfStage fund={stage.fund} event={clock} />}
       {stage.kind === 'overlap' && <OverlapStage a={stage.a} b={stage.b} quality={quality} />}
       {stage.kind === 'underground' && <UndergroundStage show={stage.show} cores={stage.cores} quality={quality} />}
       {stage.kind === 'excavator' && <Excavator other={stage.other} />}

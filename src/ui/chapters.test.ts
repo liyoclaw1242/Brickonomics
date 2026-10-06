@@ -5,7 +5,7 @@ import { chapterStates } from './chapters'
 
 const beginner = COURSES.find((c) => c.id === 'beginner')!
 const intermediate = COURSES.find((c) => c.id === 'intermediate')!
-const progress = (b: string[], m: string[] = [], sandboxUnlocked = false) => ({ ...emptyProgress(), completed: { beginner: b, intermediate: m, advanced: [] }, sandboxUnlocked })
+const progress = (b: string[], m: string[] = [], sandboxUnlocked = false) => ({ ...emptyProgress(), completed: { beginner: b, intermediate: m, advanced: [], practice: [] }, sandboxUnlocked })
 
 describe('chapterStates (per course)', () => {
   it('lists the current course’s chapters with their icons and names', () => {

@@ -101,7 +101,7 @@ describe('the big number never restarts at a gate (whole-branch review)', () => 
       }
       expect([...delays], s.id).toEqual([0])
     }
-    expect(n).toBe(5) // s-dd、s-pe、b-rate、a-dur、a-hedge
+    expect(n).toBe(6) // s-dd、s-pe、b-rate、a-dur、a-hedge、x-cc
   })
   it('steps whose event starts on entry still wait for it (c-2 waits for the strike)', () => {
     const c2 = STEP_POOL.get('c-2')!

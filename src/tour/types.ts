@@ -5,6 +5,7 @@ import type { Mark } from '../ui/marks'
 import type { FeeRaceRow } from '../sim/feeRace'
 import type { HedgeExample } from '../sim/hedge'
 import type { EventSpec } from '../scene/events/types'
+import type { FundCheckup } from '../data/fundCheckup'
 
 export type { Mark }
 
@@ -55,6 +56,20 @@ export type Stage =
   | { kind: 'hedge' }
   /** a-rebal 剪高補低：一座組合塔＋目標線（rebal 拉桿：一開始、股票漲了、剪高補低） */
   | { kind: 'rebalance' }
+  /** x-cc 掩護性買權：一座塔＋天花板虛線（ccMove 拉桿）；漲超過天花板的部分賣掉（空框），換到的權利金是塔旁一枚金幣；上漲時 🌤（scene.event sunnyTree＋eventWhen） */
+  /** fund：實戰課拆的那一檔（畫面上多一個標註：這檔有幾 % 用這種做法、下一步看配息） */
+  | { kind: 'coveredCall'; fund?: string }
+  /** x-pay 每月配息 vs 淨值（真資料）：一排月底淨值柱＋每月配息金幣（金色收益、紅色本金）；fund＝體檢資料的基金 id */
+  | { kind: 'navPayout'; fund: string }
+  /**
+   * 實戰課的體檢塔（真資料的資產大類，廣場上）：card＝怪手＋名片、mix＝拆開標三大類、hy＝🌪 高收益債裂開（scene.event tornado）、
+   * fee＝怪手＋計費表、final＝只有塔（體檢表）
+   */
+  | { kind: 'checkup'; fund: string; show: 'card' | 'mix' | 'hy' | 'fee' | 'final' }
+  /** x-where 錢放在哪：每個區域一座島，越大越亮 */
+  | { kind: 'regions'; fund: string }
+  /** x-perf 歷年績效：每年兩座塔（基金、它自己的藍圖），最差那年 🌋（scene.event quake） */
+  | { kind: 'perf'; fund: string }
   | { kind: 'overlap'; a: string; b: string }
   | { kind: 'underground'; show: 'strata' | 'cores' | 'dig' | 'veins' | 'gold'; cores?: [string, string] }
 
@@ -69,7 +84,8 @@ export type StageKind = Stage['kind']
 /** storm：a-port 選哪一種示意風暴（0 股跌債漲、1 股債一起跌） */
 /** feeDiscount：a-dt 券商手續費打幾折（1＝公告費率不打折） */
 /** winRate：a-dt 每次進出賺錢的機率（示意） */
-export type StageValues = { years: number; periods: number; phase: number; frontLoad: number; tick: number; rate: number; months: number; bondPct: number; trades: number; hedgeCase: number; rebal: number; storm: number; feeDiscount: number; winRate: number }
+/** ccMove：x-cc 股票這段期間漲跌幾 %（整數，負的＝跌） */
+export type StageValues = { years: number; periods: number; phase: number; frontLoad: number; tick: number; rate: number; months: number; bondPct: number; trades: number; hedgeCase: number; rebal: number; storm: number; feeDiscount: number; winRate: number; ccMove: number }
 export type ValueKey = keyof StageValues
 export type Control = 'slice' | 'explode' | ValueKey
 /** 要讓「下一步」可按，control 的值必須 ≥ min */
@@ -120,6 +136,8 @@ export type TextContext = {
   distributionFee: (productId: string) => { rate: number; years: number } | undefined
   /** a-hedge 的對沖舉例（sim/hedge；0050 的費用從資料讀） */
   hedge: () => HedgeExample
+  /** 實戰課：一檔真基金的體檢資料（data/fundCheckup）；沒有這檔時丟錯。讀了哪些欄位由 ui/marks 記下來，沒查證就標 ？ */
+  checkup: (id: string) => FundCheckup
 }
 
 /** 大數字卡：value 已格式化；fraction（0–1）畫色條；colorKey 對應物體顏色；note＝標籤下一行白話補充（例如為什麼是「至少」） */
@@ -141,6 +159,8 @@ export type ResearchCard = { rows: ResearchRow[]; cite: string; refs?: { citatio
 
 /** 課程最後的回顧：一個圖示＋一句短話 */
 export type RecapLine = { icon: string; text: string }
+/** 實戰課的體檢表一行：一個圖示＋一句短話＋這一行的資料日期（ISO） */
+export type CheckupLine = { icon: string; text: string; asOf: string }
 
 export type LessonText = string | ((c: TextContext) => string)
 
@@ -169,6 +189,8 @@ export type Step = {
   research?: (c: TextContext) => ResearchCard
   /** 面板上的回顧清單（最後一步用；文字版也顯示） */
   recap?: RecapLine[]
+  /** 體檢表（實戰課結尾；文字版也顯示）：每一行附資料日期，數字從體檢資料（c.checkup）算 */
+  checkupCard?: (c: TextContext) => CheckupLine[]
   callouts?: CalloutSpec[]
   scene: SceneDirective
   controls?: Control[]
@@ -180,11 +202,14 @@ export type Step = {
 export type Level = { id: string; title: string; steps: Step[] }
 
 /** 三門獨立的課（初階／中階／高階） */
-export type CourseId = 'beginner' | 'intermediate' | 'advanced'
+export type CourseId = 'beginner' | 'intermediate' | 'advanced' | 'practice'
 /** 課程裡的一章：id 在同一門課內唯一；stepIds＝步驟池裡的步驟 id（照課程順序） */
 export type CourseChapter = { id: string; icon: string; name: string; stepIds: readonly string[] }
-/** available false＝還沒開放（開場卡、換階選單、網址都不能進入） */
-export type Course = { id: CourseId; name: string; tagline: string; chapters: readonly CourseChapter[]; available: boolean }
+/**
+ * available false＝還沒開放（開場卡、換階選單、網址都不能進入）。
+ * standalone＝不在初→中→高的順序裡（實戰課）：開場卡不寫「第幾階」，前一門課的結尾也不推薦它當下一階
+ */
+export type Course = { id: CourseId; name: string; tagline: string; chapters: readonly CourseChapter[]; available: boolean; standalone?: boolean }
 /** 舊版（Plan 5 以前）的絕對位置：LEVELS 的章與步；只剩存檔／網址遷移在用 */
 export type Position = { level: number; step: number }
 /** 課程裡的位置：index＝課內扁平索引（0 起） */

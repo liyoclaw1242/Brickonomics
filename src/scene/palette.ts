@@ -58,9 +58,13 @@ const LIGHTNESS_STEP = 0.12
 
 /** 同一籃子內，同色的第 n 個（n ≥ 1）依序調亮、調暗，讓每一層地層都分得出來。 */
 export function basketLooks(assets: Asset[]): BlockLook[] {
+  return varyLooks(assets.map(lookFor))
+}
+
+/** 同色的第 n 個（n ≥ 1）依序調亮、調暗（basketLooks 與實戰課的體檢塔共用） */
+export function varyLooks(looks: readonly BlockLook[]): BlockLook[] {
   const used = new Map<string, number>()
-  return assets.map((asset) => {
-    const look = lookFor(asset)
+  return looks.map((look) => {
     const n = used.get(look.color) ?? 0
     used.set(look.color, n + 1)
     if (n === 0) return look

@@ -1,4 +1,5 @@
 import type { Universe } from '../data/universe'
+import { universe } from '../data'
 import { isVerified } from '../data/verified'
 import { DEFAULT_VALUES } from '../tour/engine'
 import { makeTextContext } from '../tour/context'
@@ -7,6 +8,7 @@ import { feeRaceRows } from '../sim/feeRace'
 import { dayTradeCostVerified } from '../sim/dayTrade'
 import { FEE_DRAG } from '../sim/feeDrag'
 import { hedgeExample } from '../sim/hedge'
+import { CHECKUPS, checkupVerified, type CheckupKey, type FundCheckup } from '../data/fundCheckup'
 
 export type Mark = 'illustrative' | 'assumption' | 'unverified'
 
@@ -19,7 +21,7 @@ export function feeRowMarks(id: 'front' | 'back' | 'etf', unverifiedParts: numbe
  * 一步的標示（面板標題旁各出現一次；3D 標註上不再重複）：
  * 步驟本身的 ≈／✎，再加上從資料推出來的 ？（這一步畫出來的費用資料有沒有查證過）。
  */
-export function stepMarks(step: Step, u: Universe): Mark[] {
+export function stepMarks(step: Step, u: Universe, funds: ReadonlyMap<string, FundCheckup> = CHECKUPS): Mark[] {
   const out: Mark[] = step.mark ? [step.mark] : []
   const st = step.scene.stage
   if (st?.kind === 'feeRace') {
@@ -49,7 +51,63 @@ export function stepMarks(step: Step, u: Universe): Mark[] {
   }
   // 這一步顯示的比例來自持股資料，持股沒查證就加 ？（用到哪些產品，從文字實際讀的資料推出來）
   if (holdingsSources(step, u).some((id) => { const a = u.get(id); return !a || !isVerified(a, 'holdings') })) out.push('unverified')
+  // 實戰課：文字讀到的體檢欄位（基金＋欄位）有一個沒查證、或值是 null，就加 ？
+  if (checkupSources(step, funds, u).some(([id, key]) => { const f = funds.get(id); return !f || !checkupVerified(f, key) })) out.push('unverified')
   return [...new Set(out)]
+}
+
+/** 記帳用的體檢資料：讀最上層欄位（dividends…）或 basics 底下的欄位時記下路徑，值照樣回傳 */
+function recordingCheckup(f: FundCheckup, seen: (key: CheckupKey) => void): FundCheckup {
+  const basics = new Proxy(f.basics, {
+    get: (t, k, r) => {
+      if (typeof k === 'string' && Object.hasOwn(t, k)) seen(`basics.${k}` as CheckupKey)
+      return Reflect.get(t, k, r)
+    },
+  })
+  return new Proxy(f, {
+    get: (t, k, r) => {
+      if (k === 'basics') return basics
+      if (typeof k === 'string' && k !== 'id' && k !== 'researchedOn' && Object.hasOwn(t, k)) seen(k as CheckupKey)
+      return Reflect.get(t, k, r)
+    },
+  })
+}
+
+const checkupCache = new WeakMap<ReadonlyMap<string, FundCheckup>, WeakMap<Step, [string, CheckupKey][]>>()
+
+/**
+ * 一步的文字（一句話、多說一點、文字版、標註、大數字）實際讀了哪些體檢欄位：[基金 id, 欄位路徑]，照第一次讀到的順序。
+ * 和 holdingsSources 一樣用會記帳的 TextContext 跑一遍，不在步驟上手動宣告。
+ */
+export function checkupSources(step: Step, funds: ReadonlyMap<string, FundCheckup>, u: Universe = universe): [string, CheckupKey][] {
+  let byStep = checkupCache.get(funds)
+  if (!byStep) checkupCache.set(funds, (byStep = new WeakMap()))
+  const hit = byStep.get(step)
+  if (hit) return hit
+  const seen = new Map<string, [string, CheckupKey]>()
+  const base = makeTextContext(u, funds)
+  const rec: TextContext = {
+    ...base,
+    checkup: (id) => recordingCheckup(base.checkup(id), (key) => {
+      if (!seen.has(`${id}|${key}`)) seen.set(`${id}|${key}`, [id, key])
+    }),
+  }
+  const run = (f: () => unknown) => {
+    try { f() } catch { /* 讀到的已記下 */ }
+  }
+  const texts = [step.line, step.more, step.fallbackLine, step.fallbackMore, ...(step.callouts ?? []).flatMap((x) => [x.title, x.sub])]
+  for (const t of texts) if (typeof t === 'function') run(() => t(rec))
+  if (step.bigNumber) {
+    const big = step.bigNumber
+    run(() => big(rec, { ...DEFAULT_VALUES, ...step.scene.values }))
+  }
+  if (step.checkupCard) {
+    const card = step.checkupCard
+    run(() => card(rec))
+  }
+  const out = [...seen.values()]
+  byStep.set(step, out)
+  return out
 }
 
 const contexts = new WeakMap<Universe, TextContext>()

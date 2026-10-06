@@ -41,6 +41,7 @@ export const VALUE_RANGES: Record<ValueKey, [number, number]> = {
   hedgeCase: DEFAULT_RANGES.hedgeCase,
   trades: DEFAULT_RANGES.trades,
   bondPct: DEFAULT_RANGES.bondPct,
+  ccMove: DEFAULT_RANGES.ccMove,
 }
 
 type TourState = {

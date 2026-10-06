@@ -83,7 +83,7 @@ describe('sandboxPatchFor', () => {
 
 describe('titleOf / lineOf / moreOf', () => {
   it('returns static text or calls the template with the context', () => {
-    const ctx = { weightPct: () => 57.35, shock: () => -0.17, sectorPct: () => 0, expenseRatio: () => 0.002, overlapShared: () => 0.3, exitFee: () => 0, assetClassPct: () => 0, fundFeeRows: () => [], distributionFee: () => undefined, hedge: () => { throw new Error('unused') } }
+    const ctx = { weightPct: () => 57.35, shock: () => -0.17, sectorPct: () => 0, expenseRatio: () => 0.002, overlapShared: () => 0.3, exitFee: () => 0, assetClassPct: () => 0, fundFeeRows: () => [], distributionFee: () => undefined, hedge: () => { throw new Error('unused') }, checkup: () => { throw new Error('unused') } }
     expect(titleOf(L[0]!.steps[0]!)).toBe('T1')
     expect(lineOf(L[0]!.steps[0]!, ctx)).toBe('x')
     expect(moreOf(L[0]!.steps[0]!, ctx)).toBe('mx')
@@ -178,7 +178,8 @@ describe('course navigation (never crosses into another course)', () => {
   it('the next course follows course order and skips nothing that is unavailable', () => {
     expect(nextCourse('beginner')).toBe('intermediate')
     expect(nextCourse('intermediate')).toBe('advanced') // Plan 8 開放高階
-    expect(nextCourse('advanced')).toBeNull() // 最後一門：結尾推薦自由玩
+    expect(nextCourse('advanced')).toBeNull() // 最後一階：結尾推薦自由玩（實戰課不在階的順序裡，不推薦它當下一階）
+    expect(nextCourse('practice')).toBeNull()
   })
 
   it('switching course keeps the step when the new course has it, else the first step', () => {
@@ -191,14 +192,14 @@ describe('course navigation (never crosses into another course)', () => {
 
 describe('progress persistence (per course)', () => {
   it('round-trips the new format and tolerates garbage', () => {
-    const p = { course: 'intermediate' as const, stepId: 'b-2', completed: { beginner: ['prologue'], intermediate: ['review'], advanced: [] }, finished: ['beginner' as const], sandboxUnlocked: true }
+    const p = { course: 'intermediate' as const, stepId: 'b-2', completed: { beginner: ['prologue'], intermediate: ['review'], advanced: [], practice: [] }, finished: ['beginner' as const], sandboxUnlocked: true }
     expect(parseProgress(serializeProgress(p))).toEqual(p)
     expect(parseProgress(null)).toEqual(emptyProgress())
     expect(parseProgress('{oops')).toEqual(emptyProgress())
     expect(parseProgress('[1,2]')).toEqual(emptyProgress())
     // 高階開放後，finished 裡的 advanced 也留著（不認得的 x 丟掉）
     expect(parseProgress('{"course":"weird","completed":{"beginner":[1,"stock"]},"finished":["x","beginner","advanced"]}')).toEqual({
-      course: null, completed: { beginner: ['stock'], intermediate: [], advanced: [] }, finished: ['beginner', 'advanced'], sandboxUnlocked: true,
+      course: null, completed: { beginner: ['stock'], intermediate: [], advanced: [], practice: [] }, finished: ['beginner', 'advanced'], sandboxUnlocked: true,
     })
   })
 

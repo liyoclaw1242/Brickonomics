@@ -3,7 +3,8 @@ import { COURSE_STEPS, LEVELS } from './levels'
 import { T } from '../ui/strings'
 
 /**
- * 課程資料（純資料）：三門獨立的課，每門課＝開頭章＋股票→債券→基金→ETF＋結尾章（口訣卡）。
+ * 課程資料（純資料）：三門獨立的課，每門課＝開頭章＋股票→債券→基金→ETF＋結尾章（口訣卡）；
+ * 另有一門實戰課（standalone）：名片→拆開→配息→費用→績效→體檢表。
  * 步驟本身放在步驟池（LEVELS＋COURSE_STEPS），這裡只排 id。規格 §2.1、§2.2（Plan 6 欄）。
  */
 
@@ -58,6 +59,22 @@ export const COURSES: readonly Course[] = [
       chapter('fund', FUND, ['a-fee30']),
       chapter('etf', ETF, ['a-lev', 'a-hedge', 'a-rebal']),
       chapter('finish', T.courseChapters.finish, ['a-fin']),
+    ],
+  },
+  {
+    // Plan 9 實戰課：拆解一檔真基金（體檢資料 data/fundCheckup）。不在初→中→高的順序裡（standalone），初階詞彙
+    id: 'practice',
+    name: '實戰',
+    tagline: '拆解一檔真基金',
+    available: true,
+    standalone: true,
+    chapters: [
+      chapter('card', T.practiceChapters.card, ['x-card']),
+      chapter('apart', T.practiceChapters.apart, ['x-mix', 'x-where', 'x-hy']),
+      chapter('payout', T.practiceChapters.payout, ['x-cc', 'x-pay']),
+      chapter('fee', T.practiceChapters.fee, ['x-fee']),
+      chapter('perf', T.practiceChapters.perf, ['x-perf']),
+      chapter('checkup', T.practiceChapters.checkup, ['x-fin']),
     ],
   },
 ]

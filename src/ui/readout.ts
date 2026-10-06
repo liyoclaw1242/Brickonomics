@@ -6,6 +6,11 @@ import { feeRaceLeader, feeRaceRows } from '../sim/feeRace'
 import { DCA_DEMO, dcaNow, ddNow, INFL_DEMO, inflReal, PE_DEMO, peYears, ratePrice } from '../scene/layout/intermediate'
 import { corrNow, dtNow, durNow, feeTreesNow, hedgeCaseIndex, hedgeTowers, levNow, portNow, rebalNow } from '../scene/layout/advanced'
 import { hedgeExample } from '../sim/hedge'
+import { ccNow } from '../scene/layout/practice'
+import { checkupOf } from '../data/fundCheckup'
+import { annualReturns, assetGroups, capitalRun, feeSummary, fundSizeYi, navChange, netPerUnit, payoutTotal, sortedAssets, sortedRegions, yearToDate } from '../sim/checkup'
+import { navPayoutLayout } from '../scene/layout/practice'
+import type { FundCheckup } from '../data/fundCheckup'
 import { FEE_DRAG } from '../sim/feeDrag'
 import { LEVERAGE } from '../sim/leverage'
 import { DURATION } from '../sim/duration'
@@ -21,6 +26,23 @@ import { T } from './strings'
 export type ReadoutRow = { label: string; value: string; marks?: Mark[]; note?: string }
 
 const n1 = (x: number) => x.toFixed(1)
+const pctRow = (v: number, digits = 1) => `${v.toFixed(digits)}%`
+
+/** 體檢的名片（x-card、x-fin）：基本資料，每列的資料日期寫在 note */
+function cardRows(f: FundCheckup): ReadoutRow[] {
+  const b = f.basics
+  const on = (d: string) => T.checkup.asOf(T.date(d))
+  return [
+    { label: T.readout.ckCompany, value: b.managementCompany.value?.zh ?? '', note: on(b.managementCompany.source.date) },
+    { label: T.readout.ckDomicile, value: b.domicile.value ?? '' },
+    { label: T.readout.ckCurrency, value: T.currency(b.currency.value ?? '') },
+    { label: T.readout.ckInception, value: T.date(b.inceptionDate.value ?? '') },
+    { label: T.readout.ckSize(T.date(b.fundSize.value?.asOf ?? b.fundSize.source.date)), value: T.readout.ckSizeValue(fundSizeYi(f), T.currency('USD')) },
+    { label: T.readout.ckRisk, value: b.riskLevelTW.value ?? '', note: on(b.riskLevelTW.source.date) },
+    { label: T.readout.ckSri, value: String(b.sri.value ?? ''), note: on(b.sri.source.date) },
+    { label: T.readout.ckPayout, value: T.readout.ckPayoutValue[b.distributionFrequency.value ?? 'none'] },
+  ]
+}
 
 /** 每個舞台在面板上的即時數字（純函式，畫面與測試共用） */
 export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId: string | null, event?: EventSpec): ReadoutRow[] {
@@ -150,6 +172,73 @@ export function stageReadout(stage: Stage, v: TourValues, u: Universe, productId
       return [
         { label: T.readout.hedgeCase, value: T.controls.hedgeCaseValue(c), marks: ['illustrative'] },
         ...hedgeTowers(ex, c, 1).map((t) => ({ label: T.hedge[t.id], value: T.wan(t.total), ...(t.id === 'inverse' ? { marks: ['assumption' as const] } : {}) })),
+      ]
+    }
+    case 'coveredCall': {
+      // 一段期間：一般持有＝漲跌；掩護＝漲到天花板為止＋權利金（≈ 示意）
+      const n = ccNow(v.ccMove)
+      const p = (r: number) => T.cc.signed(Math.round(r * 100))
+      return [
+        { label: T.controls.ccMove, value: T.controls.ccMoveValue(n.movePct), marks: ['illustrative'] },
+        { label: T.readout.ccPlain, value: p(n.plain) },
+        { label: T.readout.ccPremium, value: p(n.coin / 100) },
+        { label: T.readout.ccCovered, value: p(n.covered) },
+      ]
+    }
+    case 'checkup': {
+      const f = checkupOf(stage.fund)
+      if (stage.show === 'mix') {
+        const g = assetGroups(f)
+        return [
+          ...(['stock', 'bond', 'cash'] as const).map((k) => ({ label: T.readout.ckGroup[k], value: pctRow(g[k]) })),
+          // 現金只有一項，上面三大類已經列了
+          ...sortedAssets(f).filter((i) => i.kind !== 'cash').map((i) => ({ label: i.zh, value: pctRow(i.pct) })),
+        ]
+      }
+      if (stage.show === 'hy') return sortedAssets(f).filter((i) => i.kind === 'highYield' || i.kind === 'bond' || i.kind === 'preferred').map((i) => ({ label: i.zh, value: pctRow(i.pct) }))
+      if (stage.show === 'fee') {
+        const s = feeSummary(f)
+        return [
+          { label: T.readout.ckFeeMgmt, value: pctRow(s.management, 2) },
+          { label: T.readout.ckFeeCustody, value: pctRow(s.custody, 2) },
+          { label: T.readout.ckFeeOngoing, value: pctRow(s.ongoing, 2) },
+          { label: T.readout.ckFeeTrading, value: pctRow(s.transaction, 2) },
+          { label: T.readout.ckFeeSales, value: pctRow(s.maxSales, 0), marks: ['assumption'], note: T.readout.ckFeeSalesNote },
+        ]
+      }
+      return cardRows(f)
+    }
+    case 'regions':
+      return sortedRegions(checkupOf(stage.fund)).map((r) => ({ label: T.readout.ckRegion(r.zh), value: pctRow(r.pct) }))
+    case 'perf': {
+      const r = annualReturns(checkupOf(stage.fund))
+      const p2 = (v: number) => `${T.signed2(v)}%`
+      return [
+        ...r.rows.map((y) => ({ label: T.readout.ckYear(y.year), value: `${p2(y.fund)} / ${p2(y.bench)}` })),
+        (() => {
+          const y = yearToDate(checkupOf(stage.fund))
+          return { label: T.readout.ckYtd(T.date(y.asOf)), value: `${p2(y.fund)} / ${p2(y.bench)}` }
+        })(),
+        { label: T.readout.ckTotal(r.rows.length), value: `${p2(r.fundTotal * 100)} / ${p2(r.benchTotal * 100)}` },
+      ]
+    }
+    case 'navPayout': {
+      // 真資料（體檢快照）：沒查證的欄位由 stepMarks 在標題旁標 ？
+      const f = checkupOf(stage.fund)
+      const c = navChange(f)
+      const run = capitalRun(f)
+      const y = f.annualisedDividendYield.value
+      const unit = T.readout.npUnit(f.navMonthEnd.value!.currency)
+      return [
+        { label: T.readout.npStart(T.date(c.from.date)), value: c.from.nav.toFixed(2), note: unit },
+        { label: T.readout.npEnd(T.date(c.to.date)), value: c.to.nav.toFixed(2) },
+        { label: T.readout.npChange, value: T.signed2(c.change) },
+        { label: T.readout.npPaid, value: payoutTotal(f).toFixed(3) },
+        { label: T.readout.npNet, value: T.signed2(netPerUnit(f).net) },
+        { label: T.readout.npFloor, value: String(navPayoutLayout(f).floor) },
+        ...(run.firstIncomeOnly && run.lastIncomeOnly ? [{ label: T.readout.npIncomeOnly(T.ym(run.firstIncomeOnly), T.ym(run.lastIncomeOnly)), value: '0%' }] : []),
+        ...(run.since ? [{ label: T.readout.npCapital(T.date(run.since)), value: `${run.min}–${run.max}%` }] : []),
+        ...(y ? [{ label: T.readout.npYield(T.date(y.forRecordDate)), value: `${y.pct.toFixed(2)}%`, note: T.readout.npYieldNote }] : []),
       ]
     }
     case 'leverage': {

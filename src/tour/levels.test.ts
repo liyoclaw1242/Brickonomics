@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { universe } from '../data'
 import { isBasket } from '../data/schema'
 import { overlap } from '../sim/overlap'
-import { EXDIV_AFTER_PHASE, LEVELS } from './levels'
+import { chengOf, EXDIV_AFTER_PHASE, LEVELS } from './levels'
 import { accumulateVsPayout } from '../scene/layout/stages'
 import { COURSES, courseSteps, STEP_POOL } from './courses'
 import { ON_PLAZA } from '../scene/stage/plaza'
@@ -19,7 +19,8 @@ import { colorForKey } from '../scene/palette'
 import { isVerified } from '../data/verified'
 import { T } from '../ui/strings'
 import { CAMERA_PRESETS } from '../scene/camera'
-import { stepMarks } from '../ui/marks'
+import { checkupSources, stepMarks } from '../ui/marks'
+import { CHECKUPS, checkupVerified, type FundCheckup } from '../data/fundCheckup'
 import type { VerifiedKey } from '../data/schema'
 import type { Universe } from '../data'
 import type { Stage, StageValues, Step } from './types'
@@ -41,6 +42,8 @@ const byId = (id: string): Step => steps.find((s) => s.id === id)!
 const PLAN7_STAGES: string[] = ['drawdown', 'pe', 'seesaw', 'dca', 'inflation']
 /** Plan 8 的高階舞台：都是舉例（≈、多說一點寫「示意」） */
 const PLAN8_STAGES: string[] = ['portfolio', 'correlation', 'dayTrade', 'duration', 'feeTrees', 'leverage', 'hedge', 'rebalance']
+/** Plan 9 實戰課的新舞台（示意） */
+const PLAN9_STAGES: string[] = ['coveredCall']
 /** 大數字跟著即時拉桿值；測試預設用進入該步驟時的值 */
 const bigOf = (s: Step, values: Partial<StageValues> = {}) => s.bigNumber?.(ctx, { ...DEFAULT_VALUES, ...s.scene.values, ...values })
 const resolve = (t: Step['line'] | undefined): string | undefined => (t === undefined ? undefined : typeof t === 'function' ? t(ctx) : t)
@@ -113,7 +116,7 @@ describe('LEVELS', () => {
   })
 
   it('illustrative stages carry the illustrative mark', () => {
-    const illustrative = new Set(['exdiv', 'bonds', 'accumulate', 'principalTrap', 'ticker', ...PLAN7_STAGES, ...PLAN8_STAGES])
+    const illustrative = new Set(['exdiv', 'bonds', 'accumulate', 'principalTrap', 'ticker', ...PLAN7_STAGES, ...PLAN8_STAGES, ...PLAN9_STAGES])
     for (const s of steps) {
       const st = s.scene.stage
       const needs =
@@ -173,6 +176,12 @@ describe('LEVELS', () => {
       const bn = bigOf(s)
       if (!bn) continue
       if (bn.mark) continue
+      // 實戰課：大數字來自體檢快照，來源由 checkupSources 從文字實際讀的欄位推出來（不手動宣告），每個都要已查證
+      const fromCheckup = checkupSources(s, CHECKUPS)
+      if (fromCheckup.length > 0 && !SOURCES[s.id]) {
+        for (const [id, key] of fromCheckup) expect(checkupVerified(CHECKUPS.get(id)!, key), `${s.id}: ${id} ${key}`).toBe(true)
+        continue
+      }
       const src = SOURCES[s.id]
       expect(src, `${s.id}: list its data source or mark it`).toBeDefined()
       for (const [id, key] of src!) expect(isVerified(universe.get(id)!, key), `${s.id}: ${id} ${key}`).toBe(true)
@@ -863,12 +872,12 @@ describe('mid-r1: comparisons never read as advice', () => {
     if (!st) return false
     if (st.kind === 'held') return st.items.length >= 2
     if (st.kind === 'underground') return (st.cores ?? []).length >= 2
-    return ['bonds', 'feeRace', 'accumulate', 'overlap', 'shock', 'pe', 'duration', 'feeTrees', 'hedge'].includes(st.kind)
+    return ['bonds', 'feeRace', 'accumulate', 'overlap', 'shock', 'pe', 'duration', 'feeTrees', 'hedge', 'coveredCall', 'perf'].includes(st.kind)
   }
 
   it('the compare note sits only where a side-by-side outcome could be read as a pick (mid-r2: on 15 steps it became wallpaper)', () => {
     const flagged = steps.filter((s) => s.compare).map((s) => s.id).sort()
-    expect(flagged).toEqual(['a-dur', 'a-fee30', 'a-hedge', 'c-3', 'e-dca', 'f-6', 'f-8', 's-pe'].sort())
+    expect(flagged).toEqual(['a-dur', 'a-fee30', 'a-hedge', 'c-3', 'e-dca', 'f-6', 'f-8', 's-pe', 'x-cc', 'x-perf'].sort())
     for (const id of flagged) if (id !== 'e-dca') expect(sideBySide(byId(id)), id).toBe(true)
     expect(T.compareNote).toBe('只是比較，不是叫你買或賣')
     expect(forbiddenWordsIn(T.compareNote)).toEqual([])
@@ -1160,5 +1169,170 @@ describe('Plan 8 高階: 剪高補低 (a-rebal)', () => {
   it('honest: rebalancing does not promise more profit, and moving money has trading costs', () => {
     expect(moreOf(s(), ctx)).toContain('不保證賺比較多')
     expect(moreOf(s(), ctx)).toContain('交易成本')
+  })
+})
+
+describe('Plan 9 實戰: 每月配息 (x-pay, real data)', () => {
+  const s = () => byId('x-pay')
+  const live = new Map(CHECKUPS)
+  const patched = (patch: (f: FundCheckup) => FundCheckup) => new Map([['LU2347655073', patch(live.get('LU2347655073')!)]])
+  it('one neutral headline: payouts + NAV change per unit (+6.13, ≈ +8.2%), with the two parts in the note (prac-r1: 「vs」 read as a contest)', () => {
+    // 12 次配息合計 8.254；淨值 74.99 → 72.87 ＝ −2.12；8.254 − 2.12 = 6.134 → +6.13；6.134 ÷ 74.99 = 8.18% → +8.2%
+    expect(bigOf(s())).toEqual({ value: '+6.13 美元', label: '配息＋塔高變化（每一份）', note: '約 +8.2%・其中配出 8.25，塔少 2.12・2025/9/30–2026/9/30', colorKey: 'coin' })
+    expect(bigOf(s())!.value).not.toContain('vs')
+    expect(s().mark).toBeUndefined() // 真資料，不是示意
+    expect(s().scene.stage).toEqual({ kind: 'navPayout', fund: 'LU2347655073' })
+  })
+  it('the more text gives the year, the record date the capital started, the share, and says the payout rate is not a return', () => {
+    const more = moreOf(s(), ctx)
+    expect(more).toContain('一年下來每一份多了 6.13 美元，約 8.2%')
+    expect(more).toContain('基準日 2026/2/9 起，配息裡有本金') // 配息組成表：基準日 2026-02-09 那次起
+    expect(more).toContain('本金佔 56–76%')
+    expect(more).toContain('年化配息率 11.7% 是配出的比例，不是報酬')
+    // 畫面上的字變少：柱子從哪裡起畫放在即時數字
+    expect(Object.values(T.np).some((v) => typeof v === 'function' && String(v).includes('起畫'))).toBe(false)
+  })
+  it('the payout rate never appears as a return anywhere in the practice steps', () => {
+    for (const st of steps.filter((x) => x.id.startsWith('x-'))) {
+      const texts = [lineOf(st, ctx), moreOf(st, ctx), resolve(st.fallbackLine), resolve(st.fallbackMore), bigOf(st)?.value, bigOf(st)?.label, bigOf(st)?.note]
+      for (const t of texts) if (t?.includes('11.7')) expect(t, st.id).toContain('不是報酬')
+    }
+  })
+  it('derives ？ from the checkup fields it reads: dividends, composition, NAV', () => {
+    expect(stepMarks(s(), universe)).toEqual([])
+    for (const key of ['dividends', 'dividendComposition', 'navMonthEnd'] as const) {
+      expect(stepMarks(s(), universe, patched((f) => ({ ...f, [key]: { ...f[key], verified: false } }))), key).toEqual(['unverified'])
+    }
+  })
+  it('the readout lists the start and end NAV, the change, the payouts and the yield as a payout rate', () => {
+    const rows = stageReadout({ kind: 'navPayout', fund: 'LU2347655073' }, { ...DEFAULT_VALUES, slice: 0, explode: 0 }, universe, null)
+    expect(rows.map((r) => r.value)).toEqual(['74.99', '72.87', '−2.12', '8.254', '+6.13', '70', '0%', '56–76%', '11.70%'])
+    expect(rows[4]!.label).toBe('配息＋淨值變化（每一份）')
+    expect(rows.at(-1)!.note).toBe('配出去的比例，不是報酬')
+  })
+})
+
+describe('Plan 9 實戰: the other steps of the fund checkup (numbers from the snapshot)', () => {
+  const live = CHECKUPS.get('LU2347655073')!
+  const ctxWith = (patch: (f: FundCheckup) => FundCheckup) => makeTextContext(universe, new Map([['LU2347655073', patch(live)]]))
+  const unverified = (key: keyof FundCheckup) => new Map([['LU2347655073', { ...live, [key]: { ...(live[key] as object), verified: false } } as FundCheckup]])
+  const setItems = (f: FundCheckup, pcts: Record<string, number>): FundCheckup => ({
+    ...f,
+    assetAllocation: { ...f.assetAllocation, value: { ...f.assetAllocation.value!, items: f.assetAllocation.value!.items.map((i) => ({ ...i, pct: pcts[i.name] ?? i.pct })) } },
+  })
+
+  it('x-cc: says this fund has 9.6% in it (from the verified allocation, so no ？) and that the factsheet has no details; one new term on screen', () => {
+    const s = byId('x-cc')
+    expect(lineOf(s, ctx)).toBe('先賣掉**上半截|loss**，換一筆**金幣|coin**')
+    expect(moreOf(s, ctx)).toContain('這檔有 9.6% 是這種做法；月報沒有寫細節')
+    expect(stepMarks(s, universe)).toEqual(['illustrative'])
+    // 9.6% 來自資產配置：那個欄位沒查證時才標 ？
+    expect(stepMarks(s, universe, unverified('assetAllocation'))).toEqual(['illustrative', 'unverified'])
+    expect(s.scene.stage).toEqual({ kind: 'coveredCall', fund: 'LU2347655073' })
+    expect(T.cc.coin).not.toContain('權利金')
+  })
+
+  it('x-card: a name card with the whole-fund size and the TW risk level (RR3 = level 3 of 5)', () => {
+    const s = byId('x-card')
+    expect(lineOf(s, ctx)).toBe('這是一檔**請怪手挑**的平衡型基金')
+    expect(bigOf(s)).toMatchObject({ value: 'RR3', label: '風險等級（1–5）', fraction: 0.6 })
+    expect(moreOf(s, ctx)).toContain('整檔基金規模 221.9 億美元，所有級別合計') // 22,185.5 百萬 ÷ 100
+    expect(stepMarks(s, universe)).toEqual([])
+    expect(stepMarks(s, universe, new Map([['LU2347655073', { ...live, basics: { ...live.basics, fundSize: { ...live.basics.fundSize, verified: false } } }]]))).toEqual(['unverified'])
+  })
+
+  it('x-mix: 股票 49.7% is within 2 points of half → 「股票大約一半」 (借據＋特別股 44.4%, 現金 5.8%: not 各半); the line follows the data; preferreds named once', () => {
+    const s = byId('x-mix')
+    expect(lineOf(s, ctx)).toBe('拆開看：**股票|stock**大約一半') // |49.7 − 50| = 0.3 < 2
+    // 股票多 4 個百分點（29.0 → 33.0、27.3 → 23.3）：股票 53.7% → 一半以上是股票
+    expect(lineOf(s, ctxWith((f) => setItems(f, { 'Global Equity': 33.0, 'US High Yield': 23.3 })))).toBe('拆開看：一半以上是**股票|stock**')
+    // 股票少 4 個百分點：45.7% → 一半以上不是股票
+    expect(lineOf(s, ctxWith((f) => setItems(f, { 'Global Equity': 25.0, 'US High Yield': 31.3 })))).toBe('拆開看：一半以上不是**股票|stock**')
+    expect(bigOf(s)).toMatchObject({ value: '49.7%', label: '股票的部分', note: '借據＋特別股 44.4%・現金 5.8%' })
+    expect(moreOf(s, ctx)).toContain('其中 9.6% 用掩護性買權')
+    expect(moreOf(s, ctx)).toContain('特別股：介於股票和借據之間，這裡算借據')
+    expect(moreOf(s, ctx)).toContain('算股票就是 54.6%')
+    expect(T.checkup.stockSub('9.6')).toBe('其中 9.6% 用掩護性買權')
+    expect(s.scene.explode).toBe(1)
+  })
+
+  it('x-where: 六成多 is derived from 61.9%', () => {
+    expect(lineOf(byId('x-where'), ctx)).toBe('六成多的錢在**美國**')
+    expect([chengOf(61.9), chengOf(60), chengOf(12.8), chengOf(8)]).toEqual(['六成多', '六成', '一成多', '不到一成'])
+    expect(bigOf(byId('x-where'))).toMatchObject({ value: '61.9%', label: '放在美國' })
+    expect(byId('x-where').scene.stage).toEqual({ kind: 'regions', fund: 'LU2347655073' })
+  })
+
+  it('x-hy: about 30% high yield (27.3 + 2.2 = 29.5); only the tornado crack is ≈ (more text and 3D label), the share is data', () => {
+    const s = byId('x-hy')
+    expect(lineOf(s, ctx)).toBe('裡面約 **30%** 是**容易裂|loss**的借據')
+    expect(bigOf(s)).toMatchObject({ value: '29.5%', label: '高收益債（美國＋歐洲）', colorKey: 'loss' })
+    expect(s.mark).toBeUndefined() // prac-r1／review：29.5% 是真資料，不標整步
+    expect(T.checkup.hyHit).toContain('舉例')
+    expect(s.scene.event).toEqual({ kind: 'tornado' })
+    expect(moreOf(s, ctx)).toContain('裂開多少是示意')
+    expect(moreOf(s, ctx)).toContain('新興市場債 4.5%：有沒有高收益債，資料沒寫')
+    expect(moreOf(s, ctx)).toContain('這檔有美國 27.3%、歐洲 2.2%')
+  })
+
+  it('x-fee: 1.45% a year, 14,500 per 100 萬 (0.0145 × 1,000,000); trading costs separate; the 5% max is ✎ on its own row, not on the step', () => {
+    const s = byId('x-fee')
+    expect(lineOf(s, ctx)).toBe('每年先扣約 **1.45%|loss**')
+    expect(bigOf(s)).toMatchObject({ value: '14,500 元', label: '100 萬放一年，約扣', note: '經理費 1.25%＋保管費最多 0.20%' })
+    expect(moreOf(s, ctx)).toContain('官方文件（KID）寫每年約 1.45%')
+    expect(moreOf(s, ctx)).toContain('交易成本約 0.22%，另外算')
+    // 計費表寫已經過幾年（prac-r1：「第 2 年 22,148」看起來像 2 × 14,500 算錯）：100 萬 × (1 − 0.9855^1.53) ≈ 22,148
+    expect(T.feeMeter.elapsed(1.53)).toBe('已過 1.5 年')
+    expect(moreOf(s, ctx)).toContain('最高 5%，看通路')
+    expect(s.mark).toBeUndefined()
+    const rows = stageReadout(s.scene.stage!, { ...DEFAULT_VALUES, slice: 0, explode: 0 }, universe, null)
+    expect(rows.at(-1)).toMatchObject({ value: '5%', marks: ['assumption'], note: '實際看通路' })
+    expect(rows.find((r) => r.label.includes('KID'))).toBeUndefined() // 即時數字不用 KID 這個詞
+    expect(stepMarks(s, universe, new Map([['LU2347655073', { ...live, basics: { ...live.basics, ongoingCharges: { ...live.basics.ongoingCharges, verified: false } } }]]))).toEqual(['unverified'])
+  })
+
+  it('x-perf: the line counts the years from the data (1 higher, 3 lower), the card compounds the four years, 🌋 under 2022', () => {
+    const s = byId('x-perf')
+    expect(lineOf(s, ctx)).toBe('和**指標|passive**比：1 年高、3 年低')
+    // 指標每年都低 20 個百分點 → 4 年都比較高
+    const lower = ctxWith((f) => ({ ...f, benchmarkCalendarYearReturns: { ...f.benchmarkCalendarYearReturns, value: { ...f.benchmarkCalendarYearReturns.value!, items: f.benchmarkCalendarYearReturns.value!.items.map((i) => ({ ...i, pct: i.pct - 20 })) } } }))
+    expect(lineOf(s, lower)).toBe('和**指標|passive**比：4 年都比較高')
+    // (0.8807 × 1.0835 × 1.0816 × 1.109) − 1 = 14.46% → 14%；(0.8684 × 1.1614 × 1.1189²) − 1 = 26.27% → 26%
+    // 好的一面也在卡片上：2022 跌得比指標少（−11.93 > −13.16）
+    expect(bigOf(s)).toMatchObject({ value: '14% vs 26%', label: '漲幅：基金 vs 指標', note: '2022–2025 合起來（含配息）・2022 跌得比指標少' })
+    expect(moreOf(s, ctx)).toContain('2026 到 8/31：7.7% 對 6.0%。這段不滿一年') // 今年到資料日
+    // 「藍圖」在這門課會讓人以為有 ETF 可以買：一律叫指標
+    for (const t of [lineOf(s, ctx), moreOf(s, ctx), bigOf(s)!.label, T.checkup.bench]) expect(t).not.toContain('藍圖')
+    expect(s.scene.event).toMatchObject({ kind: 'quake', depth: 0.1193 })
+    expect(s.compare).toBe(true)
+    expect(moreOf(s, ctx)).toContain('2022 跌 11.9%，比指標的 13.2% 少')
+    expect(stepMarks(s, universe, unverified('benchmarkCalendarYearReturns'))).toEqual(['unverified'])
+  })
+
+  it('x-fin: 「只是體檢，不是叫你買或賣」 and six dated lines that follow the writing rules', () => {
+    const s = byId('x-fin')
+    expect(stripMarkup(lineOf(s, ctx))).toBe('只是體檢，不是叫你買或賣')
+    const lines = s.checkupCard!(ctx)
+    // 好處（每月現金流、2022 跌較少）和要注意的放在同一張卡；金額帶單位
+    expect(lines.map((l) => l.text)).toEqual(['怪手挑的平衡型，股票約一半', '有：每月現金流、2022 比指標少跌', '容易裂的借據約 30%', '每份多 6.13 美元，配息含本金', '每年先扣約 1.45%', '近 4 年和指標比：1 高 3 低'])
+    // ✅ 那一行：每月配息出自投資人須知（2026-07-31），2022 出自月報（2026-08-31）→ 寫較早的那個
+    expect(lines.map((l) => l.asOf)).toEqual(['2026-08-31', '2026-07-31', '2026-08-31', '2026-09-30', '2026-04-27', '2026-08-31'])
+    for (const l of lines) {
+      expect(Array.from(l.text).length, l.text).toBeLessThanOrEqual(18)
+      expect(forbiddenWordsIn(l.text)).toEqual([])
+      expect(jargonIn(l.text)).toEqual([])
+      expect(l.text.includes('被') || l.text.includes('稅'), l.text).toBe(false)
+    }
+    expect(stepMarks(s, universe)).toEqual([])
+    expect(stepMarks(s, universe, unverified('dividends'))).toEqual(['unverified'])
+  })
+
+  it('every practice step except the ≈ ones is real data: no illustrative mark, and its numbers are dated somewhere on screen or in 多說一點', () => {
+    for (const id of ['x-card', 'x-mix', 'x-where', 'x-pay', 'x-fee', 'x-perf', 'x-fin']) expect(byId(id).mark, id).toBeUndefined()
+    for (const id of ['x-card', 'x-mix', 'x-where', 'x-hy', 'x-pay']) {
+      const s = byId(id)
+      const texts = [moreOf(s, ctx), bigOf(s)?.note ?? ''].join('')
+      expect(texts, id).toMatch(/20\d\d\/\d{1,2}(\/\d{1,2})?/)
+    }
   })
 })
